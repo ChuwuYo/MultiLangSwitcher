@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Header Changer 调试页面</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <style>
+    body {
+      padding: 20px;
+    }
+    .debug-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      background-color: #f8f9fa;
+    }
+    .debug-result {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    @font-face { font-family: 'MapleMonoNL'; src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2'); }
+    body { font-family: 'MapleMonoNL', sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Header Changer 调试工具</h2>
+    <p class="lead">此页面帮助您诊断和解决请求头更改问题</p>
+    
+    <div class="alert alert-info">
+      <strong>提示：</strong> 如果您的请求头无法成功更改，可以使用此页面进行诊断。
+    </div>
+    
+    <div class="row">
+      <!-- 当前规则信息 -->
+      <div class="col-md-6">
+        <div class="debug-section">
+          <h4>当前规则信息</h4>
+          <button id="showRulesBtn" class="btn btn-primary">显示当前规则</button>
+          <div id="rulesResult" class="debug-result">点击按钮查看当前规则...</div>
+        </div>
+      </div>
+      
+      <!-- 请求头测试 -->
+      <div class="col-md-6">
+        <div class="debug-section">
+          <h4>请求头测试</h4>
+          <div class="mb-3">
+            <label for="testLanguage" class="form-label">测试语言:</label>
+            <select class="form-select" id="testLanguage">
+              <option value="zh-CN">简体中文 (zh-CN)</option>
+              <option value="zh-TW">繁体中文 (zh-TW)</option>
+              <option value="en-US">英文 (en-US)</option>
+              <option value="ja">日语 (ja)</option>
+              <option value="ko">韩语 (ko)</option>
+              <option value="de">德语 (de)</option>
+              <option value="es">西班牙语 (es)</option>
+            </select>
+          </div>
+          <button id="testHeaderBtn" class="btn btn-success">测试请求头</button>
+          <div id="headerTestResult" class="debug-result">点击按钮测试请求头...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 问题修复 -->
+    <div class="debug-section mt-4">
+      <h4>常见问题修复</h4>
+      <div class="list-group">
+        <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
+          <strong>修复规则优先级</strong> - 将动态规则优先级提高到100以覆盖静态规则
+        </button>
+        <button id="disableStaticRulesBtn" class="list-group-item list-group-item-action">
+          <strong>禁用静态规则</strong> - 临时禁用manifest中的静态规则集
+        </button>
+        <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
+          <strong>清除所有规则</strong> - 删除所有动态规则并重新应用
+        </button>
+      </div>
+      <div id="fixResult" class="debug-result mt-3">选择一个修复选项...</div>
+    </div>
+    
+    <!-- 诊断信息 -->
+    <div class="debug-section mt-4">
+      <h4>扩展诊断信息</h4>
+      <button id="showDiagnosticsBtn" class="btn btn-info">显示诊断信息</button>
+      <div id="diagnosticsResult" class="debug-result">点击按钮查看诊断信息...</div>
+    </div>
+  </div>
+  
+  <!-- 引入调试脚本 -->
+  <script src="debug-headers.js"></script>
+  <script src="debug-ui.js"></script>
+</body>
+</html>
