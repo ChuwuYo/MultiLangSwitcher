@@ -1,6 +1,66 @@
 // debug-ui.js - 调试页面UI交互脚本
 
 document.addEventListener('DOMContentLoaded', function() {
+  // 初始化JavaScript语言偏好和国际化API状态检查
+  const jsLanguageStatus = document.getElementById('jsLanguageStatus');
+  const intlAPIStatus = document.getElementById('intlAPIStatus');
+  
+  // 检查JavaScript语言偏好状态
+  document.getElementById('checkJsLanguageBtn').addEventListener('click', function() {
+    jsLanguageStatus.innerHTML = '正在检查JavaScript语言偏好...';
+    
+    chrome.storage.local.get(['jsLanguageEnabled', 'currentLanguage'], function(result) {
+      const jsLanguageEnabled = result.jsLanguageEnabled || false;
+      const currentLanguage = result.currentLanguage || '未设置';
+      
+      let html = '';
+      if (jsLanguageEnabled) {
+        html += `<p class="success">✓ JavaScript语言偏好修改已启用</p>`;
+        html += `<p>当前设置语言: <strong>${currentLanguage}</strong></p>`;
+        html += `<p>当前检测到的navigator.language: <strong>${navigator.language}</strong></p>`;
+        html += `<p>当前检测到的navigator.languages: <strong>${navigator.languages ? navigator.languages.join(', ') : '未检测到'}</strong></p>`;
+      } else {
+        html += `<p class="error">✗ JavaScript语言偏好修改未启用</p>`;
+        html += `<p>启用此功能可以修改网页中的navigator.language和navigator.languages值</p>`;
+      }
+      
+      jsLanguageStatus.innerHTML = html;
+    });
+  });
+  
+  // 检查国际化API状态
+  document.getElementById('checkIntlAPIBtn').addEventListener('click', function() {
+    intlAPIStatus.innerHTML = '正在检查国际化API状态...';
+    
+    chrome.storage.local.get(['intlAPIEnabled', 'currentLanguage'], function(result) {
+      const intlAPIEnabled = result.intlAPIEnabled || false;
+      const currentLanguage = result.currentLanguage || '未设置';
+      
+      let html = '';
+      if (intlAPIEnabled) {
+        html += `<p class="success">✓ 国际化API修改已启用</p>`;
+        html += `<p>当前设置语言: <strong>${currentLanguage}</strong></p>`;
+        
+        // 显示当前日期格式化示例
+        const date = new Date();
+        const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+          dateStyle: 'full',
+          timeStyle: 'long'
+        });
+        const formattedDate = dateTimeFormat.format(date);
+        const resolvedOptions = dateTimeFormat.resolvedOptions();
+        
+        html += `<p>当前检测到的区域设置: <strong>${resolvedOptions.locale}</strong></p>`;
+        html += `<p>格式化示例: <strong>${formattedDate}</strong></p>`;
+      } else {
+        html += `<p class="error">✗ 国际化API修改未启用</p>`;
+        html += `<p>启用此功能可以修改网页中的Intl.DateTimeFormat等国际化API的语言</p>`;
+      }
+      
+      intlAPIStatus.innerHTML = html;
+    });
+  });
+  
   // 显示当前规则
   document.getElementById('showRulesBtn').addEventListener('click', function() {
     const resultElement = document.getElementById('rulesResult');

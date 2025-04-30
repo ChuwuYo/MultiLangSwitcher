@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Header Changer</title>
+  <title>MultiLangSwitcher</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <style>
@@ -28,8 +28,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <h4>Header Changer</h4>
-      <p class="text-muted">快速切换浏览器请求头语言</p>
+      <h4>MultiLangSwitcher</h4>
+      <p class="text-muted">快速切换浏览器语言偏好设置</p>
     </div>
     
     <div class="language-select">
@@ -38,6 +38,9 @@
         <option value="zh-CN">简体中文 (zh-CN)</option>
         <option value="zh-TW">繁体中文 (zh-TW)</option>
         <option value="en-US">英文 (en-US)</option>
+        <option value="en-GB">英文(英国) (en-GB)</option>
+        <option value="fr">法语 (fr)</option>
+        <option value="ru">俄语 (ru)</option>
         <option value="ja">日语 (ja)</option>
         <option value="ko">韩语 (ko)</option>
         <option value="de">德语 (de)</option>
@@ -47,7 +50,20 @@
     
     <button id="applyButton" class="btn btn-primary w-100">应用更改</button>
     
-    <div class="status">
+    <div class="advanced-options mt-3">
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="jsLanguageToggle">
+        <label class="form-check-label" for="jsLanguageToggle">启用JavaScript语言偏好修改</label>
+        <small class="form-text text-muted d-block">同步修改navigator.language和navigator.languages</small>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="intlAPIToggle">
+        <label class="form-check-label" for="intlAPIToggle">启用Internationalization API修改</label>
+        <small class="form-text text-muted d-block">同步修改Intl.DateTimeFormat等国际化API</small>
+      </div>
+    </div>
+    
+    <div class="status mt-3">
       <p id="statusText">当前语言: <span id="currentLanguage">未设置</span></p>
     </div>
     

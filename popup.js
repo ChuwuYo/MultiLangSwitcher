@@ -5,9 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const applyButton = document.getElementById('applyButton');
   const currentLanguage = document.getElementById('currentLanguage');
   const checkHeaderBtn = document.getElementById('checkHeaderBtn');
+  const jsLanguageToggle = document.getElementById('jsLanguageToggle');
+  const intlAPIToggle = document.getElementById('intlAPIToggle');
   
-  // 从存储中加载当前语言设置
-  chrome.storage.local.get(['currentLanguage'], function(result) {
+  // 从存储中加载当前语言设置和功能开关状态
+  chrome.storage.local.get(['currentLanguage', 'jsLanguageEnabled', 'intlAPIEnabled'], function(result) {
     if (result.currentLanguage) {
       languageSelect.value = result.currentLanguage;
       currentLanguage.textContent = result.currentLanguage;
@@ -20,20 +22,72 @@ document.addEventListener('DOMContentLoaded', function() {
       currentLanguage.textContent = defaultLanguage;
       updateHeaderRules(defaultLanguage, false);
     }
+    
+    // 加载JavaScript语言偏好开关状态
+    if (result.jsLanguageEnabled !== undefined) {
+      jsLanguageToggle.checked = result.jsLanguageEnabled;
+    } else {
+      // 默认不启用
+      chrome.storage.local.set({jsLanguageEnabled: false});
+    }
+    
+    // 加载Internationalization API开关状态
+    if (result.intlAPIEnabled !== undefined) {
+      intlAPIToggle.checked = result.intlAPIEnabled;
+    } else {
+      // 默认不启用
+      chrome.storage.local.set({intlAPIEnabled: false});
+    }
   });
   
   // 应用按钮点击事件
   applyButton.addEventListener('click', function() {
     const selectedLanguage = languageSelect.value;
+    const jsLanguageEnabled = jsLanguageToggle.checked;
+    const intlAPIEnabled = intlAPIToggle.checked;
     
-    // 保存选择的语言
-    chrome.storage.local.set({currentLanguage: selectedLanguage}, function() {
-      console.log('语言设置已保存: ' + selectedLanguage);
+    // 保存所有设置
+    chrome.storage.local.set({
+      currentLanguage: selectedLanguage,
+      jsLanguageEnabled: jsLanguageEnabled,
+      intlAPIEnabled: intlAPIEnabled
+    }, function() {
+      console.log('设置已保存: 语言=' + selectedLanguage + 
+                ', JS语言偏好=' + jsLanguageEnabled + 
+                ', 国际化API=' + intlAPIEnabled);
       currentLanguage.textContent = selectedLanguage;
     });
     
     // 更新请求头规则，并自动触发检查
     updateHeaderRules(selectedLanguage, true);
+  });
+  
+  // JavaScript语言偏好开关事件
+  jsLanguageToggle.addEventListener('change', function() {
+    console.log('JavaScript语言偏好修改: ' + this.checked);
+    // 立即保存设置并应用
+    const selectedLanguage = languageSelect.value;
+    chrome.storage.local.set({
+      jsLanguageEnabled: this.checked,
+      currentLanguage: selectedLanguage
+    }, function() {
+      // 更新请求头规则和内容脚本
+      updateHeaderRules(selectedLanguage, false);
+    });
+  });
+  
+  // 国际化API开关事件
+  intlAPIToggle.addEventListener('change', function() {
+    console.log('国际化API修改: ' + this.checked);
+    // 立即保存设置并应用
+    const selectedLanguage = languageSelect.value;
+    chrome.storage.local.set({
+      intlAPIEnabled: this.checked,
+      currentLanguage: selectedLanguage
+    }, function() {
+      // 更新请求头规则和内容脚本
+      updateHeaderRules(selectedLanguage, false);
+    });
   });
   
   // 快速检查按钮点击事件
@@ -91,6 +145,37 @@ function updateHeaderRules(language, autoCheck = false) {
   
   // 确保语言值没有多余的空格
   language = language.trim();
+  
+  // 获取当前所有动态规则和功能开关状态
+  chrome.storage.local.get(['jsLanguageEnabled', 'intlAPIEnabled'], function(result) {
+    const jsLanguageEnabled = result.jsLanguageEnabled || false;
+    const intlAPIEnabled = result.intlAPIEnabled || false;
+    
+    // 向所有标签页发送消息，更新语言设置
+    console.log('应用设置: 语言=' + language + 
+              ', JS语言偏好=' + jsLanguageEnabled + 
+              ', 国际化API=' + intlAPIEnabled);
+    
+    // 向所有标签页发送消息，更新语言设置
+    chrome.tabs.query({}, function(tabs) {
+      tabs.forEach(function(tab) {
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'updateLanguage',
+          language: language,
+          jsLanguageEnabled: jsLanguageEnabled,
+          intlAPIEnabled: intlAPIEnabled
+        }, function(response) {
+          // 忽略可能的错误，因为有些标签页可能还没有加载内容脚本
+          if (chrome.runtime.lastError) {
+            console.log('向标签页发送消息时出错:', chrome.runtime.lastError.message);
+          } else if (response && response.success) {
+            console.log('标签页语言设置已更新:', tab.id);
+          }
+        });
+      });
+    });
+    
+  });
   
   // 获取当前所有动态规则
   chrome.declarativeNetRequest.getDynamicRules(function(existingRules) {

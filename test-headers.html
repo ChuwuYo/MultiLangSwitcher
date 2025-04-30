@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>请求头测试</title>
+  <title>MultiLangSwitcher 测试页面</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <style>
@@ -23,15 +23,44 @@
 </head>
 <body>
   <div class="container">
-    <h2>请求头测试页面</h2>
-    <p class="lead">此页面显示您当前的请求头信息，帮助您验证Header Changer扩展是否正常工作。</p>
+    <h2>MultiLangSwitcher 测试页面</h2>
+    <p class="lead">此页面显示您当前的语言偏好设置信息，帮助您验证MultiLangSwitcher扩展是否正常工作。</p>
     
     <div class="alert alert-info">
       <strong>提示：</strong> 请特别关注 <code>Accept-Language</code> 请求头的值，它应该与您在扩展中设置的语言相匹配。
     </div>
     
-    <div class="header-info">
-      <h4>当前请求头信息：</h4>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-primary text-white">请求头语言</div>
+          <div class="card-body">
+            <div id="headerLanguageInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-success text-white">JavaScript语言偏好</div>
+          <div class="card-body">
+            <div id="jsLanguageInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-info text-white">国际化API语言</div>
+          <div class="card-body">
+            <div id="intlAPIInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="header-info mt-4">
+      <h4>完整请求头信息：</h4>
       <pre id="headerInfo">加载中...</pre>
     </div>
   </div>
