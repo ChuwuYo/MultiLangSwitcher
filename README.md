@@ -81,7 +81,7 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
 * `manifest.json`: 定义扩展的基本信息、权限和配置。
 * `popup.html` / `popup.js`: 实现扩展弹出界面和交互逻辑。
 * `background.js`: 作为 Service Worker 在后台运行，处理扩展生命周期事件和规则的初始化应用。
-* `rules.json`: （可选）包含静态规则的文件，本项目主要通过动态规则管理语言设置。
+* `rules.json`: 包含静态规则的文件，本项目主要通过动态规则管理语言设置。
 * `test-headers.html` / `test-headers.js`: 用于测试浏览器语言和指纹信息的页面及其脚本。
 * `debug.html` / `debug-ui.js` / `debug-headers.js`: 实现调试页面及其功能。
 * `images/`: 存放扩展图标文件。
