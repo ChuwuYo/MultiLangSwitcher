@@ -18,7 +18,6 @@
     "storage",
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "scripting",
     "tabs"
   ],
   "host_permissions": [
@@ -38,13 +37,5 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
-      "run_at": "document_start",
-      "all_frames": true
-    }
-  ]
+  }
 }

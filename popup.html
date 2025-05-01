@@ -6,23 +6,55 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <style>
+    /* 页面基本样式 */
     body {
       width: 300px;
       padding: 10px;
     }
+    /* 头部样式 */
     .header {
       margin-bottom: 15px;
       text-align: center;
     }
+    /* 语言选择框容器样式 */
     .language-select {
       margin-bottom: 15px;
     }
+    /* 状态文本样式 */
     .status {
       margin-top: 15px;
       font-style: italic;
     }
+    /* 字体定义 */
     @font-face { font-family: 'MapleMonoNL'; src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2'); }
     body { font-family: 'MapleMonoNL', sans-serif; }
+
+    /* 语言选择框的自定义滚动条样式 */
+    #languageSelect {
+      overflow-y: auto; /* 确保在需要时显示滚动条 */
+    }
+
+    /* Webkit 浏览器滚动条样式 (Chrome, Safari, Edge) */
+    #languageSelect::-webkit-scrollbar {
+      width: 6px;
+    }
+    #languageSelect::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    #languageSelect::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+    #languageSelect::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Firefox 浏览器滚动条样式 */
+    #languageSelect {
+      scrollbar-width: thin; /* "auto" 或 "thin" */
+      scrollbar-color: #888 #f1f1f1; /* 滑块和轨道颜色 */
+    }
   </style>
 </head>
 <body>
@@ -31,48 +63,57 @@
       <h4>MultiLangSwitcher</h4>
       <p class="text-muted">快速切换浏览器语言偏好设置</p>
     </div>
-    
+
     <div class="language-select">
       <label for="languageSelect" class="form-label">选择语言:</label>
       <select class="form-select" id="languageSelect">
         <option value="zh-CN">简体中文 (zh-CN)</option>
         <option value="zh-TW">繁体中文 (zh-TW)</option>
-        <option value="en-US">英文 (en-US)</option>
-        <option value="en-GB">英文(英国) (en-GB)</option>
-        <option value="fr">法语 (fr)</option>
-        <option value="ru">俄语 (ru)</option>
-        <option value="ja">日语 (ja)</option>
-        <option value="ko">韩语 (ko)</option>
-        <option value="de">德语 (de)</option>
-        <option value="es">西班牙语 (es)</option>
-      </select>
+        <option value="en-US">English (US) (en-US)</option>
+        <option value="en-GB">English (UK) (en-GB)</option>
+        <option value="ja">日本語 (ja)</option>
+        <option value="ko">한국어 (ko)</option>
+        <option value="fr">Français (fr)</option>
+        <option value="de">Deutsch (de)</option>
+        <option value="es">Español (es)</option>
+        <option value="ru">Русский (ru)</option>
+        <option value="pt-BR">Português (Brasil) (pt-BR)</option>
+        <option value="it">Italiano (it)</option>
+        <option value="ar">العربية (ar)</option>
+        <option value="hi">हिन्दी (hi)</option>
+        <option value="tr">Türkçe (tr)</option>
+        <option value="nl">Nederlands (nl)</option>
+        <option value="pl">Polski (pl)</option>
+        <option value="sv">Svenska (sv)</option>
+        <option value="fi">Suomi (fi)</option>
+        <option value="da">Dansk (da)</option>
+        <option value="no">Norsk (no)</option>
+        <option value="cs">Čeština (cs)</option>
+        <option value="hu">Magyar (hu)</option>
+        <option value="el">Ελληνικά (el)</option>
+        <option value="he">עברית (he)</option>
+        <option value="th">ไทย (th)</option>
+        <option value="vi">Tiếng Việt (vi)</option>
+        <option value="id">Bahasa Indonesia (id)</option>
+        <option value="ms">Bahasa Melayu (ms)</option>
+        <option value="ro">Română (ro)</option>
+        <option value="sk">Slovenčina (sk)</option>
+        <option value="uk">Українська (uk)</option>
+        </select>
     </div>
-    
+
     <button id="applyButton" class="btn btn-primary w-100">应用更改</button>
-    
-    <div class="advanced-options mt-3">
-      <div class="form-check form-switch mb-2">
-        <input class="form-check-input" type="checkbox" id="jsLanguageToggle">
-        <label class="form-check-label" for="jsLanguageToggle">启用JavaScript语言偏好修改</label>
-        <small class="form-text text-muted d-block">同步修改navigator.language和navigator.languages</small>
-      </div>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="intlAPIToggle">
-        <label class="form-check-label" for="intlAPIToggle">启用Internationalization API修改</label>
-        <small class="form-text text-muted d-block">同步修改Intl.DateTimeFormat等国际化API</small>
-      </div>
-    </div>
-    
+
     <div class="status mt-3">
       <p id="statusText">当前语言: <span id="currentLanguage">未设置</span></p>
     </div>
-    
+
     <div class="mt-3 text-center">
-      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">在新页面验证</a>
+      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">检测页面</a>
       <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2">调试工具</a>
       <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2">快速检查</button>
     </div>
-    
+
     <div class="mt-3 d-none" id="headerCheckResult">
       <div class="card">
         <div class="card-header bg-light">当前请求头检查结果</div>
@@ -82,7 +123,7 @@
       </div>
     </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>MultiLangSwitcher 测试页面</title>
+  <title>MultiLangSwitcher 检测页面</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <style>
@@ -24,7 +24,7 @@
 <body>
   <div class="container">
     <h2>MultiLangSwitcher 测试页面</h2>
-    <p class="lead">此页面显示您当前的语言偏好设置信息，帮助您验证MultiLangSwitcher扩展是否正常工作。</p>
+    <p class="lead">此页面用于验证MultiLangSwitcher扩展的语言设置效果</p>
     
     <div class="alert alert-info">
       <strong>提示：</strong> 请特别关注 <code>Accept-Language</code> 请求头的值，它应该与您在扩展中设置的语言相匹配。
@@ -39,21 +39,71 @@
           </div>
         </div>
       </div>
-      
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-success text-white">JavaScript语言偏好</div>
+          <div class="card-header bg-info text-white">JS 语言偏好</div>
           <div class="card-body">
             <div id="jsLanguageInfo">检测中...</div>
           </div>
         </div>
       </div>
-      
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-info text-white">国际化API语言</div>
+          <div class="card-header bg-secondary text-white">国际化 API</div>
           <div class="card-body">
-            <div id="intlAPIInfo">检测中...</div>
+            <div id="intlApiInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header bg-warning text-dark">WebRTC 检测</div>
+          <div class="card-body">
+            <div id="webRtcInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header bg-success text-white">浏览器指纹 (部分)</div>
+          <div class="card-body">
+            <div id="fingerprintInfo">检测中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-3">
+          <div class="card-header bg-dark text-white">硬件指纹检测</div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark">Canvas 指纹</div>
+                  <div class="card-body">
+                    <div id="canvasFingerprintInfo">检测中...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark">WebGL 指纹</div>
+                  <div class="card-body">
+                    <div id="webglFingerprintInfo">检测中...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark">AudioContext 指纹</div>
+                  <div class="card-body">
+                    <div id="audioFingerprintInfo">检测中...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
