@@ -50,7 +50,7 @@ Currently only supports installation from source.
 
 1.  **Download or Clone**: Clone or download the project repository to your local computer.
     ```bash
-    git clone [https://github.com/ChuwuYo/MultiLangSwitcher.git](https://github.com/ChuwuYo/MultiLangSwitcher.git)
+    git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
 2.  **Open Extensions Management**: In the Chrome browser address bar, type `chrome://extensions/` and press Enter to go to the extensions management page.
 3.  **Enable Developer Mode**: Turn on the "Developer mode" toggle in the top right corner of the page.
