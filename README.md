@@ -20,7 +20,6 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
     
 </div>
 
-![主页]()
 
 
 ***
