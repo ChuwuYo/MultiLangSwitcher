@@ -14,6 +14,9 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
 
 扩展利用高效的 `chrome.declarativeNetRequest` API 来修改请求头，确保性能和隐私。
 
+![主页](https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b)
+
+
 ***
 
 <div align="center">
