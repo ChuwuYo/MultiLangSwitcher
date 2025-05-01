@@ -58,7 +58,7 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
 
 1.  **下载或克隆代码**: 将本项目仓库克隆到您的本地计算机。
     ```bash
-    git clone [https://github.com/ChuwuYo/MultiLangSwitcher.git](https://github.com/ChuwuYo/MultiLangSwitcher.git)
+    git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
 2.  **打开 Chrome 扩展管理**: 在 Chrome 浏览器地址栏输入 `chrome://extensions/` 并回车，进入扩展程序管理页面。
 3.  **开启开发者模式**: 打开页面右上角的“开发者模式”开关。
