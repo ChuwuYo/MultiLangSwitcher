@@ -23,6 +23,9 @@
       border: 1px solid #dee2e6;
       max-height: 300px;
       overflow-y: auto;
+      word-break: break-all; /* 防止长行溢出 */
+      white-space: pre-wrap; /* 保留空白符并换行 */
+      font-size: 0.9em; /* 调整字体大小以适应更多内容 */
     }
     .success {
       color: green;
@@ -32,33 +35,47 @@
       color: red;
       font-weight: bold;
     }
+    /* 日志不同类型的颜色 */
+    .log-info { color: blue; }
+    .log-warning { color: orange; }
+    .log-error { color: red; }
+    .log-success { color: green; }
+
     @font-face { font-family: 'MapleMonoNL'; src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2'); }
     body { font-family: 'MapleMonoNL', sans-serif; }
+
+    /* 匹配规则详情的样式 */
+    .matched-rule-detail {
+        margin-left: 15px;
+        border-left: 2px solid #007bff;
+        padding-left: 10px;
+        margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>MultiLangSwitcher 调试工具</h2>
     <p class="lead">此页面帮助您诊断和解决语言偏好设置问题</p>
-    
+
     <div class="alert alert-info">
-      <strong>提示：</strong> 如果您的请求头无法成功更改，可以使用此页面进行诊断。
+      <strong>提示：</strong> 如果您的请求头无法成功更改，可以使用此页面进行诊断。打开此页面后，在扩展其他部分（如弹出页）的操作会在这里显示日志。
     </div>
-    
+
     <div class="row">
-      <!-- 当前规则信息 -->
       <div class="col-md-6">
         <div class="debug-section">
           <h4>当前规则信息</h4>
+          <p class="text-muted">显示扩展当前生效的动态规则以及最近匹配到的规则详情。</p>
           <button id="showRulesBtn" class="btn btn-primary">显示当前规则</button>
           <div id="rulesResult" class="debug-result">点击按钮查看当前规则...</div>
         </div>
       </div>
-      
-      <!-- 请求头测试 -->
+
       <div class="col-md-6">
         <div class="debug-section">
           <h4>请求头测试</h4>
+          <p class="text-muted">向测试地址发送请求，检查 Accept-Language 头是否按预期设置。</p>
           <div class="mb-3">
             <label for="testLanguage" class="form-label">测试语言:</label>
             <select class="form-select" id="testLanguage">
@@ -79,33 +96,39 @@
         </div>
       </div>
     </div>
-    
-    <!-- 问题修复 -->
+
+    <div class="debug-section mt-4">
+      <h4>实时日志</h4>
+       <p class="text-muted">显示扩展运行时发送的日志信息，帮助追踪问题。</p>
+      <div id="logOutput" class="debug-result"></div>
+      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2">清除日志</button>
+    </div>
+
     <div class="debug-section mt-4">
       <h4>常见问题修复</h4>
+      <p class="text-muted">尝试自动修复一些常见的配置问题。</p>
       <div class="list-group">
         <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
           <strong>修复规则优先级</strong> - 将动态规则优先级提高到100以覆盖静态规则
         </button>
         <button id="disableStaticRulesBtn" class="list-group-item list-group-item-action">
-          <strong>禁用静态规则</strong> - 临时禁用manifest中的静态规则集
+          <strong>禁用静态规则</strong> - 临时禁用manifest中的静态规则集 (需手动修改 manifest.json)
         </button>
         <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
-          <strong>清除所有规则</strong> - 删除所有动态规则并重新应用
+          <strong>清除并重新应用规则</strong> - 删除所有动态规则并使用当前设置重新创建
         </button>
       </div>
       <div id="fixResult" class="debug-result mt-3">选择一个修复选项...</div>
     </div>
-    
-    <!-- 诊断信息 -->
+
     <div class="debug-section mt-4">
       <h4>扩展诊断信息</h4>
+      <p class="text-muted">显示扩展的基本信息、权限和配置。</p>
       <button id="showDiagnosticsBtn" class="btn btn-info">显示诊断信息</button>
       <div id="diagnosticsResult" class="debug-result">点击按钮查看诊断信息...</div>
     </div>
   </div>
-  
-  <!-- 引入调试脚本 -->
+
   <script src="debug-headers.js"></script>
   <script src="debug-ui.js"></script>
 </body>
