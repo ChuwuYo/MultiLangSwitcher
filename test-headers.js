@@ -206,62 +206,106 @@ function fetchAndDisplayHeaders() {
   const headerLanguageInfo = document.getElementById('headerLanguageInfo');
   headerInfoElement.textContent = '正在获取请求头信息...';
   headerLanguageInfo.textContent = '正在检测...';
-  
+
   // 使用随机参数避免缓存
   const timestamp = new Date().getTime();
-  
-  // 创建一个请求来获取请求头信息
-  fetch(`https://httpbin.org/headers?_=${timestamp}`, {
-    cache: 'no-store', // 完全禁用缓存
-    credentials: 'omit' // 不发送cookies
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP错误! 状态: ${response.status}`);
+
+  // 定义服务 URL 列表，按优先级排序
+  const urls = [
+    `https://httpbin.org/headers?_=${timestamp}`,
+    `https://postman-echo.com/headers?_=${timestamp}`
+  ];
+
+  // 函数用于处理成功的响应数据
+  function processHeadersData(data) {
+    const headers = data.headers;
+    let formattedHeaders = JSON.stringify(headers, null, 2);
+    headerInfoElement.textContent = formattedHeaders;
+
+    // 清除之前的语言设置信息
+    const previousLanguageInfo = document.querySelector('.alert-info p.mt-2');
+    if (previousLanguageInfo) {
+      previousLanguageInfo.remove();
+    }
+
+    // 高亮显示Accept-Language头
+    if (headers['Accept-Language']) {
+      const acceptLanguage = headers['Accept-Language'];
+      document.querySelector('.alert-info').innerHTML +=
+        `<p class="mt-2 mb-0">检测到的语言设置: <strong class="text-success">${acceptLanguage}</strong></p>`;
+      console.log('检测到的Accept-Language:', acceptLanguage);
+
+      // 更新请求头语言卡片
+      headerLanguageInfo.innerHTML = `
+        <p class="mb-1"><strong>当前值:</strong></p>
+        <p class="text-success fw-bold">${acceptLanguage}</p>
+        <p class="mb-0 mt-2 small text-muted">通过请求头检测</p>
+      `;
+    } else {
+      console.log('未检测到Accept-Language请求头');
+      document.querySelector('.alert-info').innerHTML +=
+        `<p class="mt-2 mb-0 text-warning">未检测到Accept-Language请求头</p>`;
+
+      // 更新请求头语言卡片
+      headerLanguageInfo.innerHTML = `
+        <p class="text-warning">未检测到Accept-Language请求头</p>
+      `;
+    }
+  }
+
+  // 函数用于处理请求失败的情况并尝试下一个 URL
+  function handleFetchError(error, urlIndex) {
+    console.error(`从 ${urls[urlIndex]} 获取请求头失败:`, error);
+
+    if (urlIndex < urls.length - 1) {
+      // 如果还有备用 URL，尝试下一个
+      headerInfoElement.textContent = `从 ${urls[urlIndex]} 获取失败，尝试从 ${urls[urlIndex + 1]} 获取...`;
+      // 调用 fetchChain 处理下一个 URL
+      return fetchChain(urlIndex + 1);
+    } else {
+      // 所有 URL 都尝试失败了
+      let errorMessage = error.message;
+      if (error.message.includes('503')) {
+        errorMessage = 'HTTP 错误! 状态: 503 (服务暂时不可用)。';
+      } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        errorMessage = '网络错误或 CORS 策略阻止了请求。';
       }
-      return response.json();
-    })
-    .then(data => {
-      // 格式化并显示请求头
-      const headers = data.headers;
-      let formattedHeaders = JSON.stringify(headers, null, 2);
-      headerInfoElement.textContent = formattedHeaders;
-      
-      // 清除之前的语言设置信息
-      const previousLanguageInfo = document.querySelector('.alert-info p.mt-2');
-      if (previousLanguageInfo) {
-        previousLanguageInfo.remove();
-      }
-      
-      // 高亮显示Accept-Language头
-      if (headers['Accept-Language']) {
-        const acceptLanguage = headers['Accept-Language'];
-        document.querySelector('.alert-info').innerHTML += 
-          `<p class="mt-2 mb-0">检测到的语言设置: <strong class="text-success">${acceptLanguage}</strong></p>`;
-        console.log('检测到的Accept-Language:', acceptLanguage);
-        
-        // 更新请求头语言卡片
-        headerLanguageInfo.innerHTML = `
-          <p class="mb-1"><strong>当前值:</strong></p>
-          <p class="text-success fw-bold">${acceptLanguage}</p>
-          <p class="mb-0 mt-2 small text-muted">通过请求头检测</p>
-        `;
-      } else {
-        console.log('未检测到Accept-Language请求头');
-        document.querySelector('.alert-info').innerHTML += 
-          `<p class="mt-2 mb-0 text-warning">未检测到Accept-Language请求头</p>`;
-        
-        // 更新请求头语言卡片
-        headerLanguageInfo.innerHTML = `
-          <p class="text-warning">未检测到Accept-Language请求头</p>
-        `;
-      }
-    })
-    .catch(error => {
-      console.error('获取请求头失败:', error);
-      headerInfoElement.textContent = '获取请求头信息失败: ' + error.message;
-      headerLanguageInfo.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    });
+      const finalErrorMessage = `获取请求头信息失败: ${errorMessage} (所有备用服务均失败)`;
+      headerInfoElement.textContent = finalErrorMessage;
+      headerLanguageInfo.innerHTML = `<p class="text-danger">检测失败: ${finalErrorMessage}</p>`;
+      // 抛出错误以便后续可能的全局错误处理
+      throw new Error(finalErrorMessage);
+    }
+  }
+
+  // 链式调用 fetch 的函数
+  function fetchChain(urlIndex) {
+    const currentUrl = urls[urlIndex];
+    return fetch(currentUrl, {
+        cache: 'no-store', // 完全禁用缓存
+        credentials: 'omit' // 不发送cookies
+      })
+      .then(response => {
+        if (!response.ok) {
+          // 如果响应状态不是成功的 (例如 404, 500 等)
+          // 抛出一个带状态码的错误，由 catch 捕获并尝试下一个 URL
+          throw new Error(`HTTP错误! 状态: ${response.status} 来自 ${currentUrl}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        // 如果成功，处理数据并停止链式调用
+        processHeadersData(data);
+        // 返回一个已解决的 Promise，防止链式调用继续到下一个 catch
+        return Promise.resolve();
+      })
+      .catch(error => {
+        // 捕获错误，并尝试下一个 URL 或报告最终失败
+        return handleFetchError(error, urlIndex);
+      });
+  }
+  // 从第一个 URL 开始执行链式调用
+  fetchChain(0);
 }
 
 // 检测 JavaScript 语言偏好
