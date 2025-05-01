@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "MultiLangSwitcher",
-  "version": "1.1",
-  "description": "快速切换浏览器请求头语言和JavaScript语言偏好设置",
+  "version": "0.4.0",
+  "description": "快速切换浏览器请求头语言",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
