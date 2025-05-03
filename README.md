@@ -20,6 +20,8 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
     
 </div>
 
+---
+
 同时建议在浏览器语言设置如图设置
 
 <div align="center">
