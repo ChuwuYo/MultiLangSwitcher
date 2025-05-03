@@ -10,9 +10,23 @@ Project Overview
 
 ---
 
-MultiLangSwitcher is a Chrome browser extension that helps users quickly switch the `Accept-Language` HTTP request header sent by the browser. It is very useful for front-end developers, testers, and users who want to customize the language display of websites.
+MultiLangSwitcher is a Chrome browser extension that helps users quickly switch the `Accept-Language` HTTP request header sent by the browser.
 
-The extension utilizes the efficient `chrome.declarativeNetRequest` API to modify headers, ensuring performance and privacy.
+The extension utilizes the efficient `chrome.declarativeNetRequest` API to modify the request header, ensuring performance and privacy.
+
+<div align="center">
+    <img src="https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b" alt="MultiLangSwitcher Home">
+
+</div>
+
+---
+
+It is also recommended to set the browser language settings as shown in the image.
+
+<div align="center">
+    <img src="https://github.com/user-attachments/assets/77b5a1e7-da33-4b36-a522-60ab6341a126" alt="Suggestion">
+
+</div>
 
 ***
 
@@ -22,17 +36,17 @@ Features
 
 ***
 
-* **Quick Language Switching**: Select and apply your preferred language easily through the browser toolbar's popup interface, offering a rich list of languages.
-* **Persistent Settings**: Your last selected language preference is automatically saved and applied upon every browser startup.
-* **Efficient Header Modification**: Uses the `declarativeNetRequest` API to directly modify request headers, which is more efficient than the WebRequest API and doesn't impact performance.
-* **Automatic Background Application**: The extension automatically reads and applies the saved language settings when the browser starts or the extension is installed/updated.
-* **Comprehensive Test Page**: Provides a `/test-headers.html` page to visually verify if the `Accept-Language` header has been correctly changed. It also detects browser-exposed JavaScript language preferences (`navigator.language`, `navigator.languages`), Internationalization API (Intl), WebRTC local IP leaks, and potential browser fingerprinting information like Canvas, WebGL, and AudioContext, helping you understand and control the information your browser exposes.
-* **Powerful Debugging Tools**: Offers a dedicated `/debug.html` page with diagnostic and fixing tools:
-    * **Rule Information**: View details of the dynamic rules currently applied by `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matched rule information (matched URL, resource type, etc.).
-    * **Header Test**: Manually select a language and send a request to a test service to directly view the actual request headers sent by the browser.
-    * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background scripts) in real-time, aiding in tracking code execution and issues.
-    * **Common Issue Fixes**: Provides one-click operations to resolve common problems, such as increasing rule priority to avoid conflicts with other rules or clearing and reapplying rules.
-    * **Extension Diagnostics**: Displays basic extension information, declared permissions, Manifest configuration, and stored language settings, offering a comprehensive view of the extension's state.
+* **Quick Language Switching**: Provides a rich language list through the browser toolbar popup interface for you to choose and apply.
+* **Persistent Settings**: Your last selected language preference will be automatically saved and loaded and applied each time the browser starts.
+* **Efficient Header Modification**: Utilizes the `declarativeNetRequest` API to directly modify the request header, which is more efficient and does not affect performance compared to the WebRequest API.
+* **Automatic Background Application**: The extension automatically reads and applies the saved language settings when the browser starts and when it is installed/updated.
+* **Comprehensive Test Page**: Provides a `/test-headers.html` page to intuitively verify whether the `Accept-Language` header has been successfully changed, and to detect the language preferences exposed by the browser (`navigator.language`, `navigator.languages`), internationalization API (Intl), and other information. It also includes detection of WebRTC local IP leakage and possible browser fingerprinting information such as Canvas, WebGL, AudioContext, etc., helping you understand and control the information exposed by the browser.
+* **Powerful Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
+    * **Rule Information**: View the details of the dynamic rules currently set by the extension through `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matching rule information (matched URL, resource type, etc.).
+    * **Header Testing**: Manually select a language and send a request to the test service to directly view the actual request header sent by the browser.
+    * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background service) during runtime, helping to track code execution and issues.
+    * **Common Issue Fixes**: Provides one-click operations, such as increasing rule priority to resolve potential conflicts with browser or other extension rules, or clearing and reapplying rules.
+    * **Extension Diagnostic Information**: Displays the extension ID, version, Manifest configuration, permission status, and language settings saved in local storage, providing comprehensive runtime information for the extension.
 
 ***
 
@@ -44,18 +58,18 @@ Installation Guide
 
 ### Install from Chrome Web Store (Not Published)
 
-Currently only supports installation from source.
+Currently, only installation from source code is supported.
 
 ### Install from Source Code
 
-1.  **Download or Clone**: Clone or download the project repository to your local computer.(Or download the ZIP from release and unzip it)
+1.  **Download or Clone the Code**: Clone the project repository to your local computer. (Or download the ZIP from the release and unzip it)
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
-2.  **Open Extensions Management**: In the Chrome browser address bar, type `chrome://extensions/` and press Enter to go to the extensions management page.
-3.  **Enable Developer Mode**: Turn on the "Developer mode" toggle in the top right corner of the page.
-4.  **Load Unpacked**: Click the "Load unpacked" button in the top left corner of the page, and select the MultiLangSwitcher project folder you downloaded.
-5.  **Done**: The extension will appear in your extensions list, indicating successful installation.
+2.  **Open Chrome Extensions Management**: Enter `chrome://extensions/` in the Chrome browser address bar and press Enter to go to the Extensions management page.
+3.  **Enable Developer Mode**: Turn on the "Developer mode" switch in the top right corner of the page.
+4.  **Load Unpacked Extension**: Click the "Load unpacked" button in the top left corner of the page and select the MultiLangSwitcher project folder you downloaded.
+5.  **Complete**: The extension will be successfully added to the Chrome browser, and you can start using it.
 
 ***
 
@@ -65,10 +79,10 @@ Usage
 
 ***
 
-1.  **Open Extension Popup**: Click the MultiLangSwitcher icon in the browser toolbar.
-2.  **Select Preferred Language**: Choose the language you want the browser to simulate from the dropdown menu.
-3.  **Apply Settings**: Click the "应用更改" (Apply Changes) button at the bottom of the interface. Your settings will be saved and immediately applied to new network requests.
-4.  **Verify and Debug**: Click the "检测页面" (Test Page) or "调试工具" (Debug Tools) links provided in the popup to verify if the language settings are effective or to diagnose issues.
+1.  **Open the Extension Popup**: Click the MultiLangSwitcher extension icon in the browser toolbar.
+2.  **Select Preferred Language**: In the popup dropdown menu, select the language you want the browser to simulate.
+3.  **Apply Settings**: Click the "Apply Changes" button at the bottom of the interface. Your settings will be saved and immediately applied to new network requests.
+4.  **Verification and Debugging**: Click the "Detection Page" or "Debugging Tools" links provided in the popup to verify if the language settings are effective, or to diagnose issues when they occur.
 
 ***
 
@@ -79,18 +93,18 @@ File Structure
 ***
 
 * `manifest.json`: Defines the basic information, permissions, and configuration of the extension.
-* `popup.html` / `popup.js`: Implement the extension's popup interface and interaction logic.
-* `background.js`: Runs as a Service Worker in the background, handling extension lifecycle events and initial rule application.
-* `rules.json`: Contains static rules. This project primarily uses dynamic rules for language management.
-* `test-headers.html` / `test-headers.js`: Page and script used for testing browser language and fingerprint information.
-* `debug.html` / `debug-ui.js` / `debug-headers.js`: Files related to the debugging page and its functionalities.
-* `images/`: Folder containing extension icon files.
-* `typefaces/`: Folder containing fonts used by the project.
+* `popup.html` / `popup.js`: Implements the extension popup interface and interaction logic.
+* `background.js`: Runs as a Service Worker in the background, handling extension lifecycle events and rule initialization application.
+* `rules.json`: Contains static rules file, this project mainly manages language settings through dynamic rules.
+* `test-headers.html` / `test-headers.js`: Page and script for testing browser language and fingerprinting information.
+* `debug.html` / `debug-ui.js` / `debug-headers.js`: Implements the debugging page and its functions.
+* `images/`: Stores extension icon files.
+* `typefaces/`: Stores font files used by the project.
 
 ***
 
 <div align="center">
-Acknowledgements
+Thanks to Contributors
 </div>
 
 <div align="center">
