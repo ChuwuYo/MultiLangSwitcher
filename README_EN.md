@@ -48,7 +48,7 @@ Currently only supports installation from source.
 
 ### Install from Source Code
 
-1.  **Download or Clone**: Clone or download the project repository to your local computer.
+1.  **Download or Clone**: Clone or download the project repository to your local computer.(Or download the ZIP from release and unzip it)
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
