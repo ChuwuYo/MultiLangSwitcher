@@ -14,6 +14,8 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 扩展利用高效的 `chrome.declarativeNetRequest` API 来修改请求头，确保性能和隐私。
 
+如果需要切换浏览器UA可以看一下这个项目：[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
+
 <div align="center">
     <img src="https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b" alt="MultiLangSwitcher Home">
 
