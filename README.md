@@ -25,7 +25,7 @@ MultiLangSwitcher 是一个 Chrome 浏览器扩展，帮助用户快速切换浏
 同时建议在浏览器语言设置如图设置,这样做可以混淆一些简单的navigator.languages检测。
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/77b5a1e7-da33-4b36-a522-60ab6341a126" alt="Suggestion">
+    <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
 
     
 </div>
