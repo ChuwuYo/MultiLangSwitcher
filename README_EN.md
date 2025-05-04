@@ -10,7 +10,7 @@ Project Overview
 
 ---
 
-MultiLangSwitcher is a Chrome browser extension that helps users quickly switch the `Accept-Language` HTTP request header sent by the browser.
+MultiLangSwitcher is a Chromium - based browser extension that helps users quickly switch the `Accept - Language` HTTP request header sent by the browser.
 
 The extension utilizes the efficient `chrome.declarativeNetRequest` API to modify the request header, ensuring performance and privacy.
 
