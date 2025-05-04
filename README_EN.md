@@ -24,7 +24,7 @@ The extension utilizes the efficient `chrome.declarativeNetRequest` API to modif
 At the same time, it is recommended to set the browser language settings as shown in the figure, this can confuse some simple navigators. languages detection.
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/77b5a1e7-da33-4b36-a522-60ab6341a126" alt="Suggestion">
+    <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
 
 </div>
 
