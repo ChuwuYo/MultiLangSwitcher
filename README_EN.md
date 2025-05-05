@@ -44,7 +44,7 @@ Features
 * **Efficient Header Modification**: Utilizes the `declarativeNetRequest` API to directly modify the request header, which is more efficient and does not affect performance compared to the WebRequest API.
 * **Automatic Background Application**: The extension automatically reads and applies the saved language settings when the browser starts and when it is installed/updated.
 * **Comprehensive Test Page**: Provides a `/test-headers.html` page to intuitively verify whether the `Accept-Language` header has been successfully changed, and to detect the language preferences exposed by the browser (`navigator.language`, `navigator.languages`), internationalization API (Intl), and other information. It also includes detection of WebRTC local IP leakage and possible browser fingerprinting information such as Canvas, WebGL, AudioContext, etc., helping you understand and control the information exposed by the browser.
-* **Powerful Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
+* **Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
     * **Rule Information**: View the details of the dynamic rules currently set by the extension through `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matching rule information (matched URL, resource type, etc.).
     * **Header Testing**: Manually select a language and send a request to the test service to directly view the actual request header sent by the browser.
     * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background service) during runtime, helping to track code execution and issues.
