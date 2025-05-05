@@ -95,6 +95,44 @@
           <div id="headerTestResult" class="debug-result">点击按钮测试请求头...</div>
         </div>
       </div>
+
+      <!-- 新增：自定义语言设置 -->
+      <div class="col-md-6">
+        <div class="debug-section">
+          <h4>自定义语言偏好</h4>
+          <p class="text-muted">输入完整的 Accept-Language 字符串，例如 "en-US,en;q=0.9,fr;q=0.8"。</p>
+          <div class="mb-3">
+            <label for="customLanguageInput" class="form-label">自定义语言字符串:</label>
+            <input type="text" class="form-control" id="customLanguageInput" placeholder="例如: en-US,en;q=0.9,fr;q=0.8">
+          </div>
+          <button id="applyCustomLangBtn" class="btn btn-primary">应用自定义语言</button>
+          <div id="customLangResult" class="debug-result mt-2"></div>
+        </div>
+      </div>
+      <!-- 自定义语言设置结束 -->
+
+      <!-- Accept-Language 格式说明卡片 -->
+      <div class="col-md-6">
+        <div class="debug-section">
+          <h4>Accept-Language 格式说明</h4>
+          <p class="text-muted">了解 Accept-Language 请求头的结构。</p>
+          <p><strong>基本格式:</strong></p>
+          <ul>
+            <li><code>语言代码</code> (必需): 如 <code>en</code> (英语), <code>zh</code> (中文)。使用 ISO 639-1 标准。</li>
+            <li><code>-地区代码</code> (可选): 如 <code>US</code> (美国), <code>CN</code> (中国大陆), <code>HK</code> (香港)。使用 ISO 3166-1 Alpha 2 标准。</li>
+            <li><code>;q=权重值</code> (可选): 范围 0 到 1，表示优先级，默认为 1。</li>
+          </ul>
+          <p><strong>示例:</strong></p>
+          <ul>
+            <li><code>en-US</code>: 美国英语</li>
+            <li><code>zh-CN</code>: 简体中文 (中国大陆)</li>
+            <li><code>fr</code>: 法语 (不指定地区)</li>
+            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: 优先美国英语，其次是通用英语，然后是简体中文。</li>
+          </ul>
+          <p class="small text-muted">请按照此格式在上方输入框中设置自定义语言。</p>
+        </div>
+      </div>
+      <!-- Accept-Language 格式说明卡片结束 -->
     </div>
 
     <div class="debug-section mt-4">

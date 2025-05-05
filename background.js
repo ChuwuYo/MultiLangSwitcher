@@ -212,16 +212,85 @@ chrome.runtime.onStartup.addListener(function() {
   });
 });
 
-// 监听来自Popup或其他页面的消息 (例如调试日志)
+// 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.type === 'SET_LANGUAGE') {
-        // 示例：通过消息设置语言并更新规则 (如果需要的话)
-        if (request.language) {
-             updateHeaderRules(request.language);
-             sendBackgroundLog(`通过消息接收到语言设置请求: ${request.language}`, 'info');
-             // 可以选择发送一个响应回发送者
-             // sendResponse({status: 'success', message: 'Language updated'});
-        }
+  if (request.type === 'UPDATE_RULES') {
+    try { // Add try block
+      const language = request.language;
+      sendBackgroundLog(`收到更新规则请求，语言: ${language}`, 'info');
+      updateHeaderRules(language)
+        .then(result => {
+          sendBackgroundLog(`规则更新完成，状态: ${result.status}`, 'info');
+          // 保存语言设置到 storage
+          chrome.storage.local.set({ currentLanguage: language }, () => {
+            if (chrome.runtime.lastError) {
+              sendBackgroundLog(`保存语言设置 ${language} 到 storage 失败: ${chrome.runtime.lastError.message}`, 'error');
+            } else {
+              sendBackgroundLog(`语言设置 ${language} 已成功保存到 storage`, 'success');
+            }
+            // 在保存操作完成后发送响应
+            if (chrome.runtime.lastError) {
+               sendBackgroundLog(`Error before sending success response: ${chrome.runtime.lastError.message}`, 'error');
+            } else if (typeof sendResponse === 'function') {
+               sendResponse({ status: 'success', language: result.language });
+            } else {
+               sendBackgroundLog('sendResponse 在 then 块中不可用!', 'warning');
+            }
+          });
+        })
+        .catch(error => {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          sendBackgroundLog(`规则更新失败: ${errorMessage}`, 'error');
+           // Check if sendResponse is still valid
+          if (chrome.runtime.lastError) {
+             sendBackgroundLog(`Error before sending error response: ${chrome.runtime.lastError.message}`, 'error');
+          } else if (typeof sendResponse === 'function') { // Check if function exists
+             sendResponse({ status: 'error', message: `规则更新时发生错误: ${errorMessage}` });
+          } else {
+             sendBackgroundLog('sendResponse 在 catch 块中不可用!', 'error');
+          }
+        });
+    } catch (syncError) { // Add catch block for synchronous errors
+      const errorMessage = syncError instanceof Error ? syncError.message : String(syncError);
+      sendBackgroundLog(`处理 UPDATE_RULES 时发生同步错误: ${errorMessage}`, 'error');
+      // Try to send an error response if possible
+      if (chrome.runtime.lastError) {
+         sendBackgroundLog(`Error before sending sync error response: ${chrome.runtime.lastError.message}`, 'error');
+      } else if (typeof sendResponse === 'function') {
+         sendResponse({ status: 'error', message: `处理规则更新时发生意外错误: ${errorMessage}` });
+      } else {
+         sendBackgroundLog('sendResponse 在同步 catch 块中不可用!', 'error');
+      }
     }
-    // 其他消息类型...
+    // Return true MUST be outside the try...catch to signal async handling
+    return true;
+  } else if (request.type === 'GET_CURRENT_LANGUAGE') {
+    chrome.storage.local.get(['currentLanguage'], function(result) {
+      sendResponse({ language: result.currentLanguage || DEFAULT_LANGUAGE });
+    });
+    return true; // 异步响应
+  }
+  // 对于其他类型的消息，可以添加更多处理逻辑
+});
+
+// 监听存储变化，如果语言设置在其他地方被更改，则更新规则
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+  if (namespace === 'local' && changes.currentLanguage) {
+    const newLanguage = changes.currentLanguage.newValue;
+    const oldLanguage = changes.currentLanguage.oldValue;
+    if (newLanguage && newLanguage !== oldLanguage) {
+      sendBackgroundLog(`检测到存储中的语言变化: ${oldLanguage} -> ${newLanguage}，正在更新规则...`, 'info');
+      updateHeaderRules(newLanguage);
+    }
+  }
+});
+
+// 初始检查和应用规则 (如果浏览器启动时未执行)
+// 这可以确保即使在扩展重新加载后规则也能保持最新
+chrome.runtime.onStartup.addListener(() => {
+    sendBackgroundLog('浏览器启动事件触发，检查并应用规则', 'info');
+    chrome.storage.local.get(['currentLanguage'], function(result) {
+        const language = result.currentLanguage || DEFAULT_LANGUAGE;
+        updateHeaderRules(language);
+    });
 });

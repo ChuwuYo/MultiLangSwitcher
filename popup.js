@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
           message: message,
           logType: logType // 日志级别 (info, warning, error, success)
       }).catch(error => {
-          // 如果调试页面未打开，发送消息会失败，捕获错误避免控制台报错
+          // 如果调试页面没打开，发送消息会失败，捕获错误避免控制台报错
           // console.warn("Could not send debug log:", error);
       });
   }
@@ -28,20 +28,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 移除 blur 事件监听器，改为在按钮点击时手动收起
 
-  // 从存储中加载当前语言设置并应用
-  chrome.storage.local.get(['currentLanguage'], function(result) {
-    if (result.currentLanguage) {
-      languageSelect.value = result.currentLanguage;
-      currentLanguage.textContent = result.currentLanguage;
-      sendDebugLog(`已加载存储的语言设置: ${result.currentLanguage}. 应用规则.`, 'info'); // 记录加载的设置
-      updateHeaderRules(result.currentLanguage, false);
+  // 优先从网络请求规则获取当前语言，然后回退到存储
+  const RULE_ID = 1;
+  chrome.declarativeNetRequest.getDynamicRules(function(rules) {
+    const activeRule = rules.find(rule => rule.id === RULE_ID && rule.action.type === 'modifyHeaders' && rule.action.requestHeaders?.some(h => h.header.toLowerCase() === 'accept-language'));
+    let activeLanguage = null;
+
+    if (activeRule) {
+      const headerAction = activeRule.action.requestHeaders.find(h => h.header.toLowerCase() === 'accept-language');
+      if (headerAction) {
+        activeLanguage = headerAction.value;
+        sendDebugLog(`从动态规则中获取到当前语言: ${activeLanguage}.`, 'info');
+        languageSelect.value = activeLanguage;
+        currentLanguage.textContent = activeLanguage;
+      }
+    }
+
+    // 如果没有从规则中获取到语言，则尝试从存储中加载
+    if (!activeLanguage) {
+      sendDebugLog('未从动态规则中获取到语言，尝试从存储加载.', 'info');
+      chrome.storage.local.get(['currentLanguage'], function(result) {
+        if (result.currentLanguage) {
+          languageSelect.value = result.currentLanguage;
+          currentLanguage.textContent = result.currentLanguage;
+          sendDebugLog(`已加载存储的语言设置: ${result.currentLanguage}.`, 'info');
+        } else {
+          // 如果存储中也没有，使用下拉框的默认值
+          const defaultLanguage = languageSelect.value;
+          sendDebugLog(`未找到存储的语言设置. 使用默认值: ${defaultLanguage}.`, 'warning');
+          currentLanguage.textContent = defaultLanguage;
+          // 可选：如果希望默认值也保存，可以在这里取消注释
+          // chrome.storage.local.set({currentLanguage: defaultLanguage});
+        }
+      });
     } else {
-      // 如果没有保存的语言设置，使用默认值并应用
-      const defaultLanguage = languageSelect.value;
-      sendDebugLog(`未找到存储的语言设置. 使用默认值: ${defaultLanguage}. 保存并应用规则.`, 'warning'); // 记录默认设置
-      chrome.storage.local.set({currentLanguage: defaultLanguage});
-      currentLanguage.textContent = defaultLanguage;
-      updateHeaderRules(defaultLanguage, false);
+       // 如果从规则获取到了，也更新一下存储，保持同步（可选，看需求）
+       // chrome.storage.local.set({currentLanguage: activeLanguage});
     }
   });
 
