@@ -18,6 +18,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b" alt="MultiLangSwitcher Home">
+    <img src="https://github.com/user-attachments/assets/c8b4238b-1d4a-4c51-87ea-505f9485fca4” alt="Custom">
 
     
 </div>
@@ -50,6 +51,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 * **调试工具**: 提供一个独立的 `/debug.html` 页面，包含以下诊断和修复工具：
     * **规则信息**: 查看扩展当前通过 `declarativeNetRequest` 设置的动态规则详情，包括规则 ID、优先级、操作、条件，以及最近匹配到的规则信息（匹配的 URL、资源类型等）。
     * **请求头测试**: 手动选择语言并向测试服务发送请求，直接查看浏览器实际发送的请求头。
+    * **自定义Accept-Language 字符串**：自定义语言偏好,输入完整的 Accept-Language 字符串并保存。
     * **实时日志**: 接收并显示扩展（包括弹出页和后台服务）在运行时发送的日志消息，帮助追踪代码执行和问题。
     * **常见问题修复**: 提供一键操作，例如提高规则优先级以解决可能与浏览器或其他扩展的规则冲突，或清除并重新应用规则。
     * **扩展诊断信息**: 显示扩展ID、版本、Manifest配置、权限状态以及本地存储中保存的语言设置，提供全面的扩展运行时信息。
