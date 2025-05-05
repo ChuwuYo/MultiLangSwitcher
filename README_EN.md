@@ -24,13 +24,13 @@ If you need to switch the browser UA, you can take a look at this project:[User-
 
 ---
 
-At the same time, it is recommended to set the browser language settings as shown in the figure, this can confuse some simple navigators. languages detection.
+At the same time, it is recommended to set the browser language settings as shown in the figure, this can confuse some simple  `navigator.languages`  detection.
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
 </div>
 
-This is a demonstration of customizing the Accept-Language string.
+This is a demonstration of customizing the `Accept - Language` string.
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/4136c601-5f02-467e-9f42-12eefb5a65dc" alt="Custom Accept-Language">
