@@ -47,7 +47,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 * **高效请求头修改**: 利用 `declarativeNetRequest` API，直接修改请求头，相比 WebRequest API 更加高效且不影响性能。
 * **后台自动应用**: 扩展在浏览器启动和安装/更新时，会自动读取并应用保存的语言设置。
 * **全面的测试页面**: 提供一个 `/test-headers.html` 页面，用于直观地验证 `Accept-Language` 头是否已成功更改，并检测浏览器暴露的 JavaScript 语言偏好 (`navigator.language`, `navigator.languages`)、国际化 API (Intl) 等信息。同时，还包含 WebRTC 本地 IP 泄露以及 Canvas、WebGL、AudioContext 等可能的浏览器指纹信息检测，帮助您了解和控制浏览器暴露的信息。
-* **强大的调试工具**: 提供一个独立的 `/debug.html` 页面，包含以下诊断和修复工具：
+* **调试工具**: 提供一个独立的 `/debug.html` 页面，包含以下诊断和修复工具：
     * **规则信息**: 查看扩展当前通过 `declarativeNetRequest` 设置的动态规则详情，包括规则 ID、优先级、操作、条件，以及最近匹配到的规则信息（匹配的 URL、资源类型等）。
     * **请求头测试**: 手动选择语言并向测试服务发送请求，直接查看浏览器实际发送的请求头。
     * **实时日志**: 接收并显示扩展（包括弹出页和后台服务）在运行时发送的日志消息，帮助追踪代码执行和问题。
