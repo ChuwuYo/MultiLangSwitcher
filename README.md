@@ -5,7 +5,7 @@
 ---
 
 <div align="center">
-项目概述
+## 项目概述
 </div>
 
 ---
@@ -37,7 +37,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-功能特性
+## 功能特性
 </div>
 
 ***
@@ -57,7 +57,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-安装指南
+## 安装指南
 </div>
 
 ***
@@ -82,7 +82,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-使用方法
+## 使用方法
 </div>
 
 ***
@@ -95,7 +95,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-文件结构
+## 文件结构
 </div>
 
 ***
@@ -112,7 +112,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-感谢贡献者
+## 感谢贡献者
 </div>
 
 <div align="center">
