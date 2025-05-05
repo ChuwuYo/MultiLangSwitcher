@@ -63,6 +63,8 @@ Installation Guide
 
 Currently, only installation from source code is supported.
 
+Why? Because Google developers need an international payment credit card and $5.
+
 ### Install from Source Code
 
 1.  **Download or Clone the Code**: Clone the project repository to your local computer. (Or download the ZIP from the release and unzip it)
