@@ -10,7 +10,7 @@
 
 ---
 
-MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速切换浏览器发送的 `Accept-Language` HTTP 请求头。
+MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速切换浏览器发送的 `Accept-Language` HTTP 请求头。用户也可以在调试工具页面自定义完整的 Accept-Language 字符串。
 
 扩展利用高效的 `chrome.declarativeNetRequest` API 来修改请求头，确保性能和隐私。
 
