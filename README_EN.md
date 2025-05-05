@@ -52,7 +52,7 @@ Features
 * **Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
     * **Rule Information**: View the details of the dynamic rules currently set by the extension through `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matching rule information (matched URL, resource type, etc.).
     * **Header Testing**: Manually select a language and send a request to the test service to directly view the actual request header sent by the browser.
-    * **Customize Accept-Language String**: To customize the language preference, enter the full Accept-Language string and save it.
+    * **Customize `Accept - Language` String**: To customize the language preference, enter the full `Accept - Language` string and save it.
     * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background service) during runtime, helping to track code execution and issues.
     * **Common Issue Fixes**: Provides one-click operations, such as increasing rule priority to resolve potential conflicts with browser or other extension rules, or clearing and reapplying rules.
     * **Extension Diagnostic Information**: Displays the extension ID, version, Manifest configuration, permission status, and language settings saved in local storage, providing comprehensive runtime information for the extension.
