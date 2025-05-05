@@ -18,9 +18,8 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b" alt="MultiLangSwitcher Home">
-    <img src="https://github.com/user-attachments/assets/c8b4238b-1d4a-4c51-87ea-505f9485fca4” alt="Custom">
 
-    
+
 </div>
 
 ---
@@ -29,11 +28,13 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
-
-    
 </div>
 
+这是自定义Accept-Language 字符串的演示。
 
+<div align="center">
+    <img src="https://github.com/user-attachments/assets/4136c601-5f02-467e-9f42-12eefb5a65dc" alt="Custom Accept-Language">
+</div>
 
 ***
 
