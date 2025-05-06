@@ -184,7 +184,8 @@ function md5(string) {
   }
 
   function str2rstrUTF8(input) {
-    return unescape(encodeURIComponent(input))
+    // 使用 decodeURIComponent 替代已弃用的 unescape
+    return decodeURIComponent(encodeURIComponent(input))
   }
 
   function rawMD5(s) {
@@ -200,8 +201,8 @@ function md5(string) {
 
 // --- End MD5 Hashing Function ---
 
-// 获取并显示当前请求头
-function fetchAndDisplayHeaders() {
+// 获取并显示当前请求头 (并行请求与超时)
+async function fetchAndDisplayHeaders() {
   const headerInfoElement = document.getElementById('headerInfo');
   const headerLanguageInfo = document.getElementById('headerLanguageInfo');
   headerInfoElement.textContent = '正在获取请求头信息...';
@@ -209,8 +210,9 @@ function fetchAndDisplayHeaders() {
 
   // 使用随机参数避免缓存
   const timestamp = new Date().getTime();
+  const TIMEOUT_MS = 5000; // 设置 5 秒超时
 
-  // 定义服务 URL 列表，按优先级排序
+  // 定义服务 URL 列表
   const urls = [
     `https://httpbin.org/headers?_=${timestamp}`,
     `https://postman-echo.com/headers?_=${timestamp}`
@@ -253,59 +255,47 @@ function fetchAndDisplayHeaders() {
     }
   }
 
-  // 函数用于处理请求失败的情况并尝试下一个 URL
-  function handleFetchError(error, urlIndex) {
-    console.error(`从 ${urls[urlIndex]} 获取请求头失败:`, error);
+  // 创建带超时的 fetch Promise
+  function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (urlIndex < urls.length - 1) {
-      // 如果还有备用 URL，尝试下一个
-      headerInfoElement.textContent = `从 ${urls[urlIndex]} 获取失败，尝试从 ${urls[urlIndex + 1]} 获取...`;
-      // 调用 fetchChain 处理下一个 URL
-      return fetchChain(urlIndex + 1);
-    } else {
-      // 所有 URL 都尝试失败了
-      let errorMessage = error.message;
-      if (error.message.includes('503')) {
-        errorMessage = 'HTTP 错误! 状态: 503 (服务暂时不可用)。';
-      } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        errorMessage = '网络错误或 CORS 策略阻止了请求。';
+    return fetch(url, {
+      cache: 'no-store',
+      credentials: 'omit',
+      signal: controller.signal
+    })
+    .then(response => {
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        throw new Error(`HTTP错误! 状态: ${response.status} 来自 ${url}`);
       }
-      const finalErrorMessage = `获取请求头信息失败: ${errorMessage} (所有备用服务均失败)`;
-      headerInfoElement.textContent = finalErrorMessage;
-      headerLanguageInfo.innerHTML = `<p class="text-danger">检测失败: ${finalErrorMessage}</p>`;
-      // 抛出错误以便后续可能的全局错误处理
-      throw new Error(finalErrorMessage);
-    }
+      return response.json();
+    })
+    .catch(error => {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`请求 ${url} 超时 (${timeoutMs}ms)`);
+      }
+      throw error; // 重新抛出其他错误
+    });
   }
 
-  // 链式调用 fetch 的函数
-  function fetchChain(urlIndex) {
-    const currentUrl = urls[urlIndex];
-    return fetch(currentUrl, {
-        cache: 'no-store', // 完全禁用缓存
-        credentials: 'omit' // 不发送cookies
-      })
-      .then(response => {
-        if (!response.ok) {
-          // 如果响应状态不是成功的 (例如 404, 500 等)
-          // 抛出一个带状态码的错误，由 catch 捕获并尝试下一个 URL
-          throw new Error(`HTTP错误! 状态: ${response.status} 来自 ${currentUrl}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        // 如果成功，处理数据并停止链式调用
-        processHeadersData(data);
-        // 返回一个已解决的 Promise，防止链式调用继续到下一个 catch
-        return Promise.resolve();
-      })
-      .catch(error => {
-        // 捕获错误，并尝试下一个 URL 或报告最终失败
-        return handleFetchError(error, urlIndex);
-      });
+  // 使用 Promise.any 并行请求
+  try {
+    const promises = urls.map(url => fetchWithTimeout(url, TIMEOUT_MS));
+    const firstSuccessfulResponse = await Promise.any(promises);
+    processHeadersData(firstSuccessfulResponse);
+  } catch (error) {
+    // 当所有 Promise 都失败时，Promise.any 会抛出 AggregateError
+    console.error('所有获取请求头的尝试都失败了:', error);
+    let combinedErrorMessage = '获取请求头信息失败 (所有服务均失败或超时)。';
+    if (error instanceof AggregateError) {
+        combinedErrorMessage += ' 详细错误: ' + error.errors.map(e => e.message || e).join('; ');
+    }
+    headerInfoElement.textContent = combinedErrorMessage;
+    headerLanguageInfo.innerHTML = `<p class="text-danger">检测失败: ${combinedErrorMessage}</p>`;
   }
-  // 从第一个 URL 开始执行链式调用
-  fetchChain(0);
 }
 
 // 检测 JavaScript 语言偏好
