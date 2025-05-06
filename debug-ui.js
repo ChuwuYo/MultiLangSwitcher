@@ -266,69 +266,87 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-}); // DOMContentLoaded 结束
-// 显示诊断信息
-document.getElementById('showDiagnosticsBtn').addEventListener('click', function () {
-  const resultElement = document.getElementById('diagnosticsResult');
-  resultElement.innerHTML = '正在收集诊断信息...';
-  addLogMessage('尝试显示诊断信息...', 'info'); // 记录操作
+  // 显示诊断信息
+  document.getElementById('showDiagnosticsBtn').addEventListener('click', function () {
+    const resultElement = document.getElementById('diagnosticsResult');
+    resultElement.innerHTML = '正在收集诊断信息...';
+    addLogMessage('尝试显示诊断信息...', 'info'); // 记录操作
 
-  let html = '<h5>扩展信息:</h5>';
-  html += `<p>扩展ID: ${chrome.runtime.id}</p>`;
+    let html = '';
+    try {
+      html = '<h5>扩展信息:</h5>';
+      html += `<p>扩展ID: ${chrome.runtime.id}</p>`;
 
-  // 获取清单文件信息
-  const manifest = chrome.runtime.getManifest();
-  html += '<h5>清单文件信息:</h5>';
-  html += `<p>名称: ${manifest.name}</p>`;
-  html += `<p>版本: ${manifest.version}</p>`;
-  if (manifest.permissions) {
-    html += `<p>权限:</p><ul>`;
-    manifest.permissions.forEach(permission => {
-      html += `<li>${permission}</li>`;
-    });
-    html += '</ul>';
-  } else {
-    html += '<p>未声明权限.</p>';
-  }
+      // 获取清单文件信息
+      const manifest = chrome.runtime.getManifest();
+      html += '<h5>清单文件信息:</h5>';
+      html += `<p>名称: ${manifest.name}</p>`;
+      html += `<p>版本: ${manifest.version}</p>`;
+      if (manifest.permissions) {
+        html += `<p>权限:</p><ul>`;
+        manifest.permissions.forEach(permission => {
+          html += `<li>${permission}</li>`;
+        });
+        html += '</ul>';
+      } else {
+        html += '<p>未声明权限.</p>';
+      }
 
+      // 检查declarativeNetRequest配置
+      if (manifest.declarative_net_request) {
+        html += '<h5>declarativeNetRequest 配置:</h5>';
+        const ruleResources = manifest.declarative_net_request.rule_resources;
+        if (ruleResources && ruleResources.length > 0) {
+          html += '<ul>';
+          ruleResources.forEach(resource => {
+            // 注意：静态规则的 enabled 状态在 manifest.json 中定义，运行时通常不可直接修改或读取其当前生效状态。
+            // 这里显示的是 manifest 中定义的默认状态。
+            const enabledStatus = resource.enabled === false ? '<span class="success">禁用 (manifest)</span>' : '<span class="error">启用 (manifest)</span>';
+            html += `<li>规则集ID: ${resource.id}, 路径: ${resource.path}, 状态: ${enabledStatus}</li>`;
+          });
+          html += '</ul>';
+        } else {
+          html += '<p>未找到静态规则集配置.</p>';
+        }
+        // 'reason' 字段已弃用，但仍可检查以兼容旧版
+        if (manifest.declarative_net_request.hasOwnProperty('reason')) {
+          html += `<p>原因 (Reason): ${manifest.declarative_net_request.reason}</p>`;
+        }
+      } else {
+        html += '<p>未找到 declarativeNetRequest 配置.</p>';
+      }
 
-  // 检查declarativeNetRequest配置
-  if (manifest.declarative_net_request) {
-    html += '<h5>declarativeNetRequest 配置:</h5>';
-    const ruleResources = manifest.declarative_net_request.rule_resources;
-    if (ruleResources && ruleResources.length > 0) {
-      html += '<ul>';
-      ruleResources.forEach(resource => {
-        const enabledStatus = resource.enabled ? '<span class="error">启用</span>' : '<span class="success">禁用</span>';
-        html += `<li>规则集ID: ${resource.id}, 路径: ${resource.path}, 状态: ${enabledStatus}</li>`;
+      // 获取存储的语言设置 (移入 try 块，确保在 manifest 读取成功后执行)
+      chrome.storage.local.get(['currentLanguage'], function (result) {
+        try {
+          if (chrome.runtime.lastError) {
+            throw new Error(`获取存储失败: ${chrome.runtime.lastError.message}`);
+          }
+          html += '<h5>存储的语言设置:</h5>';
+          if (result.currentLanguage) {
+            html += `<p>当前语言: ${result.currentLanguage}</p>`;
+            addLogMessage(`诊断信息: 存储的语言设置为 ${result.currentLanguage}.`, 'info'); // 记录信息
+          } else {
+            html += '<p class="warning">未找到存储的语言设置 (可能使用默认值)</p>';
+            addLogMessage('诊断信息: 未找到存储的语言设置.', 'warning'); // 记录警告
+          }
+          resultElement.innerHTML = html;
+          addLogMessage('诊断信息显示完成.', 'info'); // 记录完成
+        } catch (storageError) {
+          console.error('收集诊断信息时出错 (storage):', storageError);
+          addLogMessage(`收集诊断信息时出错 (storage): ${storageError.message}`, 'error');
+          resultElement.innerHTML = `<p class="error">收集存储信息时出错: ${storageError.message}</p>`;
+        }
       });
-      html += '</ul>';
-    } else {
-      html += '<p>未找到静态规则集配置.</p>';
-    }
-    if (manifest.declarative_net_request.hasOwnProperty('reason')) {
-      html += `<p>原因 (Reason): ${manifest.declarative_net_request.reason}</p>`;
-    }
-  } else {
-    html += '<p>未找到 declarativeNetRequest 配置.</p>';
-  }
 
-
-  // 获取存储的语言设置
-  chrome.storage.local.get(['currentLanguage'], function (result) {
-    html += '<h5>存储的语言设置:</h5>';
-    if (result.currentLanguage) {
-      html += `<p>当前语言: ${result.currentLanguage}</p>`;
-      addLogMessage(`诊断信息: 存储的语言设置为 ${result.currentLanguage}.`, 'info'); // 记录信息
-    } else {
-      html += '<p class="error">未找到存储的语言设置</p>';
-      addLogMessage('诊断信息: 未找到存储的语言设置.', 'warning'); // 记录警告
+    } catch (error) {
+      console.error('收集诊断信息时出错 (manifest/id):', error);
+      addLogMessage(`收集诊断信息时出错 (manifest/id): ${error.message}`, 'error');
+      resultElement.innerHTML = `<p class="error">收集基本信息时出错: ${error.message}</p>`;
     }
-
-    resultElement.innerHTML = html;
-    addLogMessage('诊断信息显示完成.', 'info'); // 记录完成
   });
-});
+
+}); // DOMContentLoaded 结束
 
 // 禁用静态规则说明
 document.getElementById('disableStaticRulesBtn').addEventListener('click', function () {
