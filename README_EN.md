@@ -14,6 +14,7 @@ MultiLangSwitcher is a Chromium - based browser extension that helps users quick
 
 The extension utilizes the efficient `chrome.declarativeNetRequest` API to modify the request header, ensuring performance and privacy.
 
+The website's layout and styling are built with Bootstrap.
 
 If you need to switch the browser UA, you can take a look at this project:[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
