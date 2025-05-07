@@ -214,27 +214,28 @@ async function fetchAndDisplayHeaders() {
 
   // 定义服务 URL 列表
   const urls = [
+    `https://postman-echo.com/headers?_=${timestamp}`,
     `https://httpbin.org/headers?_=${timestamp}`,
-    `https://postman-echo.com/headers?_=${timestamp}`
   ];
 
   // 函数用于处理成功的响应数据
   function processHeadersData(data) {
     const headers = data.headers;
     let formattedHeaders = JSON.stringify(headers, null, 2);
-    headerInfoElement.textContent = formattedHeaders;
+    headerInfoElement.textContent = formattedHeaders; // 主区域仍然显示完整请求头
 
-    // 清除之前的语言设置信息
-    const previousLanguageInfo = document.querySelector('.alert-info p.mt-2');
-    if (previousLanguageInfo) {
-      previousLanguageInfo.remove();
+    // 清除之前 headerInfoElement 内部可能存在的语言设置信息
+    const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
+    if (existingAlertInfoP) {
+        existingAlertInfoP.remove();
     }
 
-    // 高亮显示Accept-Language头
-    if (headers['Accept-Language']) {
-      const acceptLanguage = headers['Accept-Language'];
-      document.querySelector('.alert-info').innerHTML +=
-        `<p class="mt-2 mb-0">检测到的语言设置: <strong class="text-success">${acceptLanguage}</strong></p>`;
+    const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
+
+    if (acceptLanguage) {
+      // 在主区域高亮显示 Accept-Language
+      // document.querySelector('.alert-info').innerHTML += 
+      //  `<p class="mt-2 mb-0">检测到的语言设置: <strong class="text-success">${acceptLanguage}</strong></p>`;
       console.log('检测到的Accept-Language:', acceptLanguage);
 
       // 更新请求头语言卡片
@@ -245,12 +246,13 @@ async function fetchAndDisplayHeaders() {
       `;
     } else {
       console.log('未检测到Accept-Language请求头');
-      document.querySelector('.alert-info').innerHTML +=
-        `<p class="mt-2 mb-0 text-warning">未检测到Accept-Language请求头</p>`;
+      // document.querySelector('.alert-info').innerHTML += 
+      //  `<p class="mt-2 mb-0 text-warning">未检测到Accept-Language请求头</p>`;
 
       // 更新请求头语言卡片
       headerLanguageInfo.innerHTML = `
         <p class="text-warning">未检测到Accept-Language请求头</p>
+        <p class="mt-2">请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>
       `;
     }
   }
@@ -294,7 +296,12 @@ async function fetchAndDisplayHeaders() {
         combinedErrorMessage += ' 详细错误: ' + error.errors.map(e => e.message || e).join('; ');
     }
     headerInfoElement.textContent = combinedErrorMessage;
-    headerLanguageInfo.innerHTML = `<p class="text-danger">检测失败: ${combinedErrorMessage}</p>`;
+    // 更新请求头语言卡片，保持错误信息一致性
+    headerLanguageInfo.innerHTML = `
+      <p class="text-danger">检测失败 (所有服务均失败或超时)。</p>
+      <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
+      <p class="mt-2">请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>
+    `;
   }
 }
 

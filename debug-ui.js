@@ -102,54 +102,87 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
   // 测试请求头
-  document.getElementById('testHeaderBtn').addEventListener('click', function () {
+  document.getElementById('testHeaderBtn').addEventListener('click', async function () {
     const language = document.getElementById('testLanguage').value;
     const resultElement = document.getElementById('headerTestResult');
-    resultElement.innerHTML = `正在测试语言 "${language}" 的请求头...`;
-    addLogMessage(`开始测试请求头，语言: ${language}`, 'info'); // 记录操作
+    resultElement.innerHTML = `正在测试语言 "${language}" 的请求头... (将尝试多个检测点)`;
+    addLogMessage(`开始测试请求头，语言: ${language}`, 'info');
 
-    // 使用随机参数避免缓存
     const timestamp = new Date().getTime();
+    const testUrls = [
+      `https://httpbin.org/headers?_=${timestamp}`,
+      `https://postman-echo.com/headers?_=${timestamp}`
+      // 您可以添加更多测试URL
+    ];
 
-    fetch(`https://httpbin.org/headers?_=${timestamp}`, {
-      cache: 'no-store',
-      credentials: 'omit'
-    })
-      .then(response => {
-        if (!response.ok) {
-          addLogMessage(`请求头测试失败: HTTP错误! 状态: ${response.status}`, 'error'); // 记录错误
-          throw new Error(`HTTP错误! 状态: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        const headers = data.headers;
-        let html = '<h5>收到的请求头:</h5>';
-        html += `<pre>${JSON.stringify(headers, null, 2)}</pre>`;
+    let foundAcceptLanguage = null;
+    let allRequestsFailed = true;
+    let lastError = null;
+    let receivedHeaders = null; // 用于存储第一个成功请求的头信息
 
-        if (headers['Accept-Language']) {
-          const acceptLanguage = headers['Accept-Language'].toLowerCase();
-          const expectedLanguage = language.toLowerCase();
-
-          if (acceptLanguage.includes(expectedLanguage)) {
-            html += `<p class="success">✓ 请求头已成功更改! 当前值: ${headers['Accept-Language']}</p>`;
-            addLogMessage(`请求头测试成功: Accept-Language 为 ${headers['Accept-Language']}`, 'success'); // 记录成功
-          } else {
-            html += `<p class="error">✗ 请求头未成功更改!</p>`;
-            html += `<p>预期包含: ${expectedLanguage}, 实际: ${acceptLanguage}</p>`;
-            addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguage}`, 'error'); // 记录失败
+    const fetchPromises = testUrls.map(url =>
+      fetch(url, { cache: 'no-store', credentials: 'omit' })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP错误! 状态: ${response.status} 从 ${url}`);
           }
-        } else {
-          html += '<p class="error">✗ 未检测到Accept-Language请求头!</p>';
-          addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error'); // 记录错误
-        }
+          return response.json();
+        })
+        .then(data => {
+          allRequestsFailed = false; // 至少有一个请求成功
+          if (!receivedHeaders) receivedHeaders = data.headers; // 保存第一个成功的头信息
+          if (data.headers && data.headers['Accept-Language']) {
+            if (!foundAcceptLanguage) { // 只记录第一个找到的
+              foundAcceptLanguage = data.headers['Accept-Language'];
+            }
+          }
+          return { success: true, data }; // 返回成功标记和数据
+        })
+        .catch(error => {
+          lastError = error; // 记录最后一个错误
+          addLogMessage(`请求 ${url} 失败: ${error.message}`, 'warning');
+          return { success: false, error }; // 返回失败标记和错误
+        })
+    );
 
-        resultElement.innerHTML = html;
-      })
-      .catch(error => {
-        resultElement.innerHTML = `<p class="error">测试失败: ${error.message}</p>`;
-        addLogMessage(`请求头测试捕获到错误: ${error.message}`, 'error'); // 记录捕获的错误
-      });
+    // 等待所有请求完成
+    await Promise.all(fetchPromises);
+
+    let html = '';
+
+    if (receivedHeaders) {
+        html += '<h5>最近一次成功收到的请求头 (来自首个成功响应的检测点):</h5>';
+        html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
+    }
+
+    if (foundAcceptLanguage) {
+      const acceptLanguageValue = foundAcceptLanguage.toLowerCase();
+      const expectedLanguage = language.toLowerCase();
+
+      if (acceptLanguageValue.includes(expectedLanguage)) {
+        html += `<p class="success">✓ 请求头已成功更改! 检测到的值: ${foundAcceptLanguage}</p>`;
+        addLogMessage(`请求头测试成功: Accept-Language 为 ${foundAcceptLanguage}`, 'success');
+      } else {
+        html += `<p class="error">✗ 请求头未成功更改!</p>`;
+        html += `<p>预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguageValue}</p>`;
+        html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+        addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguageValue}`, 'error');
+      }
+    } else if (allRequestsFailed) {
+      html += `<p class="error">✗ 所有测试请求均失败。</p>`;
+      if (lastError) {
+        html += `<p class="error">最后一次错误: ${lastError.message}</p>`;
+      }
+      html += '<p>请检查您的网络连接，或尝试自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+      addLogMessage('请求头测试失败: 所有检测点均未能成功获取请求头.', 'error');
+    } else {
+      // 请求成功，但未检测到 Accept-Language
+      html += '<p class="error">✗ 未在任何检测点检测到Accept-Language请求头!</p>';
+      html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+      addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error');
+    }
+
+    resultElement.innerHTML = html;
   });
 
   // 修复规则优先级

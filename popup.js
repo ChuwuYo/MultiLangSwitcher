@@ -57,12 +57,12 @@ document.addEventListener('DOMContentLoaded', function() {
           const defaultLanguage = languageSelect.value;
           sendDebugLog(`未找到存储的语言设置. 使用默认值: ${defaultLanguage}.`, 'warning');
           currentLanguage.textContent = defaultLanguage;
-          // 可选：如果希望默认值也保存，可以在这里取消注释
+          // 如果希望默认值也保存，可以在这里取消注释
           // chrome.storage.local.set({currentLanguage: defaultLanguage});
         }
       });
     } else {
-       // 如果从规则获取到了，也更新一下存储，保持同步（可选，看需求）
+       // 如果从规则获取到了，也更新一下存储，保持同步
        // chrome.storage.local.set({currentLanguage: activeLanguage});
     }
   });
@@ -91,53 +91,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 快速检查按钮点击事件，获取并显示当前请求头
   if (checkHeaderBtn) {
-    checkHeaderBtn.addEventListener('click', function() {
-      sendDebugLog('点击了快速检查按钮. 正在获取请求头...', 'info'); // 记录按钮点击
+    checkHeaderBtn.addEventListener('click', async function() {
+      sendDebugLog('点击了快速检查按钮. 正在获取请求头...', 'info');
       const headerCheckResult = document.getElementById('headerCheckResult');
       const headerCheckContent = document.getElementById('headerCheckContent');
 
-      // 显示加载状态
       headerCheckResult.classList.remove('d-none');
-      headerCheckContent.textContent = '正在获取请求头信息...';
+      headerCheckContent.textContent = '正在获取请求头信息 (尝试多个检测点)...';
 
-      // 使用随机参数避免缓存并发送请求获取当前请求头
       const timestamp = new Date().getTime();
-      fetch(`https://httpbin.org/headers?_=${timestamp}`, {
-        cache: 'no-cache' // 禁用缓存
-      })
-        .then(response => {
-          if (!response.ok) {
-            sendDebugLog(`快速检查请求失败: HTTP错误! 状态: ${response.status}`, 'error'); // 记录请求错误
-            throw new Error(`HTTP错误! 状态: ${response.status}`);
-          }
-           sendDebugLog('快速检查请求成功，正在处理响应.', 'info'); // 记录请求成功
-          return response.json();
-        })
-        .then(data => {
-          // 格式化并显示请求头，高亮Accept-Language头
-          const headers = data.headers;
-           sendDebugLog('快速检查获取到请求头，正在显示结果.', 'info'); // 记录处理完成
-          let formattedHeaders = JSON.stringify(headers, null, 2);
-          headerCheckContent.textContent = formattedHeaders;
+      const testUrls = [
+        `https://httpbin.org/headers?_=${timestamp}`,
+        `https://postman-echo.com/headers?_=${timestamp}`
+      ];
 
-          if (headers['Accept-Language']) {
-            const acceptLanguage = headers['Accept-Language'].toLowerCase();
-            console.log('检测到的Accept-Language:', acceptLanguage); // 保留控制台日志
-             sendDebugLog(`快速检查检测到 Accept-Language: ${headers['Accept-Language']}.`, 'success'); // 记录检测到的头
-            headerCheckContent.innerHTML = formattedHeaders.replace(
-              `"Accept-Language": "${headers['Accept-Language']}"`, // 使用实际检测到的头进行替换
-              `"Accept-Language": "<span class=\"text-success fw-bold\">${headers['Accept-Language']}</span>"`
-            );
-          } else {
-            console.log('未检测到Accept-Language请求头'); // 保留控制台日志
-             sendDebugLog('快速检查: 未检测到 Accept-Language 请求头.', 'warning'); // 记录警告
+      let success = false;
+      let lastError = null;
+
+      for (const url of testUrls) {
+        try {
+          sendDebugLog(`尝试从 ${url} 获取请求头...`, 'info');
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (!response.ok) {
+            const errorMsg = `HTTP错误! 状态: ${response.status} 从 ${url}`;
+            sendDebugLog(`快速检查请求失败: ${errorMsg}`, 'warning');
+            lastError = new Error(errorMsg);
+            continue; // 尝试下一个URL
           }
-        })
-        .catch(error => {
-          console.error('获取请求头失败:', error); // 保留控制台日志
-          sendDebugLog(`快速检查获取请求头失败: ${error.message}`, 'error'); // 记录错误
-          headerCheckContent.textContent = '获取请求头信息失败: ' + error.message;
-        });
+          const data = await response.json();
+          sendDebugLog(`从 ${url} 成功获取到请求头，正在显示结果.`, 'info');
+          const headers = data.headers;
+          const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
+
+          if (acceptLangHeader) {
+            sendDebugLog(`快速检查检测到 Accept-Language: ${acceptLangHeader}.`, 'success');
+            headerCheckContent.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
+          } else {
+            sendDebugLog(`快速检查: 未在 ${url} 检测到 Accept-Language 请求头.`, 'warning');
+            headerCheckContent.textContent = '未检测到 Accept-Language 请求头。';
+          }
+          success = true;
+          break; // 成功获取，跳出循环
+        } catch (error) {
+          sendDebugLog(`从 ${url} 获取请求头时发生错误: ${error.message}`, 'warning');
+          lastError = error;
+        }
+      }
+
+      if (!success) {
+        console.error('所有检测点获取请求头均失败:', lastError);
+        sendDebugLog(`快速检查获取请求头失败 (所有检测点): ${lastError ? lastError.message : '未知错误'}`, 'error');
+        headerCheckContent.innerHTML = '所有检测点获取请求头信息均失败: ' + (lastError ? lastError.message : '未知错误') +
+          '\n请自行跳转到 <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank" style="color: #007bff;">https://www.browserscan.net/zh</a> 进行查看。';
+      }
     });
   }
 });
