@@ -5,6 +5,7 @@
   <title>MultiLangSwitcher 调试页面</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <link href="theme-switcher.css" rel="stylesheet">
   <style>
     body {
       padding: 20px;
@@ -54,6 +55,7 @@
   </style>
 </head>
 <body>
+  <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
   <div class="container">
     <h2>MultiLangSwitcher 调试工具</h2>
     <p class="lead">此页面帮助您诊断和解决语言偏好设置问题</p>
@@ -191,5 +193,6 @@
 
   <script src="debug-headers.js"></script>
   <script src="debug-ui.js"></script>
+  <script src="theme-switcher.js"></script>
 </body>
 </html>

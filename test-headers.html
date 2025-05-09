@@ -5,6 +5,7 @@
   <title>MultiLangSwitcher 检测页面</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <link href="theme-switcher.css" rel="stylesheet">
   <style>
     body {
       padding: 20px;
@@ -22,6 +23,7 @@
   </style>
 </head>
 <body>
+  <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
   <div class="container">
     <h2>MultiLangSwitcher 测试页面</h2>
     <p class="lead">此页面用于验证MultiLangSwitcher扩展的设置效果</p>
@@ -117,5 +119,6 @@
   
   <!-- 引用外部JavaScript文件替代内联脚本，解决CSP限制问题 -->
   <script src="test-headers.js"></script>
+  <script src="theme-switcher.js"></script>
 </body>
 </html>

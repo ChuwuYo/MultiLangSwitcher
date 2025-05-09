@@ -5,6 +5,7 @@
   <title>MultiLangSwitcher</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <link href="theme-switcher.css" rel="stylesheet">
   <style>
     /* 页面基本样式 */
     body {
@@ -57,7 +58,8 @@
     }
   </style>
 </head>
-<body>
+<body class="popup-body">
+  <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
   <div class="container">
     <div class="header">
       <h4>MultiLangSwitcher</h4>
@@ -125,5 +127,6 @@
   </div>
 
   <script src="popup.js"></script>
+  <script src="theme-switcher.js"></script>
 </body>
 </html>
