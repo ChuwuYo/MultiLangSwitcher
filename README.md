@@ -21,7 +21,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 如果需要切换浏览器UA可以看一下这个项目：[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/5d52f0a5-d012-4a5b-9884-ed839f8b400b" alt="MultiLangSwitcher Home">
+    <img src="https://github.com/user-attachments/assets/ac1eb0ca-4055-48b2-975f-ac7695d43b49" alt="MultiLangSwitcher Home">
 
 
 </div>
