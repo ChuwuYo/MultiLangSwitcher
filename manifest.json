@@ -1,8 +1,10 @@
 {
   "manifest_version": 3,
   "name": "MultiLangSwitcher",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "快速切换浏览器请求头语言",
+  "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",  
+  "author": "ChuwuYo",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
