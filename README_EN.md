@@ -18,7 +18,7 @@ The extension utilizes the efficient `chrome.declarativeNetRequest` API to modif
 
 The website's layout and styling are built with Bootstrap.
 
-If the built-in request header detection encounters an error or does not return results, you can manually navigate to [Browser Detection](https://webcha.cn/) or [BrowserScan](https://www.browserscan.net/zh) for further inspection.
+If the built-in request header detection encounters an error or does not return results, you can manually navigate to [Browser Detection](https://webcha.cn/) 、 [BrowserScan](https://www.browserscan.net/zh) or [header-echo](https://header-echo.addr.tools/) for further inspection.
 
 If you need to switch the browser UA, you can take a look at this project:[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
