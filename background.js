@@ -195,23 +195,6 @@ chrome.runtime.onInstalled.addListener(function(details) {
   });
 });
 
-// 当浏览器启动时触发
-chrome.runtime.onStartup.addListener(function() {
-  sendBackgroundLog('浏览器启动，MultiLangSwitcher 扩展初始化', 'info');
-
-  // 从存储中获取当前语言设置并应用
-  chrome.storage.local.get(['currentLanguage'], function(result) {
-    if (result.currentLanguage) {
-      updateHeaderRules(result.currentLanguage);
-      sendBackgroundLog(`浏览器启动时加载并应用存储的语言设置: ${result.currentLanguage}`, 'info');
-    } else {
-        // 如果浏览器启动时存储中没有设置，也应用默认值，但不改变存储
-         updateHeaderRules(DEFAULT_LANGUAGE);
-         sendBackgroundLog(`浏览器启动时未找到存储的语言设置，应用默认值: ${DEFAULT_LANGUAGE}`, 'warning');
-    }
-  });
-});
-
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.type === 'UPDATE_RULES') {

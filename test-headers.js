@@ -216,6 +216,7 @@ async function fetchAndDisplayHeaders() {
   const urls = [
     `https://postman-echo.com/headers?_=${timestamp}`,
     `https://httpbin.org/headers?_=${timestamp}`,
+    `https://header-echo.addr.tools/?_=${timestamp}`,
   ];
 
   // 函数用于处理成功的响应数据

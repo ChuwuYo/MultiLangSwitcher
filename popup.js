@@ -102,7 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const timestamp = new Date().getTime();
       const testUrls = [
         `https://httpbin.org/headers?_=${timestamp}`,
-        `https://postman-echo.com/headers?_=${timestamp}`
+        `https://postman-echo.com/headers?_=${timestamp}`,
+        `https://header-echo.addr.tools/?_=${timestamp}`
       ];
 
       let success = false;
