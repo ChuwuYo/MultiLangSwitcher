@@ -83,7 +83,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
-2.  **打开 Chrome 扩展管理**: 在 Chrome 浏览器地址栏输入 `chrome://extensions/` / `edge://extensions/` 并回车，进入扩展程序管理页面。
+2.  **打开浏览器扩展管理**: 在 Chrome 浏览器地址栏输入 `chrome://extensions/` / `edge://extensions/` 并回车，进入扩展程序管理页面。
 3.  **开启开发者模式**: 打开页面右上角的“开发者模式”开关。
 4.  **加载已解压的扩展程序**: 点击页面左上角的“加载已解压的扩展程序”按钮，选择您下载的 MultiLangSwitcher 项目文件夹。
 5.  **完成**: 扩展程序将成功添加到浏览器中，您可以开始使用了。
