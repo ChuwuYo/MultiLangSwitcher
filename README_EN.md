@@ -70,7 +70,7 @@ Installation Guide
 
 ***
 
-### Install from Chrome Web Store (Not Published)
+### Install from Chrome Web Store / Microsoft Edge Extensions Home (Not Published)
 
 Currently, only installation from source code is supported.
 
@@ -82,10 +82,10 @@ Why? Because Google developers need an international payment credit card and $5.
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
-2.  **Open Chrome Extensions Management**: Enter `chrome://extensions/` in the Chrome browser address bar and press Enter to go to the Extensions management page.
+2.  **Open Chrome Extensions Management**: Enter `chrome://extensions/` / `edge://extensions/` in the Chrome browser address bar and press Enter to go to the Extensions management page.
 3.  **Enable Developer Mode**: Turn on the "Developer mode" switch in the top right corner of the page.
 4.  **Load Unpacked Extension**: Click the "Load unpacked" button in the top left corner of the page and select the MultiLangSwitcher project folder you downloaded.
-5.  **Complete**: The extension will be successfully added to the Chrome browser, and you can start using it.
+5.  **Complete**: The extension will be successfully added to the browser, and you can start using it.
 
 ***
 
