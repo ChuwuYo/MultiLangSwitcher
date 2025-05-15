@@ -31,21 +31,65 @@ let autoSwitchEnabled = false; // 新增：自动切换状态
 
 // 域名到语言的映射规则（可以自己加）
 const domainLanguageRules = {
-  'cn': 'zh-CN',
-  'tw': 'zh-TW',
-  'jp': 'ja',
-  'kr': 'ko',
-  'uk': 'en-GB',
-  'us': 'en-US',
+  // 亚洲
+  'cn': 'zh-CN', // 中国大陆
+  'tw': 'zh-TW', // 台湾
+  'hk': 'zh-HK', // 香港
+  'jp': 'ja',     // 日本
+  'kr': 'ko',     // 韩国
+  'sg': 'en',     // 新加坡
+  'in': 'en',     // 印度
+  'th': 'th',     // 泰国
+  'vn': 'vi',     // 越南
+  // 北美
+  'us': 'en-US',  // 美国
+  'gov': 'en-US', // 美国政府
+  'ca': 'en',     // 加拿大
+  'mx': 'es',     // 墨西哥
+  // 欧洲
+  'uk': 'en-GB',  // 英国
+  'de': 'de',     // 德国
+  'fr': 'fr',     // 法国
+  'es': 'es',     // 西班牙
+  'ru': 'ru',     // 俄罗斯
+  'it': 'it',     // 意大利
+  'nl': 'nl',     // 荷兰
+  'be': 'nl',     // 比利时
+  'ch': 'de',     // 瑞士
+  'at': 'de',     // 奥地利
+  'pt': 'pt',     // 葡萄牙
+  'se': 'sv',     // 瑞典
+  'no': 'nb',     // 挪威
+  'dk': 'da',     // 丹麦
+  'fi': 'fi',     // 芬兰
+  'pl': 'pl',     // 波兰
+  'cz': 'cs',     // 捷克
+  'hu': 'hu',     // 匈牙利
+  'gr': 'el',     // 希腊
+  'tr': 'tr',     // 土耳其
+  // 大洋洲
+  'au': 'en',     // 澳大利亚
+  'nz': 'en',     // 新西兰
+  // 南美
+  'br': 'pt-BR',  // 巴西
+  'ar': 'es',     // 阿根廷
+  'cl': 'es',     // 智利
+  // 中东
+  'ae': 'ar',     // 阿联酋
+  'sa': 'ar',     // 沙特阿拉伯
+  // 通用顶级域名 (gTLDs) - 默认使用英文作为通用语言
   'com': 'en',
   'net': 'en',
   'org': 'en',
   'io': 'en',
-  'de': 'de',
-  'fr': 'fr',
-  'es': 'es',
-  'ru': 'ru',
-  'it': 'it'
+  'info': 'en',
+  'biz': 'en',
+  'mobi': 'en',
+  'site': 'en',
+  'app': 'en',
+  'online': 'en',
+  'guru': 'en',
+  // ...可以根据需要添加更多gTLDs
 };
 
 // 指数退避重试配置
@@ -261,8 +305,18 @@ function handleAutoSwitch(details) {
         targetLanguage = domainLanguageRules[sld + '.' + tld];
         matchedRule = sld + '.' + tld;
     } else if (tld && domainLanguageRules[tld]) {
+        // 对于 .jp 域名，我们应该使用日语
         targetLanguage = domainLanguageRules[tld];
         matchedRule = tld;
+        
+        // 检查URL路径中是否包含语言代码，如果包含则不覆盖域名规则
+        const pathParts = url.pathname.split('/');
+        const hasLanguageInPath = pathParts.some(part => part === 'en' || part === 'zh' || part === 'fr' || part === 'de' || part === 'es' || part === 'ru' || part === 'it');
+        
+        // 如果URL路径中包含语言代码，记录日志但仍然使用域名规则
+        if (hasLanguageInPath) {
+            sendBackgroundLog(`注意: 域名 ${hostname} 的URL路径中包含语言代码，但仍然使用域名规则 ${matchedRule} -> ${targetLanguage}`, 'info');
+        }
     }
 
     if (targetLanguage) {
@@ -443,6 +497,19 @@ chrome.runtime.onInstalled.addListener(() => {
         }
     });
 });
+
+// 注册网络请求监听器以实现自动切换 (Manifest V3 compatible)
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  function(details) {
+    if (autoSwitchEnabled) {
+      // 确保自动切换已启用
+      handleAutoSwitch(details);
+    }
+    return {};
+  },
+  {urls: ["<all_urls>"]},
+  ["requestHeaders"]
+);
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
