@@ -31,22 +31,114 @@ let autoSwitchEnabled = false; // 新增：自动切换状态
 
 // 域名到语言的映射规则（可以自己加）
 const domainLanguageRules = {
+  // 中国地区二级域名
+  'com.cn': 'zh-CN',  // 中国商业机构
+  'org.cn': 'zh-CN',  // 中国组织机构
+  'net.cn': 'zh-CN',  // 中国网络服务机构
+  'gov.cn': 'zh-CN',  // 中国政府机构
+  'edu.cn': 'zh-CN',  // 中国教育机构
+  'ac.cn': 'zh-CN',   // 中国科研机构
+  'mil.cn': 'zh-CN',  // 中国军事机构
+  // 美国地区二级域名
+  'com.us': 'en-US',  // 美国商业机构
+  'org.us': 'en-US',  // 美国组织机构
+  'gov.us': 'en-US',  // 美国政府机构
+  'edu.us': 'en-US',  // 美国教育机构
+  'ac.us': 'en-US',   // 美国教育机构
+  // 日本地区二级域名
+  'co.jp': 'ja',      // 日本商业机构
+  'ac.jp': 'ja',      // 日本教育机构
+  'go.jp': 'ja',      // 日本政府机构
+  'or.jp': 'ja',      // 日本组织机构
+  'ne.jp': 'ja',      // 日本网络服务提供商
+  // 韩国地区二级域名
+  'co.kr': 'ko',      // 韩国商业机构
+  'go.kr': 'ko',      // 韩国政府机构
+  'ac.kr': 'ko',      // 韩国教育机构
+  'or.kr': 'ko',      // 韩国组织机构
+  // 新加坡地区二级域名
+  'com.sg': 'en',     // 新加坡商业机构
+  'org.sg': 'en',     // 新加坡组织机构
+  'gov.sg': 'en',     // 新加坡政府机构
+  'edu.sg': 'en',     // 新加坡教育机构
+  // 印度地区二级域名
+  'co.id': 'id',      // 印度商业机构
+  'ac.id': 'id',      // 印度教育机构
+  'go.id': 'id',      // 印度政府机构
+  'or.id': 'id',      // 印度组织机构
+  // 台湾地区二级域名
+  'com.tw': 'zh-TW',  // 台湾商业机构
+  'org.tw': 'zh-TW',  // 台湾组织机构
+  'gov.tw': 'zh-TW',  // 台湾政府机构
+  'edu.tw': 'zh-TW',  // 台湾教育机构
+  // 马来西亚地区二级域名
+  'com.my': 'ms',     // 马来西亚商业机构
+  'org.my': 'ms',     // 马来西亚组织机构
+  'gov.my': 'ms',     // 马来西亚政府机构
+  'edu.my': 'ms',     // 马来西亚教育机构
+  // 香港地区二级域名
+  'com.hk': 'zh-HK',  // 香港商业机构
+  'org.hk': 'zh-HK',  // 香港组织机构
+  'gov.hk': 'zh-HK',  // 香港政府机构
+  'edu.hk': 'zh-HK',  // 香港教育机构
+  // 英国地区二级域名
+  'co.uk': 'en-GB',   // 英国商业机构
+  'org.uk': 'en-GB',  // 英国组织机构
+  'gov.uk': 'en-GB',  // 英国政府机构
+  'ac.uk': 'en-GB',   // 英国教育机构
+  // 法国地区二级域名
+  'com.fr': 'fr',     // 法国商业机构
+  'org.fr': 'fr',     // 法国组织机构
+  'gov.fr': 'fr',     // 法国政府机构
+  'edu.fr': 'fr',     // 法国教育机构
+  // 德国地区二级域名
+  'com.de': 'de',     // 德国商业机构 
+  'org.de': 'de',     // 德国组织机构
+  'gov.de': 'de',     // 德国政府机构
+  'edu.de': 'de',     // 德国教育机构
+  // 意大利地区二级域名
+  'com.it': 'it',     // 意大利商业机构
+  'org.it': 'it',     // 意大利组织机构
+  'gov.it': 'it',     // 意大利政府机构
+  'ac.it': 'it',      // 意大利教育机构
+  // 西班牙地区二级域名
+  'com.es': 'es',     // 西班牙商业机构
+  'org.es': 'es',     // 西班牙组织机构
+  'gov.es': 'es',     // 西班牙政府机构
+  'ac.es': 'es',      // 西班牙教育机构
+  // 俄罗斯地区二级域名
+  'com.ru': 'ru',     // 俄罗斯商业机构
+  'org.ru': 'ru',     // 俄罗斯组织机构
+  'gov.ru': 'ru',     // 俄罗斯政府机构
+  'edu.ru': 'ru',     // 俄罗斯教育机构
+  // 中东地区二级域名
+  'com.ae': 'ar',     // 商业机构
+  'org.ae': 'ar',     // 组织机构
+  'gov.ae': 'ar',     // 政府机构
+  'edu.ae': 'ar',     // 教育机构
+  'com.sa': 'ar',     // 商业机构
+  'org.sa': 'ar',     // 组织机构
+  'gov.sa': 'ar',     // 政府机构
+  'edu.sa': 'ar',     // 教育机构
+
   // 亚洲
-  'cn': 'zh-CN', // 中国大陆
-  'tw': 'zh-TW', // 台湾
-  'hk': 'zh-HK', // 香港
+  'cn': 'zh-CN',  // 中国大陆
+  'tw': 'zh-TW',  // 中国台湾
+  'hk': 'zh-HK',  // 中国香港
   'jp': 'ja',     // 日本
   'kr': 'ko',     // 韩国
   'sg': 'en',     // 新加坡
   'in': 'en',     // 印度
   'th': 'th',     // 泰国
   'vn': 'vi',     // 越南
+  'id': 'id',     // 印度尼西亚
   // 北美
   'us': 'en-US',  // 美国
   'gov': 'en-US', // 美国政府
   'ca': 'en',     // 加拿大
   'mx': 'es',     // 墨西哥
   // 欧洲
+  'eu': 'en',     // 欧盟国家
   'uk': 'en-GB',  // 英国
   'de': 'de',     // 德国
   'fr': 'fr',     // 法国
@@ -67,6 +159,12 @@ const domainLanguageRules = {
   'hu': 'hu',     // 匈牙利
   'gr': 'el',     // 希腊
   'tr': 'tr',     // 土耳其
+  'ie': 'en',     // 爱尔兰
+  'lv': 'lv',     // 拉脱维亚
+  'lt': 'lt',     // 立陶宛
+  'sk': 'sk',     // 斯洛伐克
+  'si': 'sl',     // 斯洛文尼亚
+  'ee': 'et',     // 爱沙尼亚
   // 大洋洲
   'au': 'en',     // 澳大利亚
   'nz': 'en',     // 新西兰
@@ -77,6 +175,9 @@ const domainLanguageRules = {
   // 中东
   'ae': 'ar',     // 阿联酋
   'sa': 'ar',     // 沙特阿拉伯
+  
+  // 非洲基本都使用'en'作为请求头，故不作申明
+
   // 通用顶级域名 (gTLDs) - 默认使用英文作为通用语言
   'com': 'en',
   'net': 'en',
@@ -89,6 +190,13 @@ const domainLanguageRules = {
   'app': 'en',
   'online': 'en',
   'guru': 'en',
+  'xyz': 'en',
+  'tk': 'en',
+  'dev': 'en',
+  'club': 'en',
+  'shop': 'en',
+  'store': 'en',
+  'space': 'en',
   // ...可以根据需要添加更多gTLDs
 };
 
@@ -332,14 +440,9 @@ function handleAutoSwitch(details) {
         sendBackgroundLog(`更新 ${hostname} 的规则时出错: ${error.message}`, 'error');
       });
     } else {
-      // 如果没有匹配到规则，检查TLD是否为'cn'，如果是则使用'zh-CN'
-      let fallbackLanguage = 'en'; // 默认回退到英语
-      if (tld === 'cn') {
-        fallbackLanguage = 'zh-CN';
-        sendBackgroundLog(`自动切换: 域名 ${hostname} 无特定规则但TLD为'cn', 强制使用语言: ${fallbackLanguage}`, 'info');
-      } else {
-        sendBackgroundLog(`自动切换: 域名 ${hostname} 无匹配规则, 默认使用语言: ${fallbackLanguage}`, 'info');
-      }
+      // 如果没有特定域名规则，默认使用英语('en')
+      const fallbackLanguage = 'en'; 
+      sendBackgroundLog(`自动切换: 域名 ${hostname} 无匹配规则, 默认使用语言: ${fallbackLanguage}`, 'info');
       
       updateHeaderRules(fallbackLanguage, 0, true).then(updateResult => {
         if (updateResult.status === 'success' || updateResult.status === 'unchanged') {

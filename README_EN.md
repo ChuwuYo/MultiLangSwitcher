@@ -49,9 +49,10 @@ Features
 ***
 
 * **Quick Language Switching**: Provides a rich language list through the browser toolbar popup interface for you to choose and apply.
-* **Persistent Settings**: Your last selected language preference will be automatically saved and loaded and applied each time the browser starts.
+* **Automatic Language Switching by Domain**: Automatically switch languages based on domain. You can set default languages for specific domains (including top-level domains like `.com`, `.cn` and second-level domains like `com.cn`, `co.jp`). The extension will automatically apply the corresponding language settings when visiting these domains. When no domain rule is matched, English (`en`) is used by default.
+* **Persistent Settings**: Your last selected language preference and the automatic language switching by domain state will be automatically saved and loaded and applied each time the browser starts.
 * **Efficient Header Modification**: Utilizes the `declarativeNetRequest` API to directly modify the request header, which is more efficient and does not affect performance compared to the WebRequest API.
-* **Automatic Background Application**: The extension automatically reads and applies the saved language settings when the browser starts and when it is installed/updated.
+* **Automatic Background Application**: The extension automatically reads and applies the saved language settings and auto-switch state when the browser starts and when it is installed/updated.
 * **Comprehensive Test Page**: Provides a `/test-headers.html` page to intuitively verify whether the `Accept-Language` header has been successfully changed, and to detect the language preferences exposed by the browser (`navigator.language`, `navigator.languages`), internationalization API (Intl), and other information. It also includes detection of WebRTC local IP leakage and possible browser fingerprinting information such as Canvas, WebGL, AudioContext, etc., helping you understand and control the information exposed by the browser.
 * **Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
     * **Rule Information**: View the details of the dynamic rules currently set by the extension through `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matching rule information (matched URL, resource type, etc.).
@@ -59,7 +60,7 @@ Features
     * **Customize `Accept - Language` String**: To customize the language preference, enter the full `Accept - Language` string and save it.
     * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background service) during runtime, helping to track code execution and issues.
     * **Common Issue Fixes**: Provides one-click operations, such as increasing rule priority to resolve potential conflicts with browser or other extension rules, or clearing and reapplying rules.
-    * **Extension Diagnostic Information**: Displays the extension ID, version, Manifest configuration, permission status, and language settings saved in local storage, providing comprehensive runtime information for the extension.
+    * **Extension Diagnostic Information**: Displays the extension ID, version, Manifest configuration, permission status, and language settings and auto-switch state saved in local storage, providing comprehensive runtime information for the extension.
 
 ***
 
@@ -107,14 +108,16 @@ File Structure
 
 ***
 
-* `manifest.json`: Defines the basic information, permissions, and configuration of the extension.
-* `popup.html` / `popup.js`: Implements the extension popup interface and interaction logic.
-* `background.js`: Runs as a Service Worker in the background, handling extension lifecycle events and rule initialization application.
-* `rules.json`: Contains static rules file, this project mainly manages language settings through dynamic rules.
+* `manifest.json`: Defines the basic information, permissions (including `storage` for saving settings, `declarativeNetRequest` for modifying request headers, `tabs` for detecting page URLs to implement automatic language switching by domain), and configuration of the extension.
+* `popup.html` / `popup.js`: Implements the extension popup interface and interaction logic, including manual language switching and the toggle switch for automatic language switching by domain.
+* `background.js`: Runs as a Service Worker in the background, handling extension lifecycle events (such as installation, startup), rule initialization and application, listening for storage changes, and implementing the core logic for automatic language switching by domain (including parsing domains, matching rules, updating request headers). Contains the `domainLanguageRules` object for defining domain-to-language mappings.
+* `rules.json`: Contains static rules file; this project mainly manages language settings through dynamic rules.
 * `test-headers.html` / `test-headers.js`: Page and script for testing browser language and fingerprinting information.
-* `debug.html` / `debug-ui.js` / `debug-headers.js`: Implements the debugging page and its functions.
+* `debug.html` / `debug-ui.js` / `debug-headers.js`: Implements the debugging page and its functions, helping to diagnose issues and view extension status.
 * `images/`: Stores extension icon files.
 * `typefaces/`: Stores font files used by the project.
+* `README.md`: The project's documentation in Chinese.
+* `README_EN.md`: The project's documentation in English.
 
 ***
 
