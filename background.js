@@ -323,32 +323,34 @@ function handleAutoSwitch(details) {
       sendBackgroundLog(`自动切换: 检测到域名 ${hostname} (匹配规则 TLD/SLD: ${matchedRule}), 目标语言: ${targetLanguage}`, 'info');
       updateHeaderRules(targetLanguage, 0, true).then(updateResult => {
         if (updateResult.status === 'success' || updateResult.status === 'unchanged') {
-          // 通知popup更新当前语言显示
-          notifyPopupUIUpdate(true, targetLanguage);
+          sendBackgroundLog(`为 ${hostname} 应用语言 ${targetLanguage} 成功`, 'info');
+          notifyPopupUIUpdate(autoSwitchEnabled, targetLanguage); // 更新UI
+        } else {
+          sendBackgroundLog(`为 ${hostname} 应用语言 ${targetLanguage} 失败: ${updateResult.message}`, 'error');
         }
       }).catch(error => {
-        sendBackgroundLog(`自动切换更新规则失败: ${error.message}`, 'error');
+        sendBackgroundLog(`更新 ${hostname} 的规则时出错: ${error.message}`, 'error');
       });
     } else {
-      // 如果没有特定域名规则，默认使用英语('en')
-      const fallbackLanguage = 'en'; // 固定使用英语作为默认语言
-      // 只有当当前生效语言不是fallbackLanguage时才更新，避免不必要的规则重写
-      chrome.declarativeNetRequest.getDynamicRules(rules => {
-          const currentAppliedRule = rules.find(r => r.id === RULE_ID);
-          const currentAppliedLang = currentAppliedRule?.action.requestHeaders.find(h => h.header === 'Accept-Language')?.value;
-          if (currentAppliedLang !== fallbackLanguage) {
-              sendBackgroundLog(`自动切换: 域名 ${hostname} 无特定匹配规则。默认使用英语(en)`, 'info');
-              updateHeaderRules(fallbackLanguage, 0, true).then(updateResult => {
-                if (updateResult.status === 'success' || updateResult.status === 'unchanged') {
-                  notifyPopupUIUpdate(true, fallbackLanguage);
-                }
-              });
-          } else {
-              // sendBackgroundLog(`自动切换: 域名 ${hostname} 无特定匹配规则，英语(en)已生效。`, 'info');
-              notifyPopupUIUpdate(true, fallbackLanguage); // 确保popup UI是最新的
-          }
+      // 如果没有匹配到规则，检查TLD是否为'cn'，如果是则使用'zh-CN'
+      let fallbackLanguage = 'en'; // 默认回退到英语
+      if (tld === 'cn') {
+        fallbackLanguage = 'zh-CN';
+        sendBackgroundLog(`自动切换: 域名 ${hostname} 无特定规则但TLD为'cn', 强制使用语言: ${fallbackLanguage}`, 'info');
+      } else {
+        sendBackgroundLog(`自动切换: 域名 ${hostname} 无匹配规则, 默认使用语言: ${fallbackLanguage}`, 'info');
+      }
+      
+      updateHeaderRules(fallbackLanguage, 0, true).then(updateResult => {
+        if (updateResult.status === 'success' || updateResult.status === 'unchanged') {
+          sendBackgroundLog(`为 ${hostname} 应用默认/回退语言 ${fallbackLanguage} 成功`, 'info');
+          notifyPopupUIUpdate(autoSwitchEnabled, fallbackLanguage); // 更新UI
+        } else {
+          sendBackgroundLog(`为 ${hostname} 应用默认/回退语言 ${fallbackLanguage} 失败: ${updateResult.message}`, 'error');
+        }
+      }).catch(error => {
+        sendBackgroundLog(`更新 ${hostname} 的默认/回退规则时出错: ${error.message}`, 'error');
       });
-
     }
   } catch (e) {
     sendBackgroundLog(`解析URL或处理自动切换时出错: ${e.message}`, 'error');
