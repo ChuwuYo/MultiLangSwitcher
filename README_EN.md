@@ -7,7 +7,6 @@
 <div align="center">
 Project Overview
 
-<a href="https://deepwiki.com/ChuwuYo/MultiLangSwitcher"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </div>
 
 ---
