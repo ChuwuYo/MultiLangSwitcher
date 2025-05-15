@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const applyButton = document.getElementById('applyButton');
   const currentLanguage = document.getElementById('currentLanguage');
   const checkHeaderBtn = document.getElementById('checkHeaderBtn');
+  const autoSwitchToggle = document.getElementById('autoSwitchToggle'); // 新增：获取自动切换按钮
 
   // 函数：发送日志消息到调试页面
   function sendDebugLog(message, logType = 'info') {
@@ -19,6 +20,38 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   sendDebugLog('Popup 脚本已加载.'); // 脚本加载时发送日志
+
+  // 加载自动切换状态
+  chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+    if (result.autoSwitchEnabled) {
+      autoSwitchToggle.checked = true;
+      sendDebugLog('自动切换功能已加载并启用.', 'info');
+    } else {
+      autoSwitchToggle.checked = false;
+      sendDebugLog('自动切换功能已加载并禁用.', 'info');
+    }
+  });
+
+  // 自动切换按钮事件监听
+  autoSwitchToggle.addEventListener('change', function() {
+    const enabled = this.checked;
+    chrome.storage.local.set({ autoSwitchEnabled: enabled }, function() {
+      sendDebugLog(`自动切换功能状态已保存: ${enabled ? '启用' : '禁用'}.`, 'info');
+      // 通知 background.js 状态已更改
+      chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
+    });
+
+    // 根据开关状态更新UI
+    if (enabled) {
+      languageSelect.disabled = true;
+      applyButton.disabled = true;
+      sendDebugLog('自动切换已启用，禁用手动语言选择和应用按钮。', 'info');
+    } else {
+      languageSelect.disabled = false;
+      applyButton.disabled = false;
+      sendDebugLog('自动切换已禁用，启用手动语言选择和应用按钮。', 'info');
+    }
+  });
 
   // 添加焦点事件监听器来展开下拉框
   languageSelect.addEventListener('focus', function() {
@@ -65,6 +98,18 @@ document.addEventListener('DOMContentLoaded', function() {
        // 如果从规则获取到了，也更新一下存储，保持同步
        // chrome.storage.local.set({currentLanguage: activeLanguage});
     }
+
+    // 根据自动切换状态禁用/启用手动选择
+    chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+      if (result.autoSwitchEnabled) {
+        languageSelect.disabled = true;
+        applyButton.disabled = true;
+        sendDebugLog('自动切换已启用，禁用手动语言选择。', 'info');
+      } else {
+        languageSelect.disabled = false;
+        applyButton.disabled = false;
+      }
+    });
   });
 
   // 应用按钮点击事件，保存设置、更新规则并收起下拉框
@@ -82,7 +127,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 更新请求头规则，并自动触发检查
-    updateHeaderRules(selectedLanguage, true);
+    // 仅在自动切换关闭时才通过手动应用按钮更新规则
+    chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+      if (!result.autoSwitchEnabled) {
+        updateHeaderRules(selectedLanguage, true);
+      } else {
+        sendDebugLog('自动切换已启用，手动应用更改按钮被忽略。', 'warning');
+      }
+    });
 
     // 点击按钮后手动将选择框收起
     languageSelect.size = 1;
@@ -165,6 +217,29 @@ function updateHeaderRules(language, autoCheck = false) {
 
   // 创建规则ID (使用固定ID以便更新)
   const RULE_ID = 1;
+
+  // 监听来自 background.js 的消息，以便在自动切换状态改变时更新UI
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
+      if (request.autoSwitchEnabled) {
+        languageSelect.disabled = true;
+        applyButton.disabled = true;
+        if (autoSwitchToggle) autoSwitchToggle.checked = true;
+        sendDebugLog('接收到后台消息：自动切换已启用，更新UI。', 'info');
+      } else {
+        languageSelect.disabled = false;
+        applyButton.disabled = false;
+        if (autoSwitchToggle) autoSwitchToggle.checked = false;
+        sendDebugLog('接收到后台消息：自动切换已禁用，更新UI。', 'info');
+      }
+      // 如果有当前语言信息，也一并更新
+      if (request.currentLanguage) {
+        currentLanguage.textContent = request.currentLanguage;
+        languageSelect.value = request.currentLanguage;
+        sendDebugLog(`接收到后台消息：当前语言已更新为 ${request.currentLanguage}，更新UI。`, 'info');
+      }
+    }
+  });
 
   // 确保语言值没有多余的空格
   language = language.trim();
