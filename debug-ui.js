@@ -151,8 +151,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let html = '';
 
     if (receivedHeaders) {
-        html += '<h5>最近一次成功收到的请求头 (来自首个成功响应的检测点):</h5>';
-        html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
+      html += '<h5>最近一次成功收到的请求头 (来自首个成功响应的检测点):</h5>';
+      html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
     }
 
     if (foundAcceptLanguage) {
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // 简单的格式验证 (可以根据需要增强)
+    // 简单的格式验证
     // 例如，检查是否包含不允许的字符，或者是否大致符合逗号分隔的模式
     // 这里只做非空检查
     customLangInput.classList.remove('is-invalid'); // 移除之前的错误状态
@@ -349,8 +349,8 @@ document.addEventListener('DOMContentLoaded', function () {
         html += '<p>未找到 declarativeNetRequest 配置.</p>';
       }
 
-      // 获取存储的语言设置 (移入 try 块，确保在 manifest 读取成功后执行)
-      chrome.storage.local.get(['currentLanguage'], function (result) {
+      // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
         try {
           if (chrome.runtime.lastError) {
             throw new Error(`获取存储失败: ${chrome.runtime.lastError.message}`);
@@ -363,8 +363,19 @@ document.addEventListener('DOMContentLoaded', function () {
             html += '<p class="warning">未找到存储的语言设置 (可能使用默认值)</p>';
             addLogMessage('诊断信息: 未找到存储的语言设置.', 'warning'); // 记录警告
           }
+
+          // 添加自动切换状态信息
+          html += '<h5>自动切换功能:</h5>';
+          const autoSwitchStatus = result.autoSwitchEnabled ?
+            '<span class="success">已启用</span>' :
+            '<span class="error">已禁用</span>';
+          html += `<p>状态: ${autoSwitchStatus}</p>`;
+
           resultElement.innerHTML = html;
           addLogMessage('诊断信息显示完成.', 'info'); // 记录完成
+
+          // 同步更新自动切换开关状态
+          document.getElementById('autoSwitchToggle').checked = !!result.autoSwitchEnabled;
         } catch (storageError) {
           console.error('收集诊断信息时出错 (storage):', storageError);
           addLogMessage(`收集诊断信息时出错 (storage): ${storageError.message}`, 'error');
@@ -376,6 +387,125 @@ document.addEventListener('DOMContentLoaded', function () {
       console.error('收集诊断信息时出错 (manifest/id):', error);
       addLogMessage(`收集诊断信息时出错 (manifest/id): ${error.message}`, 'error');
       resultElement.innerHTML = `<p class="error">收集基本信息时出错: ${error.message}</p>`;
+    }
+  });
+
+  // 新增：自动切换功能控制
+  document.getElementById('autoSwitchToggle').addEventListener('change', function () {
+    const isEnabled = this.checked;
+    addLogMessage(`尝试${isEnabled ? '启用' : '禁用'}自动切换功能...`, 'info');
+
+    // 发送消息到 background.js 更新自动切换状态
+    chrome.runtime.sendMessage({
+      type: 'AUTO_SWITCH_TOGGLED',
+      enabled: isEnabled
+    }, function (response) {
+      if (chrome.runtime.lastError) {
+        addLogMessage(`更新自动切换状态失败: ${chrome.runtime.lastError.message}`, 'error');
+      } else if (response && response.status === 'success') {
+        addLogMessage(`自动切换功能已${isEnabled ? '启用' : '禁用'}`, 'success');
+        // 更新存储中的状态
+        chrome.storage.local.set({ autoSwitchEnabled: isEnabled });
+      } else {
+        addLogMessage('更新自动切换状态时收到未知响应', 'warning');
+      }
+    });
+  });
+
+  // 新增：显示域名映射规则
+  document.getElementById('showDomainRulesBtn').addEventListener('click', function () {
+    const resultElement = document.getElementById('domainRulesResult');
+    resultElement.innerHTML = '正在获取域名映射规则...';
+    addLogMessage('尝试获取域名映射规则...', 'info');
+
+    // 从 background.js 获取域名映射规则
+    chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, function (response) {
+      if (chrome.runtime.lastError) {
+        resultElement.innerHTML = `<p class="error">获取域名映射规则失败: ${chrome.runtime.lastError.message}</p>`;
+        addLogMessage(`获取域名映射规则失败: ${chrome.runtime.lastError.message}`, 'error');
+        return;
+      }
+
+      if (response && response.domainRules) {
+        const rules = response.domainRules;
+        let html = '<h5>域名语言映射规则:</h5>';
+
+        // 按类别组织规则
+        const categories = {
+          '二级域名': {},
+          '亚洲': {},
+          '北美': {},
+          '欧洲': {},
+          '大洋洲': {},
+          '南美': {},
+          '中东': {},
+          '通用顶级域名': {}
+        };
+
+        // 对规则进行分类
+        Object.keys(rules).forEach(domain => {
+          const language = rules[domain];
+
+          if (domain.includes('.')) {
+            categories['二级域名'][domain] = language;
+          } else if (['cn', 'tw', 'hk', 'jp', 'kr', 'sg', 'in', 'th', 'vn', 'id'].includes(domain)) {
+            categories['亚洲'][domain] = language;
+          } else if (['us', 'gov', 'ca', 'mx'].includes(domain)) {
+            categories['北美'][domain] = language;
+          } else if (['eu', 'uk', 'de', 'fr', 'es', 'ru', 'it', 'nl', 'be', 'ch', 'at', 'pt', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'hu', 'gr', 'tr', 'ie', 'lv', 'lt', 'sk', 'si', 'ee'].includes(domain)) {
+            categories['欧洲'][domain] = language;
+          } else if (['au', 'nz'].includes(domain)) {
+            categories['大洋洲'][domain] = language;
+          } else if (['br', 'ar', 'cl'].includes(domain)) {
+            categories['南美'][domain] = language;
+          } else if (['ae', 'sa'].includes(domain)) {
+            categories['中东'][domain] = language;
+          } else {
+            categories['通用顶级域名'][domain] = language;
+          }
+        });
+
+        // 生成HTML
+        Object.keys(categories).forEach(category => {
+          const categoryRules = categories[category];
+          const ruleCount = Object.keys(categoryRules).length;
+
+          if (ruleCount > 0) {
+            html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}条规则):</div>`;
+            html += '<div class="matched-rule-detail">';
+
+            // 将规则按字母顺序排序
+            const sortedDomains = Object.keys(categoryRules).sort();
+
+            // 创建表格显示
+            html += '<table class="table table-sm table-striped">';
+            html += '<thead><tr><th>域名</th><th>语言</th></tr></thead>';
+            html += '<tbody>';
+
+            sortedDomains.forEach(domain => {
+              html += `<tr><td>${domain}</td><td>${categoryRules[domain]}</td></tr>`;
+            });
+
+            html += '</tbody></table>';
+            html += '</div>';
+          }
+        });
+
+        resultElement.innerHTML = html;
+        addLogMessage(`成功获取并显示${Object.keys(rules).length}条域名映射规则`, 'success');
+      } else {
+        resultElement.innerHTML = '<p class="error">未能获取域名映射规则或规则为空</p>';
+        addLogMessage('未能获取域名映射规则或规则为空', 'warning');
+      }
+    });
+  });
+
+  // 监听来自 background.js 的自动切换UI更新消息
+  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
+      // 更新自动切换开关状态
+      document.getElementById('autoSwitchToggle').checked = !!request.autoSwitchEnabled;
+      addLogMessage(`收到自动切换状态更新: ${request.autoSwitchEnabled ? '已启用' : '已禁用'}, 当前语言: ${request.currentLanguage}`, 'info');
     }
   });
 

@@ -83,14 +83,16 @@
             <select class="form-select" id="testLanguage">
               <option value="zh-CN">简体中文 (zh-CN)</option>
               <option value="zh-TW">繁体中文 (zh-TW)</option>
+              <option value="zh-HK">繁体中文 (香港) (zh-HK)</option>
               <option value="en-US">英文 (en-US)</option>
-              <option value="en-GB">英文(英国) (en-GB)</option>
+              <option value="en-GB">英文 (英国) (en-GB)</option>
               <option value="fr">法语 (fr)</option>
               <option value="ru">俄语 (ru)</option>
               <option value="ja">日语 (ja)</option>
               <option value="ko">韩语 (ko)</option>
               <option value="de">德语 (de)</option>
               <option value="es">西班牙语 (es)</option>
+              <option value="pt">葡萄牙语 (葡萄牙) (pt)</option>
               <option value="pt-BR">葡萄牙语 (巴西) (pt-BR)</option>
               <option value="it">意大利语 (it)</option>
               <option value="ar">阿拉伯语 (ar)</option>
@@ -113,6 +115,16 @@
               <option value="ro">罗马尼亚语 (ro)</option>
               <option value="sk">斯洛伐克语 (sk)</option>
               <option value="uk">乌克兰语 (uk)</option>
+              <option value="fa">波斯语 (fa)</option>
+              <option value="bg">保加利亚语 (bg)</option>
+              <option value="hr">克罗地亚语 (hr)</option>
+              <option value="lt">立陶宛语 (lt)</option>
+              <option value="lv">拉脱维亚语 (lv)</option>
+              <option value="et">爱沙尼亚语 (et)</option>
+              <option value="mk">马其顿语 (mk)</option>
+              <option value="sr">塞尔维亚语 (sr)</option>
+              <option value="sl">斯洛文尼亚语 (sl)</option>
+              <option value="cy">威尔士语 (cy)</option>
             </select>
           </div>
           <button id="testHeaderBtn" class="btn btn-success">测试请求头</button>
@@ -189,6 +201,19 @@
       <button id="showDiagnosticsBtn" class="btn btn-info">显示诊断信息</button>
       <div id="diagnosticsResult" class="debug-result">点击按钮查看诊断信息...</div>
     </div>
+
+    <!-- 自动切换功能控制 -->
+    <div class="debug-section mt-4">
+      <h4>自动切换功能</h4>
+      <p class="text-muted">控制按域名自动切换语言的功能。</p>
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="autoSwitchToggle">
+        <label class="form-check-label" for="autoSwitchToggle">启用自动切换 (按域名)</label>
+      </div>
+      <button id="showDomainRulesBtn" class="btn btn-outline-primary">显示域名映射规则</button>
+      <div id="domainRulesResult" class="debug-result">点击按钮查看域名映射规则...</div>
+    </div>
+    <!-- 自动切换功能控制结束 -->
   </div>
 
   <script src="debug-headers.js"></script>
