@@ -510,20 +510,3 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 }); // DOMContentLoaded 结束
-
-// 禁用静态规则说明
-document.getElementById('disableStaticRulesBtn').addEventListener('click', function () {
-  const resultElement = document.getElementById('fixResult');
-  resultElement.innerHTML = '<p class="error">此功能需要修改manifest.json文件，无法在运行时完成</p>';
-  resultElement.innerHTML += '<p>请按照以下步骤手动修改:</p>';
-  resultElement.innerHTML += '<ol>';
-  resultElement.innerHTML += '<li>打开manifest.json文件</li>';
-  resultElement.innerHTML += '<li>找到 "declarative_net_request" 部分</li>';
-  resultElement.innerHTML += '<li>在 rule_resources 中找到对应的规则集</li>';
-  resultElement.innerHTML += '<li>将该规则集的 "enabled" 值从 true 改为 false</li>';
-  resultElement.innerHTML += '<li>保存文件并重新加载扩展</li>';
-  resultElement.innerHTML += '</ol>';
-  resultElement.innerHTML += '<p>示例:</p>';
-  resultElement.innerHTML += '<pre>"declarative_net_request": {\n  "rule_resources": [{\n    "id": "ruleset_1",\n    "enabled": false, // 将这里改为 false\n    "path": "rules.json"\n  }]\n}</pre>';
-  addLogMessage('显示禁用静态规则说明.', 'info'); // 记录操作
-});

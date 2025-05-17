@@ -10,11 +10,6 @@ function showCurrentRules() {
       console.warn('警告: 没有发现动态规则!');
     } else {
       // 检查规则优先级
-      rules.forEach(rule => {
-        if (rule.priority < 100) {
-          console.warn(`警告: 规则 ${rule.id} 优先级较低 (${rule.priority}), 可能会被静态规则覆盖`);
-        }
-      });
     }
   });
   
