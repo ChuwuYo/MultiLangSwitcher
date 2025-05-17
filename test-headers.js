@@ -198,8 +198,121 @@ function md5(string) {
   return hexMD5(string)
 }
 /* eslint-enable */
-
 // --- End MD5 Hashing Function ---
+
+// --- 新增功能：浏览器兼容性检查 ---
+function getBrowserInfo() {
+  const ua = navigator.userAgent;
+  let browserName = "未知浏览器";
+  let browserVersion = "未知版本";
+  let fullVersion = "";
+
+  let tem;
+  let M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+
+  if (/trident/i.test(M[1])) {
+    tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+    browserName = 'Internet Explorer';
+    browserVersion = tem[1] || '';
+    fullVersion = browserVersion;
+  } else if (M[1] === 'Chrome') {
+    tem = ua.match(/\b(OPR|Edge|Edg)\/(\d+)/);
+    if (tem != null) {
+      const browserParts = tem.slice(1);
+      if (browserParts[0].startsWith('Edg')) browserParts[0] = 'Edge (Chromium)';
+      else if (browserParts[0] === 'Edge') browserParts[0] = 'Edge (Legacy)';
+      browserName = browserParts.join(' ').replace('OPR', 'Opera');
+      browserVersion = browserParts.length > 1 ? browserParts[1] : '';
+      fullVersion = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/) ? ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)[2] : browserVersion;
+    } else {
+      browserName = 'Chrome';
+      browserVersion = M[2];
+      fullVersion = ua.match(/\bChrome\/([\d.]+)/) ? ua.match(/\bChrome\/([\d.]+)/)[1] : browserVersion;
+    }
+  } else if (M[1] === 'Firefox') {
+    browserName = 'Firefox';
+    browserVersion = M[2];
+    fullVersion = ua.match(/\bFirefox\/([\d.]+)/) ? ua.match(/\bFirefox\/([\d.]+)/)[1] : browserVersion;
+  } else if (M[1] === 'Safari') {
+    tem = ua.match(/version\/(\d+)/i);
+    browserName = 'Safari';
+    browserVersion = tem ? tem[1] : M[2];
+    fullVersion = ua.match(/version\/([\d.]+)/i) ? ua.match(/version\/([\d.]+)/i)[1] : browserVersion;
+  } else if (M[1] === 'MSIE') {
+    browserName = 'Internet Explorer';
+    browserVersion = M[2];
+    fullVersion = browserVersion;
+  } else {
+    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+    browserName = M[0];
+    browserVersion = M[1];
+    fullVersion = M[1];
+  }
+  
+  let os = "未知操作系统";
+  if (navigator.appVersion.indexOf("Win")!=-1) os="Windows";
+  if (navigator.appVersion.indexOf("Mac")!=-1) os="MacOS";
+  if (navigator.appVersion.indexOf("X11")!=-1) os="UNIX";
+  if (navigator.appVersion.indexOf("Linux")!=-1) os="Linux";
+
+  return {
+    name: browserName,
+    version: browserVersion,
+    fullVersion: fullVersion || browserVersion,
+    os: os,
+    userAgent: ua
+  };
+}
+
+function checkApiSupport() {
+  const apis = [
+    { name: 'localStorage', supported: typeof localStorage !== 'undefined' },
+    { name: 'sessionStorage', supported: typeof sessionStorage !== 'undefined' },
+    { name: 'IndexedDB', supported: !!window.indexedDB },
+    { name: 'WebSockets', supported: 'WebSocket' in window || 'MozWebSocket' in window },
+    { name: 'Promises', supported: typeof Promise !== 'undefined' && Promise.toString().indexOf('[native code]') !== -1 },
+    { name: 'fetch API', supported: typeof fetch === 'function' },
+    { name: 'Service Workers', supported: 'serviceWorker' in navigator },
+    { name: 'Intl (Internationalization)', supported: typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function' },
+    { name: 'URL API (URLSearchParams)', supported: typeof URL !== 'undefined' && typeof URLSearchParams !== 'undefined' },
+    { name: 'Beacon API', supported: 'sendBeacon' in navigator },
+    { name: 'WebRTC (RTCPeerConnection)', supported: !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection) },
+    { name: 'WebGL', supported: (function() { try { const canvas = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))); } catch(e) { return false; } })() }
+  ];
+  return apis;
+}
+
+function performCompatibilityChecks() {
+  const browserInfoEl = document.getElementById('browserInfoDisplay');
+  const apiListEl = document.getElementById('apiCompatibilityList');
+
+  const browser = getBrowserInfo();
+  if (browserInfoEl) {
+    browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
+  }
+
+  if (apiListEl) {
+    apiListEl.innerHTML = ''; 
+    const apis = checkApiSupport();
+    apis.forEach(api => {
+      const listItem = document.createElement('li');
+      listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? 'list-group-item-success' : 'list-group-item-danger'}`;
+      
+      const apiNameSpan = document.createElement('span');
+      apiNameSpan.textContent = api.name;
+      
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`; 
+      badgeSpan.textContent = api.supported ? '支持' : '不支持';
+      
+      listItem.appendChild(apiNameSpan);
+      listItem.appendChild(badgeSpan);
+      apiListEl.appendChild(listItem);
+    });
+  }
+}
+// --- 兼容性检查功能结束 ---
 
 // 获取并显示当前请求头 (并行请求与超时)
 async function fetchAndDisplayHeaders() {
@@ -208,24 +321,20 @@ async function fetchAndDisplayHeaders() {
   headerInfoElement.textContent = '正在获取请求头信息...';
   headerLanguageInfo.textContent = '正在检测...';
 
-  // 使用随机参数避免缓存
   const timestamp = new Date().getTime();
-  const TIMEOUT_MS = 5000; // 设置 5 秒超时
+  const TIMEOUT_MS = 5000; 
 
-  // 定义服务 URL 列表
   const urls = [
     `https://postman-echo.com/headers?_=${timestamp}`,
     `https://httpbin.org/headers?_=${timestamp}`,
     `https://header-echo.addr.tools/?_=${timestamp}`,
   ];
 
-  // 函数用于处理成功的响应数据
   function processHeadersData(data) {
     const headers = data.headers;
     let formattedHeaders = JSON.stringify(headers, null, 2);
-    headerInfoElement.textContent = formattedHeaders; // 主区域仍然显示完整请求头
+    headerInfoElement.textContent = formattedHeaders; 
 
-    // 清除之前 headerInfoElement 内部可能存在的语言设置信息
     const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
     if (existingAlertInfoP) {
         existingAlertInfoP.remove();
@@ -234,12 +343,7 @@ async function fetchAndDisplayHeaders() {
     const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
 
     if (acceptLanguage) {
-      // 在主区域高亮显示 Accept-Language
-      // document.querySelector('.alert-info').innerHTML += 
-      //  `<p class="mt-2 mb-0">检测到的语言设置: <strong class="text-success">${acceptLanguage}</strong></p>`;
       console.log('检测到的Accept-Language:', acceptLanguage);
-
-      // 更新请求头语言卡片
       headerLanguageInfo.innerHTML = `
         <p class="mb-1"><strong>当前值:</strong></p>
         <p class="text-success fw-bold">${acceptLanguage}</p>
@@ -247,10 +351,6 @@ async function fetchAndDisplayHeaders() {
       `;
     } else {
       console.log('未检测到Accept-Language请求头');
-      // document.querySelector('.alert-info').innerHTML += 
-      //  `<p class="mt-2 mb-0 text-warning">未检测到Accept-Language请求头</p>`;
-
-      // 更新请求头语言卡片
       headerLanguageInfo.innerHTML = `
         <p class="text-warning">未检测到Accept-Language请求头</p>
         <p class="mt-2">请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>
@@ -258,7 +358,6 @@ async function fetchAndDisplayHeaders() {
     }
   }
 
-  // 创建带超时的 fetch Promise
   function fetchWithTimeout(url, timeoutMs) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -280,24 +379,21 @@ async function fetchAndDisplayHeaders() {
       if (error.name === 'AbortError') {
         throw new Error(`请求 ${url} 超时 (${timeoutMs}ms)`);
       }
-      throw error; // 重新抛出其他错误
+      throw error;
     });
   }
 
-  // 使用 Promise.any 并行请求
   try {
     const promises = urls.map(url => fetchWithTimeout(url, TIMEOUT_MS));
     const firstSuccessfulResponse = await Promise.any(promises);
     processHeadersData(firstSuccessfulResponse);
   } catch (error) {
-    // 当所有 Promise 都失败时，Promise.any 会抛出 AggregateError
     console.error('所有获取请求头的尝试都失败了:', error);
     let combinedErrorMessage = '获取请求头信息失败 (所有服务均失败或超时)。';
     if (error instanceof AggregateError) {
         combinedErrorMessage += ' 详细错误: ' + error.errors.map(e => e.message || e).join('; ');
     }
     headerInfoElement.textContent = combinedErrorMessage;
-    // 更新请求头语言卡片，保持错误信息一致性
     headerLanguageInfo.innerHTML = `
       <p class="text-danger">检测失败 (所有服务均失败或超时)。</p>
       <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
@@ -344,7 +440,6 @@ function detectCanvasFingerprint() {
     ctx.fillText(txt, 4, 17);
 
     const dataUrl = canvas.toDataURL();
-    // 使用 MD5 哈希
     const fingerprint = md5(dataUrl);
 
     canvasInfoElement.innerHTML = `
@@ -377,9 +472,7 @@ function detectWebglFingerprint() {
     const version = gl.getParameter(gl.VERSION) || 'N/A';
     const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || 'N/A';
 
-    // 组合指纹信息
     const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-    // 使用 MD5 哈希
     const fingerprint = md5(fingerprintData);
 
     webglInfoElement.innerHTML = `
@@ -415,8 +508,6 @@ async function detectAudioFingerprint() {
       return;
     }
 
-    // 使用 FingerprintJS v2 的 AudioContext 指纹生成方法
-    // https://github.com/fingerprintjs/fingerprintjs/blob/v2/fingerprint2.js
     const context = new audioCtx(1, 44100, 44100);
     const oscillator = context.createOscillator();
     oscillator.type = 'triangle';
@@ -436,14 +527,12 @@ async function detectAudioFingerprint() {
     const renderedBuffer = await context.startRendering();
     const bufferData = renderedBuffer.getChannelData(0);
     let sum = 0;
-    // FingerprintJS v2 只计算特定范围以提高稳定性
     for (let i = 4500; i < 5000; i++) {
         if (bufferData[i]) {
             sum += Math.abs(bufferData[i]);
         }
     }
     const fingerprintData = sum.toString();
-    // 使用 MD5 哈希
     const fingerprint = md5(fingerprintData);
 
     audioInfoElement.innerHTML = `
@@ -479,139 +568,6 @@ function detectIntlApi() {
   }
 }
 
-// 检测 Canvas 指纹
-function detectCanvasFingerprint() {
-  const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const txt = 'BrowserLeaks,com <canvas> 1.0';
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = "#069";
-    ctx.fillText(txt, 2, 15);
-    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText(txt, 4, 17);
-
-    const dataUrl = canvas.toDataURL();
-    // 使用 MD5 哈希
-    const fingerprint = md5(dataUrl);
-
-    canvasInfoElement.innerHTML = `
-      <p class="mb-1"><strong>Canvas hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 Canvas API 检测</p>
-    `;
-    console.log('Canvas Fingerprint (MD5):', fingerprint);
-  } catch (error) {
-    canvasInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('Canvas 指纹检测失败:', error);
-  }
-}
-
-// 检测 WebGL 指纹
-function detectWebglFingerprint() {
-  const webglInfoElement = document.getElementById('webglFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      webglInfoElement.innerHTML = '<p class="text-warning">WebGL 不支持或已禁用。</p>';
-      console.warn('WebGL not supported');
-      return;
-    }
-
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
-    const version = gl.getParameter(gl.VERSION) || 'N/A';
-    const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || 'N/A';
-
-    // 组合指纹信息
-    const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    webglInfoElement.innerHTML = `
-      <p class="mb-1"><strong>WebGL hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked vendor:</strong></p>
-      <p class="text-dark small">${vendor}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked renderer:</strong></p>
-      <p class="text-dark small">${renderer}</p>
-      <p class="mb-1 mt-2"><strong>WebGL version:</strong></p>
-      <p class="text-dark small">${version}</p>
-      <p class="mb-1 mt-2"><strong>Shading Language Version:</strong></p>
-      <p class="text-dark small">${shadingLanguageVersion}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 WebGL API 检测</p>
-    `;
-    console.log('WebGL Fingerprint (MD5):', fingerprint);
-    console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
-  } catch (error) {
-    webglInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('WebGL 指纹检测失败:', error);
-  }
-}
-
-// 检测 AudioContext 指纹 (异步)
-async function detectAudioFingerprint() {
-  const audioInfoElement = document.getElementById('audioFingerprintInfo');
-  audioInfoElement.innerHTML = '<p>检测中...</p>';
-  try {
-    const audioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (!audioCtx) {
-      audioInfoElement.innerHTML = '<p class="text-warning">AudioContext 不支持。</p>';
-      console.warn('AudioContext not supported');
-      return;
-    }
-
-    // 使用 FingerprintJS v2 的 AudioContext 指纹生成方法
-    // https://github.com/fingerprintjs/fingerprintjs/blob/v2/fingerprint2.js
-    const context = new audioCtx(1, 44100, 44100);
-    const oscillator = context.createOscillator();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(10000, context.currentTime);
-
-    const compressor = context.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-50, context.currentTime);
-    compressor.knee.setValueAtTime(40, context.currentTime);
-    compressor.ratio.setValueAtTime(12, context.currentTime);
-    compressor.attack.setValueAtTime(0, context.currentTime);
-    compressor.release.setValueAtTime(0.25, context.currentTime);
-
-    oscillator.connect(compressor);
-    compressor.connect(context.destination);
-    oscillator.start(0);
-
-    const renderedBuffer = await context.startRendering();
-    const bufferData = renderedBuffer.getChannelData(0);
-    let sum = 0;
-    // FingerprintJS v2 只计算特定范围以提高稳定性
-    for (let i = 4500; i < 5000; i++) {
-        if (bufferData[i]) {
-            sum += Math.abs(bufferData[i]);
-        }
-    }
-    const fingerprintData = sum.toString();
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    audioInfoElement.innerHTML = `
-      <p class="mb-1"><strong>AudioContext hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 AudioContext API 检测</p>
-    `;
-    console.log('Audio Fingerprint (MD5):', fingerprint);
-
-  } catch (error) {
-    audioInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('AudioContext 指纹检测失败:', error);
-  }
-}
-
 // 检测 WebRTC IP 泄露
 function detectWebRtc() {
   const webRtcInfoElement = document.getElementById('webRtcInfo');
@@ -620,10 +576,9 @@ function detectWebRtc() {
 
   try {
     const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.createDataChannel(''); // 创建虚拟数据通道以触发 ICE 收集
+    pc.createDataChannel(''); 
     pc.onicecandidate = (e) => {
       if (!e || !e.candidate || !e.candidate.candidate) return;
-      // 提取 IP 地址 (支持 IPv4 和 IPv6)
       const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
       const ipMatch = ipRegex.exec(e.candidate.candidate);
       if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
@@ -634,9 +589,8 @@ function detectWebRtc() {
       .then(offer => pc.setLocalDescription(offer))
       .catch(err => console.error('WebRTC setLocalDescription 失败:', err));
 
-    // 设置超时，因为 ICE 收集可能不会立即完成
     setTimeout(() => {
-      pc.close(); // 关闭连接以停止收集
+      pc.close(); 
       if (ips.length > 0) {
         webRtcInfoElement.innerHTML = `
           <p class="mb-1"><strong>WebRTC 本地 IP 地址 (用于连接优化):</strong></p>
@@ -651,143 +605,10 @@ function detectWebRtc() {
         webRtcInfoElement.innerHTML = '<p class="text-success">未检测到 WebRTC 本地 IP 地址暴露。</p><p class="mb-0 mt-2 small text-muted">通过 WebRTC 检测</p>';
         console.log('WebRTC 未检测到本地 IP');
       }
-    }, 1000); // 1 秒超时
+    }, 1000); 
   } catch (error) {
     webRtcInfoElement.innerHTML = `<p class="text-danger">WebRTC 检测失败或不受支持: ${error.message}</p>`;
     console.error('WebRTC 检测失败:', error);
-  }
-}
-
-// 检测 Canvas 指纹
-function detectCanvasFingerprint() {
-  const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const txt = 'BrowserLeaks,com <canvas> 1.0';
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = "#069";
-    ctx.fillText(txt, 2, 15);
-    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText(txt, 4, 17);
-
-    const dataUrl = canvas.toDataURL();
-    // 使用 MD5 哈希
-    const fingerprint = md5(dataUrl);
-
-    canvasInfoElement.innerHTML = `
-      <p class="mb-1"><strong>Canvas hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 Canvas API 检测</p>
-    `;
-    console.log('Canvas Fingerprint (MD5):', fingerprint);
-  } catch (error) {
-    canvasInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('Canvas 指纹检测失败:', error);
-  }
-}
-
-// 检测 WebGL 指纹
-function detectWebglFingerprint() {
-  const webglInfoElement = document.getElementById('webglFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      webglInfoElement.innerHTML = '<p class="text-warning">WebGL 不支持或已禁用。</p>';
-      console.warn('WebGL not supported');
-      return;
-    }
-
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
-    const version = gl.getParameter(gl.VERSION) || 'N/A';
-    const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || 'N/A';
-
-    // 组合指纹信息
-    const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    webglInfoElement.innerHTML = `
-      <p class="mb-1"><strong>WebGL hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked vendor:</strong></p>
-      <p class="text-dark small">${vendor}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked renderer:</strong></p>
-      <p class="text-dark small">${renderer}</p>
-      <p class="mb-1 mt-2"><strong>WebGL version:</strong></p>
-      <p class="text-dark small">${version}</p>
-      <p class="mb-1 mt-2"><strong>Shading Language Version:</strong></p>
-      <p class="text-dark small">${shadingLanguageVersion}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 WebGL API 检测</p>
-    `;
-    console.log('WebGL Fingerprint (MD5):', fingerprint);
-    console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
-  } catch (error) {
-    webglInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('WebGL 指纹检测失败:', error);
-  }
-}
-
-// 检测 AudioContext 指纹 (异步)
-async function detectAudioFingerprint() {
-  const audioInfoElement = document.getElementById('audioFingerprintInfo');
-  audioInfoElement.innerHTML = '<p>检测中...</p>';
-  try {
-    const audioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (!audioCtx) {
-      audioInfoElement.innerHTML = '<p class="text-warning">AudioContext 不支持。</p>';
-      console.warn('AudioContext not supported');
-      return;
-    }
-
-    // 使用 FingerprintJS v2 的 AudioContext 指纹生成方法
-    // https://github.com/fingerprintjs/fingerprintjs/blob/v2/fingerprint2.js
-    const context = new audioCtx(1, 44100, 44100);
-    const oscillator = context.createOscillator();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(10000, context.currentTime);
-
-    const compressor = context.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-50, context.currentTime);
-    compressor.knee.setValueAtTime(40, context.currentTime);
-    compressor.ratio.setValueAtTime(12, context.currentTime);
-    compressor.attack.setValueAtTime(0, context.currentTime);
-    compressor.release.setValueAtTime(0.25, context.currentTime);
-
-    oscillator.connect(compressor);
-    compressor.connect(context.destination);
-    oscillator.start(0);
-
-    const renderedBuffer = await context.startRendering();
-    const bufferData = renderedBuffer.getChannelData(0);
-    let sum = 0;
-    // FingerprintJS v2 只计算特定范围以提高稳定性
-    for (let i = 4500; i < 5000; i++) {
-        if (bufferData[i]) {
-            sum += Math.abs(bufferData[i]);
-        }
-    }
-    const fingerprintData = sum.toString();
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    audioInfoElement.innerHTML = `
-      <p class="mb-1"><strong>AudioContext hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 AudioContext API 检测</p>
-    `;
-    console.log('Audio Fingerprint (MD5):', fingerprint);
-
-  } catch (error) {
-    audioInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('AudioContext 指纹检测失败:', error);
   }
 }
 
@@ -799,7 +620,6 @@ function detectFingerprint() {
     const screenRes = `${screen.width}x${screen.height}x${screen.colorDepth}` || 'N/A';
     const timezoneOffset = new Date().getTimezoneOffset();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
-    // 插件信息在现代浏览器中通常受限
     const plugins = navigator.plugins ? Array.from(navigator.plugins).map(p => p.name).join(', ') : 'N/A (受限)';
 
     fingerprintInfoElement.innerHTML = `
@@ -820,139 +640,6 @@ function detectFingerprint() {
   }
 }
 
-// 检测 Canvas 指纹
-function detectCanvasFingerprint() {
-  const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const txt = 'BrowserLeaks,com <canvas> 1.0';
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = "#069";
-    ctx.fillText(txt, 2, 15);
-    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText(txt, 4, 17);
-
-    const dataUrl = canvas.toDataURL();
-    // 使用 MD5 哈希
-    const fingerprint = md5(dataUrl);
-
-    canvasInfoElement.innerHTML = `
-      <p class="mb-1"><strong>Canvas hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 Canvas API 检测</p>
-    `;
-    console.log('Canvas Fingerprint (MD5):', fingerprint);
-  } catch (error) {
-    canvasInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('Canvas 指纹检测失败:', error);
-  }
-}
-
-// 检测 WebGL 指纹
-function detectWebglFingerprint() {
-  const webglInfoElement = document.getElementById('webglFingerprintInfo');
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      webglInfoElement.innerHTML = '<p class="text-warning">WebGL 不支持或已禁用。</p>';
-      console.warn('WebGL not supported');
-      return;
-    }
-
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
-    const version = gl.getParameter(gl.VERSION) || 'N/A';
-    const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || 'N/A';
-
-    // 组合指纹信息
-    const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    webglInfoElement.innerHTML = `
-      <p class="mb-1"><strong>WebGL hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked vendor:</strong></p>
-      <p class="text-dark small">${vendor}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked renderer:</strong></p>
-      <p class="text-dark small">${renderer}</p>
-      <p class="mb-1 mt-2"><strong>WebGL version:</strong></p>
-      <p class="text-dark small">${version}</p>
-      <p class="mb-1 mt-2"><strong>Shading Language Version:</strong></p>
-      <p class="text-dark small">${shadingLanguageVersion}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 WebGL API 检测</p>
-    `;
-    console.log('WebGL Fingerprint (MD5):', fingerprint);
-    console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
-  } catch (error) {
-    webglInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('WebGL 指纹检测失败:', error);
-  }
-}
-
-// 检测 AudioContext 指纹 (异步)
-async function detectAudioFingerprint() {
-  const audioInfoElement = document.getElementById('audioFingerprintInfo');
-  audioInfoElement.innerHTML = '<p>检测中...</p>';
-  try {
-    const audioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (!audioCtx) {
-      audioInfoElement.innerHTML = '<p class="text-warning">AudioContext 不支持。</p>';
-      console.warn('AudioContext not supported');
-      return;
-    }
-
-    // 使用 FingerprintJS v2 的 AudioContext 指纹生成方法
-    // https://github.com/fingerprintjs/fingerprintjs/blob/v2/fingerprint2.js
-    const context = new audioCtx(1, 44100, 44100);
-    const oscillator = context.createOscillator();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(10000, context.currentTime);
-
-    const compressor = context.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-50, context.currentTime);
-    compressor.knee.setValueAtTime(40, context.currentTime);
-    compressor.ratio.setValueAtTime(12, context.currentTime);
-    compressor.attack.setValueAtTime(0, context.currentTime);
-    compressor.release.setValueAtTime(0.25, context.currentTime);
-
-    oscillator.connect(compressor);
-    compressor.connect(context.destination);
-    oscillator.start(0);
-
-    const renderedBuffer = await context.startRendering();
-    const bufferData = renderedBuffer.getChannelData(0);
-    let sum = 0;
-    // FingerprintJS v2 只计算特定范围以提高稳定性
-    for (let i = 4500; i < 5000; i++) {
-        if (bufferData[i]) {
-            sum += Math.abs(bufferData[i]);
-        }
-    }
-    const fingerprintData = sum.toString();
-    // 使用 MD5 哈希
-    const fingerprint = md5(fingerprintData);
-
-    audioInfoElement.innerHTML = `
-      <p class="mb-1"><strong>AudioContext hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 AudioContext API 检测</p>
-    `;
-    console.log('Audio Fingerprint (MD5):', fingerprint);
-
-  } catch (error) {
-    audioInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
-    console.error('AudioContext 指纹检测失败:', error);
-  }
-}
-
 // 页面加载完成后获取请求头和执行其他检测
 window.addEventListener('DOMContentLoaded', function() {
   // 延迟执行，确保扩展规则已应用
@@ -965,12 +652,13 @@ window.addEventListener('DOMContentLoaded', function() {
     detectCanvasFingerprint();
     detectWebglFingerprint();
     detectAudioFingerprint(); // 异步
+    performCompatibilityChecks(); // 新增：执行兼容性检查
   }, 1000);
 
   // 添加刷新按钮功能
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
-  refreshButton.textContent = '刷新请求头信息';
+  refreshButton.textContent = '刷新检测信息'; // 修改了按钮文字
   refreshButton.onclick = function() {
     fetchAndDisplayHeaders();
     detectJsLanguage();
@@ -980,6 +668,27 @@ window.addEventListener('DOMContentLoaded', function() {
     detectCanvasFingerprint();
     detectWebglFingerprint();
     detectAudioFingerprint(); // 异步
+    performCompatibilityChecks(); // 新增：刷新时也执行兼容性检查
   };
-  document.querySelector('.header-info').appendChild(refreshButton);
+  
+  // 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
+  const headerInfoDiv = document.querySelector('.header-info.mt-4'); 
+  if (headerInfoDiv) {
+     headerInfoDiv.appendChild(refreshButton);
+  } else {
+     // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
+     const container = document.querySelector('.container');
+     if (container) {
+         const allHeaderInfoDivs = container.querySelectorAll('.header-info');
+         if (allHeaderInfoDivs.length > 0) {
+             allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
+         } else {
+              // 如果还是找不到，就直接附加到 container 的末尾，位置可能不理想
+              container.appendChild(refreshButton);
+              console.warn("未能精确找到 .header-info 用于附加刷新按钮，按钮已附加到 .container 末尾。");
+         }
+     } else {
+         console.error("未能找到 .container 用于附加刷新按钮。");
+     }
+  }
 });

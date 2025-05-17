@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>MultiLangSwitcher 检测页面</title>
@@ -10,28 +11,49 @@
     body {
       padding: 20px;
     }
+
     .header-info {
       margin-top: 20px;
     }
+
     pre {
       background-color: #f8f9fa;
       padding: 15px;
       border-radius: 5px;
     }
-    @font-face { font-family: 'MapleMonoNL'; src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2'); }
-    body { font-family: 'MapleMonoNL', sans-serif; }
+
+    @font-face {
+      font-family: 'MapleMonoNL';
+      src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2');
+    }
+
+    body {
+      font-family: 'MapleMonoNL', sans-serif;
+    }
+
+    /* 为兼容性检查列表项添加一些样式 */
+    .list-group-item-success .badge {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .list-group-item-danger .badge {
+      background-color: #dc3545;
+      color: white;
+    }
   </style>
 </head>
+
 <body>
   <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
   <div class="container">
     <h2>MultiLangSwitcher 检测页面</h2>
     <p class="lead">此页面用于验证MultiLangSwitcher扩展的设置效果</p>
-    
+
     <div class="alert alert-info">
       <strong>提示：</strong> 请特别关注 <code>Accept-Language</code> 请求头的值，它应该与您在扩展中设置的语言相匹配。
     </div>
-    
+
     <div class="row">
       <div class="col-md-4">
         <div class="card mb-3">
@@ -75,6 +97,24 @@
       </div>
     </div>
 
+    <!-- 兼容性检查 -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-3">
+          <div class="card-header bg-dark text-white">浏览器兼容性检查</div>
+          <div class="card-body">
+            <p><strong>浏览器信息:</strong> <span id="browserInfoDisplay">检测中...</span></p>
+            <h5>API 支持情况:</h5>
+            <ul id="apiCompatibilityList" class="list-group">
+              <!-- JS 将在此处填充 API 兼容性信息 -->
+              <li class="list-group-item">检测中...</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <div class="row">
       <div class="col-md-12">
         <div class="card mb-3">
@@ -110,15 +150,16 @@
         </div>
       </div>
     </div>
-    
+
     <div class="header-info mt-4">
       <h4>完整请求头信息：</h4>
       <pre id="headerInfo">加载中...</pre>
     </div>
   </div>
-  
+
   <!-- 引用外部JavaScript文件替代内联脚本，解决CSP限制问题 -->
   <script src="test-headers.js"></script>
   <script src="theme-switcher.js"></script>
 </body>
+
 </html>

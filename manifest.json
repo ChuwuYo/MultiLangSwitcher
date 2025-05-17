@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MultiLangSwitcher",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "快速切换浏览器请求头语言",
   "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",  
   "author": "ChuwuYo",
@@ -29,13 +29,6 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "declarative_net_request": {
-    "rule_resources": [{
-      "id": "ruleset_1",
-      "enabled": false,
-      "path": "rules.json"
-    }]
-  },
   "icons": {
     "16": "images/icon16.png",
     "32": "images/icon32.png",
