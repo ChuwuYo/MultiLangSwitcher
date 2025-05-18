@@ -75,14 +75,57 @@ document.addEventListener('DOMContentLoaded', function () {
   const logOutput = document.getElementById('logOutput');
   const clearLogsBtn = document.getElementById('clearLogsBtn');
 
+  // 存储所有日志消息，以便过滤
+  let allLogMessages = [];
+
   // 添加日志消息到UI
+  // 增加函数级注释
+  /**
+   * 添加日志消息到UI并存储
+   * @param {string} message - 日志消息内容
+   * @param {string} logType - 日志类型 (info, warning, error, success)
+   */
   function addLogMessage(message, logType = 'info') {
-    const logElement = document.createElement('div');
-    logElement.classList.add(`log-${logType}`);
-    logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-    logOutput.appendChild(logElement);
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = { timestamp, message, logType };
+    allLogMessages.push(logEntry);
+    renderLogs(); // 重新渲染日志以应用过滤
     // 自动滚动到底部
     logOutput.scrollTop = logOutput.scrollHeight;
+  }
+
+  // 根据当前过滤器渲染日志
+  // 增加函数级注释
+  /**
+   * 根据当前选中的过滤器渲染日志到UI
+   */
+  function renderLogs() {
+    logOutput.innerHTML = ''; // 清空当前显示
+    const activeFilters = getActiveFilters();
+
+    allLogMessages.forEach(logEntry => {
+      if (activeFilters.includes(logEntry.logType)) {
+        const logElement = document.createElement('div');
+        logElement.classList.add(`log-${logEntry.logType}`);
+        logElement.textContent = `[${logEntry.timestamp}] ${logEntry.message}`;
+        logOutput.appendChild(logElement);
+      }
+    });
+  }
+
+  // 获取当前激活的过滤器
+  // 增加函数级注释
+  /**
+   * 获取当前选中的日志类型过滤器
+   * @returns {string[]} - 激活的日志类型数组
+   */
+  function getActiveFilters() {
+    const filters = [];
+    if (document.getElementById('filterInfo').checked) filters.push('info');
+    if (document.getElementById('filterWarning').checked) filters.push('warning');
+    if (document.getElementById('filterError').checked) filters.push('error');
+    if (document.getElementById('filterSuccess').checked) filters.push('success');
+    return filters;
   }
 
   // 监听来自扩展其他部分的日志消息
@@ -94,11 +137,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 清除日志按钮功能
   clearLogsBtn.addEventListener('click', function () {
-    logOutput.innerHTML = ''; // 清空日志输出区域
+    allLogMessages = []; // 清空存储的日志
+    renderLogs(); // 渲染空日志列表
+  });
+
+  // 监听过滤器变化
+  document.querySelectorAll('.form-check-input[id^="filter"]').forEach(checkbox => {
+    checkbox.addEventListener('change', renderLogs);
   });
 
   // 调试页面加载时发送一条日志
   addLogMessage('调试日志已启动', 'info');
+  // 初始渲染日志 (虽然此时allLogMessages是空的)
+  renderLogs();
 
 
   // 测试请求头

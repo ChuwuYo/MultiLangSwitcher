@@ -18,8 +18,6 @@
   background-color: transparent; /* 默认变体：bg-transparent */
   color: var(--bs-body-color);
   border: 1px solid var(--bs-border-color);
-  
-  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   cursor: pointer;
   
   /* 用于聚焦环 */

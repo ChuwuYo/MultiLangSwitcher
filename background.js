@@ -2,7 +2,7 @@
 
 // 定义规则ID
 const RULE_ID = 1;
-const DEFAULT_LANGUAGE = 'zh-CN';
+const DEFAULT_LANGUAGE = 'en-US';
 
 // 函数：发送日志消息 (可选，如果不需要调试日志可以删掉)
 function sendBackgroundLog(message, logType = 'info') {
@@ -132,6 +132,7 @@ const domainLanguageRules = {
   'th': 'th',     // 泰国
   'vn': 'vi',     // 越南
   'id': 'id',     // 印度尼西亚
+  'my': 'ms',     // 马来西亚
   // 北美
   'us': 'en-US',  // 美国
   'gov': 'en-US', // 美国政府

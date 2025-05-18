@@ -1,10 +1,12 @@
 {
   "manifest_version": 3,
   "name": "MultiLangSwitcher",
-  "version": "1.6.5",
+  "version": "1.6.6",
+  "minimum_chrome_version": "88.0",
   "description": "快速切换浏览器请求头语言",
   "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",  
   "author": "ChuwuYo",
+  "incognito": "spanning",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -37,6 +39,12 @@
     "128": "images/icon128.png",
     "256": "images/icon256.png"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }
