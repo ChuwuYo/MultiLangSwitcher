@@ -197,40 +197,44 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     // 等待所有请求完成
-    await Promise.all(fetchPromises);
+    const results = await Promise.all(fetchPromises);
 
     let html = '';
+    let firstSuccessfulResult = results.find(result => result.success);
 
-    if (receivedHeaders) {
+    if (firstSuccessfulResult && firstSuccessfulResult.data && firstSuccessfulResult.data.headers) {
+      receivedHeaders = firstSuccessfulResult.data.headers; // 保存第一个成功的头信息
       html += '<h5>最近一次成功收到的请求头 (来自首个成功响应的检测点):</h5>';
       html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
-    }
 
-    if (foundAcceptLanguage) {
-      const acceptLanguageValue = foundAcceptLanguage.toLowerCase();
-      const expectedLanguage = language.toLowerCase();
+      if (receivedHeaders['Accept-Language']) {
+        foundAcceptLanguage = receivedHeaders['Accept-Language'];
+        const acceptLanguageValue = foundAcceptLanguage.toLowerCase();
+        const expectedLanguage = language.toLowerCase();
 
-      if (acceptLanguageValue.includes(expectedLanguage)) {
-        html += `<p class="success">✓ 请求头已成功更改! 检测到的值: ${foundAcceptLanguage}</p>`;
-        addLogMessage(`请求头测试成功: Accept-Language 为 ${foundAcceptLanguage}`, 'success');
+        if (acceptLanguageValue.includes(expectedLanguage)) {
+          html += `<p class="success">✓ 请求头已成功更改! 检测到的值: ${foundAcceptLanguage}</p>`;
+          addLogMessage(`请求头测试成功: Accept-Language 为 ${foundAcceptLanguage}`, 'success');
+        } else {
+          html += `<p class="error">✗ 请求头未成功更改!</p>`;
+          html += `<p>预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguageValue}</p>`;
+          html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+          addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguageValue}`, 'error');
+        }
       } else {
-        html += `<p class="error">✗ 请求头未成功更改!</p>`;
-        html += `<p>预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguageValue}</p>`;
+        // 请求成功，但未检测到 Accept-Language
+        html += '<p class="error">✗ 未在任何检测点检测到Accept-Language请求头!</p>';
         html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
-        addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguageValue}`, 'error');
+        addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error');
       }
-    } else if (allRequestsFailed) {
+    } else {
+      // 所有请求均失败
       html += `<p class="error">✗ 所有测试请求均失败。</p>`;
-      if (lastError) {
+      if (lastError) { // lastError 在 catch 中设置
         html += `<p class="error">最后一次错误: ${lastError.message}</p>`;
       }
       html += '<p>请检查您的网络连接，或尝试自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
       addLogMessage('请求头测试失败: 所有检测点均未能成功获取请求头.', 'error');
-    } else {
-      // 请求成功，但未检测到 Accept-Language
-      html += '<p class="error">✗ 未在任何检测点检测到Accept-Language请求头!</p>';
-      html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
-      addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error');
     }
 
     resultElement.innerHTML = html;

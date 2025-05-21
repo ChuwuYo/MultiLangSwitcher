@@ -70,12 +70,8 @@ function updateHeaderRules(language, autoCheck = false) {
         if (oldSuccessSpan) {
             oldSuccessSpan.remove();
         }
-        // 插入到 currentLanguageSpan 之后，而不是 statusTextElement 的末尾
-        if (currentLanguageSpan.nextSibling) {
-            statusTextElement.insertBefore(successSpan, currentLanguageSpan.nextSibling);
-        } else {
-            statusTextElement.appendChild(successSpan);
-        }
+        // 插入到 currentLanguageSpan 之后
+        currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
         
 
         setTimeout(function() {

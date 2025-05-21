@@ -4,10 +4,14 @@
 const RULE_ID = 1;
 const DEFAULT_LANGUAGE = 'en-US';
 
-// 函数：发送日志消息 (可选，如果不需要调试日志可以删掉)
+// 函数：发送后台日志消息，用于调试和重要信息输出
 function sendBackgroundLog(message, logType = 'info') {
-    // 在生产环境中可以移除或注释掉这个发送消息逻辑
-    /*
+    // 在控制台输出重要信息
+    if (logType === 'error' || logType === 'warning' || logType === 'info' || logType === 'success') {
+         console.log(`[Background ${logType.toUpperCase()}] ${message}`);
+    }
+    
+    // 尝试发送到调试页面
     chrome.runtime.sendMessage({
         type: 'DEBUG_LOG', // 消息类型，用于在调试页面区分
         message: `[Background] ${message}`,
@@ -16,13 +20,7 @@ function sendBackgroundLog(message, logType = 'info') {
         // 捕获错误避免控制台报错
         // console.warn("Could not send debug log from background:", error);
     });
-    */
-    // 或者只在控制台输出重要信息
-    if (logType === 'error' || logType === 'warning' || logType === 'info') {
-         console.log(`[Background ${logType.toUpperCase()}] ${message}`);
-    }
 }
-
 
 // 规则缓存，避免重复获取已知规则
 let rulesCache = null;
