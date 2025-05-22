@@ -387,14 +387,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ruleResources && ruleResources.length > 0) {
           html += '<ul>';
           ruleResources.forEach(resource => {
-            // 注意：静态规则的 enabled 状态在 manifest.json 中定义，运行时通常不可直接修改或读取其当前生效状态。
             // 这里显示的是 manifest 中定义的默认状态。
             const enabledStatus = resource.enabled === false ? '<span class="success">禁用 (manifest)</span>' : '<span class="error">启用 (manifest)</span>';
             html += `<li>规则集ID: ${resource.id}, 路径: ${resource.path}, 状态: ${enabledStatus}</li>`;
           });
           html += '</ul>';
         } else {
-          html += '<p>未找到静态规则集配置.</p>';
+          html += '<p>未找到规则集.</p>';
         }
         // 'reason' 字段已弃用，但仍可检查以兼容旧版
         if (manifest.declarative_net_request.hasOwnProperty('reason')) {
