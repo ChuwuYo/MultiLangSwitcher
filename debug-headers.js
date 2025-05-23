@@ -8,17 +8,20 @@
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
 function sendDebugLog(message, logType = 'info') {
-    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage({
-            type: 'DEBUG_LOG',
-            message: message,
-            logType: logType
-        }).catch(error => {
-            // console.warn("Could not send debug log from debug-headers:", error.message);
-        });
-    } else {
+    const canSendMessage = chrome && chrome.runtime && chrome.runtime.sendMessage;
+    
+    if (!canSendMessage) {
         // console.log(`[Debug Log - ${logType.toUpperCase()}]: ${message}`);
+        return;
     }
+    
+    chrome.runtime.sendMessage({
+        type: 'DEBUG_LOG',
+        message: message,
+        logType: logType
+    }).catch(error => {
+        // console.warn("Could not send debug log from debug-headers:", error.message);
+    });
 }
 
 // 在控制台中显示当前的动态规则
@@ -50,6 +53,50 @@ function showCurrentRules() {
  * 测试指定语言的 Accept-Language 请求头是否生效
  * @param {string} language - 要测试的语言代码
  */
+/**
+ * 处理获取到的请求头数据
+ * @param {Object} data - 从httpbin.org返回的数据
+ * @param {string} language - 预期的语言代码
+ */
+function handleHeaderResponse(data, language) {
+    const headers = data.headers;
+    sendDebugLog('收到的请求头: ' + JSON.stringify(headers, null, 2), 'info');
+    
+    if (!headers['Accept-Language']) {
+        sendDebugLog('✗ 未检测到Accept-Language请求头!', 'error');
+        return;
+    }
+    
+    const acceptLanguage = headers['Accept-Language'].toLowerCase();
+    const expectedLanguage = language.toLowerCase();
+    
+    if (acceptLanguage.includes(expectedLanguage)) {
+        sendDebugLog(`✓ 请求头已成功更改! 检测到的值: ${acceptLanguage}`, 'success');
+    } else {
+        sendDebugLog(`✗ 请求头未成功更改! 预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguage}`, 'error');
+    }
+}
+
+/**
+ * 处理fetch请求错误
+ * @param {Error} error - 错误对象
+ */
+function handleFetchError(error) {
+    sendDebugLog(`测试失败: ${error.message}`, 'error');
+}
+
+/**
+ * 验证HTTP响应状态
+ * @param {Response} response - fetch响应对象
+ * @returns {Response} 验证通过的响应对象
+ */
+function validateResponse(response) {
+    if (!response.ok) {
+        throw new Error(`HTTP错误! 状态: ${response.status}`);
+    }
+    return response;
+}
+
 function testHeaderChange(language) {
   sendDebugLog(`正在测试语言 "${language}" 的请求头是否生效...`, 'info');
   
@@ -60,32 +107,10 @@ function testHeaderChange(language) {
     cache: 'no-store',
     credentials: 'omit'
   })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP错误! 状态: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      const headers = data.headers;
-      sendDebugLog('收到的请求头: ' + JSON.stringify(headers, null, 2), 'info');
-      
-      if (headers['Accept-Language']) {
-        const acceptLanguage = headers['Accept-Language'].toLowerCase();
-        const expectedLanguage = language.toLowerCase();
-        
-        if (acceptLanguage.includes(expectedLanguage)) {
-          sendDebugLog(`✓ 请求头已成功更改! 检测到的值: ${acceptLanguage}`, 'success');
-        } else {
-          sendDebugLog(`✗ 请求头未成功更改! 预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguage}`, 'error');
-        }
-      } else {
-        sendDebugLog('✗ 未检测到Accept-Language请求头!', 'error');
-      }
-    })
-    .catch(error => {
-      sendDebugLog(`测试失败: ${error.message}`, 'error');
-    });
+    .then(validateResponse)
+    .then(response => response.json())
+    .then(data => handleHeaderResponse(data, language))
+    .catch(handleFetchError);
 }
 
 // 导出函数供控制台使用
