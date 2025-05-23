@@ -501,18 +501,38 @@ document.addEventListener('DOMContentLoaded', function () {
           const language = rules[domain];
 
           if (domain.includes('.')) {
-            categories['二级域名'][domain] = language;
-          } else if (['cn', 'tw', 'hk', 'jp', 'kr', 'sg', 'in', 'th', 'vn', 'id'].includes(domain)) {
+            categories['二级域名'][domain] = language;          } else if ([
+            'af', 'am', 'az', 'bh', 'bd', 'bt', 'bn', 'kh', 'cn', 'tw', 'hk', 'cy', 'tl', 'ge',
+            'in', 'id', 'ir', 'iq', 'il', 'jp', 'jo', 'kz', 'kr', 'kw', 'kg', 'la', 'lb', 'mo',
+            'my', 'mv', 'mn', 'np', 'om', 'pk', 'ps', 'ph', 'qa', 'sa', 'sg', 'lk', 'sy', 'tj',
+            'th', 'tr', 'tm', 'ae', 'uz', 'vn', 'ye'
+          ].includes(domain)) {
             categories['亚洲'][domain] = language;
-          } else if (['us', 'gov', 'ca', 'mx'].includes(domain)) {
+          } else if ([
+            'ag', 'ar', 'bs', 'bb', 'bz', 'bo', 'br', 'ca', 'cl', 'co', 'cr', 'cu', 'dm', 'do',
+            'ec', 'sv', 'gd', 'gt', 'gy', 'ht', 'hn', 'jm', 'mx', 'ni', 'pa', 'py', 'pe', 'kn',
+            'lc', 'vc', 'sr', 'tt', 'us', 'gov', 'uy', 've'
+          ].includes(domain)) {
             categories['北美'][domain] = language;
-          } else if (['eu', 'uk', 'de', 'fr', 'es', 'ru', 'it', 'nl', 'be', 'ch', 'at', 'pt', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'hu', 'gr', 'tr', 'ie', 'lv', 'lt', 'sk', 'si', 'ee'].includes(domain)) {
+          } else if ([
+            'al', 'ad', 'at', 'by', 'be', 'ba', 'bg', 'hr', 'cz', 'dk', 'ee', 'fi', 'fr', 'de',
+            'gr', 'hu', 'is', 'ie', 'it', 'xk', 'lv', 'li', 'lt', 'lu', 'mk', 'mt', 'md', 'mc',
+            'me', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sm', 'rs', 'sk', 'si', 'es', 'se', 'ch',
+            'ua', 'uk', 'va', 'eu'
+          ].includes(domain)) {
             categories['欧洲'][domain] = language;
-          } else if (['au', 'nz'].includes(domain)) {
+          } else if ([
+            'au', 'fj', 'ki', 'mh', 'fm', 'nr', 'nz', 'pw', 'pg', 'ws', 'sb', 'to', 'tv', 'vu'
+          ].includes(domain)) {
             categories['大洋洲'][domain] = language;
-          } else if (['br', 'ar', 'cl'].includes(domain)) {
+          } else if ([
+            'ar', 'bo', 'br', 'cl', 'co', 'ec', 'gy', 'py', 'pe', 'sr', 'uy', 've'
+          ].includes(domain)) {
             categories['南美'][domain] = language;
-          } else if (['ae', 'sa'].includes(domain)) {
+          } else if ([
+            'ae', 'bh', 'cy', 'eg', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 'qa', 'sa',
+            'sy', 'tr', 'ye'
+          ].includes(domain)) {
             categories['中东'][domain] = language;
           } else {
             categories['通用顶级域名'][domain] = language;
