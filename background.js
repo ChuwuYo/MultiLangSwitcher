@@ -685,23 +685,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-// 函数：发送日志消息 (修改为同时支持控制台和调试页面)
-function sendBackgroundLog(message, logType = 'info') {
-  // 在控制台输出重要信息
-  if (logType === 'error' || logType === 'warning' || logType === 'info') {
-    console.log(`[Background ${logType.toUpperCase()}] ${message}`);
-  }
-
-  // 尝试发送到调试页面
-  chrome.runtime.sendMessage({
-    type: 'DEBUG_LOG',
-    message: `[Background] ${message}`,
-    logType: logType
-  }).catch(error => {
-    // 忽略错误，调试页面可能未打开
-  });
-}
-
 // 注册网络请求监听器以实现自动切换 (Manifest V3 compatible)
 chrome.webRequest.onBeforeSendHeaders.addListener(
   function (details) {
