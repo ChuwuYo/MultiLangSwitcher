@@ -128,7 +128,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-感谢贡献者
+感谢贡献者（欢迎提交PR）
 </div>
 
 <div align="center">
