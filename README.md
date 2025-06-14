@@ -109,25 +109,6 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ***
 
 <div align="center">
-文件结构
-</div>
-
-***
-
-* `manifest.json`: 定义扩展的基本信息、权限（包括 `storage` 用于存储设置，`declarativeNetRequest` 用于修改请求头，`tabs` 用于检测页面URL以实现按域名自动切换语言）和配置。
-* `popup.html` / `popup.js`: 实现扩展弹出界面和交互逻辑，包括手动语言切换和按域名自动切换的开关控制。
-* `background.js`: 作为 Service Worker 在后台运行，处理扩展生命周期事件（如安装、启动）、规则的初始化与应用、监听存储变化以及实现按域名自动切换语言的核心逻辑（包括解析域名、匹配规则、更新请求头）。包含 `domainLanguageRules` 对象用于定义域名与语言的映射关系。
-* `rules.json`: 包含静态规则的文件，本项目主要通过动态规则管理语言设置。
-* `test-headers.html` / `test-headers.js`: 用于测试浏览器语言和指纹信息的页面及其脚本。
-* `debug.html` / `debug-ui.js` / `debug-headers.js`: 实现调试页面及其功能，帮助诊断问题和查看扩展状态。
-* `images/`: 存放扩展图标文件。
-* `typefaces/`: 存放项目使用的字体文件。
-* `README.md`: 项目的中文说明文档。
-* `README_EN.md`: 项目的英文说明文档。
-
-***
-
-<div align="center">
 感谢贡献者（欢迎提交PR）
 </div>
 

@@ -105,25 +105,6 @@ Usage
 ***
 
 <div align="center">
-File Structure
-</div>
-
-***
-
-* `manifest.json`: Defines the basic information, permissions (including `storage` for saving settings, `declarativeNetRequest` for modifying request headers, `tabs` for detecting page URLs to implement automatic language switching by domain), and configuration of the extension.
-* `popup.html` / `popup.js`: Implements the extension popup interface and interaction logic, including manual language switching and the toggle switch for automatic language switching by domain.
-* `background.js`: Runs as a Service Worker in the background, handling extension lifecycle events (such as installation, startup), rule initialization and application, listening for storage changes, and implementing the core logic for automatic language switching by domain (including parsing domains, matching rules, updating request headers). Contains the `domainLanguageRules` object for defining domain-to-language mappings.
-* `rules.json`: Contains static rules file; this project mainly manages language settings through dynamic rules.
-* `test-headers.html` / `test-headers.js`: Page and script for testing browser language and fingerprinting information.
-* `debug.html` / `debug-ui.js` / `debug-headers.js`: Implements the debugging page and its functions, helping to diagnose issues and view extension status.
-* `images/`: Stores extension icon files.
-* `typefaces/`: Stores font files used by the project.
-* `README.md`: The project's documentation in Chinese.
-* `README_EN.md`: The project's documentation in English.
-
-***
-
-<div align="center">
 Thanks to Contributors(Welcome to submit PRs)
 </div>
 
