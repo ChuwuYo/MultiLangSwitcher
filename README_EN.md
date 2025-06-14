@@ -124,7 +124,7 @@ File Structure
 ***
 
 <div align="center">
-Thanks to Contributors
+Thanks to Contributors(Welcome to submit PRs)
 </div>
 
 <div align="center">
