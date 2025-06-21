@@ -3,11 +3,16 @@
 // 导入域名规则管理器
 importScripts('domain-rules-manager.js');
 
-// 定义规则ID
+// 常量定义
 const RULE_ID = 1;
 const DEFAULT_LANGUAGE = 'en-US';
+const FALLBACK_LANGUAGE = 'en';
 
-// 函数：发送后台日志消息，用于调试和重要信息输出
+/**
+ * 发送后台日志消息，用于调试和重要信息输出
+ * @param {string} message - 日志消息内容
+ * @param {string} logType - 日志类型 (info, warning, error, success)
+ */
 function sendBackgroundLog(message, logType = 'info') {
   // 在控制台输出重要信息
   if (logType === 'error' || logType === 'warning' || logType === 'info' || logType === 'success') {
@@ -16,41 +21,58 @@ function sendBackgroundLog(message, logType = 'info') {
 
   // 尝试发送到调试页面
   chrome.runtime.sendMessage({
-    type: 'DEBUG_LOG', // 消息类型，用于在调试页面区分
+    type: 'DEBUG_LOG',
     message: `[Background] ${message}`,
-    logType: logType // 日志级别 (info, warning, error, success)
-  }).catch(error => {
+    logType: logType
+  }).catch(() => {
     // 捕获错误避免控制台报错
-    // console.warn("Could not send debug log from background:", error);
   });
 }
 
-// 规则缓存，避免重复获取已知规则
-let rulesCache = null;
-let lastAppliedLanguage = null;
-let autoSwitchEnabled = false; // 新增：自动切换状态
+// 全局状态变量
+let rulesCache = null;          // 规则缓存，避免重复获取已知规则
+let lastAppliedLanguage = null; // 最后应用的语言
+let autoSwitchEnabled = false;  // 自动切换状态
 
-// 函数：根据域名获取对应的语言
+/**
+ * 根据域名获取对应的语言
+ * @param {string} domain - 域名
+ * @returns {Promise<string|null>} 对应的语言代码或null
+ */
 async function getLanguageForDomain(domain) {
   return await domainRulesManager.getLanguageForDomain(domain);
 }
 
-// 初始化域名规则管理器
-chrome.runtime.onStartup.addListener(async () => {
-  await domainRulesManager.loadRules();
-  sendBackgroundLog('Domain rules loaded on startup', 'info');
-});
+/**
+ * 初始化域名规则管理器
+ * @returns {Promise<void>}
+ */
+async function initDomainRulesManager() {
+  try {
+    await domainRulesManager.loadRules();
+    sendBackgroundLog('Domain rules loaded successfully', 'info');
+  } catch (error) {
+    sendBackgroundLog(`Failed to load domain rules: ${error.message}`, 'error');
+  }
+}
 
-chrome.runtime.onInstalled.addListener(async () => {
-  await domainRulesManager.loadRules();
-  sendBackgroundLog('Domain rules loaded on install', 'info');
-});
+// 在浏览器启动时初始化
+chrome.runtime.onStartup.addListener(initDomainRulesManager);
+
+// 在扩展安装或更新时初始化
+chrome.runtime.onInstalled.addListener(initDomainRulesManager);
 
 // 指数退避重试配置
 const MAX_RETRY_ATTEMPTS = 3;
 const BASE_RETRY_DELAY = 500; // 毫秒
 
-// 更新请求头规则，支持错误重试和规则缓存
+/**
+ * 更新请求头规则，支持错误重试和规则缓存
+ * @param {string} language - 要设置的语言代码
+ * @param {number} retryCount - 当前重试次数
+ * @param {boolean} isAutoSwitch - 是否由自动切换触发
+ * @returns {Promise<Object>} 更新结果
+ */
 function updateHeaderRules(language, retryCount = 0, isAutoSwitch = false) {
   language = language ? language.trim() : DEFAULT_LANGUAGE; // 增加对language空值的处理
 
@@ -133,7 +155,14 @@ function updateHeaderRules(language, retryCount = 0, isAutoSwitch = false) {
   });
 }
 
-// 处理规则更新错误，实现指数退避重试
+/**
+ * 处理规则更新错误，实现指数退避重试
+ * @param {Error} error - 错误对象
+ * @param {string} language - 要设置的语言代码
+ * @param {number} retryCount - 当前重试次数
+ * @param {Function} resolve - Promise resolve函数
+ * @param {Function} reject - Promise reject函数
+ */
 function handleRuleUpdateError(error, language, retryCount, resolve, reject) {
   // 对不同类型的错误进行分类处理
   let errorType = 'unknown';
@@ -206,10 +235,10 @@ chrome.runtime.onInstalled.addListener(function (details) {
       sendBackgroundLog(`加载存储的自动切换状态: ${autoSwitchEnabled}`, 'info');
 
       if (autoSwitchEnabled) {
-        sendBackgroundLog('自动切换已启用，将应用默认语言(en)直到首次导航触发规则。', 'info');
-        // 当自动切换启用时，默认使用英语 ('en')，直到访问特定域名时再切换或用户手动更改
-        updateHeaderRules('en', 0, true).then(() => { // 标记为自动切换初始化
-          notifyPopupUIUpdate(true, 'en'); // 通知UI当前是自动模式且语言为'en'
+        sendBackgroundLog(`自动切换已启用，将应用默认语言(${FALLBACK_LANGUAGE})直到首次导航触发规则。`, 'info');
+        // 当自动切换启用时，使用回退语言，直到访问特定域名时再切换或用户手动更改
+        updateHeaderRules(FALLBACK_LANGUAGE, 0, true).then(() => { // 标记为自动切换初始化
+          notifyPopupUIUpdate(true, FALLBACK_LANGUAGE); // 通知UI当前是自动模式
         });
       } else if (result.currentLanguage) {
         updateHeaderRules(result.currentLanguage);
@@ -234,18 +263,26 @@ chrome.runtime.onInstalled.addListener(function (details) {
   });
 });
 
-// 通知popup更新UI的函数
+/**
+ * 通知popup更新UI
+ * @param {boolean} autoSwitchEnabled - 自动切换是否启用
+ * @param {string} currentLanguage - 当前语言代码
+ */
 function notifyPopupUIUpdate(autoSwitchEnabled, currentLanguage) {
   chrome.runtime.sendMessage({
     type: 'AUTO_SWITCH_UI_UPDATE',
-    autoSwitchEnabled: autoSwitchEnabled,
-    currentLanguage: currentLanguage
-  }).catch(error => {
-    // console.warn("Could not send UI update to popup:", error);
+    autoSwitchEnabled,
+    currentLanguage
+  }).catch(() => {
+    // 忽略发送消息的错误
   });
 }
 
-// 处理自动切换逻辑
+/**
+ * 处理自动切换逻辑
+ * @param {Object} details - 请求详情
+ * @returns {Promise<void>}
+ */
 async function handleAutoSwitch(details) {
   if (!autoSwitchEnabled || details.method !== 'GET' || !details.url || details.tabId < 0 || details.type !== 'main_frame') {
     return; // 只处理主框架请求
@@ -262,9 +299,10 @@ async function handleAutoSwitch(details) {
     if (targetLanguage) {
       matchedRule = hostname;
 
-      // 检查URL路径中是否包含语言代码，如果包含则不覆盖域名规则
+      // 检查URL路径中是否包含语言代码
       const pathParts = url.pathname.split('/');
-      const hasLanguageInPath = pathParts.some(part => part === 'en' || part === 'zh' || part === 'fr' || part === 'de' || part === 'es' || part === 'ru' || part === 'it');
+      const commonLanguageCodes = ['en', 'zh', 'fr', 'de', 'es', 'ru', 'it', 'ja', 'ko', 'ar'];
+      const hasLanguageInPath = pathParts.some(part => commonLanguageCodes.includes(part));
 
       // 如果URL路径中包含语言代码，记录日志但仍然使用域名规则
       if (hasLanguageInPath) {
@@ -285,8 +323,8 @@ async function handleAutoSwitch(details) {
         sendBackgroundLog(`更新 ${hostname} 的规则时出错: ${error.message}`, 'error');
       });
     } else {
-      // 如果没有特定域名规则，默认使用英语('en')
-      const fallbackLanguage = 'en';
+      // 如果没有特定域名规则，使用回退语言
+      const fallbackLanguage = FALLBACK_LANGUAGE;
       sendBackgroundLog(`自动切换: 域名 ${hostname} 无匹配规则, 默认使用语言: ${fallbackLanguage}`, 'info');
 
       updateHeaderRules(fallbackLanguage, 0, true).then(updateResult => {
@@ -347,12 +385,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     if (autoSwitchEnabled) {
       sendBackgroundLog('自动切换已启用。后续请求将根据域名自动切换语言。', 'info');
-      // 启用自动切换时，先应用默认的英语
-      updateHeaderRules('en', 0, true).then(() => {
+      // 启用自动切换时，先应用回退语言
+      updateHeaderRules(FALLBACK_LANGUAGE, 0, true).then(() => {
         if (typeof sendResponse === 'function') {
           sendResponse({ status: 'success' });
         }
-        notifyPopupUIUpdate(true, 'en');
+        notifyPopupUIUpdate(true, FALLBACK_LANGUAGE);
       }).catch(error => {
         sendBackgroundLog(`自动切换启用时更新规则失败: ${error.message}`, 'error');
         if (typeof sendResponse === 'function') {
@@ -433,8 +471,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             sendBackgroundLog(`自动切换失败: ${currentHostname} -> ${targetLanguage}: ${error.message}`, 'error');
           });
       } else {
-        // 如果没有匹配的规则，默认使用英语
-        const defaultLanguage = 'en';
+        // 如果没有匹配的规则，使用回退语言
+        const defaultLanguage = FALLBACK_LANGUAGE;
         sendBackgroundLog(`域名 '${currentHostname}' 没有匹配的规则，使用默认语言: ${defaultLanguage}`, 'info');
         // 只有在当前语言不是默认语言时才更新
         chrome.declarativeNetRequest.getDynamicRules(function(rules) {
