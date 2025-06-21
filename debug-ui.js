@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // 新增：自动切换功能控制
+  // 自动切换功能控制
   document.getElementById('autoSwitchToggle').addEventListener('change', function () {
     const isEnabled = this.checked;
     addLogMessage(`尝试${isEnabled ? '启用' : '禁用'}自动切换功能...`, 'info');
@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 新增：显示域名映射规则
+  // 显示域名映射规则
   document.getElementById('showDomainRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('domainRulesResult');
     resultElement.innerHTML = '正在获取域名映射规则...';
@@ -480,6 +480,16 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      // 响应检查
+      console.log('收到域名规则响应:', response);
+      addLogMessage(`收到响应: ${JSON.stringify(response)}`, 'info');
+
+      if (response && response.error) {
+        resultElement.innerHTML = `<p class="error">获取域名映射规则时出错: ${response.error}</p>`;
+        addLogMessage(`获取域名映射规则时出错: ${response.error}`, 'error');
+        return;
+      }
+
       if (response && response.domainRules) {
         const rules = response.domainRules;
         let html = '<h5>域名语言映射规则:</h5>';
@@ -488,58 +498,51 @@ document.addEventListener('DOMContentLoaded', function () {
         const categories = {
           '二级域名': {},
           '亚洲': {},
-          '北美': {},
+          '北美洲': {},
+          '南美洲': {},
           '欧洲': {},
-          '大洋洲': {},
-          '南美': {},
           '中东': {},
-          '通用顶级域名': {}
+          '其他': {}
         };
 
-        // 对规则进行分类
+        // 对规则进行分类（基于domain-rules.json中实际存在的域名）
+        console.log('开始分类域名规则，总数:', Object.keys(rules).length);
         Object.keys(rules).forEach(domain => {
           const language = rules[domain];
 
           if (domain.includes('.')) {
-            categories['二级域名'][domain] = language;          } else if ([
-            'af', 'am', 'az', 'bh', 'bd', 'bt', 'bn', 'kh', 'cn', 'tw', 'hk', 'cy', 'tl', 'ge',
-            'in', 'id', 'ir', 'iq', 'il', 'jp', 'jo', 'kz', 'kr', 'kw', 'kg', 'la', 'lb', 'mo',
-            'my', 'mv', 'mn', 'np', 'om', 'pk', 'ps', 'ph', 'qa', 'sa', 'sg', 'lk', 'sy', 'tj',
-            'th', 'tr', 'tm', 'ae', 'uz', 'vn', 'ye'
+            categories['二级域名'][domain] = language;
+          } else if ([
+            'af', 'am', 'az', 'bd', 'bt', 'bn', 'kh', 'cn', 'tw', 'hk', 'ge',
+            'in', 'id', 'jp', 'kz', 'kr', 'kg', 'la', 'mo',
+            'my', 'mv', 'mn', 'np', 'pk', 'ph', 'sg', 'lk', 'tj',
+            'th', 'tm', 'uz', 'vn'
           ].includes(domain)) {
             categories['亚洲'][domain] = language;
           } else if ([
-            'ag', 'ar', 'bs', 'bb', 'bz', 'bo', 'br', 'ca', 'cl', 'co', 'cr', 'cu', 'dm', 'do',
-            'ec', 'sv', 'gd', 'gt', 'gy', 'ht', 'hn', 'jm', 'mx', 'ni', 'pa', 'py', 'pe', 'kn',
-            'lc', 'vc', 'sr', 'tt', 'us', 'gov', 'uy', 've'
+            'ag', 'bs', 'bb', 'bz', 'ca', 'cr', 'cu', 'dm', 'gd', 'gt', 'gy', 'ht', 'hn', 'jm', 'mx', 'ni', 'kn',
+            'lc', 'vc', 'sr', 'tt', 'us', 'gov'
           ].includes(domain)) {
-            categories['北美'][domain] = language;
+            categories['北美洲'][domain] = language;
           } else if ([
-            'al', 'ad', 'at', 'by', 'be', 'ba', 'bg', 'hr', 'cz', 'dk', 'ee', 'fi', 'fr', 'de',
-            'gr', 'hu', 'is', 'ie', 'it', 'xk', 'lv', 'li', 'lt', 'lu', 'mk', 'mt', 'md', 'mc',
-            'me', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sm', 'rs', 'sk', 'si', 'es', 'se', 'ch',
-            'ua', 'uk', 'va', 'eu'
+            'ar', 'bo', 'br', 'cl', 'co', 'ec', 'pa', 'py', 'pe', 'uy', 've', 'sv', 'do'
+          ].includes(domain)) {
+            categories['南美洲'][domain] = language;
+          } else if ([
+            'al', 'ad', 'at', 'by', 'be', 'cy', 'tl', 'eu'
           ].includes(domain)) {
             categories['欧洲'][domain] = language;
           } else if ([
-            'au', 'fj', 'ki', 'mh', 'fm', 'nr', 'nz', 'pw', 'pg', 'ws', 'sb', 'to', 'tv', 'vu'
-          ].includes(domain)) {
-            categories['大洋洲'][domain] = language;
-          } else if ([
-            'ar', 'bo', 'br', 'cl', 'co', 'ec', 'gy', 'py', 'pe', 'sr', 'uy', 've'
-          ].includes(domain)) {
-            categories['南美'][domain] = language;
-          } else if ([
-            'ae', 'bh', 'cy', 'eg', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 'qa', 'sa',
-            'sy', 'tr', 'ye'
+            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 'qa', 'sa',
+            'sy', 'tr', 'ae', 'ye'
           ].includes(domain)) {
             categories['中东'][domain] = language;
           } else {
-            categories['通用顶级域名'][domain] = language;
+            categories['其他'][domain] = language;
           }
         });
 
-        // 生成HTML
+        // 生成HTML（只显示有规则的分类）
         Object.keys(categories).forEach(category => {
           const categoryRules = categories[category];
           const ruleCount = Object.keys(categoryRules).length;
@@ -569,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addLogMessage(`成功获取并显示${Object.keys(rules).length}条域名映射规则`, 'success');
       } else {
         resultElement.innerHTML = '<p class="error">未能获取域名映射规则或规则为空</p>';
-        addLogMessage('未能获取域名映射规则或规则为空', 'warning');
+        addLogMessage(`未能获取域名映射规则或规则为空。响应内容: ${JSON.stringify(response)}`, 'warning');
       }
     });
   });

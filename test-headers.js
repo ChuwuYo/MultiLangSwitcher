@@ -625,11 +625,11 @@ function detectFingerprint() {
     fingerprintInfoElement.innerHTML = `
       <p class="mb-1"><strong>User Agent:</strong></p>
       <p class="text-success small">${ua}</p>
-      <p class="mb-1 mt-2"><strong>屏幕信息:</strong></p>
+      <p class="mb-1 mt-2"><strong>Screen information:</strong></p>
       <p class="text-success fw-bold">${screenRes}</p>
-      <p class="mb-1 mt-2"><strong>时区:</strong></p>
+      <p class="mb-1 mt-2"><strong>Timezone:</strong></p>
       <p class="text-success fw-bold">${timezone} (Offset: ${timezoneOffset})</p>
-      <p class="mb-1 mt-2"><strong>插件:</strong></p>
+      <p class="mb-1 mt-2"><strong>Plugins:</strong></p>
       <p class="text-success small">${plugins}</p>
       <p class="mb-0 mt-2 small text-muted">部分浏览器指纹信息</p>
     `;
@@ -652,7 +652,7 @@ window.addEventListener('DOMContentLoaded', function() {
     detectCanvasFingerprint();
     detectWebglFingerprint();
     detectAudioFingerprint(); // 异步
-    performCompatibilityChecks(); // 新增：执行兼容性检查
+    performCompatibilityChecks(); // 兼容性检查
   }, 1000);
 
   // 添加刷新按钮功能

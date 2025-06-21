@@ -17,12 +17,28 @@ class DomainRulesManager {
 
   async _loadRulesFromFile() {
     try {
-      const response = await fetch(chrome.runtime.getURL('domain-rules.json'));
+      const url = chrome.runtime.getURL('domain-rules.json');
+      console.log('[DomainRulesManager] 尝试加载规则文件:', url);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      this.rules = data.domainLanguageRules;
+      console.log('[DomainRulesManager] 规则文件加载成功，数据结构:', Object.keys(data));
+      
+      if (data.domainLanguageRules) {
+        this.rules = data.domainLanguageRules;
+        console.log(`[DomainRulesManager] 成功加载 ${Object.keys(this.rules).length} 条域名规则`);
+      } else {
+        console.warn('[DomainRulesManager] 规则文件中未找到 domainLanguageRules 字段');
+        this.rules = {};
+      }
+      
       return this.rules;
     } catch (error) {
-      console.error('Failed to load domain rules:', error);
+      console.error('[DomainRulesManager] 加载域名规则失败:', error);
       this.rules = {};
       return this.rules;
     }
@@ -30,7 +46,11 @@ class DomainRulesManager {
 
   // 获取规则数据
   getRules() {
-    return this.rules || {};
+    if (!this.rules) {
+      console.warn('[DomainRulesManager] 规则尚未加载，返回空对象');
+      return {};
+    }
+    return this.rules;
   }
 
   // 根据域名获取语言
@@ -105,13 +125,17 @@ class DomainRulesManager {
   getRulesStats() {
     const rules = this.getRules();
     const stats = {
-      totalRules: Object.keys(rules).length,
+      totalRules: Object.keys(rules || {}).length,
       languageDistribution: {}
     };
 
-    Object.values(rules).forEach(lang => {
-      stats.languageDistribution[lang] = (stats.languageDistribution[lang] || 0) + 1;
-    });
+    if (rules && typeof rules === 'object') {
+      Object.values(rules).forEach(lang => {
+        if (lang) {
+          stats.languageDistribution[lang] = (stats.languageDistribution[lang] || 0) + 1;
+        }
+      });
+    }
 
     return stats;
   }

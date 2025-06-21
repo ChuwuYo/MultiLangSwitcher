@@ -421,15 +421,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog('收到获取域名映射规则请求', 'info');
     try {
-      const rules = domainRulesManager.getRules();
-      const stats = domainRulesManager.getRulesStats();
-      if (typeof sendResponse === 'function') {
-        sendResponse({ domainRules: rules, stats: stats });
-      }
+      // 确保规则已加载
+      domainRulesManager.loadRules().then(() => {
+        const rules = domainRulesManager.getRules();
+        const stats = domainRulesManager.getRulesStats();
+        sendBackgroundLog(`成功获取${Object.keys(rules || {}).length}条域名映射规则`, 'success');
+        if (typeof sendResponse === 'function') {
+          sendResponse({ domainRules: rules, stats: stats });
+        }
+      }).catch(error => {
+        sendBackgroundLog(`加载域名规则失败: ${error.message}`, 'error');
+        if (typeof sendResponse === 'function') {
+          sendResponse({ error: `加载域名规则失败: ${error.message}` });
+        }
+      });
     } catch (e) {
-      sendBackgroundLog(`发送 domainRules 时出错: ${e.message}`, 'error');
+      sendBackgroundLog(`处理 GET_DOMAIN_RULES 时出错: ${e.message}`, 'error');
       if (typeof sendResponse === 'function') {
-        sendResponse({ error: `发送 domainRules 时出错: ${e.message}` });
+        sendResponse({ error: `处理 GET_DOMAIN_RULES 时出错: ${e.message}` });
       }
     }
     return true;
