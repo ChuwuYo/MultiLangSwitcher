@@ -50,19 +50,29 @@ Features
 
 ***
 
-* **Quick Language Switching**: Provides a rich language list through the browser toolbar popup interface for you to choose and apply.
-* **Automatic Language Switching by Domain**: Automatically switch languages based on domain. You can set default languages for specific domains (including top-level domains like `.com`, `.cn` and second-level domains like `com.cn`, `co.jp`). The extension will automatically apply the corresponding language settings when visiting these domains. When no domain rule is matched, English (`en`) is used by default.
-* **Persistent Settings**: Your last selected language preference and the automatic language switching by domain state will be automatically saved and loaded and applied each time the browser starts.
-* **Efficient Header Modification**: Utilizes the `declarativeNetRequest` API to directly modify the request header, which is more efficient and does not affect performance compared to the WebRequest API.
-* **Automatic Background Application**: The extension automatically reads and applies the saved language settings and auto-switch state when the browser starts and when it is installed/updated.
-* **Comprehensive Test Page**: Provides a `/test-headers.html` page to intuitively verify whether the `Accept-Language` header has been successfully changed, and to detect the language preferences exposed by the browser (`navigator.language`, `navigator.languages`), internationalization API (Intl), and other information. It also includes detection of WebRTC local IP leakage and possible browser fingerprinting information such as Canvas, WebGL, AudioContext, etc., helping you understand and control the information exposed by the browser.
-* **Debugging Tools**: Provides an independent `/debug.html` page containing the following diagnostic and repair tools:
-    * **Rule Information**: View the details of the dynamic rules currently set by the extension through `declarativeNetRequest`, including rule ID, priority, action, conditions, and recent matching rule information (matched URL, resource type, etc.).
-    * **Header Testing**: Manually select a language and send a request to the test service to directly view the actual request header sent by the browser.
-    * **Customize `Accept - Language` String**: To customize the language preference, enter the full `Accept - Language` string and save it.
-    * **Real-time Logs**: Receive and display log messages sent by the extension (including popup and background service) during runtime, helping to track code execution and issues.
-    * **Common Issue Fixes**: Provides one-click operations, such as increasing rule priority to resolve potential conflicts with browser or other extension rules, or clearing and reapplying rules.
-    * **Extension Diagnostic Information**: Displays the extension ID, version, Manifest configuration, permission status, and language settings and auto-switch state saved in local storage, providing comprehensive runtime information for the extension.
+* **Language Switching**: Popup interface for selecting languages and modifying `Accept-Language` request headers
+* **Domain-Based Auto-Switching**: Automatically applies corresponding language settings based on visited domains
+  - Supports top-level domains (e.g., `.cn`, `.jp`) and second-level domains (e.g., `com.cn`, `co.jp`)
+  - Built-in domain rules covering major countries and regions
+  - Defaults to English for unmatched domains
+* **Persistent Settings**: Language preferences and auto-switch status saved to local storage
+* **Efficient Header Modification**: Uses `declarativeNetRequest` API for better performance than WebRequest API
+* **Background Auto-Application**: Extension automatically loads settings on startup with error retry mechanism
+* **Theme Switching**: Support for light/dark theme switching
+* **Detection Page**: `test-headers.html` for verifying request header modifications, detecting:
+  - `Accept-Language` request headers
+  - JavaScript language preferences (`navigator.language`, `navigator.languages`)
+  - Internationalization API (Intl) information
+  - WebRTC local IP leakage
+  - Canvas, WebGL, AudioContext fingerprinting information
+* **Debugging Tools**: `debug.html` provides debugging and diagnostic features:
+  - View `declarativeNetRequest` dynamic rule details
+  - Multi-endpoint request header testing
+  - Custom `Accept-Language` strings (e.g., `en-US,en;q=0.9,zh-CN;q=0.8`)
+  - Real-time log display with category filtering
+  - Rule priority fixes and rule rebuilding
+  - Extension diagnostic information (version, permissions, configuration, storage status)
+  - Domain-language mapping rules viewer
 
 ***
 

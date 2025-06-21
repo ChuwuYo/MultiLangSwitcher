@@ -34,7 +34,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 ---
 
-同时建议在浏览器语言设置如图设置,这样做可以混淆一些简单的 `navigator.languages` 检测。
+建议同时在浏览器语言设置中进行相应配置，这样可以混淆一些简单的 `navigator.languages` 检测。
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
@@ -54,19 +54,29 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 ***
 
-* **快速语言切换**: 通过浏览器工具栏弹出的界面，提供丰富的语言列表供您选择并应用。
-* **按域名自动切换语言**: 根据访问的域名自动切换语言，支持顶级域名（如 `.com`, `.cn`）和二级域名（如 `com.cn`, `co.jp`）。扩展会自动应用对应域名的语言设置，当没有匹配规则时使用英语（`en`）。
-* **设置持久化**: 您上次选择的语言偏好以及按域名自动切换的状态会自动保存，并在每次浏览器启动时自动加载和应用。
-* **高效请求头修改**: 利用 `declarativeNetRequest` API，直接修改请求头，相比 WebRequest API 更加高效且不影响性能。
-* **后台自动应用**: 扩展在浏览器启动和安装/更新时，会自动读取并应用保存的语言设置和自动切换状态。
-* **全面的测试页面**: 提供一个 `/test-headers.html` 页面，用于直观地验证 `Accept-Language` 头是否已成功更改，并检测浏览器暴露的 JavaScript 语言偏好 (`navigator.language`, `navigator.languages`)、国际化 API (Intl) 等信息。同时，还包含 WebRTC 本地 IP 泄露以及 Canvas、WebGL、AudioContext 等可能的浏览器指纹信息检测，帮助您了解和控制浏览器暴露的信息。
-* **调试工具**: 提供一个独立的 `/debug.html` 页面，包含以下诊断和修复工具：
-    * **规则信息**: 查看扩展当前通过 `declarativeNetRequest` 设置的动态规则详情，包括规则 ID、优先级、操作、条件，以及最近匹配到的规则信息（匹配的 URL、资源类型等）。
-    * **请求头测试**: 手动选择语言并向测试服务发送请求，直接查看浏览器实际发送的请求头。
-    * **自定义 `Accept - Language` 字符串**：自定义语言偏好,输入完整的 `Accept - Language` 字符串并保存。
-    * **实时日志**: 接收并显示扩展（包括弹出页和后台服务）在运行时发送的日志消息，帮助追踪代码执行和问题。
-    * **常见问题修复**: 提供一键操作，例如提高规则优先级以解决可能与浏览器或其他扩展的规则冲突，或清除并重新应用规则。
-    * **扩展诊断信息**: 显示扩展ID、版本、Manifest配置、权限状态以及本地存储中保存的语言设置和自动切换状态，提供全面的扩展运行时信息。
+* **语言切换**: 弹出界面选择语言，修改 `Accept-Language` 请求头
+* **域名自动切换**: 根据访问域名自动应用对应语言设置
+  - 支持顶级域名（如 `.cn`、`.jp`）和二级域名（如 `com.cn`、`co.jp`）
+  - 内置域名规则覆盖主要国家和地区
+  - 未匹配域名默认使用英语
+* **设置持久化**: 语言偏好和自动切换状态保存到本地存储
+* **高效请求头修改**: 使用 `declarativeNetRequest` API，性能优于 WebRequest API
+* **后台自动应用**: 扩展启动时自动加载设置，支持错误重试机制
+* **主题切换**: 支持明暗主题切换
+* **检测页面**: `test-headers.html` 用于验证请求头修改效果，检测：
+  - `Accept-Language` 请求头
+  - JavaScript 语言偏好（`navigator.language`、`navigator.languages`）
+  - 国际化 API (Intl) 信息
+  - WebRTC 本地 IP 泄露
+  - Canvas、WebGL、AudioContext 指纹信息
+* **调试工具**: `debug.html` 提供调试和诊断功能：
+  - 查看 `declarativeNetRequest` 动态规则详情
+  - 多端点请求头测试
+  - 自定义 `Accept-Language` 字符串（如 `en-US,en;q=0.9,zh-CN;q=0.8`）
+  - 实时日志显示，支持分类过滤
+  - 规则优先级修复、规则重建等问题修复
+  - 扩展诊断信息（版本、权限、配置、存储状态）
+  - 域名语言映射规则查看
 
 ***
 
