@@ -86,7 +86,7 @@ Installation Guide
 
 Currently, only installation from source code is supported.
 
-Why? Because Google developers need an international payment credit card and $5.
+Why? Because I didn't register as a Google developer
 
 ### Install from Source Code
 
