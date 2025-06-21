@@ -578,9 +578,19 @@ document.addEventListener('DOMContentLoaded', function () {
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       // 更新自动切换开关状态
-      document.getElementById('autoSwitchToggle').checked = !!request.autoSwitchEnabled;
+      const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+      if (autoSwitchToggle) {
+        autoSwitchToggle.checked = !!request.autoSwitchEnabled;
+        // 同时更新存储状态，确保一致性
+        chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
+      }
       addLogMessage(`收到自动切换状态更新: ${request.autoSwitchEnabled ? '已启用' : '已禁用'}, 当前语言: ${request.currentLanguage}`, 'info');
+      
+      if (sendResponse) {
+        sendResponse({status: "Debug UI updated"});
+      }
     }
+    return true;
   });
 
 }); // DOMContentLoaded 结束

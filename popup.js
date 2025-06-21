@@ -281,7 +281,11 @@ document.addEventListener('DOMContentLoaded', function() {
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       const autoSwitchEnabled = request.autoSwitchEnabled;
-      if (autoSwitchToggle) autoSwitchToggle.checked = autoSwitchEnabled;
+      if (autoSwitchToggle) {
+        autoSwitchToggle.checked = autoSwitchEnabled;
+        // 同时更新存储状态，确保一致性
+        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
+      }
 
       if (languageSelect) languageSelect.disabled = autoSwitchEnabled;
       if (applyButton) applyButton.disabled = autoSwitchEnabled;
