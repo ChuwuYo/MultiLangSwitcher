@@ -1,5 +1,24 @@
 // --- 全局函数 ---
 
+/**
+ * 更新自动切换UI状态
+ * @param {boolean} enabled - 是否启用自动切换
+ * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
+ * @param {HTMLElement} languageSelect - 语言选择元素
+ * @param {HTMLElement} applyButton - 应用按钮元素
+ */
+function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton) {
+  if (autoSwitchToggle) autoSwitchToggle.checked = !!enabled;
+  
+  if (languageSelect) languageSelect.disabled = !!enabled;
+  if (applyButton) applyButton.disabled = !!enabled;
+  
+  const statusMsg = enabled ? '启用' : '禁用';
+  const actionMsg = enabled ? '禁用手动选择' : '启用手动选择';
+  
+  sendDebugLog(`自动切换功能已${statusMsg}, ${actionMsg}.`, 'info');
+}
+
 // 函数：发送日志消息到调试页面
 function sendDebugLog(message, logType = 'info') {
     if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
@@ -16,7 +35,6 @@ function sendDebugLog(message, logType = 'info') {
 }
 
 // 更新请求头规则，设置Accept-Language
-// 把 updateHeaderRules 移到全局作用域，或至少在 DOMContentLoaded 之前定义
 function updateHeaderRules(language, autoCheck = false) {
   const RULE_ID = 1;
   language = language.trim();
@@ -110,17 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 加载自动切换状态
   chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
-    if (result.autoSwitchEnabled) {
-      autoSwitchToggle.checked = true;
-      if (languageSelect) languageSelect.disabled = true;
-      if (applyButton) applyButton.disabled = true;
-      sendDebugLog('自动切换功能已加载并启用, 禁用手动选择.', 'info');
-    } else {
-      autoSwitchToggle.checked = false;
-      if (languageSelect) languageSelect.disabled = false;
-      if (applyButton) applyButton.disabled = false;
-      sendDebugLog('自动切换功能已加载并禁用, 启用手动选择.', 'info');
-    }
+    updateAutoSwitchUI(result.autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
   });
 
   // 自动切换按钮事件监听
@@ -131,16 +139,8 @@ document.addEventListener('DOMContentLoaded', function() {
         sendDebugLog(`自动切换功能状态已保存: ${enabled ? '启用' : '禁用'}.`, 'info');
         chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
       });
-
-      if (enabled) {
-        if (languageSelect) languageSelect.disabled = true;
-        if (applyButton) applyButton.disabled = true;
-        sendDebugLog('自动切换已启用，禁用手动语言选择和应用按钮。', 'info');
-      } else {
-        if (languageSelect) languageSelect.disabled = false;
-        if (applyButton) applyButton.disabled = false;
-        sendDebugLog('自动切换已禁用，启用手动语言选择和应用按钮。', 'info');
-      }
+      
+      updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
     });
   }
 
@@ -287,10 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
       }
 
-      if (languageSelect) languageSelect.disabled = autoSwitchEnabled;
-      if (applyButton) applyButton.disabled = autoSwitchEnabled;
-      
-      sendDebugLog(`接收到后台消息：自动切换已${autoSwitchEnabled ? '启用' : '禁用'}，更新UI。`, 'info');
+      updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
       
       if (request.currentLanguage) {
         if (currentLanguageSpan) currentLanguageSpan.textContent = request.currentLanguage;

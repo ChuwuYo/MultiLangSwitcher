@@ -1,7 +1,6 @@
 // 调试脚本，用于验证请求头更改是否生效
 
 // 函数：发送日志消息到调试页面 (与 popup.js 中的 sendDebugLog 保持一致)
-// 增加函数级注释
 /**
  * 发送日志消息到调试页面
  * @param {string} message - 日志消息内容
@@ -53,9 +52,36 @@ function showCurrentRules() {
  * 测试指定语言的 Accept-Language 请求头是否生效
  * @param {string} language - 要测试的语言代码
  */
+function testHeaderChange(language) {
+  sendDebugLog(`正在测试语言 "${language}" 的请求头是否生效...`, 'info');
+  
+  // 使用随机参数避免缓存
+  const timestamp = new Date().getTime();
+  
+  fetchWithRetry(`https://httpbin.org/headers?_=${timestamp}`, { cache: 'no-store', credentials: 'omit' })
+    .then(data => handleHeaderResponse(data, language))
+    .catch(error => sendDebugLog(`测试失败: ${error.message}`, 'error'));
+}
+
+/**
+ * 带验证的fetch请求
+ * @param {string} url - 请求URL
+ * @param {Object} options - fetch选项
+ * @returns {Promise<Object>} 响应数据
+ */
+function fetchWithRetry(url, options = {}) {
+  return fetch(url, options)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP错误! 状态: ${response.status}`);
+      }
+      return response.json();
+    });
+}
+
 /**
  * 处理获取到的请求头数据
- * @param {Object} data - 从httpbin.org返回的数据
+ * @param {Object} data - 从API返回的数据
  * @param {string} language - 预期的语言代码
  */
 function handleHeaderResponse(data, language) {
@@ -75,42 +101,6 @@ function handleHeaderResponse(data, language) {
     } else {
         sendDebugLog(`✗ 请求头未成功更改! 预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguage}`, 'error');
     }
-}
-
-/**
- * 处理fetch请求错误
- * @param {Error} error - 错误对象
- */
-function handleFetchError(error) {
-    sendDebugLog(`测试失败: ${error.message}`, 'error');
-}
-
-/**
- * 验证HTTP响应状态
- * @param {Response} response - fetch响应对象
- * @returns {Response} 验证通过的响应对象
- */
-function validateResponse(response) {
-    if (!response.ok) {
-        throw new Error(`HTTP错误! 状态: ${response.status}`);
-    }
-    return response;
-}
-
-function testHeaderChange(language) {
-  sendDebugLog(`正在测试语言 "${language}" 的请求头是否生效...`, 'info');
-  
-  // 使用随机参数避免缓存
-  const timestamp = new Date().getTime();
-  
-  fetch(`https://httpbin.org/headers?_=${timestamp}`, {
-    cache: 'no-store',
-    credentials: 'omit'
-  })
-    .then(validateResponse)
-    .then(response => response.json())
-    .then(data => handleHeaderResponse(data, language))
-    .catch(handleFetchError);
 }
 
 // 导出函数供控制台使用

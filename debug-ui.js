@@ -1,5 +1,14 @@
 // debug-ui.js - 调试页面UI交互脚本
 
+/**
+ * 获取外部请求头检查网站的链接HTML
+ * @param {string} prefix - 链接前缀文本
+ * @returns {string} 包含外部检查链接的HTML
+ */
+function getExternalCheckLinks(prefix = '请自行跳转到') {
+  return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>`;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   // 显示当前规则和匹配的规则详情
   document.getElementById('showRulesBtn').addEventListener('click', function () {
@@ -218,13 +227,13 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           html += `<p class="error">✗ 请求头未成功更改!</p>`;
           html += `<p>预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguageValue}</p>`;
-          html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+          html += getExternalCheckLinks();
           addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguageValue}`, 'error');
         }
       } else {
         // 请求成功，但未检测到 Accept-Language
         html += '<p class="error">✗ 未在任何检测点检测到Accept-Language请求头!</p>';
-        html += '<p>请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+        html += getExternalCheckLinks();
         addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error');
       }
     } else {
@@ -233,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (lastError) { // lastError 在 catch 中设置
         html += `<p class="error">最后一次错误: ${lastError.message}</p>`;
       }
-      html += '<p>请检查您的网络连接，或尝试自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>';
+      html += '<p>请检查您的网络连接，或尝试' + getExternalCheckLinks('自行跳转到');
       addLogMessage('请求头测试失败: 所有检测点均未能成功获取请求头.', 'error');
     }
 
@@ -501,6 +510,7 @@ document.addEventListener('DOMContentLoaded', function () {
           '北美洲': {},
           '南美洲': {},
           '欧洲': {},
+          '大洋洲': {},
           '中东': {},
           '其他': {}
         };
@@ -536,6 +546,10 @@ document.addEventListener('DOMContentLoaded', function () {
             'qa', 'sa', 'sy', 'ae', 'ye'
           ].includes(domain)) {
             categories['中东'][domain] = language;
+          } else if ([
+            'au', 'nz', 'fj'
+          ].includes(domain)) {
+            categories['大洋洲'][domain] = language;
           } else {
             categories['其他'][domain] = language;
           }
