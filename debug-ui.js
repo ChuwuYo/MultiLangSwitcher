@@ -513,28 +513,27 @@ document.addEventListener('DOMContentLoaded', function () {
           if (domain.includes('.')) {
             categories['二级域名'][domain] = language;
           } else if ([
-            'af', 'am', 'az', 'bd', 'bt', 'bn', 'kh', 'cn', 'tw', 'hk', 'ge',
-            'in', 'id', 'jp', 'kz', 'kr', 'kg', 'la', 'mo',
-            'my', 'mv', 'mn', 'np', 'pk', 'ph', 'sg', 'lk', 'tj',
-            'th', 'tm', 'uz', 'vn'
+            'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg', 
+            'th', 'vn', 'ph', 'kz', 'uz', 'mn'
           ].includes(domain)) {
             categories['亚洲'][domain] = language;
           } else if ([
-            'ag', 'bs', 'bb', 'bz', 'ca', 'cr', 'cu', 'dm', 'gd', 'gt', 'gy', 'ht', 'hn', 'jm', 'mx', 'ni', 'kn',
-            'lc', 'vc', 'sr', 'tt', 'us', 'gov'
+            'us', 'ca', 'mx', 'gt', 'cr', 'pa', 'cu', 'ht', 'jm', 'gov'
           ].includes(domain)) {
             categories['北美洲'][domain] = language;
           } else if ([
-            'ar', 'bo', 'br', 'cl', 'co', 'ec', 'pa', 'py', 'pe', 'uy', 've', 'sv', 'do'
+            'ar', 'br', 'cl', 'co', 'ec', 'pe', 'bo', 'py', 'uy', 've'
           ].includes(domain)) {
             categories['南美洲'][domain] = language;
           } else if ([
-            'al', 'ad', 'at', 'by', 'be', 'cy', 'tl', 'eu'
+            'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi', 
+            'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt', 
+            'se', 'uk', 'tr', 'cy'
           ].includes(domain)) {
             categories['欧洲'][domain] = language;
           } else if ([
-            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 'qa', 'sa',
-            'sy', 'tr', 'ae', 'ye'
+            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 
+            'qa', 'sa', 'sy', 'ae', 'ye'
           ].includes(domain)) {
             categories['中东'][domain] = language;
           } else {
