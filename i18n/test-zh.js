@@ -1,0 +1,21 @@
+const testZh = {
+  "title": "MultiLangSwitcher 检测页面",
+  "heading": "MultiLangSwitcher 检测页面",
+  "subtitle": "此页面用于验证MultiLangSwitcher扩展的设置效果",
+  "tip": "请特别关注 Accept-Language 请求头的值，它应该与您在扩展中设置的语言相匹配。",
+  "request_header": "请求头语言 Accept-Language",
+  "js_language": "JS 语言偏好",
+  "intl_api": "国际化 API",
+  "webrtc_detection": "WebRTC 检测",
+  "browser_fingerprint": "浏览器指纹 (部分)",
+  "detecting": "检测中...",
+  "browser_compatibility": "浏览器兼容性检查",
+  "browser_info": "浏览器信息:",
+  "api_support": "API 支持情况:",
+  "hardware_fingerprint": "硬件指纹检测",
+  "canvas_fingerprint": "Canvas 指纹",
+  "webgl_fingerprint": "WebGL 指纹",
+  "audio_fingerprint": "AudioContext 指纹",
+  "complete_headers": "完整请求头信息：",
+  "loading": "加载中..."
+};

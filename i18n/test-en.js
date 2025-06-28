@@ -1,0 +1,21 @@
+const testEn = {
+  "title": "MultiLangSwitcher Detection Page",
+  "heading": "MultiLangSwitcher Detection Page",
+  "subtitle": "This page is used to verify the effect of MultiLangSwitcher extension settings",
+  "tip": "Pay special attention to the value of the Accept-Language request header, which should match the language you set in the extension.",
+  "request_header": "Request Header Language Accept-Language",
+  "js_language": "JS Language Preference",
+  "intl_api": "Internationalization API",
+  "webrtc_detection": "WebRTC Detection",
+  "browser_fingerprint": "Browser Fingerprint (Partial)",
+  "detecting": "Detecting...",
+  "browser_compatibility": "Browser Compatibility Check",
+  "browser_info": "Browser Information:",
+  "api_support": "API Support Status:",
+  "hardware_fingerprint": "Hardware Fingerprint Detection",
+  "canvas_fingerprint": "Canvas Fingerprint",
+  "webgl_fingerprint": "WebGL Fingerprint",
+  "audio_fingerprint": "AudioContext Fingerprint",
+  "complete_headers": "Complete Request Header Information:",
+  "loading": "Loading..."
+};
