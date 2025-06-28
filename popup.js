@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const headerCheckContentPre = document.getElementById('headerCheckContent');
 
       if (headerCheckResultDiv) headerCheckResultDiv.classList.remove('d-none');
-      if (headerCheckContentPre) headerCheckContentPre.textContent = '正在获取请求头信息 (尝试多个检测点)...';
+      if (headerCheckContentPre) headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
 
       const timestamp = new Date().getTime();
       const testUrls = [

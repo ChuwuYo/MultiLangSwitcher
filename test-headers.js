@@ -304,7 +304,7 @@ function performCompatibilityChecks() {
       
       const badgeSpan = document.createElement('span');
       badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`; 
-      badgeSpan.textContent = api.supported ? '支持' : '不支持';
+      badgeSpan.textContent = api.supported ? testI18n.t('supported') : testI18n.t('not_supported');
       
       listItem.appendChild(apiNameSpan);
       listItem.appendChild(badgeSpan);
@@ -318,8 +318,8 @@ function performCompatibilityChecks() {
 async function fetchAndDisplayHeaders() {
   const headerInfoElement = document.getElementById('headerInfo');
   const headerLanguageInfo = document.getElementById('headerLanguageInfo');
-  headerInfoElement.textContent = '正在获取请求头信息...';
-  headerLanguageInfo.textContent = '正在检测...';
+  headerInfoElement.textContent = testI18n.t('fetching_headers');
+  headerLanguageInfo.textContent = testI18n.t('detecting');
 
   const timestamp = new Date().getTime();
   const TIMEOUT_MS = 5000; 
@@ -345,9 +345,9 @@ async function fetchAndDisplayHeaders() {
     if (acceptLanguage) {
       console.log('检测到的Accept-Language:', acceptLanguage);
       headerLanguageInfo.innerHTML = `
-        <p class="mb-1"><strong>当前值:</strong></p>
+        <p class="mb-1"><strong>${testI18n.t('current_value')}</strong></p>
         <p class="text-success fw-bold">${acceptLanguage}</p>
-        <p class="mb-0 mt-2 small text-muted">通过请求头检测</p>
+        <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('request_header_method'))}</p>
       `;
     } else {
       console.log('未检测到Accept-Language请求头');
@@ -413,11 +413,11 @@ function detectJsLanguage() {
       <p class="text-info fw-bold">${lang}</p>
       <p class="mb-1 mt-2"><strong>navigator.languages:</strong></p>
       <p class="text-info fw-bold">${langs}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 JavaScript 检测</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('javascript_method'))}</p>
     `;
     console.log('JS Language:', { language: lang, languages: langs });
   } catch (error) {
-    jsLanguageInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
+    jsLanguageInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('JS 语言检测失败:', error);
   }
 }
@@ -445,11 +445,11 @@ function detectCanvasFingerprint() {
     canvasInfoElement.innerHTML = `
       <p class="mb-1"><strong>Canvas hash:</strong></p>
       <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 Canvas API 检测</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('canvas_method'))}</p>
     `;
     console.log('Canvas Fingerprint (MD5):', fingerprint);
   } catch (error) {
-    canvasInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
+    canvasInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('Canvas 指纹检测失败:', error);
   }
 }
@@ -461,7 +461,7 @@ function detectWebglFingerprint() {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) {
-      webglInfoElement.innerHTML = '<p class="text-warning">WebGL 不支持或已禁用。</p>';
+      webglInfoElement.innerHTML = `<p class="text-warning">${testI18n.t('webgl_not_supported')}</p>`;
       console.warn('WebGL not supported');
       return;
     }
@@ -486,12 +486,12 @@ function detectWebglFingerprint() {
       <p class="text-dark small">${version}</p>
       <p class="mb-1 mt-2"><strong>Shading Language Version:</strong></p>
       <p class="text-dark small">${shadingLanguageVersion}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 WebGL API 检测</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webgl_method'))}</p>
     `;
     console.log('WebGL Fingerprint (MD5):', fingerprint);
     console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
   } catch (error) {
-    webglInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
+    webglInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('WebGL 指纹检测失败:', error);
   }
 }
@@ -499,11 +499,11 @@ function detectWebglFingerprint() {
 // 检测 AudioContext 指纹 (异步)
 async function detectAudioFingerprint() {
   const audioInfoElement = document.getElementById('audioFingerprintInfo');
-  audioInfoElement.innerHTML = '<p>检测中...</p>';
+  audioInfoElement.innerHTML = `<p>${testI18n.t('detecting')}</p>`;
   try {
     const audioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (!audioCtx) {
-      audioInfoElement.innerHTML = '<p class="text-warning">AudioContext 不支持。</p>';
+      audioInfoElement.innerHTML = `<p class="text-warning">${testI18n.t('audio_not_supported')}</p>`;
       console.warn('AudioContext not supported');
       return;
     }
@@ -538,12 +538,12 @@ async function detectAudioFingerprint() {
     audioInfoElement.innerHTML = `
       <p class="mb-1"><strong>AudioContext hash:</strong></p>
       <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 AudioContext API 检测</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('audio_method'))}</p>
     `;
     console.log('Audio Fingerprint (MD5):', fingerprint);
 
   } catch (error) {
-    audioInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
+    audioInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('AudioContext 指纹检测失败:', error);
   }
 }
@@ -559,11 +559,11 @@ function detectIntlApi() {
       <p class="text-secondary fw-bold">${dateTimeLocale}</p>
       <p class="mb-1 mt-2"><strong>NumberFormat Locale:</strong></p>
       <p class="text-secondary fw-bold">${numberFormatLocale}</p>
-      <p class="mb-0 mt-2 small text-muted">通过 Intl API 检测</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('intl_method'))}</p>
     `;
     console.log('Intl API Locale:', { dateTime: dateTimeLocale, numberFormat: numberFormatLocale });
   } catch (error) {
-    intlApiInfoElement.innerHTML = `<p class="text-danger">检测失败: ${error.message}</p>`;
+    intlApiInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('Intl API 检测失败:', error);
   }
 }
@@ -571,7 +571,7 @@ function detectIntlApi() {
 // 检测 WebRTC IP 泄露
 function detectWebRtc() {
   const webRtcInfoElement = document.getElementById('webRtcInfo');
-  webRtcInfoElement.innerHTML = '<p>正在尝试检测 WebRTC 本地 IP...</p>';
+  webRtcInfoElement.innerHTML = `<p>${testI18n.t('trying_webrtc')}</p>`;
   let ips = [];
 
   try {
@@ -593,21 +593,21 @@ function detectWebRtc() {
       pc.close(); 
       if (ips.length > 0) {
         webRtcInfoElement.innerHTML = `
-          <p class="mb-1"><strong>WebRTC 本地 IP 地址 (用于连接优化):</strong></p>
-          <p class="small text-muted mb-1">这是 WebRTC 的正常行为，有助于建立直接连接，但也可能暴露您的本地网络 IP 地址。</p>
+          <p class="mb-1"><strong>${testI18n.t('webrtc_local_ip')}</strong></p>
+          <p class="small text-muted mb-1">${testI18n.t('webrtc_description')}</p>
           <ul class="list-unstyled mb-0">
             ${ips.map(ip => `<li class="text-info fw-bold">${ip}</li>`).join('')}
           </ul>
-          <p class="mb-0 mt-2 small text-muted">通过 WebRTC 检测</p>
+          <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>
         `;
         console.info('WebRTC 检测到本地 IP (正常行为):', ips);
       } else {
-        webRtcInfoElement.innerHTML = '<p class="text-success">未检测到 WebRTC 本地 IP 地址暴露。</p><p class="mb-0 mt-2 small text-muted">通过 WebRTC 检测</p>';
+        webRtcInfoElement.innerHTML = `<p class="text-success">未检测到 WebRTC 本地 IP 地址暴露。</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
         console.log('WebRTC 未检测到本地 IP');
       }
     }, 1000); 
   } catch (error) {
-    webRtcInfoElement.innerHTML = `<p class="text-danger">WebRTC 检测失败或不受支持: ${error.message}</p>`;
+    webRtcInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('webrtc_not_supported')}: ${error.message}</p>`;
     console.error('WebRTC 检测失败:', error);
   }
 }
@@ -631,11 +631,11 @@ function detectFingerprint() {
       <p class="text-success fw-bold">${timezone} (Offset: ${timezoneOffset})</p>
       <p class="mb-1 mt-2"><strong>Plugins:</strong></p>
       <p class="text-success small">${plugins}</p>
-      <p class="mb-0 mt-2 small text-muted">部分浏览器指纹信息</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('partial_fingerprint')}</p>
     `;
     console.log('Fingerprint Info:', { ua, screenRes, timezone, timezoneOffset, plugins });
   } catch (error) {
-    fingerprintInfoElement.innerHTML = `<p class="text-danger">指纹检测失败: ${error.message}</p>`;
+    fingerprintInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('fingerprint')}${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error('指纹检测失败:', error);
   }
 }
@@ -658,7 +658,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // 添加刷新按钮功能
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
-  refreshButton.textContent = '刷新检测信息'; // 修改了按钮文字
+  refreshButton.textContent = testI18n.t('refresh_detection'); // 修改了按钮文字
   refreshButton.onclick = function() {
     fetchAndDisplayHeaders();
     detectJsLanguage();

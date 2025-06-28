@@ -11,5 +11,6 @@ const popupZh = {
   "debug_tools": "调试工具",
   "quick_check": "快速检查",
   "header_check_result": "当前请求头检查结果",
-  "click_quick_check": "点击\"快速检查\"按钮查看结果"
+  "click_quick_check": "点击\"快速检查\"按钮查看结果",
+  "fetching_headers": "正在获取请求头信息 (尝试多个检测点)..."
 };

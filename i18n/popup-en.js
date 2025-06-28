@@ -11,5 +11,6 @@ const popupEn = {
   "debug_tools": "Debug",
   "quick_check": "Quick Check",
   "header_check_result": "Current Request Header",
-  "click_quick_check": "Click \"Quick Check\" button to see results"
+  "click_quick_check": "Click \"Quick Check\" button to see results",
+  "fetching_headers": "Fetching request headers (trying multiple endpoints)..."
 };

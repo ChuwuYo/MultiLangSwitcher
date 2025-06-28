@@ -39,11 +39,40 @@ class TestI18n {
     document.querySelector('.alert-info').innerHTML = `<strong>${this.currentLang === 'zh' ? '提示' : 'Tip'}：</strong> ${this.t('tip')}`;
     
     const cardHeaders = document.querySelectorAll('.card-header');
-    const headerTexts = ['request_header', 'js_language', 'intl_api', 'webrtc_detection', 'browser_fingerprint', 'browser_compatibility', 'hardware_fingerprint'];
+    const headerTexts = ['request_header', 'js_language', 'intl_api', 'webrtc_detection', 'browser_fingerprint', 'browser_compatibility', 'hardware_fingerprint', 'canvas_fingerprint', 'webgl_fingerprint', 'audio_fingerprint'];
     cardHeaders.forEach((header, index) => {
       if (headerTexts[index] && !header.dataset.translated) {
         header.textContent = this.t(headerTexts[index]);
         header.dataset.translated = 'true';
+      }
+    });
+    
+    // 处理其他固定文本
+    const browserInfoLabel = document.querySelector('p strong');
+    if (browserInfoLabel && !browserInfoLabel.dataset.translated) {
+      browserInfoLabel.textContent = this.t('browser_info');
+      browserInfoLabel.dataset.translated = 'true';
+    }
+    
+    const apiSupportH5 = document.querySelector('h5');
+    if (apiSupportH5 && !apiSupportH5.dataset.translated) {
+      apiSupportH5.textContent = this.t('api_support');
+      apiSupportH5.dataset.translated = 'true';
+    }
+    
+    // 处理检测中文本
+    document.querySelectorAll('[id$="Info"]:not([data-translated])').forEach(el => {
+      if (el.textContent === '检测中...') {
+        el.textContent = this.t('detecting');
+        el.dataset.translated = 'true';
+      }
+    });
+    
+    const detectingItems = document.querySelectorAll('.list-group-item');
+    detectingItems.forEach(item => {
+      if (item.textContent === '检测中...' && !item.dataset.translated) {
+        item.textContent = this.t('detecting');
+        item.dataset.translated = 'true';
       }
     });
 
