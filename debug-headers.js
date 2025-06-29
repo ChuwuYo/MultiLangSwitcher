@@ -1,6 +1,5 @@
 // 调试脚本，用于验证请求头更改是否生效
 
-// 函数：发送日志消息到调试页面 (与 popup.js 中的 sendDebugLog 保持一致)
 /**
  * 发送日志消息到调试页面
  * @param {string} message - 日志消息内容
@@ -23,8 +22,7 @@ function sendDebugLog(message, logType = 'info') {
     });
 }
 
-// 在控制台中显示当前的动态规则
-// 增加函数级注释
+
 /**
  * 显示当前生效的动态规则和最近匹配的规则
  */
@@ -46,8 +44,7 @@ function showCurrentRules() {
   });
 }
 
-// 测试请求头是否生效
-// 增加函数级注释
+
 /**
  * 测试指定语言的 Accept-Language 请求头是否生效
  * @param {string} language - 要测试的语言代码

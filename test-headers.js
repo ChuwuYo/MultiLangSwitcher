@@ -653,7 +653,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // 添加刷新按钮功能
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
-  refreshButton.textContent = testI18n.t('Refresh detection'); // 修改了按钮文字
+  refreshButton.textContent = testI18n.t('Refresh detection');
   refreshButton.onclick = function() {
     fetchAndDisplayHeaders();
     detectJsLanguage();

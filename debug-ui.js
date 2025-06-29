@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
               html += `<div class="matched-rule-detail">`;
               html += `${debugI18n.t('matched_url')} <code>${info.request.url}</code><br>`;
               html += `${debugI18n.t('resource_type')} ${info.request.resourceType}`;
-              // 可以根据需要添加更多 info.request 的属性
               html += `</div>`;
             }
             html += '</li>';
@@ -74,21 +73,19 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           html += `<p>${debugI18n.t('no_recent_matches')}</p>`;
         }
-
         resultElement.innerHTML = html;
       });
     });
   });
 
-  // 实时日志功能
+  // 日志功能
   const logOutput = document.getElementById('logOutput');
   const clearLogsBtn = document.getElementById('clearLogsBtn');
 
-  // 存储所有日志消息，以便过滤
+  // 存储所有日志消息
   let allLogMessages = [];
 
-  // 添加日志消息到UI
-  // 增加函数级注释
+
   /**
    * 添加日志消息到UI并存储
    * @param {string} message - 日志消息内容
@@ -104,10 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 根据当前过滤器渲染日志
-  // 增加函数级注释
-  /**
-   * 根据当前选中的过滤器渲染日志到UI
-   */
   function renderLogs() {
     logOutput.innerHTML = ''; // 清空当前显示
     const activeFilters = getActiveFilters();
@@ -122,8 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 获取当前激活的过滤器
-  // 增加函数级注释
+
   /**
    * 获取当前选中的日志类型过滤器
    * @returns {string[]} - 激活的日志类型数组
@@ -338,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 简单的格式验证
     // 例如，检查是否包含不允许的字符，或者是否大致符合逗号分隔的模式
     // 这里只做非空检查
-    customLangInput.classList.remove('is-invalid'); // 移除之前的错误状态
+    customLangInput.classList.remove('is-invalid');
 
     customLangResult.innerHTML = `${debugI18n.t('applying_custom_language')} ${languageString}...`;
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
@@ -396,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ruleResources && ruleResources.length > 0) {
           html += '<ul>';
           ruleResources.forEach(resource => {
-            // 这里显示的是 manifest 中定义的默认状态。
+            // 这里显示的是 manifest 中定义的默认状态
             const enabledStatus = resource.enabled === false ? `<span class="success">${debugI18n.t('disabled_manifest')}</span>` : `<span class="error">${debugI18n.t('enabled_manifest')}</span>`;
             html += `<li>${debugI18n.t('ruleset_id')} ${resource.id}, ${debugI18n.t('path')} ${resource.path}, ${debugI18n.t('status')} ${enabledStatus}</li>`;
           });
@@ -404,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
           html += `<p>${debugI18n.t('no_ruleset_found')}</p>`;
         }
-        // 'reason' 字段已弃用，但仍可检查以兼容旧版
+        // 'reason' 字段已弃用，但可以检查以兼容旧版
         if (manifest.declarative_net_request.hasOwnProperty('reason')) {
           html += `<p>${debugI18n.t('reason')} ${manifest.declarative_net_request.reason}</p>`;
         }
@@ -538,7 +530,8 @@ document.addEventListener('DOMContentLoaded', function () {
           } else if ([
             'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi', 
             'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt', 
-            'se', 'uk', 'tr', 'cy'
+            'se', 'uk', 'tr', 'cy', 'by', 'bg', 'hr', 'rs', 'si', 
+            'ee', 'lv', 'lt', 'md', 'mk', 'al', 'ba', 'me', 'xk'
           ].includes(domain)) {
             categories[debugI18n.t('europe')][domain] = language;
           } else if ([
@@ -551,6 +544,7 @@ document.addEventListener('DOMContentLoaded', function () {
           ].includes(domain)) {
             categories[debugI18n.t('oceania')][domain] = language;
           } else {
+            // 将最后两个else if合并为一个
             categories[debugI18n.t('other')][domain] = language;
           }
         });

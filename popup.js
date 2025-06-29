@@ -19,7 +19,7 @@ function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButt
   sendDebugLog(`${popupI18n.t('auto_switch_function')}${statusMsg}, ${actionMsg}.`, 'info');
 }
 
-// 函数：发送日志消息到调试页面
+// 发送日志消息到调试页面
 function sendDebugLog(message, logType = 'info') {
     if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
         chrome.runtime.sendMessage({
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const checkHeaderBtn = document.getElementById('checkHeaderBtn');
   const autoSwitchToggle = document.getElementById('autoSwitchToggle');
 
-  // 此处可以直接调用全局的 sendDebugLog
+  // 调用全局的 sendDebugLog
   sendDebugLog(popupI18n.t('popup_script_loaded'));
 
   // 加载自动切换状态
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const autoSwitchEnabled = request.autoSwitchEnabled;
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = autoSwitchEnabled;
-        // 同时更新存储状态，确保一致性
+        // 同时更新存储状态
         chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
       }
 
