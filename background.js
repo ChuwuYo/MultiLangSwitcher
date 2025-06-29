@@ -469,7 +469,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  sendBackgroundLog(`Tab事件: tabId=${tabId}, status=${changeInfo.status}, autoSwitch=${autoSwitchEnabled}, url=${tab?.url}`, 'info');
+  sendBackgroundLog(`Tab: tabId=${tabId}, status=${changeInfo.status}, autoSwitch=${autoSwitchEnabled}, url=${tab?.url}`, 'info');
   
   // 确保自动切换已启用，标签页加载完成，并且有有效的URL (http or https)
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab && tab.url && (tab.url.startsWith('http:') || tab.url.startsWith('https://'))) {

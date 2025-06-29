@@ -1,71 +1,78 @@
 const debugEn = {
+  // Page basic information
   "title": "MultiLangSwitcher Debug Page",
   "heading": "MultiLangSwitcher Debug Tools",
   "subtitle": "This page helps you diagnose and solve language preference issues",
+  "tip_label": "Tip:",
   "tip": "If your request headers cannot be successfully changed, you can use this page for diagnosis. After opening this page, operations in other parts of the extension (such as the popup page) will display logs here.",
+
+  // Section titles and descriptions
   "current_rules": "Current Rules Information",
-  "rules_description": "Shows the dynamic rules currently in effect by the extension and details of recently matched rules.",
-  "show_rules": "Show Current Rules",
-  "click_to_view_rules": "Click the button to view current rules...",
+  "current_rules_desc": "Shows the dynamic rules currently in effect by the extension and details of recently matched rules.",
   "header_test": "Request Header Test",
-  "header_test_description": "Send a request to the test address to check if the Accept-Language header is set as expected.",
-  "test_language": "Test Language:",
-  "test_header": "Test Request Header",
-  "click_to_test": "Click the button to test request header...",
+  "header_test_desc": "Send a request to the test address to check if the Accept-Language header is set as expected.",
   "custom_language": "Custom Language Preference",
-  "custom_language_description": "Enter a complete Accept-Language string, such as \"en-US,en;q=0.9,fr;q=0.8\".",
-  "custom_language_string": "Custom Language String:",
-  "custom_language_placeholder": "Example: en-US,en;q=0.9,fr;q=0.8",
-  "apply_custom": "Apply Custom Language",
+  "custom_language_desc": "Enter a complete Accept-Language string, such as \"en-US,en;q=0.9,fr;q=0.8\".",
   "format_explanation": "Accept-Language Format Explanation",
-  "format_description": "Understand the structure of the Accept-Language request header.",
-  "basic_format": "Basic Format:",
-  "format_example": "Examples:",
-  "format_note": "Please follow this format in the input box above to set custom language.",
+  "format_explanation_desc": "Understand the structure of the Accept-Language request header.",
   "live_logs": "Live Logs",
-  "logs_description": "Shows log messages sent by the extension at runtime to help track issues.",
+  "live_logs_desc": "Shows log messages sent by the extension at runtime to help track issues.",
+  "common_fixes": "Common Problem Fixes",
+  "common_fixes_desc": "Try to automatically fix some common configuration issues.",
+  "diagnostics": "Extension Diagnostic Information",
+  "diagnostics_desc": "Shows basic information, permissions, and configuration of the extension.",
+  "auto_switch_feature": "Auto Switch Feature",
+  "auto_switch_desc": "Control the feature to automatically switch language by domain. (May detect incorrectly)",
+
+  // Button texts
+  "show_rules": "Show Current Rules",
+  "test_header": "Test Request Header",
+  "apply_custom": "Apply Custom Language",
+  "clear_logs": "Clear Logs",
+  "show_diagnostics": "Show Diagnostic Information",
+  "show_domain_rules": "Show Domain Mapping Rules",
+
+  // Labels and forms
+  "test_language_label": "Test Language:",
+  "custom_language_label": "Custom Language String:",
+  "custom_language_placeholder": "Example: en-US,en;q=0.9,fr;q=0.8",
   "info": "Info",
   "warning": "Warning",
   "error": "Error",
   "success": "Success",
-  "clear_logs": "Clear Logs",
-  "common_fixes": "Common Problem Fixes",
-  "fixes_description": "Try to automatically fix some common configuration issues.",
-  "fix_priority": "Fix Rule Priority",
-  "fix_priority_description": "Increase dynamic rule priority to 100 to override static rules",
-  "clear_rules": "Clear and Reapply Rules",
-  "clear_rules_description": "Delete all dynamic rules and recreate with current settings",
-  "select_fix": "Select a fix option...",
-  "diagnostics": "Extension Diagnostic Information",
-  "diagnostics_description": "Shows basic information, permissions, and configuration of the extension.",
-  "show_diagnostics": "Show Diagnostic Information",
-  "click_diagnostics": "Click the button to view diagnostic information...",
-  "auto_switch_feature": "Auto Switch Feature",
-  "auto_switch_description": "Control the feature to automatically switch language by domain. (May detect incorrectly)",
   "enable_auto_switch": "Enable Auto Switch (by domain)",
-  "show_domain_rules": "Show Domain Mapping Rules",
-  "click_domain_rules": "Click the button to view domain mapping rules...",
-  "language_code_required": "Language code (required): e.g. en (English), zh (Chinese). Uses ISO 639-1 standard.",
-  "region_code_optional": "-Region code (optional): e.g. US (United States), CN (Mainland China), HK (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.",
-  "quality_value_optional": ";q=Quality value (optional): Range 0 to 1, indicates priority, default is 1.",
+
+  // Initial display texts
+  "click_view_rules": "Click the button to view current rules...",
+  "click_test_header": "Click the button to test request header...",
+  "select_fix_option": "Select a fix option...",
+  "click_view_diagnostics": "Click the button to view diagnostic information...",
+  "click_view_domain_rules": "Click the button to view domain mapping rules...",
+
+  // Fix options
+  "fix_priority": "Fix Rule Priority",
+  "fix_priority_desc": "Increase dynamic rule priority to 100 to override static rules",
+  "clear_reapply": "Clear and Reapply Rules",
+  "clear_reapply_desc": "Delete all dynamic rules and recreate with current settings",
+
+  // Accept-Language format explanation
+  "basic_format": "Basic Format:",
+  "language_code": "Language code",
+  "region_code": "Region code",
+  "quality_value": "Quality value",
+  "required": "required",
+  "optional": "optional",
+  "examples": "Examples:",
+  "language_code_required": "e.g. en (English), zh (Chinese). Uses ISO 639-1 standard.",
+  "region_code_optional": "e.g. US (United States), CN (Mainland China), HK (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.",
+  "quality_value_optional": "Range 0 to 1, indicates priority, default is 1.",
   "example_en_us": "American English",
   "example_zh_cn": "Simplified Chinese (Mainland China)",
   "example_fr": "French (no region specified)",
   "example_complex": "Priority American English, followed by general English, then Simplified Chinese.",
-  "getting_rules": "Getting current dynamic rules...",
-  "current_rules": "Current dynamic rules:",
-  "no_rules_warning": "Warning: No dynamic rules found!",
-  "matched_rules": "Current matched rules:",
-  "testing_language": "Testing language",
-  "header_effective": "request header effectiveness...",
-  "test_failed": "Test failed:",
-  "http_error_status": "HTTP error! Status:",
-  "received_headers": "Received headers:",
-  "no_accept_language": "✗ No Accept-Language request header detected!",
-  "header_changed_success": "✓ Request header successfully changed! Detected value:",
-  "header_not_changed": "✗ Request header not successfully changed! Expected to contain:",
-  "actually_detected": "Actually detected:",
-  "debug_tool_loaded": "Request header debug tool loaded",
+  "format_note": "Please follow this format in the input box above to set custom language.",
+
+  // Keys used in debug-ui.js
   "please_visit": "Please visit",
   "or": "or",
   "to_view": "to view.",
@@ -87,6 +94,8 @@ const debugEn = {
   "recent_match_note": "Note: This shows rules matched in recent page loads, not necessarily all rule match history.",
   "no_recent_matches": "No recent rule matches",
   "debug_log_started": "Debug log started",
+
+  // Request header test related
   "testing_language_header": "Testing language",
   "header_test_multiple": "request header... (will try multiple detection points)",
   "start_header_test": "Starting header test, language:",
@@ -106,6 +115,10 @@ const debugEn = {
   "last_error": "Last error:",
   "check_network_connection": "Please check your network connection, or try",
   "header_test_failed_all_endpoints": "Header test failed: All detection points failed to get request headers.",
+  "http_error_status_from": "HTTP error! Status:",
+  "from": "from",
+
+  // Fix functionality related
   "fixing_rule_priority": "Fixing rule priority...",
   "try_fix_priority": "Trying to fix rule priority...",
   "fix_failed": "Fix failed:",
@@ -124,6 +137,8 @@ const debugEn = {
   "background_reapply_failed_log": "Background reapply rules failed:",
   "background_no_clear_response": "Background did not clearly respond success or failure.",
   "background_no_clear_response_log": "Background did not clearly respond success or failure.",
+
+  // Custom language related
   "enter_valid_language": "Please enter a valid language string.",
   "try_apply_custom_empty": "Trying to apply custom language, but input is empty.",
   "applying_custom_language": "Applying custom language:",
@@ -134,6 +149,8 @@ const debugEn = {
   "apply_custom_failed_backend": "✗ Apply custom language failed:",
   "backend_apply_custom_failed": "Backend apply custom language failed:",
   "backend_no_custom_response": "Background did not clearly respond to custom language application success or failure.",
+
+  // Diagnostic information related
   "collecting_diagnostics": "Collecting diagnostic information...",
   "try_show_diagnostics": "Trying to show diagnostic information...",
   "extension_info": "Extension Information:",
@@ -165,6 +182,8 @@ const debugEn = {
   "collect_storage_info_error": "Error collecting storage information:",
   "collect_diagnostics_manifest_error": "Error collecting diagnostic information (manifest/id):",
   "collect_basic_info_error": "Error collecting basic information:",
+
+  // Auto switch functionality related
   "try_enable_disable_auto": "Trying to",
   "enable": "enable",
   "disable": "disable",
@@ -173,6 +192,8 @@ const debugEn = {
   "auto_switch_enabled": "Auto switch function enabled",
   "auto_switch_disabled": "Auto switch function disabled",
   "unknown_response_auto_switch": "Received unknown response when updating auto switch status",
+
+  // Domain mapping rules related
   "getting_domain_rules": "Getting domain mapping rules...",
   "try_get_domain_rules": "Trying to get domain mapping rules...",
   "get_domain_rules_failed": "Get domain mapping rules failed:",
@@ -197,7 +218,5 @@ const debugEn = {
   "failed_get_domain_rules_empty": "Failed to get domain mapping rules or rules are empty",
   "failed_get_domain_rules_response": "Failed to get domain mapping rules or rules are empty. Response content:",
   "received_auto_switch_update": "Received auto switch status update:",
-  "current_language_colon": "current language:",
-  "http_error_status_from": "HTTP error! Status:",
-  "from": "from"
+  "current_language_colon": "current language:"
 };

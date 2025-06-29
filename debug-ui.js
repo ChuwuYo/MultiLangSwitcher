@@ -147,8 +147,10 @@ document.addEventListener('DOMContentLoaded', function () {
     checkbox.addEventListener('change', renderLogs);
   });
 
-  // Send a log when debug page loads
-  addLogMessage(debugI18n.t('debug_log_started'), 'info');
+  // 延迟发送日志，确保翻译已加载
+  setTimeout(() => {
+    addLogMessage(debugI18n.t('debug_log_started'), 'info');
+  }, 100);
   // 初始渲染日志 (虽然此时allLogMessages是空的)
   renderLogs();
 

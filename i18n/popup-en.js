@@ -4,7 +4,7 @@ const popupEn = {
   "subtitle": "Quickly switch Accept-Language",
   "select_language": "Language:",
   "apply_changes": "Apply",
-  "current_language": "Current Language:",
+  "current_language": "Accept-Language:",
   "not_set": "Not Set",
   "auto_switch": "Auto Switch Language (by domain)",
   "detection_page": "Detection",
