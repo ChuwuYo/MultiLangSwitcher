@@ -25,7 +25,7 @@ const testZh = {
   "partial_fingerprint": "部分浏览器指纹信息",
   "supported": "支持",
   "not_supported": "不支持",
-  "refresh_detection": "刷新检测信息",
+  "Refresh detection": "刷新检测信息",
   "request_header_method": "请求头",
   "javascript_method": "JavaScript",
   "webrtc_method": "WebRTC",

@@ -5,7 +5,7 @@
   <title>MultiLangSwitcher Debug Page</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
-  <link href="theme-switcher.css" rel="stylesheet">
+  <link href="toggle.css" rel="stylesheet">
   <style>
     body {
       padding: 20px;
@@ -55,7 +55,8 @@
   </style>
 </head>
 <body>
-  <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">🌙</button>
+  <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
+
   <div class="container">
     <h2>MultiLangSwitcher Debug Tools</h2>
     <p class="lead">This page helps you diagnose and solve language preference issues</p>
@@ -252,6 +253,6 @@
   <script src="debug-i18n.js"></script>
   <script src="debug-headers.js"></script>
   <script src="debug-ui.js"></script>
-  <script src="theme-switcher.js"></script>
+  <script src="toggle.js"></script>
 </body>
 </html>
