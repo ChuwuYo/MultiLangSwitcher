@@ -44,6 +44,23 @@ async function getLanguageForDomain(domain) {
 }
 
 /**
+ * 检测浏览器语言并返回对应的i18n语言代码
+ * @returns {string} 'zh' 或 'en'
+ */
+function detectBrowserLanguage() {
+  const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+  sendBackgroundLog(`检测到浏览器语言: ${browserLang}`, 'info');
+  
+  // 检查是否为中文及其变体
+  if (browserLang.startsWith('zh')) {
+    return 'zh';
+  }
+  
+  // 默认返回英文
+  return 'en';
+}
+
+/**
  * 初始化域名规则管理器
  * @returns {Promise<void>}
  */
@@ -245,16 +262,19 @@ chrome.runtime.onInstalled.addListener(function (details) {
         sendBackgroundLog(`加载并应用存储的语言设置: ${result.currentLanguage}`, 'info');
         notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage);
       } else {
-        // 如果没有保存的语言设置，并且自动切换未启用，使用默认值并保存
+        // 如果没有保存的语言设置，根据浏览器语言自动检测
+        const detectedLang = detectBrowserLanguage();
+        const defaultLanguage = detectedLang === 'zh' ? 'zh-CN' : DEFAULT_LANGUAGE;
+        
         chrome.storage.local.set({
-          currentLanguage: DEFAULT_LANGUAGE
+          currentLanguage: defaultLanguage
         }, function () {
           if (chrome.runtime.lastError) {
-            sendBackgroundLog(`保存默认语言设置 ${DEFAULT_LANGUAGE} 到 storage 失败: ${chrome.runtime.lastError.message}`, 'error');
+            sendBackgroundLog(`保存默认语言设置 ${defaultLanguage} 到 storage 失败: ${chrome.runtime.lastError.message}`, 'error');
           }
-          updateHeaderRules(DEFAULT_LANGUAGE);
-          sendBackgroundLog(`未找到存储的语言设置，使用并保存默认值: ${DEFAULT_LANGUAGE}`, 'warning');
-          notifyPopupUIUpdate(autoSwitchEnabled, DEFAULT_LANGUAGE);
+          updateHeaderRules(defaultLanguage);
+          sendBackgroundLog(`首次安装检测到浏览器语言为 ${detectedLang}，设置默认语言为: ${defaultLanguage}`, 'info');
+          notifyPopupUIUpdate(autoSwitchEnabled, defaultLanguage);
         });
       }
     });
