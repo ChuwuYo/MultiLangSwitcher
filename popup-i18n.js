@@ -80,5 +80,5 @@ class PopupI18n {
 
 const popupI18n = new PopupI18n();
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => popupI18n.addLanguageSelector(), 200);
+  popupI18n.addLanguageSelector();
 });

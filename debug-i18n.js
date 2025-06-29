@@ -57,6 +57,22 @@ class DebugI18n {
       const el = document.querySelector(selector);
       if (el) el.textContent = this.t(key);
     });
+    
+    // 处理Accept-Language格式说明
+    const formatList = document.querySelectorAll('.debug-section ul li');
+    if (formatList.length >= 3) {
+      formatList[0].innerHTML = `<code>Language code</code> (required): e.g. <code>en</code> (English), <code>zh</code> (Chinese). Uses ISO 639-1 standard.`;
+      formatList[1].innerHTML = `<code>-Region code</code> (optional): e.g. <code>US</code> (United States), <code>CN</code> (Mainland China), <code>HK</code> (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.`;
+      formatList[2].innerHTML = `<code>;q=Quality value</code> (optional): Range 0 to 1, indicates priority, default is 1.`;
+    }
+    
+    const exampleList = document.querySelectorAll('.debug-section ul')[1]?.querySelectorAll('li');
+    if (exampleList && exampleList.length >= 4) {
+      exampleList[0].innerHTML = `<code>en-US</code>: ${this.t('example_en_us')}`;
+      exampleList[1].innerHTML = `<code>zh-CN</code>: ${this.t('example_zh_cn')}`;
+      exampleList[2].innerHTML = `<code>fr</code>: ${this.t('example_fr')}`;
+      exampleList[3].innerHTML = `<code>en-US,en;q=0.9,zh-CN;q=0.8</code>: ${this.t('example_complex')}`;
+    }
   }
 
   switchLanguage(lang) {
@@ -85,5 +101,5 @@ class DebugI18n {
 
 const debugI18n = new DebugI18n();
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => debugI18n.addLanguageSelector(), 300);
+  debugI18n.addLanguageSelector();
 });

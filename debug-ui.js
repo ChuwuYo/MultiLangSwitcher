@@ -5,42 +5,42 @@
  * @param {string} prefix - 链接前缀文本
  * @returns {string} 包含外部检查链接的HTML
  */
-function getExternalCheckLinks(prefix = '请自行跳转到') {
-  return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>`;
+function getExternalCheckLinks(prefix = debugI18n.t('please_visit')) {
+  return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${debugI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${debugI18n.t('to_view')}</p>`;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
   // 显示当前规则和匹配的规则详情
   document.getElementById('showRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('rulesResult');
-    resultElement.innerHTML = '正在获取规则信息...';
+    resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
     // 获取动态规则
     chrome.declarativeNetRequest.getDynamicRules(function (rules) {
-      let html = '<h5>动态规则:</h5>';
+      let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
       if (rules.length === 0) {
-        html += '<p class="error">没有发现动态规则!</p>';
+        html += `<p class="error">${debugI18n.t('no_dynamic_rules')}</p>`;
       } else {
         html += '<ul>';
         rules.forEach(rule => {
           let priorityClass = rule.priority < 100 ? 'error' : 'success';
-          html += `<li>规则ID: ${rule.id}, 优先级: <span class="${priorityClass}">${rule.priority}</span></li>`;
-          html += `<li>操作: ${rule.action.type}</li>`;
+          html += `<li>${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} <span class="${priorityClass}">${rule.priority}</span></li>`;
+          html += `<li>${debugI18n.t('action')} ${rule.action.type}</li>`;
           if (rule.action.requestHeaders) {
-            html += `<li>修改头:`;
+            html += `<li>${debugI18n.t('modify_headers')}`;
             html += '<ul>';
             rule.action.requestHeaders.forEach(header => {
-              html += `<li>${header.header}: ${header.value} (操作: ${header.operation})</li>`;
+              html += `<li>${header.header}: ${header.value} (${debugI18n.t('operation')} ${header.operation})</li>`;
             });
             html += '</ul></li>';
           }
           if (rule.condition) {
-            html += `<li>条件:`;
+            html += `<li>${debugI18n.t('conditions')}`;
             html += '<ul>';
-            if (rule.condition.urlFilter) html += `<li>URL 过滤: <code>${rule.condition.urlFilter}</code></li>`;
+            if (rule.condition.urlFilter) html += `<li>${debugI18n.t('url_filter')} <code>${rule.condition.urlFilter}</code></li>`;
             if (rule.condition.resourceTypes && rule.condition.resourceTypes.length > 0) {
-              html += `<li>资源类型: ${rule.condition.resourceTypes.join(', ')}</li>`;
+              html += `<li>${debugI18n.t('resource_types')} ${rule.condition.resourceTypes.join(', ')}</li>`;
             }
             html += '</ul></li>';
           }
@@ -51,18 +51,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // 获取最近匹配的规则信息
       chrome.declarativeNetRequest.getMatchedRules({}, function (matchedRules) {
-        html += '<h5>最近匹配的规则:</h5>';
+        html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
           matchedRules.rulesMatchedInfo.forEach(info => {
             // 提取并显示匹配规则和请求的更多细节
             // info 对象包含 rule 和 request 属性
             html += `<li>`;
-            html += `规则集ID: ${info.rule.rulesetId ? info.rule.rulesetId : '动态规则'}, 规则ID: ${info.rule.ruleId}`;
+            html += `${debugI18n.t('ruleset_id')} ${info.rule.rulesetId ? info.rule.rulesetId : debugI18n.t('dynamic_rules').replace(':', '')}, ${debugI18n.t('rule_id')} ${info.rule.ruleId}`;
             if (info.request) {
               html += `<div class="matched-rule-detail">`;
-              html += `匹配的 URL: <code>${info.request.url}</code><br>`;
-              html += `资源类型: ${info.request.resourceType}`;
+              html += `${debugI18n.t('matched_url')} <code>${info.request.url}</code><br>`;
+              html += `${debugI18n.t('resource_type')} ${info.request.resourceType}`;
               // 可以根据需要添加更多 info.request 的属性
               html += `</div>`;
             }
@@ -70,9 +70,9 @@ document.addEventListener('DOMContentLoaded', function () {
             html += '<hr>'; // 分隔不同匹配项
           });
           html += '</ul>';
-          html += '<p class="text-muted">注意：这里显示的是最近一次或几次页面加载中匹配到的规则，不一定是全部规则匹配历史。</p>';
+          html += `<p class="text-muted">${debugI18n.t('recent_match_note')}</p>`;
         } else {
-          html += '<p>最近没有匹配到规则</p>';
+          html += `<p>${debugI18n.t('no_recent_matches')}</p>`;
         }
 
         resultElement.innerHTML = html;
@@ -155,8 +155,8 @@ document.addEventListener('DOMContentLoaded', function () {
     checkbox.addEventListener('change', renderLogs);
   });
 
-  // 调试页面加载时发送一条日志
-  addLogMessage('调试日志已启动', 'info');
+  // Send a log when debug page loads
+  addLogMessage(debugI18n.t('debug_log_started'), 'info');
   // 初始渲染日志 (虽然此时allLogMessages是空的)
   renderLogs();
 
@@ -165,8 +165,8 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('testHeaderBtn').addEventListener('click', async function () {
     const language = document.getElementById('testLanguage').value;
     const resultElement = document.getElementById('headerTestResult');
-    resultElement.innerHTML = `正在测试语言 "${language}" 的请求头... (将尝试多个检测点)`;
-    addLogMessage(`开始测试请求头，语言: ${language}`, 'info');
+    resultElement.innerHTML = `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`;
+    addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
 
     const timestamp = new Date().getTime();
     const testUrls = [
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
       fetch(url, { cache: 'no-store', credentials: 'omit' })
         .then(response => {
           if (!response.ok) {
-            throw new Error(`HTTP错误! 状态: ${response.status} 从 ${url}`);
+            throw new Error(`${debugI18n.t('http_error_status_from')} ${response.status} ${debugI18n.t('from')} ${url}`);
           }
           return response.json();
         })
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => {
           lastError = error; // 记录最后一个错误
-          addLogMessage(`请求 ${url} 失败: ${error.message}`, 'warning');
+          addLogMessage(`${debugI18n.t('request_failed')} ${url} ${debugI18n.t('failed')} ${error.message}`, 'warning');
           return { success: false, error }; // 返回失败标记和错误
         })
     );
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (firstSuccessfulResult && firstSuccessfulResult.data && firstSuccessfulResult.data.headers) {
       receivedHeaders = firstSuccessfulResult.data.headers; // 保存第一个成功的头信息
-      html += '<h5>最近一次成功收到的请求头 (来自首个成功响应的检测点):</h5>';
+      html += `<h5>${debugI18n.t('recent_successful_headers')}</h5>`;
       html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
 
       if (receivedHeaders['Accept-Language']) {
@@ -222,28 +222,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const expectedLanguage = language.toLowerCase();
 
         if (acceptLanguageValue.includes(expectedLanguage)) {
-          html += `<p class="success">✓ 请求头已成功更改! 检测到的值: ${foundAcceptLanguage}</p>`;
-          addLogMessage(`请求头测试成功: Accept-Language 为 ${foundAcceptLanguage}`, 'success');
+          html += `<p class="success">${debugI18n.t('header_changed_success')} ${foundAcceptLanguage}</p>`;
+          addLogMessage(`${debugI18n.t('header_test_success')} ${foundAcceptLanguage}`, 'success');
         } else {
-          html += `<p class="error">✗ 请求头未成功更改!</p>`;
-          html += `<p>预期包含: ${expectedLanguage}, 实际检测到: ${acceptLanguageValue}</p>`;
+          html += `<p class="error">${debugI18n.t('header_not_changed')}</p>`;
+          html += `<p>${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}</p>`;
           html += getExternalCheckLinks();
-          addLogMessage(`请求头测试失败: Accept-Language 未按预期设置. 预期包含: ${expectedLanguage}, 实际: ${acceptLanguageValue}`, 'error');
+          addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
         }
       } else {
         // 请求成功，但未检测到 Accept-Language
-        html += '<p class="error">✗ 未在任何检测点检测到Accept-Language请求头!</p>';
+        html += `<p class="error">${debugI18n.t('no_accept_language_any_endpoint')}</p>`;
         html += getExternalCheckLinks();
-        addLogMessage('请求头测试失败: 未检测到 Accept-Language 请求头.', 'error');
+        addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
       }
     } else {
       // 所有请求均失败
-      html += `<p class="error">✗ 所有测试请求均失败。</p>`;
-      if (lastError) { // lastError 在 catch 中设置
-        html += `<p class="error">最后一次错误: ${lastError.message}</p>`;
+      html += `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
+      if (lastError) {
+        html += `<p class="error">${debugI18n.t('last_error')} ${lastError.message}</p>`;
       }
-      html += '<p>请检查您的网络连接，或尝试' + getExternalCheckLinks('自行跳转到');
-      addLogMessage('请求头测试失败: 所有检测点均未能成功获取请求头.', 'error');
+      html += '<p>' + debugI18n.t('check_network_connection') + getExternalCheckLinks();
+      addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
     }
 
     resultElement.innerHTML = html;
@@ -252,8 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // 修复规则优先级
   document.getElementById('fixPriorityBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = '正在修复规则优先级...';
-    addLogMessage('尝试修复规则优先级...', 'info'); // 记录操作
+    resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
+    addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
     chrome.declarativeNetRequest.getDynamicRules(function (existingRules) {
       const existingRuleIds = existingRules.map(rule => rule.id);
@@ -269,11 +269,11 @@ document.addEventListener('DOMContentLoaded', function () {
         addRules: updatedRules
       }, function () {
         if (chrome.runtime.lastError) {
-          resultElement.innerHTML = `<p class="error">修复失败: ${chrome.runtime.lastError.message}</p>`;
-          addLogMessage(`修复规则优先级失败: ${chrome.runtime.lastError.message}`, 'error'); // 记录失败
+          resultElement.innerHTML = `<p class="error">${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}</p>`;
+          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${chrome.runtime.lastError.message}`, 'error');
         } else {
-          resultElement.innerHTML = '<p class="success">规则优先级已成功更新为100</p>';
-          addLogMessage('规则优先级已成功更新为100.', 'success'); // 记录成功
+          resultElement.innerHTML = `<p class="success">${debugI18n.t('priority_updated_success')}</p>`;
+          addLogMessage(debugI18n.t('priority_updated_log'), 'success');
         }
       });
     });
@@ -282,8 +282,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // 清除并重新应用规则
   document.getElementById('clearAllRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = '正在清除所有动态规则并重新应用...';
-    addLogMessage('尝试清除所有动态规则并重新应用...', 'info'); // 记录操作
+    resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
+    addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
     chrome.declarativeNetRequest.getDynamicRules(function (existingRules) {
       const existingRuleIds = existingRules.map(rule => rule.id);
@@ -292,26 +292,26 @@ document.addEventListener('DOMContentLoaded', function () {
         removeRuleIds: existingRuleIds
       }, function () {
         if (chrome.runtime.lastError) {
-          resultElement.innerHTML = `<p class="error">清除失败: ${chrome.runtime.lastError.message}</p>`;
-          addLogMessage(`清除规则失败: ${chrome.runtime.lastError.message}`, 'error'); // 记录失败
+          resultElement.innerHTML = `<p class="error">${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}</p>`;
+          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
           chrome.storage.local.get(['currentLanguage'], function (result) {
-            const languageToApply = result.currentLanguage || 'zh-CN'; // 使用存储的或默认语言
-            // 发送消息给 background.js 请求更新规则
+            const languageToApply = result.currentLanguage || 'zh-CN';
+            // Send message to background.js to request rule update
             chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, function (response) {
               if (chrome.runtime.lastError) {
-                resultElement.innerHTML = `<p class="error">重新应用规则时出错: ${chrome.runtime.lastError.message}</p>`;
-                addLogMessage(`请求后台重新应用规则失败: ${chrome.runtime.lastError.message}`, 'error');
+                resultElement.innerHTML = `<p class="error">${debugI18n.t('reapply_rules_error')} ${chrome.runtime.lastError.message}</p>`;
+                addLogMessage(`${debugI18n.t('request_background_reapply_failed')} ${chrome.runtime.lastError.message}`, 'error');
               } else if (response && response.status === 'success') {
-                resultElement.innerHTML = `<p class="success">所有规则已清除，并已重新应用语言: ${languageToApply}</p>`;
-                addLogMessage(`规则已清除并重新应用语言: ${languageToApply}`, 'success');
+                resultElement.innerHTML = `<p class="success">${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}</p>`;
+                addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
               } else if (response && response.status === 'error') {
-                resultElement.innerHTML = `<p class="error">后台重新应用规则失败: ${response.message}</p>`;
-                addLogMessage(`后台重新应用规则失败: ${response.message}`, 'error');
+                resultElement.innerHTML = `<p class="error">${debugI18n.t('background_reapply_failed')} ${response.message}</p>`;
+                addLogMessage(`${debugI18n.t('background_reapply_failed_log')} ${response.message}`, 'error');
               } else {
-                resultElement.innerHTML = `<p class="warning">后台未明确响应成功或失败。</p>`;
-                addLogMessage('后台未明确响应成功或失败。', 'warning');
+                resultElement.innerHTML = `<p class="warning">${debugI18n.t('background_no_clear_response')}</p>`;
+                addLogMessage(debugI18n.t('background_no_clear_response_log'), 'warning');
               }
             });
           });
@@ -329,8 +329,8 @@ document.addEventListener('DOMContentLoaded', function () {
     customLangResult.innerHTML = ''; // 清除旧结果
 
     if (!languageString) {
-      customLangResult.innerHTML = '<p class="error">请输入有效的语言字符串。</p>';
-      addLogMessage('尝试应用自定义语言，但输入为空。', 'warning');
+      customLangResult.innerHTML = `<p class="error">${debugI18n.t('enter_valid_language')}</p>`;
+      addLogMessage(debugI18n.t('try_apply_custom_empty'), 'warning');
       customLangInput.classList.add('is-invalid');
       return;
     }
@@ -340,25 +340,25 @@ document.addEventListener('DOMContentLoaded', function () {
     // 这里只做非空检查
     customLangInput.classList.remove('is-invalid'); // 移除之前的错误状态
 
-    customLangResult.innerHTML = `正在应用自定义语言: ${languageString}...`;
-    addLogMessage(`尝试应用自定义语言: ${languageString}`, 'info');
+    customLangResult.innerHTML = `${debugI18n.t('applying_custom_language')} ${languageString}...`;
+    addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
 
     // 发送消息到 background.js 请求更新规则
     chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString }, function (response) {
       if (chrome.runtime.lastError) {
-        customLangResult.innerHTML = `<p class="error">应用自定义语言失败: ${chrome.runtime.lastError.message}</p>`;
-        addLogMessage(`应用自定义语言失败: ${chrome.runtime.lastError.message}`, 'error');
+        customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}</p>`;
+        addLogMessage(`${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
       } else if (response && response.status === 'success') {
-        customLangResult.innerHTML = `<p class="success">✓ 自定义语言已成功应用: ${languageString}</p>`;
-        addLogMessage(`自定义语言已成功应用: ${languageString}`, 'success');
+        customLangResult.innerHTML = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
+        addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
         // 可选：更新存储中的语言，如果希望自定义设置持久化
         // chrome.storage.local.set({ currentLanguage: languageString });
       } else if (response && response.status === 'error') {
-        customLangResult.innerHTML = `<p class="error">✗ 应用自定义语言失败: ${response.message}</p>`;
-        addLogMessage(`后台应用自定义语言失败: ${response.message}`, 'error');
+        customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed_backend')} ${response.message}</p>`;
+        addLogMessage(`${debugI18n.t('backend_apply_custom_failed')} ${response.message}`, 'error');
       } else {
-        customLangResult.innerHTML = `<p class="warning">后台未明确响应成功或失败。</p>`;
-        addLogMessage('后台未明确响应自定义语言应用的成功或失败。', 'warning');
+        customLangResult.innerHTML = `<p class="warning">${debugI18n.t('background_no_clear_response')}</p>`;
+        addLogMessage(debugI18n.t('backend_no_custom_response'), 'warning');
       }
     });
   });
@@ -366,97 +366,97 @@ document.addEventListener('DOMContentLoaded', function () {
   // 显示诊断信息
   document.getElementById('showDiagnosticsBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('diagnosticsResult');
-    resultElement.innerHTML = '正在收集诊断信息...';
-    addLogMessage('尝试显示诊断信息...', 'info'); // 记录操作
+    resultElement.innerHTML = debugI18n.t('collecting_diagnostics');
+    addLogMessage(debugI18n.t('try_show_diagnostics'), 'info');
 
     let html = '';
     try {
-      html = '<h5>扩展信息:</h5>';
-      html += `<p>扩展ID: ${chrome.runtime.id}</p>`;
+      html = `<h5>${debugI18n.t('extension_info')}</h5>`;
+      html += `<p>${debugI18n.t('extension_id')} ${chrome.runtime.id}</p>`;
 
       // 获取清单文件信息
       const manifest = chrome.runtime.getManifest();
-      html += '<h5>清单文件信息:</h5>';
-      html += `<p>名称: ${manifest.name}</p>`;
-      html += `<p>版本: ${manifest.version}</p>`;
+      html += `<h5>${debugI18n.t('manifest_info')}</h5>`;
+      html += `<p>${debugI18n.t('name')} ${manifest.name}</p>`;
+      html += `<p>${debugI18n.t('version')} ${manifest.version}</p>`;
       if (manifest.permissions) {
-        html += `<p>权限:</p><ul>`;
+        html += `<p>${debugI18n.t('permissions')}</p><ul>`;
         manifest.permissions.forEach(permission => {
           html += `<li>${permission}</li>`;
         });
         html += '</ul>';
       } else {
-        html += '<p>未声明权限.</p>';
+        html += `<p>${debugI18n.t('no_permissions')}</p>`;
       }
 
       // 检查declarativeNetRequest配置
       if (manifest.declarative_net_request) {
-        html += '<h5>declarativeNetRequest 配置:</h5>';
+        html += `<h5>${debugI18n.t('declarative_config')}</h5>`;
         const ruleResources = manifest.declarative_net_request.rule_resources;
         if (ruleResources && ruleResources.length > 0) {
           html += '<ul>';
           ruleResources.forEach(resource => {
             // 这里显示的是 manifest 中定义的默认状态。
-            const enabledStatus = resource.enabled === false ? '<span class="success">禁用 (manifest)</span>' : '<span class="error">启用 (manifest)</span>';
-            html += `<li>规则集ID: ${resource.id}, 路径: ${resource.path}, 状态: ${enabledStatus}</li>`;
+            const enabledStatus = resource.enabled === false ? `<span class="success">${debugI18n.t('disabled_manifest')}</span>` : `<span class="error">${debugI18n.t('enabled_manifest')}</span>`;
+            html += `<li>${debugI18n.t('ruleset_id')} ${resource.id}, ${debugI18n.t('path')} ${resource.path}, ${debugI18n.t('status')} ${enabledStatus}</li>`;
           });
           html += '</ul>';
         } else {
-          html += '<p>未找到规则集.</p>';
+          html += `<p>${debugI18n.t('no_ruleset_found')}</p>`;
         }
         // 'reason' 字段已弃用，但仍可检查以兼容旧版
         if (manifest.declarative_net_request.hasOwnProperty('reason')) {
-          html += `<p>原因 (Reason): ${manifest.declarative_net_request.reason}</p>`;
+          html += `<p>${debugI18n.t('reason')} ${manifest.declarative_net_request.reason}</p>`;
         }
       } else {
-        html += '<p>未找到 declarativeNetRequest 配置.</p>';
+        html += `<p>${debugI18n.t('no_declarative_config')}</p>`;
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
       chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
         try {
           if (chrome.runtime.lastError) {
-            throw new Error(`获取存储失败: ${chrome.runtime.lastError.message}`);
+            throw new Error(`${debugI18n.t('storage_failed')} ${chrome.runtime.lastError.message}`);
           }
-          html += '<h5>存储的语言设置:</h5>';
+          html += `<h5>${debugI18n.t('stored_language_settings')}</h5>`;
           if (result.currentLanguage) {
-            html += `<p>当前语言: ${result.currentLanguage}</p>`;
-            addLogMessage(`诊断信息: 存储的语言设置为 ${result.currentLanguage}.`, 'info'); // 记录信息
+            html += `<p>${debugI18n.t('current_language')} ${result.currentLanguage}</p>`;
+            addLogMessage(`${debugI18n.t('diagnostics_stored_language')} ${result.currentLanguage}.`, 'info');
           } else {
-            html += '<p class="warning">未找到存储的语言设置 (可能使用默认值)</p>';
-            addLogMessage('诊断信息: 未找到存储的语言设置.', 'warning'); // 记录警告
+            html += `<p class="warning">${debugI18n.t('no_stored_language_found')}</p>`;
+            addLogMessage(debugI18n.t('diagnostics_no_stored_language'), 'warning');
           }
 
           // 添加自动切换状态信息
-          html += '<h5>自动切换功能:</h5>';
+          html += `<h5>${debugI18n.t('auto_switch_function')}</h5>`;
           const autoSwitchStatus = result.autoSwitchEnabled ?
-            '<span class="success">已启用</span>' :
-            '<span class="error">已禁用</span>';
-          html += `<p>状态: ${autoSwitchStatus}</p>`;
+            `<span class="success">${debugI18n.t('enabled')}</span>` :
+            `<span class="error">${debugI18n.t('disabled')}</span>`;
+          html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
 
           resultElement.innerHTML = html;
-          addLogMessage('诊断信息显示完成.', 'info'); // 记录完成
+          addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
           // 同步更新自动切换开关状态
           document.getElementById('autoSwitchToggle').checked = !!result.autoSwitchEnabled;
         } catch (storageError) {
-          console.error('收集诊断信息时出错 (storage):', storageError);
-          addLogMessage(`收集诊断信息时出错 (storage): ${storageError.message}`, 'error');
-          resultElement.innerHTML = `<p class="error">收集存储信息时出错: ${storageError.message}</p>`;
+          console.error('Error collecting diagnostic information (storage):', storageError);
+          addLogMessage(`${debugI18n.t('collect_diagnostics_storage_error')} ${storageError.message}`, 'error');
+          resultElement.innerHTML = `<p class="error">${debugI18n.t('collect_storage_info_error')} ${storageError.message}</p>`;
         }
       });
 
     } catch (error) {
-      console.error('收集诊断信息时出错 (manifest/id):', error);
-      addLogMessage(`收集诊断信息时出错 (manifest/id): ${error.message}`, 'error');
-      resultElement.innerHTML = `<p class="error">收集基本信息时出错: ${error.message}</p>`;
+      console.error('Error collecting diagnostic information (manifest/id):', error);
+      addLogMessage(`${debugI18n.t('collect_diagnostics_manifest_error')} ${error.message}`, 'error');
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('collect_basic_info_error')} ${error.message}</p>`;
     }
   });
 
   // 自动切换功能控制
   document.getElementById('autoSwitchToggle').addEventListener('change', function () {
     const isEnabled = this.checked;
-    addLogMessage(`尝试${isEnabled ? '启用' : '禁用'}自动切换功能...`, 'info');
+    addLogMessage(`${debugI18n.t('try_enable_disable_auto')}${isEnabled ? debugI18n.t('enable') : debugI18n.t('disable')}${debugI18n.t('auto_switch_function_ellipsis')}`, 'info');
 
     // 发送消息到 background.js 更新自动切换状态
     chrome.runtime.sendMessage({
@@ -464,13 +464,13 @@ document.addEventListener('DOMContentLoaded', function () {
       enabled: isEnabled
     }, function (response) {
       if (chrome.runtime.lastError) {
-        addLogMessage(`更新自动切换状态失败: ${chrome.runtime.lastError.message}`, 'error');
+        addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${chrome.runtime.lastError.message}`, 'error');
       } else if (response && response.status === 'success') {
-        addLogMessage(`自动切换功能已${isEnabled ? '启用' : '禁用'}`, 'success');
+        addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
         // 更新存储中的状态
         chrome.storage.local.set({ autoSwitchEnabled: isEnabled });
       } else {
-        addLogMessage('更新自动切换状态时收到未知响应', 'warning');
+        addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
       }
     });
   });
@@ -478,80 +478,80 @@ document.addEventListener('DOMContentLoaded', function () {
   // 显示域名映射规则
   document.getElementById('showDomainRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('domainRulesResult');
-    resultElement.innerHTML = '正在获取域名映射规则...';
-    addLogMessage('尝试获取域名映射规则...', 'info');
+    resultElement.innerHTML = debugI18n.t('getting_domain_rules');
+    addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
 
     // 从 background.js 获取域名映射规则
     chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, function (response) {
       if (chrome.runtime.lastError) {
-        resultElement.innerHTML = `<p class="error">获取域名映射规则失败: ${chrome.runtime.lastError.message}</p>`;
-        addLogMessage(`获取域名映射规则失败: ${chrome.runtime.lastError.message}`, 'error');
+        resultElement.innerHTML = `<p class="error">${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}</p>`;
+        addLogMessage(`${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
         return;
       }
 
       // 响应检查
-      console.log('收到域名规则响应:', response);
-      addLogMessage(`收到响应: ${JSON.stringify(response)}`, 'info');
+      console.log(debugI18n.t('received_domain_response'), response);
+      addLogMessage(`${debugI18n.t('received_response')} ${JSON.stringify(response)}`, 'info');
 
       if (response && response.error) {
-        resultElement.innerHTML = `<p class="error">获取域名映射规则时出错: ${response.error}</p>`;
-        addLogMessage(`获取域名映射规则时出错: ${response.error}`, 'error');
+        resultElement.innerHTML = `<p class="error">${debugI18n.t('get_domain_rules_error')} ${response.error}</p>`;
+        addLogMessage(`${debugI18n.t('get_domain_rules_error')} ${response.error}`, 'error');
         return;
       }
 
       if (response && response.domainRules) {
         const rules = response.domainRules;
-        let html = '<h5>域名语言映射规则:</h5>';
+        let html = `<h5>${debugI18n.t('domain_language_mapping')}</h5>`;
 
         // 按类别组织规则
         const categories = {
-          '二级域名': {},
-          '亚洲': {},
-          '北美洲': {},
-          '南美洲': {},
-          '欧洲': {},
-          '大洋洲': {},
-          '中东': {},
-          '其他': {}
+          [debugI18n.t('second_level_domain')]: {},
+          [debugI18n.t('asia')]: {},
+          [debugI18n.t('north_america')]: {},
+          [debugI18n.t('south_america')]: {},
+          [debugI18n.t('europe')]: {},
+          [debugI18n.t('oceania')]: {},
+          [debugI18n.t('middle_east')]: {},
+          [debugI18n.t('other')]: {}
         };
 
         // 对规则进行分类（基于domain-rules.json中实际存在的域名）
-        console.log('开始分类域名规则，总数:', Object.keys(rules).length);
+        console.log(debugI18n.t('start_classify_domain_rules'), Object.keys(rules).length);
         Object.keys(rules).forEach(domain => {
           const language = rules[domain];
 
           if (domain.includes('.')) {
-            categories['二级域名'][domain] = language;
+            categories[debugI18n.t('second_level_domain')][domain] = language;
           } else if ([
             'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg', 
             'th', 'vn', 'ph', 'kz', 'uz', 'mn'
           ].includes(domain)) {
-            categories['亚洲'][domain] = language;
+            categories[debugI18n.t('asia')][domain] = language;
           } else if ([
             'us', 'ca', 'mx', 'gt', 'cr', 'pa', 'cu', 'ht', 'jm', 'gov'
           ].includes(domain)) {
-            categories['北美洲'][domain] = language;
+            categories[debugI18n.t('north_america')][domain] = language;
           } else if ([
             'ar', 'br', 'cl', 'co', 'ec', 'pe', 'bo', 'py', 'uy', 've'
           ].includes(domain)) {
-            categories['南美洲'][domain] = language;
+            categories[debugI18n.t('south_america')][domain] = language;
           } else if ([
             'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi', 
             'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt', 
             'se', 'uk', 'tr', 'cy'
           ].includes(domain)) {
-            categories['欧洲'][domain] = language;
+            categories[debugI18n.t('europe')][domain] = language;
           } else if ([
             'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 
             'qa', 'sa', 'sy', 'ae', 'ye'
           ].includes(domain)) {
-            categories['中东'][domain] = language;
+            categories[debugI18n.t('middle_east')][domain] = language;
           } else if ([
             'au', 'nz', 'fj'
           ].includes(domain)) {
-            categories['大洋洲'][domain] = language;
+            categories[debugI18n.t('oceania')][domain] = language;
           } else {
-            categories['其他'][domain] = language;
+            categories[debugI18n.t('other')][domain] = language;
           }
         });
 
@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
           const ruleCount = Object.keys(categoryRules).length;
 
           if (ruleCount > 0) {
-            html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}条规则):</div>`;
+            html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}${debugI18n.t('rules_count')}):</div>`;
             html += '<div class="matched-rule-detail">';
 
             // 将规则按字母顺序排序
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 创建表格显示
             html += '<table class="table table-sm table-striped">';
-            html += '<thead><tr><th>域名</th><th>语言</th></tr></thead>';
+            html += `<thead><tr><th>${debugI18n.t('domain')}</th><th>${debugI18n.t('language')}</th></tr></thead>`;
             html += '<tbody>';
 
             sortedDomains.forEach(domain => {
@@ -582,10 +582,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         resultElement.innerHTML = html;
-        addLogMessage(`成功获取并显示${Object.keys(rules).length}条域名映射规则`, 'success');
+        addLogMessage(`${debugI18n.t('successfully_got_displayed_rules')}${Object.keys(rules).length}${debugI18n.t('domain_mapping_rules')}`, 'success');
       } else {
-        resultElement.innerHTML = '<p class="error">未能获取域名映射规则或规则为空</p>';
-        addLogMessage(`未能获取域名映射规则或规则为空。响应内容: ${JSON.stringify(response)}`, 'warning');
+        resultElement.innerHTML = `<p class="error">${debugI18n.t('failed_get_domain_rules_empty')}</p>`;
+        addLogMessage(`${debugI18n.t('failed_get_domain_rules_response')} ${JSON.stringify(response)}`, 'warning');
       }
     });
   });
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // 同时更新存储状态，确保一致性
         chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
       }
-      addLogMessage(`收到自动切换状态更新: ${request.autoSwitchEnabled ? '已启用' : '已禁用'}, 当前语言: ${request.currentLanguage}`, 'info');
+      addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
       
       if (sendResponse) {
         sendResponse({status: "Debug UI updated"});

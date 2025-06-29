@@ -200,11 +200,11 @@ function md5(string) {
 /* eslint-enable */
 // --- End MD5 Hashing Function ---
 
-// --- 新增功能：浏览器兼容性检查 ---
+// --- 浏览器兼容性检查 ---
 function getBrowserInfo() {
   const ua = navigator.userAgent;
-  let browserName = "未知浏览器";
-  let browserVersion = "未知版本";
+  let browserName = testI18n.t('unknown_browser');
+  let browserVersion = testI18n.t('unknown_version');
   let fullVersion = "";
 
   let tem;
@@ -243,18 +243,16 @@ function getBrowserInfo() {
     browserVersion = M[2];
     fullVersion = browserVersion;
   } else {
-    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-    if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
-    browserName = M[0];
-    browserVersion = M[1];
-    fullVersion = M[1];
+    browserName = testI18n.t('unknown_browser');
+    browserVersion = testI18n.t('unknown_version');
+    fullVersion = testI18n.t('unknown_version');
   }
   
-  let os = "未知操作系统";
-  if (navigator.appVersion.indexOf("Win")!=-1) os="Windows";
-  if (navigator.appVersion.indexOf("Mac")!=-1) os="MacOS";
-  if (navigator.appVersion.indexOf("X11")!=-1) os="UNIX";
-  if (navigator.appVersion.indexOf("Linux")!=-1) os="Linux";
+  let os = testI18n.t('unknown_os');
+  if (ua.indexOf("Windows") !== -1) os = "Windows";
+  if (ua.indexOf("Mac") !== -1) os = "MacOS";
+  if (ua.indexOf("X11") !== -1) os = "UNIX";
+  if (ua.indexOf("Linux") !== -1) os = "Linux";
 
   return {
     name: browserName,
@@ -343,17 +341,17 @@ async function fetchAndDisplayHeaders() {
     const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
 
     if (acceptLanguage) {
-      console.log('检测到的Accept-Language:', acceptLanguage);
+      console.log(testI18n.t('detected_accept_language'), acceptLanguage);
       headerLanguageInfo.innerHTML = `
         <p class="mb-1"><strong>${testI18n.t('current_value')}</strong></p>
         <p class="text-success fw-bold">${acceptLanguage}</p>
         <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('request_header_method'))}</p>
       `;
     } else {
-      console.log('未检测到Accept-Language请求头');
+      console.log(testI18n.t('no_accept_language'));
       headerLanguageInfo.innerHTML = `
-        <p class="text-warning">未检测到Accept-Language请求头</p>
-        <p class="mt-2">请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>
+        <p class="text-warning">${testI18n.t('not_detected_accept_language')}</p>
+        <p class="mt-2">${testI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${testI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${testI18n.t('to_view')}</p>
       `;
     }
   }
@@ -370,14 +368,14 @@ async function fetchAndDisplayHeaders() {
     .then(response => {
       clearTimeout(timeoutId);
       if (!response.ok) {
-        throw new Error(`HTTP错误! 状态: ${response.status} 来自 ${url}`);
+        throw new Error(`${testI18n.t('http_error_status')} ${response.status} ${testI18n.t('from')} ${url}`);
       }
       return response.json();
     })
     .catch(error => {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        throw new Error(`请求 ${url} 超时 (${timeoutMs}ms)`);
+        throw new Error(testI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
       }
       throw error;
     });
@@ -388,16 +386,16 @@ async function fetchAndDisplayHeaders() {
     const firstSuccessfulResponse = await Promise.any(promises);
     processHeadersData(firstSuccessfulResponse);
   } catch (error) {
-    console.error('所有获取请求头的尝试都失败了:', error);
-    let combinedErrorMessage = '获取请求头信息失败 (所有服务均失败或超时)。';
+    console.error(testI18n.t('all_attempts_failed'), error);
+    let combinedErrorMessage = testI18n.t('fetch_failed_all_services');
     if (error instanceof AggregateError) {
-        combinedErrorMessage += ' 详细错误: ' + error.errors.map(e => e.message || e).join('; ');
+        combinedErrorMessage += ' ' + testI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
     }
     headerInfoElement.textContent = combinedErrorMessage;
     headerLanguageInfo.innerHTML = `
-      <p class="text-danger">检测失败 (所有服务均失败或超时)。</p>
+      <p class="text-danger">${testI18n.t('detection_failed_all_services')}</p>
       <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
-      <p class="mt-2">请自行跳转到 <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> 进行查看。</p>
+      <p class="mt-2">${testI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${testI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${testI18n.t('to_view')}</p>
     `;
   }
 }
@@ -418,7 +416,7 @@ function detectJsLanguage() {
     console.log('JS Language:', { language: lang, languages: langs });
   } catch (error) {
     jsLanguageInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('JS 语言检测失败:', error);
+    console.error(testI18n.t('js_language_detection_failed'), error);
   }
 }
 
@@ -450,7 +448,7 @@ function detectCanvasFingerprint() {
     console.log('Canvas Fingerprint (MD5):', fingerprint);
   } catch (error) {
     canvasInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('Canvas 指纹检测失败:', error);
+    console.error(testI18n.t('canvas_fingerprint_detection_failed'), error);
   }
 }
 
@@ -492,7 +490,7 @@ function detectWebglFingerprint() {
     console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
   } catch (error) {
     webglInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('WebGL 指纹检测失败:', error);
+    console.error(testI18n.t('webgl_fingerprint_detection_failed'), error);
   }
 }
 
@@ -544,7 +542,7 @@ async function detectAudioFingerprint() {
 
   } catch (error) {
     audioInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('AudioContext 指纹检测失败:', error);
+    console.error(testI18n.t('audio_fingerprint_detection_failed'), error);
   }
 }
 
@@ -564,7 +562,7 @@ function detectIntlApi() {
     console.log('Intl API Locale:', { dateTime: dateTimeLocale, numberFormat: numberFormatLocale });
   } catch (error) {
     intlApiInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('Intl API 检测失败:', error);
+    console.error(testI18n.t('intl_api_detection_failed'), error);
   }
 }
 
@@ -587,7 +585,7 @@ function detectWebRtc() {
     };
     pc.createOffer()
       .then(offer => pc.setLocalDescription(offer))
-      .catch(err => console.error('WebRTC setLocalDescription 失败:', err));
+      .catch(err => console.error(testI18n.t('webrtc_setlocaldescription_failed'), err));
 
     setTimeout(() => {
       pc.close(); 
@@ -600,15 +598,15 @@ function detectWebRtc() {
           </ul>
           <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>
         `;
-        console.info('WebRTC 检测到本地 IP (正常行为):', ips);
+        console.info(testI18n.t('webrtc_detected_local_ip'), ips);
       } else {
-        webRtcInfoElement.innerHTML = `<p class="text-success">未检测到 WebRTC 本地 IP 地址暴露。</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
-        console.log('WebRTC 未检测到本地 IP');
+        webRtcInfoElement.innerHTML = `<p class="text-success">${testI18n.t('webrtc_no_ip_detected')}</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
+        console.log(testI18n.t('webrtc_no_local_ip'));
       }
     }, 1000); 
   } catch (error) {
     webRtcInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('webrtc_not_supported')}: ${error.message}</p>`;
-    console.error('WebRTC 检测失败:', error);
+    console.error(testI18n.t('webrtc_detection_failed'), error);
   }
 }
 
@@ -620,7 +618,6 @@ function detectFingerprint() {
     const screenRes = `${screen.width}x${screen.height}x${screen.colorDepth}` || 'N/A';
     const timezoneOffset = new Date().getTimezoneOffset();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
-    const plugins = navigator.plugins ? Array.from(navigator.plugins).map(p => p.name).join(', ') : 'N/A (受限)';
 
     fingerprintInfoElement.innerHTML = `
       <p class="mb-1"><strong>User Agent:</strong></p>
@@ -629,14 +626,12 @@ function detectFingerprint() {
       <p class="text-success fw-bold">${screenRes}</p>
       <p class="mb-1 mt-2"><strong>Timezone:</strong></p>
       <p class="text-success fw-bold">${timezone} (Offset: ${timezoneOffset})</p>
-      <p class="mb-1 mt-2"><strong>Plugins:</strong></p>
-      <p class="text-success small">${plugins}</p>
       <p class="mb-0 mt-2 small text-muted">${testI18n.t('partial_fingerprint')}</p>
     `;
-    console.log('Fingerprint Info:', { ua, screenRes, timezone, timezoneOffset, plugins });
+    console.log('Fingerprint Info:', { ua, screenRes, timezone, timezoneOffset });
   } catch (error) {
     fingerprintInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('fingerprint')}${testI18n.t('detection_failed')}: ${error.message}</p>`;
-    console.error('指纹检测失败:', error);
+    console.error(testI18n.t('fingerprint_detection_failed'), error);
   }
 }
 
@@ -668,7 +663,7 @@ window.addEventListener('DOMContentLoaded', function() {
     detectCanvasFingerprint();
     detectWebglFingerprint();
     detectAudioFingerprint(); // 异步
-    performCompatibilityChecks(); // 新增：刷新时也执行兼容性检查
+    performCompatibilityChecks(); // 刷新时也执行兼容性检查
   };
   
   // 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
@@ -683,12 +678,12 @@ window.addEventListener('DOMContentLoaded', function() {
          if (allHeaderInfoDivs.length > 0) {
              allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
          } else {
-              // 如果还是找不到，就直接附加到 container 的末尾，位置可能不理想
+              // 如果还是找不到，就直接附加到 container 的末尾
               container.appendChild(refreshButton);
-              console.warn("未能精确找到 .header-info 用于附加刷新按钮，按钮已附加到 .container 末尾。");
+              console.warn(testI18n.t('button_add_failed_container'));
          }
      } else {
-         console.error("未能找到 .container 用于附加刷新按钮。");
+         console.error(testI18n.t('button_add_failed_no_container'));
      }
   }
 });

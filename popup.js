@@ -13,10 +13,10 @@ function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButt
   if (languageSelect) languageSelect.disabled = !!enabled;
   if (applyButton) applyButton.disabled = !!enabled;
   
-  const statusMsg = enabled ? '启用' : '禁用';
-  const actionMsg = enabled ? '禁用手动选择' : '启用手动选择';
+  const statusMsg = enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
+  const actionMsg = enabled ? popupI18n.t('disable_manual_selection') : popupI18n.t('enable_manual_selection');
   
-  sendDebugLog(`自动切换功能已${statusMsg}, ${actionMsg}.`, 'info');
+  sendDebugLog(`${popupI18n.t('auto_switch_function')}${statusMsg}, ${actionMsg}.`, 'info');
 }
 
 // 函数：发送日志消息到调试页面
@@ -40,10 +40,10 @@ function updateHeaderRules(language, autoCheck = false) {
   language = language.trim();
 
   // 此处可以直接调用全局的 sendDebugLog
-  sendDebugLog(`正在尝试更新请求头规则，语言: ${language}. 是否自动检查: ${autoCheck}.`, 'info');
+  sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${language}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
   chrome.declarativeNetRequest.getDynamicRules(function(existingRules) {
-    sendDebugLog(`找到 ${existingRules.length} 条现有动态规则，准备移除并添加新规则.`, 'info');
+    sendDebugLog(`${popupI18n.t('found_rules')} ${existingRules.length} ${popupI18n.t('existing_dynamic_rules')}`, 'info');
     // const existingRuleIds = existingRules.map(rule => rule.id); // 如果要移除所有
     const ruleExists = existingRules.some(rule => rule.id === RULE_ID);
 
@@ -69,12 +69,12 @@ function updateHeaderRules(language, autoCheck = false) {
       }]
     }, function() {
       if (chrome.runtime.lastError) {
-        sendDebugLog(`更新 declarativeNetRequest 规则失败: ${chrome.runtime.lastError.message}`, 'error');
-        alert('更新请求头规则失败: ' + chrome.runtime.lastError.message);
+        sendDebugLog(`${popupI18n.t('update_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
+        alert(popupI18n.t('update_request_header_failed') + ' ' + chrome.runtime.lastError.message);
         return;
       }
 
-      sendDebugLog(`DeclarativeNetRequest 规则已成功更新为: ${language}.`, 'success');
+      sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${language}.`, 'success');
       const statusTextElement = document.getElementById('statusText');
       const currentLanguageSpan = document.getElementById('currentLanguage');
 
@@ -82,7 +82,7 @@ function updateHeaderRules(language, autoCheck = false) {
         currentLanguageSpan.textContent = language;
         const successSpan = document.createElement('span');
         successSpan.className = 'text-success ms-1'; // 加一点左边距
-        successSpan.textContent = '(已应用)';
+        successSpan.textContent = popupI18n.t('applied');
         
         const oldSuccessSpan = statusTextElement.querySelector('.text-success');
         if (oldSuccessSpan) {
@@ -102,7 +102,7 @@ function updateHeaderRules(language, autoCheck = false) {
       if (autoCheck) {
         const checkHeaderBtn = document.getElementById('checkHeaderBtn');
         if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
-          sendDebugLog('规则更新后自动触发快速检查.', 'info');
+          sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
           setTimeout(function() {
             checkHeaderBtn.click();
           }, 500);
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const autoSwitchToggle = document.getElementById('autoSwitchToggle');
 
   // 此处可以直接调用全局的 sendDebugLog
-  sendDebugLog('Popup 脚本已加载.');
+  sendDebugLog(popupI18n.t('popup_script_loaded'));
 
   // 加载自动切换状态
   chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     autoSwitchToggle.addEventListener('change', function() {
       const enabled = this.checked;
       chrome.storage.local.set({ autoSwitchEnabled: enabled }, function() {
-        sendDebugLog(`自动切换功能状态已保存: ${enabled ? '启用' : '禁用'}.`, 'info');
+        sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
         chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
       });
       
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (languageSelect) {
     languageSelect.addEventListener('focus', function() {
       this.size = 6;
-      sendDebugLog('语言选择框获得焦点，展开下拉框.', 'info');
+      sendDebugLog(popupI18n.t('language_select_focus'), 'info');
     });
     // 添加 blur 事件，当选择框失去焦点时收起 (apply按钮已处理)
     // languageSelect.addEventListener('blur', function() {
@@ -167,22 +167,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const headerAction = activeRule.action.requestHeaders.find(h => h.header.toLowerCase() === 'accept-language');
       if (headerAction) {
         activeLanguage = headerAction.value;
-        sendDebugLog(`从动态规则中获取到当前语言: ${activeLanguage}.`, 'info');
+        sendDebugLog(`${popupI18n.t('get_current_language_from_rules')} ${activeLanguage}.`, 'info');
         if (languageSelect) languageSelect.value = activeLanguage;
         if (currentLanguageSpan) currentLanguageSpan.textContent = activeLanguage;
       }
     }
 
     if (!activeLanguage) {
-      sendDebugLog('未从动态规则中获取到语言，尝试从存储加载.', 'info');
+      sendDebugLog(popupI18n.t('no_language_from_rules'), 'info');
       chrome.storage.local.get(['currentLanguage'], function(result) {
         if (result.currentLanguage) {
           if (languageSelect) languageSelect.value = result.currentLanguage;
           if (currentLanguageSpan) currentLanguageSpan.textContent = result.currentLanguage;
-          sendDebugLog(`已加载存储的语言设置: ${result.currentLanguage}.`, 'info');
+          sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
         } else {
-          const defaultLanguage = languageSelect ? languageSelect.value : "未设置";
-          sendDebugLog(`未找到存储的语言设置. 使用默认值: ${defaultLanguage}.`, 'warning');
+          const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
+          sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
           if (currentLanguageSpan) currentLanguageSpan.textContent = defaultLanguage;
         }
       });
@@ -194,12 +194,12 @@ document.addEventListener('DOMContentLoaded', function() {
     applyButton.addEventListener('click', function() {
       if (!languageSelect) return; // 防御性编程
       const selectedLanguage = languageSelect.value;
-      sendDebugLog(`点击了应用更改按钮. 选择的语言: ${selectedLanguage}.`, 'info');
+      sendDebugLog(`${popupI18n.t('clicked_apply_button')} ${selectedLanguage}.`, 'info');
 
       chrome.storage.local.set({
         currentLanguage: selectedLanguage
       }, function() {
-        sendDebugLog(`语言设置已保存: ${selectedLanguage}.`, 'info');
+        sendDebugLog(`${popupI18n.t('language_settings_saved')} ${selectedLanguage}.`, 'info');
         if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
       });
 
@@ -208,19 +208,19 @@ document.addEventListener('DOMContentLoaded', function() {
           // 调用全局的 updateHeaderRules
           updateHeaderRules(selectedLanguage, true);
         } else {
-          sendDebugLog('自动切换已启用，手动应用更改按钮被忽略。', 'warning');
+          sendDebugLog(popupI18n.t('auto_switch_enabled_ignored'), 'warning');
         }
       });
 
       languageSelect.size = 1;
-      sendDebugLog('收起语言选择下拉框.', 'info');
+      sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
     });
   }
 
   // 快速检查按钮点击事件
   if (checkHeaderBtn) {
     checkHeaderBtn.addEventListener('click', async function() {
-      sendDebugLog('点击了快速检查按钮. 正在获取请求头...', 'info');
+      sendDebugLog(popupI18n.t('clicked_quick_check'), 'info');
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
 
@@ -238,41 +238,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
       for (const url of testUrls) {
         try {
-          sendDebugLog(`尝试从 ${url} 获取请求头...`, 'info');
+          sendDebugLog(`${popupI18n.t('trying_to_get_headers_from')} ${url} ${popupI18n.t('get_request_headers')}`, 'info');
           const response = await fetch(url, { cache: 'no-cache' });
           if (!response.ok) {
-            const errorMsg = `HTTP错误! 状态: ${response.status} 从 ${url}`;
-            sendDebugLog(`快速检查请求失败: ${errorMsg}`, 'warning');
+            const errorMsg = `${popupI18n.t('http_error_status')} ${response.status} ${popupI18n.t('from')} ${url}`;
+            sendDebugLog(`${popupI18n.t('quick_check_request_failed')} ${errorMsg}`, 'warning');
             lastError = new Error(errorMsg);
             continue;
           }
           const data = await response.json();
-          sendDebugLog(`从 ${url} 成功获取到请求头，正在显示结果.`, 'info');
+          sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${url}${popupI18n.t('displaying_results')}`, 'info');
           const headers = data.headers;
           const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
 
           if (headerCheckContentPre) {
             if (acceptLangHeader) {
-              sendDebugLog(`快速检查检测到 Accept-Language: ${acceptLangHeader}.`, 'success');
+              sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${acceptLangHeader}.`, 'success');
               headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
             } else {
-              sendDebugLog(`快速检查: 未在 ${url} 检测到 Accept-Language 请求头.`, 'warning');
-              headerCheckContentPre.textContent = '未检测到 Accept-Language 请求头。';
+              sendDebugLog(`${popupI18n.t('quick_check_no_accept_language')} ${url} ${popupI18n.t('detected_accept_language_header')}`, 'warning');
+              headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
             }
           }
           success = true;
           break;
         } catch (error) {
-          sendDebugLog(`从 ${url} 获取请求头时发生错误: ${error.message}`, 'warning');
+          sendDebugLog(`${popupI18n.t('error_getting_headers_from')} ${url}: ${error.message}`, 'warning');
           lastError = error;
         }
       }
 
       if (!success && headerCheckContentPre) {
-        console.error('所有检测点获取请求头均失败:', lastError);
-        sendDebugLog(`快速检查获取请求头失败 (所有检测点): ${lastError ? lastError.message : '未知错误'}`, 'error');
-        headerCheckContentPre.innerHTML = '所有检测点获取请求头信息均失败: ' + (lastError ? lastError.message : '未知错误') +
-          '\n请自行跳转到 <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a> 或 <a href="https://www.browserscan.net/zh" target="_blank" style="color: #007bff;">https://www.browserscan.net/zh</a> 进行查看。';
+        console.error(popupI18n.t('all_detection_points_failed'), lastError);
+        sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')} ${lastError ? lastError.message : popupI18n.t('unknown_error')}`, 'error');
+        headerCheckContentPre.innerHTML = popupI18n.t('all_detection_points_failed_info') + ' ' + (lastError ? lastError.message : popupI18n.t('unknown_error')) +
+          '\n' + popupI18n.t('please_visit_manually') + ' <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a> ' + popupI18n.t('or') + ' <a href="https://www.browserscan.net/zh" target="_blank" style="color: #007bff;">https://www.browserscan.net/zh</a> ' + popupI18n.t('to_view');
       }
     });
   }
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (request.currentLanguage) {
         if (currentLanguageSpan) currentLanguageSpan.textContent = request.currentLanguage;
         if (languageSelect) languageSelect.value = request.currentLanguage;
-        sendDebugLog(`接收到后台消息：当前语言已更新为 ${request.currentLanguage}，更新UI。`, 'info');
+        sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
       }
       sendResponse({status: "UI updated"});
     }

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>MultiLangSwitcher 调试页面</title>
+  <title>MultiLangSwitcher Debug Page</title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="theme-switcher.css" rel="stylesheet">
@@ -55,93 +55,111 @@
   </style>
 </head>
 <body>
-  <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
+  <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">🌙</button>
   <div class="container">
-    <h2>MultiLangSwitcher 调试工具</h2>
-    <p class="lead">此页面帮助您诊断和解决语言偏好设置问题</p>
+    <h2>MultiLangSwitcher Debug Tools</h2>
+    <p class="lead">This page helps you diagnose and solve language preference issues</p>
 
     <div class="alert alert-info">
-      <strong>提示：</strong> 如果您的请求头无法成功更改，可以使用此页面进行诊断。打开此页面后，在扩展其他部分（如弹出页）的操作会在这里显示日志。
+      <strong>Tip:</strong> If your request headers cannot be successfully changed, you can use this page for diagnosis. After opening this page, operations in other parts of the extension (such as the popup page) will display logs here.
     </div>
 
     <div class="row">
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>当前规则信息</h4>
-          <p class="text-muted">显示扩展当前生效的动态规则以及最近匹配到的规则详情。</p>
-          <button id="showRulesBtn" class="btn btn-primary">显示当前规则</button>
-          <div id="rulesResult" class="debug-result">点击按钮查看当前规则...</div>
+          <h4>Current Rules Information</h4>
+          <p class="text-muted">Shows the dynamic rules currently in effect by the extension and details of recently matched rules.</p>
+          <button id="showRulesBtn" class="btn btn-primary">Show Current Rules</button>
+          <div id="rulesResult" class="debug-result">Click the button to view current rules...</div>
         </div>
       </div>
 
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>请求头测试</h4>
-          <p class="text-muted">向测试地址发送请求，检查 Accept-Language 头是否按预期设置。</p>
+          <h4>Request Header Test</h4>
+          <p class="text-muted">Send a request to the test address to check if the Accept-Language header is set as expected.</p>
           <div class="mb-3">
-            <label for="testLanguage" class="form-label">测试语言:</label>
+            <label for="testLanguage" class="form-label">Test Language:</label>
             <select class="form-select" id="testLanguage">
               <option value="zh-CN">简体中文 (zh-CN)</option>
               <option value="zh-TW">繁体中文 (zh-TW)</option>
               <option value="zh-HK">繁体中文 (香港) (zh-HK)</option>
-              <option value="en-US">英文 (en-US)</option>
-              <option value="en-GB">英文 (英国) (en-GB)</option>
-              <option value="fr">法语 (fr)</option>
-              <option value="ru">俄语 (ru)</option>
-              <option value="ja">日语 (ja)</option>
-              <option value="ko">韩语 (ko)</option>
-              <option value="de">德语 (de)</option>
-              <option value="es">西班牙语 (es)</option>
-              <option value="pt">葡萄牙语 (葡萄牙) (pt)</option>
-              <option value="pt-BR">葡萄牙语 (巴西) (pt-BR)</option>
-              <option value="it">意大利语 (it)</option>
-              <option value="ar">阿拉伯语 (ar)</option>
-              <option value="hi">印地语 (hi)</option>
-              <option value="tr">土耳其语 (tr)</option>
-              <option value="nl">荷兰语 (nl)</option>
-              <option value="pl">波兰语 (pl)</option>
-              <option value="sv">瑞典语 (sv)</option>
-              <option value="fi">芬兰语 (fi)</option>
-              <option value="da">丹麦语 (da)</option>
-              <option value="no">挪威语 (no)</option>
-              <option value="cs">捷克语 (cs)</option>
-              <option value="hu">匈牙利语 (hu)</option>
-              <option value="el">希腊语 (el)</option>
-              <option value="he">希伯来语 (he)</option>
-              <option value="th">泰语 (th)</option>
-              <option value="vi">越南语 (vi)</option>
-              <option value="id">印尼语 (id)</option>
-              <option value="ms">马来语 (ms)</option>
-              <option value="ro">罗马尼亚语 (ro)</option>
-              <option value="sk">斯洛伐克语 (sk)</option>
-              <option value="uk">乌克兰语 (uk)</option>
-              <option value="fa">波斯语 (fa)</option>
-              <option value="bg">保加利亚语 (bg)</option>
-              <option value="hr">克罗地亚语 (hr)</option>
-              <option value="lt">立陶宛语 (lt)</option>
-              <option value="lv">拉脱维亚语 (lv)</option>
-              <option value="et">爱沙尼亚语 (et)</option>
-              <option value="mk">马其顿语 (mk)</option>
-              <option value="sr">塞尔维亚语 (sr)</option>
-              <option value="sl">斯洛文尼亚语 (sl)</option>
-              <option value="cy">威尔士语 (cy)</option>
+              <option value="en-US">English (US) (en-US)</option>
+              <option value="en-GB">English (UK) (en-GB)</option>
+              <option value="en-AU">English (Australia) (en-AU)</option>
+              <option value="en-CA">English (Canada) (en-CA)</option>
+              <option value="ja">日本語 (ja)</option>
+              <option value="ko">한국어 (ko)</option>
+              <option value="fr">Français (fr)</option>
+              <option value="fr-CA">Français (Canada) (fr-CA)</option>
+              <option value="de">Deutsch (de)</option>
+              <option value="de-AT">Deutsch (Österreich) (de-AT)</option>
+              <option value="de-CH">Deutsch (Schweiz) (de-CH)</option>
+              <option value="es">Español (es)</option>
+              <option value="es-MX">Español (México) (es-MX)</option>
+              <option value="es-AR">Español (Argentina) (es-AR)</option>
+              <option value="ru">Русский (ru)</option>
+              <option value="pt-BR">Português (Brasil) (pt-BR)</option>
+              <option value="pt-PT">Português (Portugal) (pt-PT)</option>
+              <option value="it">Italiano (it)</option>
+              <option value="ar">العربية (ar)</option>
+              <option value="hi">हिन्दी (hi)</option>
+              <option value="bn">বাংলা (bn)</option>
+              <option value="ur">اردو (ur)</option>
+              <option value="fa">فارسی (fa)</option>
+              <option value="tr">Türkçe (tr)</option>
+              <option value="nl">Nederlands (nl)</option>
+              <option value="nl-BE">Nederlands (België) (nl-BE)</option>
+              <option value="pl">Polski (pl)</option>
+              <option value="sv">Svenska (sv)</option>
+              <option value="fi">Suomi (fi)</option>
+              <option value="da">Dansk (da)</option>
+              <option value="no">Norsk (no)</option>
+              <option value="cs">Čeština (cs)</option>
+              <option value="sk">Slovenčina (sk)</option>
+              <option value="hu">Magyar (hu)</option>
+              <option value="ro">Română (ro)</option>
+              <option value="bg">Български (bg)</option>
+              <option value="hr">Hrvatski (hr)</option>
+              <option value="sr">Српски (sr)</option>
+              <option value="sl">Slovenščina (sl)</option>
+              <option value="et">Eesti (et)</option>
+              <option value="lv">Latviešu (lv)</option>
+              <option value="lt">Lietuvių (lt)</option>
+              <option value="el">Ελληνικά (el)</option>
+              <option value="he">עברית (he)</option>
+              <option value="th">ไทย (th)</option>
+              <option value="vi">Tiếng Việt (vi)</option>
+              <option value="id">Bahasa Indonesia (id)</option>
+              <option value="ms">Bahasa Melayu (ms)</option>
+              <option value="tl">Filipino (tl)</option>
+              <option value="uk">Українська (uk)</option>
+              <option value="be">Беларуская (be)</option>
+              <option value="ka">ქართული (ka)</option>
+              <option value="hy">Հայերեն (hy)</option>
+              <option value="az">Azərbaycan (az)</option>
+              <option value="kk">Қазақша (kk)</option>
+              <option value="ky">Кыргызча (ky)</option>
+              <option value="uz">O'zbek (uz)</option>
+              <option value="mn">Монгол (mn)</option>
+              <option value="ta">தமிழ் (ta)</option>
             </select>
           </div>
-          <button id="testHeaderBtn" class="btn btn-success">测试请求头</button>
-          <div id="headerTestResult" class="debug-result">点击按钮测试请求头...</div>
+          <button id="testHeaderBtn" class="btn btn-success">Test Request Header</button>
+          <div id="headerTestResult" class="debug-result">Click the button to test request header...</div>
         </div>
       </div>
 
       <!-- 新增：自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>自定义语言偏好</h4>
-          <p class="text-muted">输入完整的 Accept-Language 字符串，例如 "en-US,en;q=0.9,fr;q=0.8"。</p>
+          <h4>Custom Language Preference</h4>
+          <p class="text-muted">Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".</p>
           <div class="mb-3">
-            <label for="customLanguageInput" class="form-label">自定义语言字符串:</label>
-            <input type="text" class="form-control" id="customLanguageInput" placeholder="例如: en-US,en;q=0.9,fr;q=0.8">
+            <label for="customLanguageInput" class="form-label">Custom Language String:</label>
+            <input type="text" class="form-control" id="customLanguageInput" placeholder="Example: en-US,en;q=0.9,fr;q=0.8">
           </div>
-          <button id="applyCustomLangBtn" class="btn btn-primary">应用自定义语言</button>
+          <button id="applyCustomLangBtn" class="btn btn-primary">Apply Custom Language</button>
           <div id="customLangResult" class="debug-result mt-2"></div>
         </div>
       </div>
@@ -150,83 +168,83 @@
       <!-- Accept-Language 格式说明卡片 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>Accept-Language 格式说明</h4>
-          <p class="text-muted">了解 Accept-Language 请求头的结构。</p>
-          <p><strong>基本格式:</strong></p>
+          <h4>Accept-Language Format Explanation</h4>
+          <p class="text-muted">Understand the structure of the Accept-Language request header.</p>
+          <p><strong>Basic Format:</strong></p>
           <ul>
-            <li><code>语言代码</code> (必需): 如 <code>en</code> (英语), <code>zh</code> (中文)。使用 ISO 639-1 标准。</li>
-            <li><code>-地区代码</code> (可选): 如 <code>US</code> (美国), <code>CN</code> (中国大陆), <code>HK</code> (香港)。使用 ISO 3166-1 Alpha 2 标准。</li>
-            <li><code>;q=权重值</code> (可选): 范围 0 到 1，表示优先级，默认为 1。</li>
+            <li><code>Language code</code> (required): e.g. <code>en</code> (English), <code>zh</code> (Chinese). Uses ISO 639-1 standard.</li>
+            <li><code>-Region code</code> (optional): e.g. <code>US</code> (United States), <code>CN</code> (Mainland China), <code>HK</code> (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.</li>
+            <li><code>;q=Quality value</code> (optional): Range 0 to 1, indicates priority, default is 1.</li>
           </ul>
-          <p><strong>示例:</strong></p>
+          <p><strong>Examples:</strong></p>
           <ul>
-            <li><code>en-US</code>: 美国英语</li>
-            <li><code>zh-CN</code>: 简体中文 (中国大陆)</li>
-            <li><code>fr</code>: 法语 (不指定地区)</li>
-            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: 优先美国英语，其次是通用英语，然后是简体中文。</li>
+            <li><code>en-US</code>: American English</li>
+            <li><code>zh-CN</code>: Simplified Chinese (Mainland China)</li>
+            <li><code>fr</code>: French (no region specified)</li>
+            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: Priority American English, followed by general English, then Simplified Chinese.</li>
           </ul>
-          <p class="small text-muted">请按照此格式在上方输入框中设置自定义语言。</p>
+          <p class="small text-muted">Please follow this format in the input box above to set custom language.</p>
         </div>
       </div>
       <!-- Accept-Language 格式说明卡片结束 -->
     </div>
 
     <div class="debug-section mt-4">
-      <h4>实时日志</h4>
-       <p class="text-muted">显示扩展运行时发送的日志信息，帮助追踪问题。</p>
+      <h4>Live Logs</h4>
+       <p class="text-muted">Shows log messages sent by the extension at runtime to help track issues.</p>
       <div class="mb-3">
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterInfo" value="info" checked>
-          <label class="form-check-label" for="filterInfo">信息</label>
+          <label class="form-check-label" for="filterInfo">Info</label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterWarning" value="warning" checked>
-          <label class="form-check-label" for="filterWarning">警告</label>
+          <label class="form-check-label" for="filterWarning">Warning</label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterError" value="error" checked>
-          <label class="form-check-label" for="filterError">错误</label>
+          <label class="form-check-label" for="filterError">Error</label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterSuccess" value="success" checked>
-          <label class="form-check-label" for="filterSuccess">成功</label>
+          <label class="form-check-label" for="filterSuccess">Success</label>
         </div>
       </div>
       <div id="logOutput" class="debug-result"></div>
-      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2">清除日志</button>
+      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2">Clear Logs</button>
     </div>
 
     <div class="debug-section mt-4">
-      <h4>常见问题修复</h4>
-      <p class="text-muted">尝试自动修复一些常见的配置问题。</p>
+      <h4>Common Problem Fixes</h4>
+      <p class="text-muted">Try to automatically fix some common configuration issues.</p>
       <div class="list-group">
         <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
-          <strong>修复规则优先级</strong> - 将动态规则优先级提高到100以覆盖静态规则
+          <strong>Fix Rule Priority</strong> - Increase dynamic rule priority to 100 to override static rules
         </button>
         <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
-          <strong>清除并重新应用规则</strong> - 删除所有动态规则并使用当前设置重新创建
+          <strong>Clear and Reapply Rules</strong> - Delete all dynamic rules and recreate with current settings
         </button>
       </div>
-      <div id="fixResult" class="debug-result mt-3">选择一个修复选项...</div>
+      <div id="fixResult" class="debug-result mt-3">Select a fix option...</div>
     </div>
 
     <div class="debug-section mt-4">
-      <h4>扩展诊断信息</h4>
-      <p class="text-muted">显示扩展的基本信息、权限和配置。</p>
-      <button id="showDiagnosticsBtn" class="btn btn-info">显示诊断信息</button>
-      <div id="diagnosticsResult" class="debug-result">点击按钮查看诊断信息...</div>
+      <h4>Extension Diagnostic Information</h4>
+      <p class="text-muted">Shows basic information, permissions, and configuration of the extension.</p>
+      <button id="showDiagnosticsBtn" class="btn btn-info">Show Diagnostic Information</button>
+      <div id="diagnosticsResult" class="debug-result">Click the button to view diagnostic information...</div>
     </div>
 
     <!-- 自动切换功能控制 -->
     <div class="debug-section mt-4">
-      <h4>自动切换功能</h4>
-      <p class="text-muted">控制按域名自动切换语言的功能。(可能检测错误)</p>
+      <h4>Auto Switch Feature</h4>
+      <p class="text-muted">Control the feature to automatically switch language by domain. (May detect incorrectly)</p>
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="autoSwitchToggle">
-        <label class="form-check-label" for="autoSwitchToggle">启用自动切换 (按域名)</label>
+        <label class="form-check-label" for="autoSwitchToggle">Enable Auto Switch (by domain)</label>
       </div>
-      <button id="showDomainRulesBtn" class="btn btn-outline-primary">显示域名映射规则</button>
-      <div id="domainRulesResult" class="debug-result">点击按钮查看域名映射规则...</div>
+      <button id="showDomainRulesBtn" class="btn btn-outline-primary">Show Domain Mapping Rules</button>
+      <div id="domainRulesResult" class="debug-result">Click the button to view domain mapping rules...</div>
     </div>
     <!-- 自动切换功能控制结束 -->
   </div>

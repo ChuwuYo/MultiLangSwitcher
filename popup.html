@@ -134,15 +134,15 @@
   </style>
 </head>
 <body class="popup-body">
-  <button id="themeToggleBtn" class="theme-toggle" title="切换主题">🌙</button>
+  <button id="themeToggleBtn" class="theme-toggle" title="Toggle Theme">🌙</button>
   <div class="container">
     <div class="header">
       <h4>MultiLangSwitcher</h4>
-      <p class="text-muted">快速切换浏览器语言偏好设置</p>
+      <p class="text-muted">Quickly switch Accept-Language</p>
     </div>
 
     <div class="language-select">
-      <label for="languageSelect" class="form-label">选择语言:</label>
+      <label for="languageSelect" class="form-label">Language:</label>
       <select class="form-select" id="languageSelect">
         <option value="zh-CN">简体中文 (zh-CN)</option>
         <option value="zh-TW">繁体中文 (zh-TW)</option>
@@ -209,14 +209,14 @@
         </select>
     </div>
 
-    <button id="applyButton" class="btn btn-primary w-100">应用更改</button>
+    <button id="applyButton" class="btn btn-primary w-100">Apply</button>
 
     <div class="status mt-3">
-      <p id="statusText">当前语言: <span id="currentLanguage">未设置</span></p>
+      <p id="statusText">Current Language: <span id="currentLanguage">Not Set</span></p>
     </div>
 
     <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">自动切换语言 (按域名)</label>
+      <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">Auto Switch Language (by domain)</label>
       <div class="toggle-wrapper" style="font-size: 1em; margin: 0 auto; width: fit-content;"> 
         <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle"> 
         <div class="toggle-container">  
@@ -241,16 +241,16 @@
     </div>
 
     <div class="mt-3 text-center">
-      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">检测页面</a>
-      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2">调试工具</a>
-      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2">快速检查</button>
+      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">Detection</a>
+      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2">Debug</a>
+      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2">Quick Check</button>
     </div>
 
     <div class="mt-3 d-none" id="headerCheckResult">
       <div class="card">
-        <div class="card-header bg-light">当前请求头检查结果</div>
+        <div class="card-header bg-light">Current Request Header</div>
         <div class="card-body">
-          <pre id="headerCheckContent" class="mb-0" style="font-size: 12px; max-height: 150px; overflow-y: auto;">点击"快速检查"按钮查看结果</pre>
+          <pre id="headerCheckContent" class="mb-0" style="font-size: 12px; max-height: 150px; overflow-y: auto;">Click "Quick Check" button to see results</pre>
         </div>
       </div>
     </div>

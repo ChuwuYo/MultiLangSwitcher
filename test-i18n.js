@@ -115,5 +115,5 @@ class TestI18n {
 
 const testI18n = new TestI18n();
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => testI18n.addLanguageSelector(), 300);
+  testI18n.addLanguageSelector();
 });
