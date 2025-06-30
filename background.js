@@ -332,10 +332,13 @@ async function handleAutoSwitch(details) {
 
     if (targetLanguage) {
       sendBackgroundLog(`自动切换: 检测到域名 ${hostname} (匹配规则: ${matchedRule}), 目标语言: ${targetLanguage}`, 'info');
-      updateHeaderRules(targetLanguage, 0, true).then(updateResult => {
+      optimizedUpdateHeaderRules(targetLanguage, 0, true).then(updateResult => {
         if (updateResult.status === 'success' || updateResult.status === 'unchanged') {
           sendBackgroundLog(`为 ${hostname} 应用语言 ${targetLanguage} 成功`, 'info');
-          notifyPopupUIUpdate(autoSwitchEnabled, targetLanguage); // 更新UI
+          // 只在状态变化时更新UI
+          if (updateResult.status === 'success') {
+            notifyPopupUIUpdate(autoSwitchEnabled, targetLanguage);
+          }
         } else {
           sendBackgroundLog(`为 ${hostname} 应用语言 ${targetLanguage} 失败: ${updateResult.message}`, 'error');
         }
@@ -363,13 +366,46 @@ async function handleAutoSwitch(details) {
   }
 }
 
+// 防抖函数，防止频繁操作
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// 优化的规则更新函数，带状态检查
+const optimizedUpdateHeaderRules = debounce(async function(language, delay = 0, isAutoSwitch = false) {
+  try {
+    // 检查当前规则是否已经是目标语言
+    const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const currentRule = currentRules.find(rule => rule.id === 1);
+    const currentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
+    
+    if (currentLang === language) {
+      sendBackgroundLog(`语言已是 ${language}，跳过更新`, 'info');
+      return { status: 'unchanged', language: language };
+    }
+    
+    return await updateHeaderRules(language, delay, isAutoSwitch);
+  } catch (error) {
+    sendBackgroundLog(`优化更新规则失败: ${error.message}`, 'error');
+    throw error;
+  }
+}, 100);
+
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === 'UPDATE_RULES') {
     try {
       const language = request.language;
       sendBackgroundLog(`收到更新规则请求，语言: ${language}`, 'info');
-      updateHeaderRules(language)
+      optimizedUpdateHeaderRules(language)
         .then(result => {
           sendBackgroundLog(`规则更新完成，状态: ${result.status}`, 'info');
           chrome.storage.local.set({ currentLanguage: language }, () => {
@@ -379,8 +415,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             if (typeof sendResponse === 'function') {
               sendResponse({ status: 'success', language: result.language });
             }
-            // 手动更新规则后，也通知popup更新UI
-            notifyPopupUIUpdate(autoSwitchEnabled, result.language);
+            // 只在状态发生变化时才通知UI更新
+            if (result.status === 'success') {
+              notifyPopupUIUpdate(autoSwitchEnabled, result.language);
+            }
           });
         })
         .catch(error => {
