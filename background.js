@@ -284,18 +284,23 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 /**
- * 通知popup更新UI
+ * 通知所有相关页面更新UI
  * @param {boolean} autoSwitchEnabled - 自动切换是否启用
  * @param {string} currentLanguage - 当前语言代码
  */
 function notifyPopupUIUpdate(autoSwitchEnabled, currentLanguage) {
-  chrome.runtime.sendMessage({
+  const message = {
     type: 'AUTO_SWITCH_UI_UPDATE',
     autoSwitchEnabled,
     currentLanguage
-  }).catch(() => {
+  };
+  
+  // 向所有相关页面发送消息（popup和debug页面）
+  chrome.runtime.sendMessage(message).catch(() => {
     // 忽略发送消息的错误
   });
+  
+  sendBackgroundLog(`已发送UI更新通知: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
 }
 
 /**
@@ -366,16 +371,28 @@ async function handleAutoSwitch(details) {
   }
 }
 
-// 防抖函数，防止频繁操作
+// 防抖函数，正确处理Promise
 function debounce(func, wait) {
   let timeout;
+  let pendingPromises = [];
+  
   return function executedFunction(...args) {
-    const later = () => {
+    return new Promise((resolve, reject) => {
+      pendingPromises.push({ resolve, reject });
       clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+      
+      timeout = setTimeout(async () => {
+        const promises = pendingPromises;
+        pendingPromises = [];
+        
+        try {
+          const result = await func(...args);
+          promises.forEach(p => p.resolve(result));
+        } catch (error) {
+          promises.forEach(p => p.reject(error));
+        }
+      }, wait);
+    });
   };
 }
 
@@ -440,10 +457,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     autoSwitchEnabled = request.enabled;
     sendBackgroundLog(`自动切换功能状态已更新为: ${autoSwitchEnabled}`, 'info');
     chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }); // 保存状态
+    
+    // 广播状态变化给所有页面
+    chrome.runtime.sendMessage({
+      type: 'AUTO_SWITCH_STATE_CHANGED',
+      enabled: autoSwitchEnabled
+    }).catch(() => {});
 
     if (autoSwitchEnabled) {
       sendBackgroundLog('自动切换已启用。后续请求将根据域名自动切换语言。', 'info');
-      // 启用自动切换时，先应用回退语言
       updateHeaderRules(FALLBACK_LANGUAGE, 0, true).then(() => {
         if (typeof sendResponse === 'function') {
           sendResponse({ status: 'success' });
@@ -456,7 +478,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }
       });
     } else {
-      // 禁用自动切换时，恢复到用户之前手动设置的语言
       chrome.storage.local.get(['currentLanguage'], function (result) {
         const language = result.currentLanguage || DEFAULT_LANGUAGE;
         sendBackgroundLog(`自动切换已禁用。恢复到用户设置的语言: ${language}`, 'info');
@@ -473,8 +494,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         });
       });
     }
-    // 由于此分支中的 sendResponse 是在异步操作 (.then() 或回调) 中调用的，
-    // 因此整个 'AUTO_SWITCH_TOGGLED' 分支必须返回 true。
     return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog('收到获取域名映射规则请求', 'info');

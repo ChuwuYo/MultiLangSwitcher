@@ -153,6 +153,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }, 100);
   // 初始渲染日志 (虽然此时allLogMessages是空的)
   renderLogs();
+  
+  // 页面加载时同步自动切换状态
+  chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+    const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+    if (autoSwitchToggle) {
+      autoSwitchToggle.checked = !!result.autoSwitchEnabled;
+      addLogMessage(`页面加载时同步自动切换状态: ${result.autoSwitchEnabled ? '启用' : '禁用'}`, 'info');
+    }
+  });
 
 
   // 测试请求头
@@ -586,20 +595,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 监听来自 background.js 的自动切换UI更新消息
+  // 监听来自 background.js 的消息
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
-      // 更新自动切换开关状态
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-        // 同时更新存储状态，确保一致性
         chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
       
       if (sendResponse) {
         sendResponse({status: "Debug UI updated"});
+      }
+    } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
+      // 同步自动切换状态
+      const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+      if (autoSwitchToggle) {
+        autoSwitchToggle.checked = request.enabled;
+        addLogMessage(`收到状态同步: 自动切换${request.enabled ? '启用' : '禁用'}`, 'info');
       }
     }
     return true;

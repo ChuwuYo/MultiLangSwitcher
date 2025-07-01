@@ -277,15 +277,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // 监听来自 background.js 的消息，以便在自动切换状态改变时更新UI和语言
+  // 监听来自 background.js 的消息
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       const autoSwitchEnabled = request.autoSwitchEnabled;
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = autoSwitchEnabled;
-        // 同时更新存储状态
-        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
       }
+      
+      chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function() {
+        if (chrome.runtime.lastError) {
+          sendDebugLog(`更新存储状态失败: ${chrome.runtime.lastError.message}`, 'error');
+        } else {
+          sendDebugLog(`已同步自动切换状态到存储: ${autoSwitchEnabled}`, 'info');
+        }
+      });
 
       updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
       
@@ -295,6 +301,13 @@ document.addEventListener('DOMContentLoaded', function() {
         sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
       }
       sendResponse({status: "UI updated"});
+    } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
+      // 同步自动切换状态
+      if (autoSwitchToggle) {
+        autoSwitchToggle.checked = request.enabled;
+        updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
+        sendDebugLog(`收到状态同步: 自动切换${request.enabled ? '启用' : '禁用'}`, 'info');
+      }
     }
     return true; 
   });
