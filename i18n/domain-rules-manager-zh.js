@@ -1,0 +1,22 @@
+const domainRulesManagerZh = {
+  "loading_rules_file": "尝试加载规则文件:",
+  "rules_loaded_successfully": "规则文件加载成功，数据结构:",
+  "rules_count_loaded": "成功加载 {count} 条域名规则",
+  "rules_field_not_found": "规则文件中未找到 domainLanguageRules 字段",
+  "loading_rules_failed": "加载域名规则失败:",
+  "rules_not_loaded": "规则尚未加载，返回空对象",
+  "searching_domain": "查找域名: {domain}",
+  "rules_not_loaded_loading": "规则未加载，正在加载...",
+  "loading_rules_failed_warn": "加载规则失败",
+  "loaded_rules_count": "已加载 {count} 条规则",
+  "found_in_custom_rules": "在自定义规则中找到: {domain} -> {language}",
+  "found_in_full_domain": "在完整域名中找到: {domain} -> {language}",
+  "checking_second_level": "检查二级域名: {domain}",
+  "found_in_second_level": "在二级域名中找到: {domain} -> {language}",
+  "checking_top_level": "检查顶级域名: {domain}",
+  "available_top_level_rules": "可用顶级域名规则:",
+  "found_in_top_level": "在顶级域名中找到: {domain} -> {language}",
+  "no_matching_rules": "未找到匹配的规则: {domain}",
+  "domain_parsing_result": "域名解析结果 - 完整: {full}, 二级: {second}, 顶级: {top}",
+  "failed_to_get_custom_rules": "获取自定义规则失败:"
+};

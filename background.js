@@ -1,6 +1,7 @@
 // 后台脚本，确保扩展在浏览器启动时就能应用语言设置
 
-// 导入域名规则管理器
+// 导入域名规则管理器和国际化
+importScripts('i18n/domain-rules-manager-i18n.js');
 importScripts('domain-rules-manager.js');
 
 // 常量定义
@@ -366,16 +367,34 @@ async function handleAutoSwitch(details) {
   }
 }
 
-// 防抖函数，防止频繁操作
+// 防抖函数，防止频繁操作，支持Promise
 function debounce(func, wait) {
   let timeout;
+  let pendingPromises = [];
+  
   return function executedFunction(...args) {
-    const later = () => {
+    return new Promise((resolve, reject) => {
+      // 将当前Promise添加到待处理列表
+      pendingPromises.push({ resolve, reject });
+      
+      const later = async () => {
+        clearTimeout(timeout);
+        const currentPromises = [...pendingPromises];
+        pendingPromises = [];
+        
+        try {
+          const result = await func(...args);
+          // 解决所有待处理的Promise
+          currentPromises.forEach(({ resolve }) => resolve(result));
+        } catch (error) {
+          // 拒绝所有待处理的Promise
+          currentPromises.forEach(({ reject }) => reject(error));
+        }
+      };
+      
       clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+      timeout = setTimeout(later, wait);
+    });
   };
 }
 
@@ -439,7 +458,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   } else if (request.type === 'AUTO_SWITCH_TOGGLED') {
     autoSwitchEnabled = request.enabled;
     sendBackgroundLog(`自动切换功能状态已更新为: ${autoSwitchEnabled}`, 'info');
-    chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }); // 保存状态
+    chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function() {
+      // 广播状态变化给所有页面
+      chrome.runtime.sendMessage({
+        type: 'AUTO_SWITCH_STATE_CHANGED',
+        enabled: autoSwitchEnabled
+      }).catch(() => {});
+    }); // 保存状态
 
     if (autoSwitchEnabled) {
       sendBackgroundLog('自动切换已启用。后续请求将根据域名自动切换语言。', 'info');

@@ -1,0 +1,22 @@
+const domainRulesManagerEn = {
+  "loading_rules_file": "Attempting to load rules file:",
+  "rules_loaded_successfully": "Rules file loaded successfully, data structure:",
+  "rules_count_loaded": "Successfully loaded {count} domain rules",
+  "rules_field_not_found": "domainLanguageRules field not found in rules file",
+  "loading_rules_failed": "Failed to load domain rules:",
+  "rules_not_loaded": "Rules not yet loaded, returning empty object",
+  "searching_domain": "Searching for domain: {domain}",
+  "rules_not_loaded_loading": "Rules not loaded, loading...",
+  "loading_rules_failed_warn": "Failed to load rules",
+  "loaded_rules_count": "Loaded {count} rules",
+  "found_in_custom_rules": "Found in custom rules: {domain} -> {language}",
+  "found_in_full_domain": "Found in full domain: {domain} -> {language}",
+  "checking_second_level": "Checking second-level domain: {domain}",
+  "found_in_second_level": "Found in second-level domain: {domain} -> {language}",
+  "checking_top_level": "Checking top-level domain: {domain}",
+  "available_top_level_rules": "Available top-level domain rules:",
+  "found_in_top_level": "Found in top-level domain: {domain} -> {language}",
+  "no_matching_rules": "No matching rules found: {domain}",
+  "domain_parsing_result": "Domain parsing result - Full: {full}, Second-level: {second}, Top-level: {top}",
+  "failed_to_get_custom_rules": "Failed to get custom rules:"
+};

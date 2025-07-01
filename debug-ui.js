@@ -431,8 +431,11 @@ document.addEventListener('DOMContentLoaded', function () {
           resultElement.innerHTML = html;
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
-          // 同步更新自动切换开关状态
-          document.getElementById('autoSwitchToggle').checked = !!result.autoSwitchEnabled;
+          // 同步更新自动切换开关状态（如果尚未设置）
+          const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+          if (autoSwitchToggle && autoSwitchToggle.checked !== !!result.autoSwitchEnabled) {
+            autoSwitchToggle.checked = !!result.autoSwitchEnabled;
+          }
         } catch (storageError) {
           console.error('Error collecting diagnostic information (storage):', storageError);
           addLogMessage(`${debugI18n.t('collect_diagnostics_storage_error')} ${storageError.message}`, 'error');
@@ -461,12 +464,18 @@ document.addEventListener('DOMContentLoaded', function () {
         addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${chrome.runtime.lastError.message}`, 'error');
       } else if (response && response.status === 'success') {
         addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
-        // 更新存储中的状态
-        chrome.storage.local.set({ autoSwitchEnabled: isEnabled });
       } else {
         addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
       }
     });
+  });
+
+  // 初始化时同步自动切换状态
+  chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+    const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+    if (autoSwitchToggle) {
+      autoSwitchToggle.checked = !!result.autoSwitchEnabled;
+    }
   });
 
   // 显示域名映射规则
@@ -589,17 +598,21 @@ document.addEventListener('DOMContentLoaded', function () {
   // 监听来自 background.js 的自动切换UI更新消息
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
-      // 更新自动切换开关状态
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-        // 同时更新存储状态，确保一致性
         chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
       
       if (sendResponse) {
         sendResponse({status: "Debug UI updated"});
+      }
+    } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
+      const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+      if (autoSwitchToggle && autoSwitchToggle.checked !== request.enabled) {
+        autoSwitchToggle.checked = request.enabled;
+        addLogMessage(`${debugI18n.t('auto_switch_function')} ${request.enabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}`, 'info');
       }
     }
     return true;

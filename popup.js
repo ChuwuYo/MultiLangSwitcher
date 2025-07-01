@@ -283,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const autoSwitchEnabled = request.autoSwitchEnabled;
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = autoSwitchEnabled;
-        // 同时更新存储状态
         chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
       }
 
@@ -295,6 +294,11 @@ document.addEventListener('DOMContentLoaded', function() {
         sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
       }
       sendResponse({status: "UI updated"});
+    } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
+      if (autoSwitchToggle && autoSwitchToggle.checked !== request.enabled) {
+        autoSwitchToggle.checked = request.enabled;
+        updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
+      }
     }
     return true; 
   });

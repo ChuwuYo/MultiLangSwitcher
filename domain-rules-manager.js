@@ -3,6 +3,19 @@ class DomainRulesManager {
   constructor() {
     this.rules = null;
     this.loadPromise = null;
+    this.i18n = null;
+    this.initI18n();
+  }
+
+  async initI18n() {
+    if (typeof domainRulesManagerI18n !== 'undefined') {
+      this.i18n = domainRulesManagerI18n;
+      await this.i18n.loadTranslations();
+    }
+  }
+
+  t(key, params = {}) {
+    return this.i18n ? this.i18n.t(key, params) : key;
   }
 
   // 加载规则数据
@@ -18,7 +31,7 @@ class DomainRulesManager {
   async _loadRulesFromFile() {
     try {
       const url = chrome.runtime.getURL('domain-rules.json');
-      console.log('[DomainRulesManager] 尝试加载规则文件:', url);
+      console.log(`[DomainRulesManager] ${this.t('loading_rules_file')}`, url);
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -26,19 +39,19 @@ class DomainRulesManager {
       }
       
       const data = await response.json();
-      console.log('[DomainRulesManager] 规则文件加载成功，数据结构:', Object.keys(data));
+      console.log(`[DomainRulesManager] ${this.t('rules_loaded_successfully')}`, Object.keys(data));
       
       if (data.domainLanguageRules) {
         this.rules = data.domainLanguageRules;
-        console.log(`[DomainRulesManager] 成功加载 ${Object.keys(this.rules).length} 条域名规则`);
+        console.log(`[DomainRulesManager] ${this.t('rules_count_loaded', {count: Object.keys(this.rules).length})}`);
       } else {
-        console.warn('[DomainRulesManager] 规则文件中未找到 domainLanguageRules 字段');
+        console.warn(`[DomainRulesManager] ${this.t('rules_field_not_found')}`);
         this.rules = {};
       }
       
       return this.rules;
     } catch (error) {
-      console.error('[DomainRulesManager] 加载域名规则失败:', error);
+      console.error(`[DomainRulesManager] ${this.t('loading_rules_failed')}`, error);
       this.rules = {};
       return this.rules;
     }
@@ -47,7 +60,7 @@ class DomainRulesManager {
   // 获取规则数据
   getRules() {
     if (!this.rules) {
-      console.warn('[DomainRulesManager] 规则尚未加载，返回空对象');
+      console.warn(`[DomainRulesManager] ${this.t('rules_not_loaded')}`);
       return {};
     }
     return this.rules;
@@ -55,31 +68,31 @@ class DomainRulesManager {
 
   // 根据域名获取语言
   async getLanguageForDomain(domain) {
-    console.log(`[DomainRulesManager] 查找域名: ${domain}`);
+    console.log(`[DomainRulesManager] ${this.t('searching_domain', {domain})}`);
     
     // 确保规则已加载
     if (!this.rules) {
-      console.log(`[DomainRulesManager] 规则未加载，正在加载...`);
+      console.log(`[DomainRulesManager] ${this.t('rules_not_loaded_loading')}`);
       await this.loadRules();
     }
     
     if (!this.rules) {
-      console.warn('[DomainRulesManager] 加载规则失败');
+      console.warn(`[DomainRulesManager] ${this.t('loading_rules_failed_warn')}`);
       return null;
     }
 
-    console.log(`[DomainRulesManager] 已加载 ${Object.keys(this.rules).length} 条规则`);
+    console.log(`[DomainRulesManager] ${this.t('loaded_rules_count', {count: Object.keys(this.rules).length})}`);
 
     // 优先检查自定义规则
     const customRules = await this.getCustomRules();
     if (customRules[domain]) {
-      console.log(`[DomainRulesManager] 在自定义规则中找到: ${domain} -> ${customRules[domain]}`);
+      console.log(`[DomainRulesManager] ${this.t('found_in_custom_rules', {domain, language: customRules[domain]})}`);
       return customRules[domain];
     }
 
     // 检查完整域名
     if (this.rules[domain]) {
-      console.log(`[DomainRulesManager] 在完整域名中找到: ${domain} -> ${this.rules[domain]}`);
+      console.log(`[DomainRulesManager] ${this.t('found_in_full_domain', {domain, language: this.rules[domain]})}`);
       return this.rules[domain];
     }
 
@@ -87,26 +100,26 @@ class DomainRulesManager {
     const parts = domain.split('.');
     if (parts.length >= 2) {
       const secondLevel = parts.slice(-2).join('.');
-      console.log(`[DomainRulesManager] 检查二级域名: ${secondLevel}`);
+      console.log(`[DomainRulesManager] ${this.t('checking_second_level', {domain: secondLevel})}`);
       if (customRules[secondLevel] || this.rules[secondLevel]) {
         const result = customRules[secondLevel] || this.rules[secondLevel];
-        console.log(`[DomainRulesManager] 在二级域名中找到: ${secondLevel} -> ${result}`);
+        console.log(`[DomainRulesManager] ${this.t('found_in_second_level', {domain: secondLevel, language: result})}`);
         return result;
       }
     }
 
     // 检查顶级域名
     const topLevel = parts[parts.length - 1];
-    console.log(`[DomainRulesManager] 检查顶级域名: ${topLevel}`);
-    console.log(`[DomainRulesManager] 可用顶级域名规则:`, Object.keys(this.rules).filter(k => !k.includes('.')).slice(0, 10));
+    console.log(`[DomainRulesManager] ${this.t('checking_top_level', {domain: topLevel})}`);
+    console.log(`[DomainRulesManager] ${this.t('available_top_level_rules')}`, Object.keys(this.rules).filter(k => !k.includes('.')).slice(0, 10));
     if (customRules[topLevel] || this.rules[topLevel]) {
       const result = customRules[topLevel] || this.rules[topLevel];
-      console.log(`[DomainRulesManager] 在顶级域名中找到: ${topLevel} -> ${result}`);
+      console.log(`[DomainRulesManager] ${this.t('found_in_top_level', {domain: topLevel, language: result})}`);
       return result;
     }
 
-    console.log(`[DomainRulesManager] 未找到匹配的规则: ${domain}`);
-    console.log(`[DomainRulesManager] 域名解析结果 - 完整: ${domain}, 二级: ${parts.length >= 2 ? parts.slice(-2).join('.') : 'N/A'}, 顶级: ${topLevel}`);
+    console.log(`[DomainRulesManager] ${this.t('no_matching_rules', {domain})}`);
+    console.log(`[DomainRulesManager] ${this.t('domain_parsing_result', {full: domain, second: parts.length >= 2 ? parts.slice(-2).join('.') : 'N/A', top: topLevel})}`);
     return null;
   }
 
@@ -116,7 +129,7 @@ class DomainRulesManager {
       const result = await chrome.storage.local.get(['customDomainRules']);
       return result.customDomainRules || {};
     } catch (error) {
-      console.error('Failed to get custom rules:', error);
+      console.error(`${this.t('failed_to_get_custom_rules')}`, error);
       return {};
     }
   }
