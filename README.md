@@ -1,6 +1,6 @@
 <div align="center">
     <img src="images/icon128.png" alt="MultiLangSwitcher Icon" width="150" height="150"> <h1>MultiLangSwitcher</h1>
-    <a href="https://github.com/ChuwuYo/MultiLangSwitcher/blob/main/README.md">简体中文</a> | <a href="https://github.com/ChuwuYo/MultiLangSwitcher/blob/main/README_EN.md">English</a> </div>
+    <a href="../README.md">简体中文</a> | <a href="docs/README_EN.md">English</a> </div>
 
 ---
 
@@ -13,7 +13,6 @@
 
 ---
 
-
 MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速切换浏览器发送的 `Accept-Language` HTTP 请求头。用户也可以在调试工具页面自定义完整的 `Accept - Language` 字符串。
 
 扩展利用 `chrome.declarativeNetRequest` API 来修改请求头，确保性能和隐私。
@@ -24,7 +23,6 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 如果需要切换浏览器UA可以看一下这个项目：[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
-代码注释由AI辅助生成
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/e44b6d72-b66c-4be5-a80d-a2de07fb86c6" alt="MultiLangSwitcher Home">

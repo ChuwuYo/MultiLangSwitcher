@@ -1,6 +1,6 @@
 <div align="center">
     <img src="images/icon128.png" alt="MultiLangSwitcher Icon" width="150" height="150"> <h1>MultiLangSwitcher</h1>
-    <a href="https://github.com/ChuwuYo/MultiLangSwitcher/blob/main/README.md">简体中文</a> | <a href="https://github.com/ChuwuYo/MultiLangSwitcher/blob/main/README_EN.md">English</a> </div>
+    <a href="../README.md">简体中文</a> | <a href="docs/README_EN.md">English</a> </div>
 
 ---
 
