@@ -2,7 +2,7 @@ const testEn = {
   "title": "MultiLangSwitcher Detection Page",
   "heading": "MultiLangSwitcher Detection Page",
   "subtitle": "This page is used to verify the effect of MultiLangSwitcher extension settings",
-  "tip": "Pay attention to the value of the Accept-Language request header, which should match the language you set in the extension.",
+  "tip": "Pay special attention to the value of the Accept-Language request header, which should match the language you set in the extension.",
   "request_header": "Accept-Language",
   "js_language": "JS Language Preference",
   "intl_api": "Internationalization API",
