@@ -23,7 +23,11 @@ class DomainRulesManagerI18n {
   async loadTranslations() {
     try {
       if (typeof importScripts !== 'undefined') {
-        importScripts(`i18n/domain-rules-manager-${this.currentLang}.js`);
+        // 检查重复导入
+        const varName = this.currentLang === 'zh' ? 'domainRulesManagerZh' : 'domainRulesManagerEn';
+        if (typeof self[varName] === 'undefined') {
+          importScripts(`i18n/domain-rules-manager-${this.currentLang}.js`);
+        }
         this.translations = this.currentLang === 'zh' ? domainRulesManagerZh : domainRulesManagerEn;
       } else {
         const script = document.createElement('script');
