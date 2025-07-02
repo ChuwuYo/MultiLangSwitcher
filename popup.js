@@ -34,82 +34,62 @@ function sendDebugLog(message, logType = 'info') {
     }
 }
 
-// 更新请求头规则，设置Accept-Language
+// 更新请求头规则，通过background脚本
 function updateHeaderRules(language, autoCheck = false) {
-  const RULE_ID = 1;
   language = language.trim();
-
-  // 此处可以直接调用全局的 sendDebugLog
   sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${language}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
-  chrome.declarativeNetRequest.getDynamicRules(function(existingRules) {
-    sendDebugLog(`${popupI18n.t('found_rules')} ${existingRules.length} ${popupI18n.t('existing_dynamic_rules')}`, 'info');
-    // const existingRuleIds = existingRules.map(rule => rule.id); // 如果要移除所有
-    const ruleExists = existingRules.some(rule => rule.id === RULE_ID);
+  chrome.runtime.sendMessage({
+    type: 'UPDATE_RULES',
+    language: language
+  }, function(response) {
+    if (chrome.runtime.lastError) {
+      sendDebugLog(`发送更新请求失败: ${chrome.runtime.lastError.message}`, 'error');
+      return;
+    }
 
-    chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: ruleExists ? [RULE_ID] : [], // 只移除ID为RULE_ID的规则 (如果存在)
-      addRules: [{
-        "id": RULE_ID,
-        "priority": 100,
-        "action": {
-          "type": "modifyHeaders",
-          "requestHeaders": [
-            {
-              "header": "Accept-Language",
-              "operation": "set",
-              "value": language
-            }
-          ]
-        },
-        "condition": {
-          "urlFilter": "*",
-          "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
-        }
-      }]
-    }, function() {
-      if (chrome.runtime.lastError) {
-        sendDebugLog(`${popupI18n.t('update_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
-        alert(popupI18n.t('update_request_header_failed') + ' ' + chrome.runtime.lastError.message);
-        return;
-      }
-
-      sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${language}.`, 'success');
-      const statusTextElement = document.getElementById('statusText');
-      const currentLanguageSpan = document.getElementById('currentLanguage');
-
-      if (statusTextElement && currentLanguageSpan) {
-        currentLanguageSpan.textContent = language;
-        const successSpan = document.createElement('span');
-        successSpan.className = 'text-success ms-1'; // 加一点左边距
-        successSpan.textContent = popupI18n.t('applied');
-        
-        const oldSuccessSpan = statusTextElement.querySelector('.text-success');
-        if (oldSuccessSpan) {
-            oldSuccessSpan.remove();
-        }
-        // 插入到 currentLanguageSpan 之后
-        currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
-        
-
-        setTimeout(function() {
-          if (successSpan.parentNode === statusTextElement) {
-            successSpan.remove();
-          }
-        }, 2000);
-      }
-
+    if (response && response.status === 'success') {
+      sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${response.language}.`, 'success');
+      updateLanguageDisplay(response.language, true);
+      
       if (autoCheck) {
         const checkHeaderBtn = document.getElementById('checkHeaderBtn');
         if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
           sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
-          setTimeout(function() {
-            checkHeaderBtn.click();
-          }, 500);
+          setTimeout(() => checkHeaderBtn.click(), 500);
         }
       }
-    });
+    } else if (response && response.status === 'error') {
+      sendDebugLog(`${popupI18n.t('update_rules_failed')} ${response.message}`, 'error');
+      alert(popupI18n.t('update_request_header_failed') + ' ' + response.message);
+    }
   });
+}
+
+// 更新语言显示
+function updateLanguageDisplay(language, showSuccess = false) {
+  const statusTextElement = document.getElementById('statusText');
+  const currentLanguageSpan = document.getElementById('currentLanguage');
+  const languageSelect = document.getElementById('languageSelect');
+
+  if (currentLanguageSpan) currentLanguageSpan.textContent = language;
+  if (languageSelect) languageSelect.value = language;
+
+  if (showSuccess && statusTextElement) {
+    const oldSuccessSpan = statusTextElement.querySelector('.text-success');
+    if (oldSuccessSpan) oldSuccessSpan.remove();
+    
+    const successSpan = document.createElement('span');
+    successSpan.className = 'text-success ms-1';
+    successSpan.textContent = popupI18n.t('applied');
+    currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+    
+    setTimeout(() => {
+      if (successSpan.parentNode === statusTextElement) {
+        successSpan.remove();
+      }
+    }, 2000);
+  }
 }
 
 
@@ -168,8 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (headerAction) {
         activeLanguage = headerAction.value;
         sendDebugLog(`${popupI18n.t('get_current_language_from_rules')} ${activeLanguage}.`, 'info');
-        if (languageSelect) languageSelect.value = activeLanguage;
-        if (currentLanguageSpan) currentLanguageSpan.textContent = activeLanguage;
+        updateLanguageDisplay(activeLanguage);
       }
     }
 
@@ -177,8 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
       sendDebugLog(popupI18n.t('no_language_from_rules'), 'info');
       chrome.storage.local.get(['currentLanguage'], function(result) {
         if (result.currentLanguage) {
-          if (languageSelect) languageSelect.value = result.currentLanguage;
-          if (currentLanguageSpan) currentLanguageSpan.textContent = result.currentLanguage;
+          updateLanguageDisplay(result.currentLanguage);
           sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
         } else {
           const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
@@ -277,29 +255,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // 防抖的UI更新
+  let lastUIUpdate = 0;
+  function debouncedUIUpdate(updateFn, delay = 100) {
+    const now = Date.now();
+    if (now - lastUIUpdate > delay) {
+      lastUIUpdate = now;
+      updateFn();
+    } else {
+      setTimeout(() => {
+        lastUIUpdate = Date.now();
+        updateFn();
+      }, delay);
+    }
+  }
+
   // 监听来自 background.js 的消息
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
-      const autoSwitchEnabled = request.autoSwitchEnabled;
-      if (autoSwitchToggle) {
-        autoSwitchToggle.checked = autoSwitchEnabled;
-      }
-      
-      chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function() {
-        if (chrome.runtime.lastError) {
-          sendDebugLog(`更新存储状态失败: ${chrome.runtime.lastError.message}`, 'error');
-        } else {
-          sendDebugLog(`已同步自动切换状态到存储: ${autoSwitchEnabled}`, 'info');
+      debouncedUIUpdate(() => {
+        const autoSwitchEnabled = request.autoSwitchEnabled;
+        if (autoSwitchToggle) {
+          autoSwitchToggle.checked = autoSwitchEnabled;
+        }
+        
+        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function() {
+          if (chrome.runtime.lastError) {
+            sendDebugLog(`更新存储状态失败: ${chrome.runtime.lastError.message}`, 'error');
+          } else {
+            sendDebugLog(`已同步自动切换状态到存储: ${autoSwitchEnabled}`, 'info');
+          }
+        });
+
+        updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
+        
+        if (request.currentLanguage) {
+          updateLanguageDisplay(request.currentLanguage);
+          sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
         }
       });
-
-      updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
-      
-      if (request.currentLanguage) {
-        if (currentLanguageSpan) currentLanguageSpan.textContent = request.currentLanguage;
-        if (languageSelect) languageSelect.value = request.currentLanguage;
-        sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
-      }
       sendResponse({status: "UI updated"});
     } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
       // 同步自动切换状态

@@ -33,6 +33,8 @@ function sendBackgroundLog(message, logType = 'info') {
 let rulesCache = null;          // 规则缓存，避免重复获取已知规则
 let lastAppliedLanguage = null; // 最后应用的语言
 let autoSwitchEnabled = false;  // 自动切换状态
+let lastUIUpdateTime = 0;       // 最后UI更新时间
+let pendingUIUpdate = null;     // 待处理的UI更新
 
 /**
  * 根据域名获取对应的语言
@@ -254,13 +256,13 @@ chrome.runtime.onInstalled.addListener(function (details) {
       if (autoSwitchEnabled) {
         sendBackgroundLog(`自动切换已启用，将应用默认语言(${FALLBACK_LANGUAGE})直到首次导航触发规则。`, 'info');
         // 当自动切换启用时，使用回退语言，直到访问特定域名时再切换或用户手动更改
-        updateHeaderRules(FALLBACK_LANGUAGE, 0, true).then(() => { // 标记为自动切换初始化
-          notifyPopupUIUpdate(true, FALLBACK_LANGUAGE); // 通知UI当前是自动模式
+        updateHeaderRules(FALLBACK_LANGUAGE, 0, true).then(() => {
+          notifyPopupUIUpdate(true, FALLBACK_LANGUAGE, true);
         });
       } else if (result.currentLanguage) {
         updateHeaderRules(result.currentLanguage);
         sendBackgroundLog(`加载并应用存储的语言设置: ${result.currentLanguage}`, 'info');
-        notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage);
+        notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage, true);
       } else {
         // 如果没有保存的语言设置，根据浏览器语言自动检测
         const detectedLang = detectBrowserLanguage();
@@ -274,7 +276,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
           }
           updateHeaderRules(defaultLanguage);
           sendBackgroundLog(`首次安装检测到浏览器语言为 ${detectedLang}，设置默认语言为: ${defaultLanguage}`, 'info');
-          notifyPopupUIUpdate(autoSwitchEnabled, defaultLanguage);
+          notifyPopupUIUpdate(autoSwitchEnabled, defaultLanguage, true);
         });
       }
     });
@@ -284,23 +286,35 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 /**
- * 通知所有相关页面更新UI
+ * 防抖的UI更新通知
  * @param {boolean} autoSwitchEnabled - 自动切换是否启用
  * @param {string} currentLanguage - 当前语言代码
+ * @param {boolean} immediate - 是否立即更新
  */
-function notifyPopupUIUpdate(autoSwitchEnabled, currentLanguage) {
+function notifyPopupUIUpdate(autoSwitchEnabled, currentLanguage, immediate = false) {
+  const now = Date.now();
   const message = {
     type: 'AUTO_SWITCH_UI_UPDATE',
     autoSwitchEnabled,
     currentLanguage
   };
   
-  // 向所有相关页面发送消息（popup和debug页面）
-  chrome.runtime.sendMessage(message).catch(() => {
-    // 忽略发送消息的错误
-  });
-  
-  sendBackgroundLog(`已发送UI更新通知: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
+  // 立即更新或距离上次更新超过500ms
+  if (immediate || now - lastUIUpdateTime > 500) {
+    clearTimeout(pendingUIUpdate);
+    lastUIUpdateTime = now;
+    
+    chrome.runtime.sendMessage(message).catch(() => {});
+    sendBackgroundLog(`UI更新: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
+  } else {
+    // 防抖延迟更新
+    clearTimeout(pendingUIUpdate);
+    pendingUIUpdate = setTimeout(() => {
+      lastUIUpdateTime = Date.now();
+      chrome.runtime.sendMessage(message).catch(() => {});
+      sendBackgroundLog(`延迟UI更新: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
+    }, 300);
+  }
 }
 
 /**
@@ -374,9 +388,12 @@ async function handleAutoSwitch(details) {
 // 防抖函数，正确处理Promise
 function debounce(func, wait) {
   let timeout;
+  let lastArgs;
   let pendingPromises = [];
   
   return function executedFunction(...args) {
+    lastArgs = args;
+    
     return new Promise((resolve, reject) => {
       pendingPromises.push({ resolve, reject });
       clearTimeout(timeout);
@@ -386,7 +403,7 @@ function debounce(func, wait) {
         pendingPromises = [];
         
         try {
-          const result = await func(...args);
+          const result = await func(...lastArgs);
           promises.forEach(p => p.resolve(result));
         } catch (error) {
           promises.forEach(p => p.reject(error));
@@ -396,17 +413,24 @@ function debounce(func, wait) {
   };
 }
 
-// 优化的规则更新函数，带状态检查
+// 优化的规则更新函数，带状态检查和智能防抖
 const optimizedUpdateHeaderRules = debounce(async function(language, delay = 0, isAutoSwitch = false) {
   try {
-    // 检查当前规则是否已经是目标语言
+    // 快速检查内存缓存
+    if (language === lastAppliedLanguage && !isAutoSwitch) {
+      sendBackgroundLog(`语言已是 ${language}，跳过更新`, 'info');
+      return { status: 'cached', language };
+    }
+    
+    // 检查当前规则
     const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
-    const currentRule = currentRules.find(rule => rule.id === 1);
+    const currentRule = currentRules.find(rule => rule.id === RULE_ID);
     const currentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
     
     if (currentLang === language) {
-      sendBackgroundLog(`语言已是 ${language}，跳过更新`, 'info');
-      return { status: 'unchanged', language: language };
+      lastAppliedLanguage = language;
+      sendBackgroundLog(`规则已是 ${language}，更新缓存`, 'info');
+      return { status: 'unchanged', language };
     }
     
     return await updateHeaderRules(language, delay, isAutoSwitch);
@@ -414,7 +438,7 @@ const optimizedUpdateHeaderRules = debounce(async function(language, delay = 0, 
     sendBackgroundLog(`优化更新规则失败: ${error.message}`, 'error');
     throw error;
   }
-}, 100);
+}, 150);
 
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -470,7 +494,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         if (typeof sendResponse === 'function') {
           sendResponse({ status: 'success' });
         }
-        notifyPopupUIUpdate(true, FALLBACK_LANGUAGE);
+        notifyPopupUIUpdate(true, FALLBACK_LANGUAGE, true);
       }).catch(error => {
         sendBackgroundLog(`自动切换启用时更新规则失败: ${error.message}`, 'error');
         if (typeof sendResponse === 'function') {
@@ -485,7 +509,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
           if (typeof sendResponse === 'function') {
             sendResponse({ status: 'success' });
           }
-          notifyPopupUIUpdate(false, language);
+          notifyPopupUIUpdate(false, language, true);
         }).catch(error => {
           sendBackgroundLog(`自动切换禁用时更新规则失败: ${error.message}`, 'error');
           if (typeof sendResponse === 'function') {
@@ -551,7 +575,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         updateHeaderRules(targetLanguage, 0, true)
           .then(result => {
             sendBackgroundLog(`自动切换成功: ${currentHostname} -> ${targetLanguage} (${result.status})`, 'success');
-            notifyPopupUIUpdate(true, targetLanguage);
+            if (result.status === 'success') {
+              notifyPopupUIUpdate(true, targetLanguage);
+            }
           })
           .catch(error => {
             sendBackgroundLog(`自动切换失败: ${currentHostname} -> ${targetLanguage}: ${error.message}`, 'error');
@@ -569,7 +595,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             updateHeaderRules(defaultLanguage, 0, true)
               .then(result => {
                 sendBackgroundLog(`已为 ${currentHostname} 应用默认语言(${defaultLanguage}): ${result.status}`, 'info');
-                notifyPopupUIUpdate(true, defaultLanguage);
+                if (result.status === 'success') {
+                  notifyPopupUIUpdate(true, defaultLanguage);
+                }
               })
               .catch(error => {
                 sendBackgroundLog(`为 ${currentHostname} 应用默认语言失败: ${error.message}`, 'error');
