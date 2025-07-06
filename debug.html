@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>MultiLangSwitcher Debug Page</title>
   <link href="bootstrap.min.css" rel="stylesheet">
-  <link href="typefaces/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
   <style>
     body {
@@ -61,7 +61,7 @@
 
     @font-face {
       font-family: 'MapleMonoNL';
-      src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2');
+      src: url('fonts/MapleMonoNL-Regular.woff2') format('woff2');
     }
 
     body {
@@ -110,68 +110,7 @@
           <div class="mb-3">
             <label for="testLanguage" class="form-label">Test Language:</label>
             <select class="form-select" id="testLanguage">
-              <option value="zh-CN">简体中文 (zh-CN)</option>
-              <option value="zh-TW">繁体中文 (zh-TW)</option>
-              <option value="zh-HK">繁体中文 (香港) (zh-HK)</option>
-              <option value="en-US">English (US) (en-US)</option>
-              <option value="en-GB">English (UK) (en-GB)</option>
-              <option value="en-AU">English (Australia) (en-AU)</option>
-              <option value="en-CA">English (Canada) (en-CA)</option>
-              <option value="ja">日本語 (ja)</option>
-              <option value="ko">한국어 (ko)</option>
-              <option value="fr">Français (fr)</option>
-              <option value="fr-CA">Français (Canada) (fr-CA)</option>
-              <option value="de">Deutsch (de)</option>
-              <option value="de-AT">Deutsch (Österreich) (de-AT)</option>
-              <option value="de-CH">Deutsch (Schweiz) (de-CH)</option>
-              <option value="es">Español (es)</option>
-              <option value="es-MX">Español (México) (es-MX)</option>
-              <option value="es-AR">Español (Argentina) (es-AR)</option>
-              <option value="ru">Русский (ru)</option>
-              <option value="pt-BR">Português (Brasil) (pt-BR)</option>
-              <option value="pt-PT">Português (Portugal) (pt-PT)</option>
-              <option value="it">Italiano (it)</option>
-              <option value="ar">العربية (ar)</option>
-              <option value="hi">हिन्दी (hi)</option>
-              <option value="bn">বাংলা (bn)</option>
-              <option value="ur">اردو (ur)</option>
-              <option value="fa">فارسی (fa)</option>
-              <option value="tr">Türkçe (tr)</option>
-              <option value="nl">Nederlands (nl)</option>
-              <option value="nl-BE">Nederlands (België) (nl-BE)</option>
-              <option value="pl">Polski (pl)</option>
-              <option value="sv">Svenska (sv)</option>
-              <option value="fi">Suomi (fi)</option>
-              <option value="da">Dansk (da)</option>
-              <option value="no">Norsk (no)</option>
-              <option value="cs">Čeština (cs)</option>
-              <option value="sk">Slovenčina (sk)</option>
-              <option value="hu">Magyar (hu)</option>
-              <option value="ro">Română (ro)</option>
-              <option value="bg">Български (bg)</option>
-              <option value="hr">Hrvatski (hr)</option>
-              <option value="sr">Српски (sr)</option>
-              <option value="sl">Slovenščina (sl)</option>
-              <option value="et">Eesti (et)</option>
-              <option value="lv">Latviešu (lv)</option>
-              <option value="lt">Lietuvių (lt)</option>
-              <option value="el">Ελληνικά (el)</option>
-              <option value="he">עברית (he)</option>
-              <option value="th">ไทย (th)</option>
-              <option value="vi">Tiếng Việt (vi)</option>
-              <option value="id">Bahasa Indonesia (id)</option>
-              <option value="ms">Bahasa Melayu (ms)</option>
-              <option value="tl">Filipino (tl)</option>
-              <option value="uk">Українська (uk)</option>
-              <option value="be">Беларуская (be)</option>
-              <option value="ka">ქართული (ka)</option>
-              <option value="hy">Հայերեն (hy)</option>
-              <option value="az">Azərbaycan (az)</option>
-              <option value="kk">Қазақша (kk)</option>
-              <option value="ky">Кыргызча (ky)</option>
-              <option value="uz">O'zbek (uz)</option>
-              <option value="mn">Монгол (mn)</option>
-              <option value="ta">தமிழ் (ta)</option>
+              <!-- 语言选项将由JavaScript动态生成 -->
             </select>
           </div>
           <button id="testHeaderBtn" class="btn btn-success">Test Request Header</button>
@@ -282,6 +221,8 @@
     <!-- 自动切换功能控制结束 -->
   </div>
 
+  <script src="shared/shared-utils.js"></script>
+  <script src="shared/shared-language-options.js"></script>
   <script src="i18n/debug-i18n.js"></script>
   <script src="debug-headers.js"></script>
   <script src="debug-ui.js"></script>

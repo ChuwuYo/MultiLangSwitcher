@@ -10,6 +10,12 @@ function getExternalCheckLinks(prefix = debugI18n.t('please_visit')) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 初始化语言选项
+  const testLanguageSelect = document.getElementById('testLanguage');
+  if (testLanguageSelect) {
+    populateLanguageSelect(testLanguageSelect);
+  }
+
   // 显示当前规则和匹配的规则详情
   document.getElementById('showRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('rulesResult');
@@ -572,9 +578,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // 将规则按字母顺序排序
             const sortedDomains = Object.keys(categoryRules).sort();
 
-            // 创建表格显示
-            html += '<table class="table table-sm table-striped">';
-            html += `<thead><tr><th>${debugI18n.t('domain')}</th><th>${debugI18n.t('language')}</th></tr></thead>`;
+            // 创建表格显示，设置固定列宽
+            html += '<table class="table table-sm table-striped" style="table-layout: fixed;">';
+            html += `<thead><tr><th style="width: 50%;">${debugI18n.t('domain')}</th><th style="width: 50%;">${debugI18n.t('language')}</th></tr></thead>`;
             html += '<tbody>';
 
             sortedDomains.forEach(domain => {
