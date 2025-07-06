@@ -153,9 +153,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }, 100);
   // 初始渲染日志 (虽然此时allLogMessages是空的)
   renderLogs();
-  
+
   // 页面加载时同步自动切换状态
-  chrome.storage.local.get(['autoSwitchEnabled'], function(result) {
+  chrome.storage.local.get(['autoSwitchEnabled'], function (result) {
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (autoSwitchToggle) {
       autoSwitchToggle.checked = !!result.autoSwitchEnabled;
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function () {
           if (domain.includes('.')) {
             categories[debugI18n.t('second_level_domain')][domain] = language;
           } else if ([
-            'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg', 
+            'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg',
             'th', 'vn', 'ph', 'kz', 'uz', 'mn'
           ].includes(domain)) {
             categories[debugI18n.t('asia')][domain] = language;
@@ -539,14 +539,14 @@ document.addEventListener('DOMContentLoaded', function () {
           ].includes(domain)) {
             categories[debugI18n.t('south_america')][domain] = language;
           } else if ([
-            'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi', 
-            'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt', 
-            'se', 'uk', 'tr', 'cy', 'by', 'bg', 'hr', 'rs', 'si', 
+            'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi',
+            'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt',
+            'se', 'uk', 'tr', 'cy', 'by', 'bg', 'hr', 'rs', 'si',
             'ee', 'lv', 'lt', 'md', 'mk', 'al', 'ba', 'me', 'xk'
           ].includes(domain)) {
             categories[debugI18n.t('europe')][domain] = language;
           } else if ([
-            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps', 
+            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps',
             'qa', 'sa', 'sy', 'ae', 'ye'
           ].includes(domain)) {
             categories[debugI18n.t('middle_east')][domain] = language;
@@ -604,9 +604,9 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
-      
+
       if (sendResponse) {
-        sendResponse({status: "Debug UI updated"});
+        sendResponse({ status: "Debug UI updated" });
       }
     } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
       // 同步自动切换状态

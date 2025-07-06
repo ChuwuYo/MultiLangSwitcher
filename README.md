@@ -1,6 +1,6 @@
 <div align="center">
     <img src="images/icon128.png" alt="MultiLangSwitcher Icon" width="150" height="150"> <h1>MultiLangSwitcher</h1>
-    <a href="../README.md">简体中文</a> | <a href="docs/README_EN.md">English</a> </div>
+    <a href="README.md">简体中文</a> | <a href="docs/README/README_EN.md">English</a> </div>
 
 ---
 
@@ -52,7 +52,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 ***
 
-* **语言切换**: 弹出界面选择语言，修改 `Accept-Language` 请求头
+* **语言请求头切换**: 弹出界面选择语言，修改 `Accept-Language` 请求头
 * **域名自动切换**: 根据访问域名自动应用对应语言设置
   - 支持顶级域名（如 `.cn`、`.jp`）和二级域名（如 `com.cn`、`co.jp`）
   - 内置域名规则覆盖主要国家和地区

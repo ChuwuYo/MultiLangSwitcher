@@ -52,12 +52,12 @@ async function getLanguageForDomain(domain) {
 function detectBrowserLanguage() {
   const browserLang = chrome.i18n.getUILanguage().toLowerCase();
   sendBackgroundLog(`检测到浏览器语言: ${browserLang}`, 'info');
-  
+
   // 检查是否为中文及其变体
   if (browserLang.startsWith('zh')) {
     return 'zh';
   }
-  
+
   // 默认返回英文
   return 'en';
 }
@@ -247,7 +247,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
   // 初始化域名规则管理器
   domainRulesManager.loadRules().then(() => {
     sendBackgroundLog('Domain rules loaded after install', 'info');
-    
+
     // 从存储中获取当前语言设置和自动切换状态并应用
     chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
       autoSwitchEnabled = !!result.autoSwitchEnabled; // 更新内存中的状态
@@ -267,7 +267,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
         // 如果没有保存的语言设置，根据浏览器语言自动检测
         const detectedLang = detectBrowserLanguage();
         const defaultLanguage = detectedLang === 'zh' ? 'zh-CN' : DEFAULT_LANGUAGE;
-        
+
         chrome.storage.local.set({
           currentLanguage: defaultLanguage
         }, function () {
@@ -298,20 +298,20 @@ function notifyPopupUIUpdate(autoSwitchEnabled, currentLanguage, immediate = fal
     autoSwitchEnabled,
     currentLanguage
   };
-  
+
   // 立即更新或距离上次更新超过500ms
   if (immediate || now - lastUIUpdateTime > 500) {
     clearTimeout(pendingUIUpdate);
     lastUIUpdateTime = now;
-    
-    chrome.runtime.sendMessage(message).catch(() => {});
+
+    chrome.runtime.sendMessage(message).catch(() => { });
     sendBackgroundLog(`UI更新: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
   } else {
     // 防抖延迟更新
     clearTimeout(pendingUIUpdate);
     pendingUIUpdate = setTimeout(() => {
       lastUIUpdateTime = Date.now();
-      chrome.runtime.sendMessage(message).catch(() => {});
+      chrome.runtime.sendMessage(message).catch(() => { });
       sendBackgroundLog(`延迟UI更新: 自动切换=${autoSwitchEnabled}, 语言=${currentLanguage}`, 'info');
     }, 300);
   }
@@ -390,18 +390,18 @@ function debounce(func, wait) {
   let timeout;
   let lastArgs;
   let pendingPromises = [];
-  
+
   return function executedFunction(...args) {
     lastArgs = args;
-    
+
     return new Promise((resolve, reject) => {
       pendingPromises.push({ resolve, reject });
       clearTimeout(timeout);
-      
+
       timeout = setTimeout(async () => {
         const promises = pendingPromises;
         pendingPromises = [];
-        
+
         try {
           const result = await func(...lastArgs);
           promises.forEach(p => p.resolve(result));
@@ -414,25 +414,25 @@ function debounce(func, wait) {
 }
 
 // 优化的规则更新函数，带状态检查和智能防抖
-const optimizedUpdateHeaderRules = debounce(async function(language, delay = 0, isAutoSwitch = false) {
+const optimizedUpdateHeaderRules = debounce(async function (language, delay = 0, isAutoSwitch = false) {
   try {
     // 快速检查内存缓存
     if (language === lastAppliedLanguage && !isAutoSwitch) {
       sendBackgroundLog(`语言已是 ${language}，跳过更新`, 'info');
       return { status: 'cached', language };
     }
-    
+
     // 检查当前规则
     const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
     const currentRule = currentRules.find(rule => rule.id === RULE_ID);
     const currentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
-    
+
     if (currentLang === language) {
       lastAppliedLanguage = language;
       sendBackgroundLog(`规则已是 ${language}，更新缓存`, 'info');
       return { status: 'unchanged', language };
     }
-    
+
     return await updateHeaderRules(language, delay, isAutoSwitch);
   } catch (error) {
     sendBackgroundLog(`优化更新规则失败: ${error.message}`, 'error');
@@ -481,12 +481,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     autoSwitchEnabled = request.enabled;
     sendBackgroundLog(`自动切换功能状态已更新为: ${autoSwitchEnabled}`, 'info');
     chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }); // 保存状态
-    
+
     // 广播状态变化给所有页面
     chrome.runtime.sendMessage({
       type: 'AUTO_SWITCH_STATE_CHANGED',
       enabled: autoSwitchEnabled
-    }).catch(() => {});
+    }).catch(() => { });
 
     if (autoSwitchEnabled) {
       sendBackgroundLog('自动切换已启用。后续请求将根据域名自动切换语言。', 'info');
@@ -551,7 +551,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   sendBackgroundLog(`Tab: tabId=${tabId}, status=${changeInfo.status}, autoSwitch=${autoSwitchEnabled}, url=${tab?.url}`, 'info');
-  
+
   // 确保自动切换已启用，标签页加载完成，并且有有效的URL (http or https)
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab && tab.url && (tab.url.startsWith('http:') || tab.url.startsWith('https://'))) {
     sendBackgroundLog(`Tab updated: ${tab.url}, Status: ${changeInfo.status}`, 'info');
@@ -587,10 +587,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         const defaultLanguage = FALLBACK_LANGUAGE;
         sendBackgroundLog(`域名 '${currentHostname}' 没有匹配的规则，使用默认语言: ${defaultLanguage}`, 'info');
         // 只有在当前语言不是默认语言时才更新
-        chrome.declarativeNetRequest.getDynamicRules(function(rules) {
+        chrome.declarativeNetRequest.getDynamicRules(function (rules) {
           const currentRule = rules.find(rule => rule.id === 1);
           const currentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
-          
+
           if (currentLang !== defaultLanguage) {
             updateHeaderRules(defaultLanguage, 0, true)
               .then(result => {

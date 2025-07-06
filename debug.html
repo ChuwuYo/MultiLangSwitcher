@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>MultiLangSwitcher Debug Page</title>
@@ -10,12 +11,14 @@
     body {
       padding: 20px;
     }
+
     .debug-section {
       margin-bottom: 20px;
       padding: 15px;
       border-radius: 5px;
       background-color: #f8f9fa;
     }
+
     .debug-result {
       margin-top: 10px;
       padding: 10px;
@@ -24,36 +27,57 @@
       border: 1px solid #dee2e6;
       max-height: 300px;
       overflow-y: auto;
-      word-break: break-all; /* 防止长行溢出 */
-      white-space: pre-wrap; /* 保留空白符并换行 */
+      word-break: break-all;
+      white-space: pre-wrap;
       font-size: 0.9em;
     }
+
     .success {
       color: green;
       font-weight: bold;
     }
+
     .error {
       color: rgb(240, 101, 101);
       font-weight: bold;
     }
-    /* 日志不同类型的颜色 */
-    .log-info { color: rgb(165, 165, 250); }
-    .log-warning { color: orange; }
-    .log-error { color: rgb(248, 115, 115); }
-    .log-success { color: green; }
 
-    @font-face { font-family: 'MapleMonoNL'; src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2'); }
-    body { font-family: 'MapleMonoNL', sans-serif; }
+    /* 日志不同类型的颜色 */
+    .log-info {
+      color: rgb(165, 165, 250);
+    }
+
+    .log-warning {
+      color: orange;
+    }
+
+    .log-error {
+      color: rgb(248, 115, 115);
+    }
+
+    .log-success {
+      color: green;
+    }
+
+    @font-face {
+      font-family: 'MapleMonoNL';
+      src: url('typefaces/MapleMonoNL-Regular.woff2') format('woff2');
+    }
+
+    body {
+      font-family: 'MapleMonoNL', sans-serif;
+    }
 
     /* 匹配规则详情的样式 */
     .matched-rule-detail {
-        margin-left: 15px;
-        border-left: 2px solid #007bff;
-        padding-left: 10px;
-        margin-bottom: 5px;
+      margin-left: 15px;
+      border-left: 2px solid #007bff;
+      padding-left: 10px;
+      margin-bottom: 5px;
     }
   </style>
 </head>
+
 <body>
   <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
 
@@ -62,14 +86,17 @@
     <p class="lead">This page helps you diagnose and solve language preference issues</p>
 
     <div class="alert alert-info">
-      <strong>Tip:</strong> If your request headers cannot be successfully changed, you can use this page for diagnosis. After opening this page, operations in other parts of the extension (such as the popup page) will display logs here.
+      <strong>Tip:</strong> If your request headers cannot be successfully changed, you can use this page for diagnosis.
+      After opening this page, operations in other parts of the extension (such as the popup page) will display logs
+      here.
     </div>
 
     <div class="row">
       <div class="col-md-6">
         <div class="debug-section">
           <h4>Current Rules Information</h4>
-          <p class="text-muted">Shows the dynamic rules currently in effect by the extension and details of recently matched rules.</p>
+          <p class="text-muted">Shows the dynamic rules currently in effect by the extension and details of recently
+            matched rules.</p>
           <button id="showRulesBtn" class="btn btn-primary">Show Current Rules</button>
           <div id="rulesResult" class="debug-result">Click the button to view current rules...</div>
         </div>
@@ -78,7 +105,8 @@
       <div class="col-md-6">
         <div class="debug-section">
           <h4>Request Header Test</h4>
-          <p class="text-muted">Send a request to the test address to check if the Accept-Language header is set as expected.</p>
+          <p class="text-muted">Send a request to the test address to check if the Accept-Language header is set as
+            expected.</p>
           <div class="mb-3">
             <label for="testLanguage" class="form-label">Test Language:</label>
             <select class="form-select" id="testLanguage">
@@ -151,14 +179,15 @@
         </div>
       </div>
 
-      <!-- 新增：自定义语言设置 -->
+      <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
           <h4>Custom Language Preference</h4>
           <p class="text-muted">Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".</p>
           <div class="mb-3">
             <label for="customLanguageInput" class="form-label">Custom Language String:</label>
-            <input type="text" class="form-control" id="customLanguageInput" placeholder="Example: en-US,en;q=0.9,fr;q=0.8">
+            <input type="text" class="form-control" id="customLanguageInput"
+              placeholder="Example: en-US,en;q=0.9,fr;q=0.8">
           </div>
           <button id="applyCustomLangBtn" class="btn btn-primary">Apply Custom Language</button>
           <div id="customLangResult" class="debug-result mt-2"></div>
@@ -173,8 +202,10 @@
           <p class="text-muted">Understand the structure of the Accept-Language request header.</p>
           <p><strong>Basic Format:</strong></p>
           <ul>
-            <li><code>Language code</code> (required): e.g. <code>en</code> (English), <code>zh</code> (Chinese). Uses ISO 639-1 standard.</li>
-            <li><code>-Region code</code> (optional): e.g. <code>US</code> (United States), <code>CN</code> (Mainland China), <code>HK</code> (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.</li>
+            <li><code>Language code</code> (required): e.g. <code>en</code> (English), <code>zh</code> (Chinese). Uses
+              ISO 639-1 standard.</li>
+            <li><code>-Region code</code> (optional): e.g. <code>US</code> (United States), <code>CN</code> (Mainland
+              China), <code>HK</code> (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.</li>
             <li><code>;q=Quality value</code> (optional): Range 0 to 1, indicates priority, default is 1.</li>
           </ul>
           <p><strong>Examples:</strong></p>
@@ -182,7 +213,8 @@
             <li><code>en-US</code>: American English</li>
             <li><code>zh-CN</code>: Simplified Chinese (Mainland China)</li>
             <li><code>fr</code>: French (no region specified)</li>
-            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: Priority American English, followed by general English, then Simplified Chinese.</li>
+            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: Priority American English, followed by general English, then
+              Simplified Chinese.</li>
           </ul>
           <p class="small text-muted">Please follow this format in the input box above to set custom language.</p>
         </div>
@@ -192,7 +224,7 @@
 
     <div class="debug-section mt-4">
       <h4>Live Logs</h4>
-       <p class="text-muted">Shows log messages sent by the extension at runtime to help track issues.</p>
+      <p class="text-muted">Shows log messages sent by the extension at runtime to help track issues.</p>
       <div class="mb-3">
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterInfo" value="info" checked>
@@ -255,4 +287,5 @@
   <script src="debug-ui.js"></script>
   <script type="module" src="toggle.js"></script>
 </body>
+
 </html>
