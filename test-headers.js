@@ -247,7 +247,7 @@ function getBrowserInfo() {
     browserVersion = testI18n.t('unknown_version');
     fullVersion = testI18n.t('unknown_version');
   }
-  
+
   let os = testI18n.t('unknown_os');
   if (ua.indexOf("Windows") !== -1) os = "Windows";
   if (ua.indexOf("Mac") !== -1) os = "MacOS";
@@ -276,7 +276,7 @@ function checkApiSupport() {
     { name: 'URL API (URLSearchParams)', supported: typeof URL !== 'undefined' && typeof URLSearchParams !== 'undefined' },
     { name: 'Beacon API', supported: 'sendBeacon' in navigator },
     { name: 'WebRTC (RTCPeerConnection)', supported: !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection) },
-    { name: 'WebGL', supported: (function() { try { const canvas = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))); } catch(e) { return false; } })() }
+    { name: 'WebGL', supported: (function () { try { const canvas = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))); } catch (e) { return false; } })() }
   ];
   return apis;
 }
@@ -291,19 +291,19 @@ function performCompatibilityChecks() {
   }
 
   if (apiListEl) {
-    apiListEl.innerHTML = ''; 
+    apiListEl.innerHTML = '';
     const apis = checkApiSupport();
     apis.forEach(api => {
       const listItem = document.createElement('li');
       listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? 'list-group-item-success' : 'list-group-item-danger'}`;
-      
+
       const apiNameSpan = document.createElement('span');
       apiNameSpan.textContent = api.name;
-      
+
       const badgeSpan = document.createElement('span');
-      badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`; 
+      badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`;
       badgeSpan.textContent = api.supported ? testI18n.t('supported') : testI18n.t('not_supported');
-      
+
       listItem.appendChild(apiNameSpan);
       listItem.appendChild(badgeSpan);
       apiListEl.appendChild(listItem);
@@ -320,7 +320,7 @@ async function fetchAndDisplayHeaders() {
   headerLanguageInfo.textContent = testI18n.t('detecting');
 
   const timestamp = new Date().getTime();
-  const TIMEOUT_MS = 5000; 
+  const TIMEOUT_MS = 5000;
 
   const urls = [
     `https://postman-echo.com/headers?_=${timestamp}`,
@@ -331,11 +331,11 @@ async function fetchAndDisplayHeaders() {
   function processHeadersData(data) {
     const headers = data.headers;
     let formattedHeaders = JSON.stringify(headers, null, 2);
-    headerInfoElement.textContent = formattedHeaders; 
+    headerInfoElement.textContent = formattedHeaders;
 
     const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
     if (existingAlertInfoP) {
-        existingAlertInfoP.remove();
+      existingAlertInfoP.remove();
     }
 
     const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
@@ -365,20 +365,20 @@ async function fetchAndDisplayHeaders() {
       credentials: 'omit',
       signal: controller.signal
     })
-    .then(response => {
-      clearTimeout(timeoutId);
-      if (!response.ok) {
-        throw new Error(`${testI18n.t('http_error_status')} ${response.status} ${testI18n.t('from')} ${url}`);
-      }
-      return response.json();
-    })
-    .catch(error => {
-      clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        throw new Error(testI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
-      }
-      throw error;
-    });
+      .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+          throw new Error(`${testI18n.t('http_error_status')} ${response.status} ${testI18n.t('from')} ${url}`);
+        }
+        return response.json();
+      })
+      .catch(error => {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error(testI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
+        }
+        throw error;
+      });
   }
 
   try {
@@ -389,7 +389,7 @@ async function fetchAndDisplayHeaders() {
     console.error(testI18n.t('all_attempts_failed'), error);
     let combinedErrorMessage = testI18n.t('fetch_failed_all_services');
     if (error instanceof AggregateError) {
-        combinedErrorMessage += ' ' + testI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
+      combinedErrorMessage += ' ' + testI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
     }
     headerInfoElement.textContent = combinedErrorMessage;
     headerLanguageInfo.innerHTML = `
@@ -526,9 +526,9 @@ async function detectAudioFingerprint() {
     const bufferData = renderedBuffer.getChannelData(0);
     let sum = 0;
     for (let i = 4500; i < 5000; i++) {
-        if (bufferData[i]) {
-            sum += Math.abs(bufferData[i]);
-        }
+      if (bufferData[i]) {
+        sum += Math.abs(bufferData[i]);
+      }
     }
     const fingerprintData = sum.toString();
     const fingerprint = md5(fingerprintData);
@@ -574,7 +574,7 @@ function detectWebRtc() {
 
   try {
     const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.createDataChannel(''); 
+    pc.createDataChannel('');
     pc.onicecandidate = (e) => {
       if (!e || !e.candidate || !e.candidate.candidate) return;
       const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
@@ -588,7 +588,7 @@ function detectWebRtc() {
       .catch(err => console.error(testI18n.t('webrtc_setlocaldescription_failed'), err));
 
     setTimeout(() => {
-      pc.close(); 
+      pc.close();
       if (ips.length > 0) {
         webRtcInfoElement.innerHTML = `
           <p class="mb-1"><strong>${testI18n.t('webrtc_local_ip')}</strong></p>
@@ -603,7 +603,7 @@ function detectWebRtc() {
         webRtcInfoElement.innerHTML = `<p class="text-success">${testI18n.t('webrtc_no_ip_detected')}</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
         console.log(testI18n.t('webrtc_no_local_ip'));
       }
-    }, 1000); 
+    }, 1000);
   } catch (error) {
     webRtcInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('webrtc_not_supported')}: ${error.message}</p>`;
     console.error(testI18n.t('webrtc_detection_failed'), error);
@@ -636,9 +636,9 @@ function detectFingerprint() {
 }
 
 // 页面加载完成后获取请求头和执行其他检测
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function () {
   // 延迟执行，确保扩展规则已应用
-  setTimeout(function() {
+  setTimeout(function () {
     fetchAndDisplayHeaders();
     detectJsLanguage();
     detectIntlApi();
@@ -654,7 +654,7 @@ window.addEventListener('DOMContentLoaded', function() {
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
   refreshButton.textContent = testI18n.t('Refresh detection');
-  refreshButton.onclick = function() {
+  refreshButton.onclick = function () {
     fetchAndDisplayHeaders();
     detectJsLanguage();
     detectIntlApi();
@@ -665,25 +665,25 @@ window.addEventListener('DOMContentLoaded', function() {
     detectAudioFingerprint(); // 异步
     performCompatibilityChecks(); // 刷新时也执行兼容性检查
   };
-  
+
   // 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
-  const headerInfoDiv = document.querySelector('.header-info.mt-4'); 
+  const headerInfoDiv = document.querySelector('.header-info.mt-4');
   if (headerInfoDiv) {
-     headerInfoDiv.appendChild(refreshButton);
+    headerInfoDiv.appendChild(refreshButton);
   } else {
-     // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
-     const container = document.querySelector('.container');
-     if (container) {
-         const allHeaderInfoDivs = container.querySelectorAll('.header-info');
-         if (allHeaderInfoDivs.length > 0) {
-             allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
-         } else {
-              // 如果还是找不到，就直接附加到 container 的末尾
-              container.appendChild(refreshButton);
-              console.warn(testI18n.t('button_add_failed_container'));
-         }
-     } else {
-         console.error(testI18n.t('button_add_failed_no_container'));
-     }
+    // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
+    const container = document.querySelector('.container');
+    if (container) {
+      const allHeaderInfoDivs = container.querySelectorAll('.header-info');
+      if (allHeaderInfoDivs.length > 0) {
+        allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
+      } else {
+        // 如果还是找不到，就直接附加到 container 的末尾
+        container.appendChild(refreshButton);
+        console.warn(testI18n.t('button_add_failed_container'));
+      }
+    } else {
+      console.error(testI18n.t('button_add_failed_no_container'));
+    }
   }
 });

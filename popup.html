@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>MultiLangSwitcher</title>
@@ -7,26 +8,25 @@
   <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
   <style>
-    /* 页面基本样式 */
     body {
       width: 300px;
       padding: 10px;
     }
-    /* 头部样式 */
+
     .header {
       margin-bottom: 15px;
       text-align: center;
     }
-    /* 语言选择框容器样式 */
+
     .language-select {
       margin-bottom: 15px;
     }
-    /* 状态文本样式 */
+
     .status {
       margin-top: 15px;
       font-style: italic;
     }
-    /* 当前语言代码高亮样式 */
+
     #currentLanguage {
       background-color: #f4fccc;
       color: #0d6efd;
@@ -34,40 +34,53 @@
       border-radius: 4px;
       font-weight: 600;
     }
-    /* 暗色主题下的语言代码高亮样式 */
+
+    /* 暗色主题下的语言代码高亮 */
     html[data-bs-theme="dark"] #currentLanguage {
       background-color: #373c42;
       color: #86b7fe;
     }
-    /* 字体定义 */
-    @font-face { font-family: 'MapleMonoNL'; src: url('fonts/MapleMonoNL-Regular.woff2') format('woff2'); }
-    body { font-family: 'MapleMonoNL', sans-serif; }
+
+    /* 字体 */
+    @font-face {
+      font-family: 'MapleMonoNL';
+      src: url('fonts/MapleMonoNL-Regular.woff2') format('woff2');
+    }
+
+    body {
+      font-family: 'MapleMonoNL', sans-serif;
+    }
 
     /* 语言选择框的自定义滚动条样式 */
     #languageSelect {
-      overflow-y: auto; /* 确保在需要时显示滚动条 */
+      overflow-y: auto;
     }
 
     /* Webkit 浏览器滚动条样式 (Chrome, Safari, Edge) */
     #languageSelect::-webkit-scrollbar {
       width: 6px;
     }
+
     #languageSelect::-webkit-scrollbar-track {
       background: #f1f1f1;
       border-radius: 10px;
     }
+
     #languageSelect::-webkit-scrollbar-thumb {
       background: #888;
       border-radius: 10px;
     }
+
     #languageSelect::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
 
     /* Firefox 浏览器滚动条样式 */
     #languageSelect {
-      scrollbar-width: thin; /* "auto" 或 "thin" */
-      scrollbar-color: #888 #f1f1f1; /* 滑块和轨道颜色 */
+      scrollbar-width: thin;
+      /* "auto" 或 "thin" */
+      scrollbar-color: #888 #f1f1f1;
+      /* 滑块和轨道颜色 */
     }
 
     /* Toggle Switch CSS */
@@ -80,8 +93,8 @@
       padding: .125em;
       background-image: linear-gradient(to bottom, #d5d5d5, #e8e8e8);
       box-shadow: 0 1px 1px rgb(255 255 255 / .6);
-      font-size: 1.5em; 
-      margin-top: 15px; /* Added margin for spacing */
+      font-size: 1.5em;
+      margin-top: 15px;
     }
 
     .toggle-checkbox {
@@ -108,7 +121,7 @@
       transition: background-color .4s linear;
     }
 
-    .toggle-checkbox:checked + .toggle-container {
+    .toggle-checkbox:checked+.toggle-container {
       background-color: #f3b519;
     }
 
@@ -126,7 +139,7 @@
       transition: left .4s;
     }
 
-    .toggle-checkbox:checked + .toggle-container > .toggle-button {
+    .toggle-checkbox:checked+.toggle-container>.toggle-button {
       left: 1.5625em;
     }
 
@@ -146,6 +159,7 @@
     }
   </style>
 </head>
+
 <body class="popup-body">
   <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
 
@@ -220,7 +234,7 @@
         <option value="uz">O'zbek (uz)</option>
         <option value="mn">Монгол (mn)</option>
         <option value="ta">தமிழ் (ta)</option>
-        </select>
+      </select>
     </div>
 
     <button id="applyButton" class="btn btn-primary w-100">Apply</button>
@@ -230,27 +244,28 @@
     </div>
 
     <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">Auto Switch Language (by domain)</label>
-      <div class="toggle-wrapper" style="font-size: 1em; margin: 0 auto; width: fit-content;"> 
-        <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle"> 
-        <div class="toggle-container">  
-          <div class="toggle-button"> 
-            <div class="toggle-button-circles-container"> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-              <div class="toggle-button-circle"></div> 
-            </div> 
-          </div> 
-        </div> 
+      <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">Auto Switch Language
+        (by domain)</label>
+      <div class="toggle-wrapper" style="font-size: 1em; margin: 0 auto; width: fit-content;">
+        <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle">
+        <div class="toggle-container">
+          <div class="toggle-button">
+            <div class="toggle-button-circles-container">
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+              <div class="toggle-button-circle"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -264,7 +279,8 @@
       <div class="card">
         <div class="card-header bg-light">Current Request Header</div>
         <div class="card-body">
-          <pre id="headerCheckContent" class="mb-0" style="font-size: 12px; max-height: 150px; overflow-y: auto;">Click "Quick Check" button to see results</pre>
+          <pre id="headerCheckContent" class="mb-0"
+            style="font-size: 12px; max-height: 150px; overflow-y: auto;">Click "Quick Check" button to see results</pre>
         </div>
       </div>
     </div>
@@ -274,4 +290,5 @@
   <script src="popup.js"></script>
   <script type="module" src="toggle.js"></script>
 </body>
+
 </html>

@@ -20,14 +20,14 @@ class DomainRulesManager {
       const url = chrome.runtime.getURL('domain-rules.json');
       console.log('[DomainRulesManager] 尝试加载规则文件:', url);
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log('[DomainRulesManager] 规则文件加载成功，数据结构:', Object.keys(data));
-      
+
       if (data.domainLanguageRules) {
         this.rules = data.domainLanguageRules;
         console.log(`[DomainRulesManager] 成功加载 ${Object.keys(this.rules).length} 条域名规则`);
@@ -35,7 +35,7 @@ class DomainRulesManager {
         console.warn('[DomainRulesManager] 规则文件中未找到 domainLanguageRules 字段');
         this.rules = {};
       }
-      
+
       return this.rules;
     } catch (error) {
       console.error('[DomainRulesManager] 加载域名规则失败:', error);
@@ -56,13 +56,13 @@ class DomainRulesManager {
   // 根据域名获取语言
   async getLanguageForDomain(domain) {
     console.log(`[DomainRulesManager] 查找域名: ${domain}`);
-    
+
     // 确保规则已加载
     if (!this.rules) {
       console.log(`[DomainRulesManager] 规则未加载，正在加载...`);
       await this.loadRules();
     }
-    
+
     if (!this.rules) {
       console.warn('[DomainRulesManager] 加载规则失败');
       return null;
