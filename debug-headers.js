@@ -1,26 +1,6 @@
 // 调试脚本，用于验证请求头更改是否生效
 
-/**
- * 发送日志消息到调试页面
- * @param {string} message - 日志消息内容
- * @param {string} logType - 日志类型 (info, warning, error, success)
- */
-function sendDebugLog(message, logType = 'info') {
-  const canSendMessage = chrome && chrome.runtime && chrome.runtime.sendMessage;
 
-  if (!canSendMessage) {
-    // console.log(`[Debug Log - ${logType.toUpperCase()}]: ${message}`);
-    return;
-  }
-
-  chrome.runtime.sendMessage({
-    type: 'DEBUG_LOG',
-    message: message,
-    logType: logType
-  }).catch(error => {
-    // console.warn("Could not send debug log from debug-headers:", error.message);
-  });
-}
 
 
 /**

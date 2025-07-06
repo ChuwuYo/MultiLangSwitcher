@@ -10,6 +10,12 @@ function getExternalCheckLinks(prefix = debugI18n.t('please_visit')) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 初始化语言选项
+  const testLanguageSelect = document.getElementById('testLanguage');
+  if (testLanguageSelect) {
+    populateLanguageSelect(testLanguageSelect);
+  }
+
   // 显示当前规则和匹配的规则详情
   document.getElementById('showRulesBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('rulesResult');
