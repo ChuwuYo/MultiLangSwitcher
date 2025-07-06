@@ -24,10 +24,18 @@ If the built-in request header detection encounters an error or does not return 
 
 If you need to switch the browser UA, you can take a look at this project:[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
-<div align="center">
-    <img src="https://github.com/user-attachments/assets/e44b6d72-b66c-4be5-a80d-a2de07fb86c6" alt="MultiLangSwitcher Home">
-
-</div>
+<center>
+    <table>
+        <tr>
+            <td>
+                <img src="https://github.com/user-attachments/assets/03607306-3e19-4492-8055-92d23fe2f73c" alt="CN_Light">
+            </td>
+            <td>
+                <img src="https://github.com/user-attachments/assets/f6b21816-f589-44ef-8681-628be3d9c912" alt="EN_Dark">
+            </td>
+        </tr>
+    </table>
+</center>
 
 ---
 
