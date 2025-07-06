@@ -490,25 +490,23 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         const fallbackLanguage = DEFAULT_LANG_EN;
         sendBackgroundLog(`域名 '${currentHostname}' 没有匹配的规则，使用回退语言: ${fallbackLanguage}`, 'info');
         // 只有在当前语言不是回退语言时才更新
-        chrome.declarativeNetRequest.getDynamicRules(function (rules) {
-          const currentRule = rules.find(rule => rule.id === 1);
+        try {
+          const rules = await chrome.declarativeNetRequest.getDynamicRules();
+          const currentRule = rules.find(rule => rule.id === RULE_ID);
           const currentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
           if (currentLang !== fallbackLanguage) {
-            updateHeaderRules(fallbackLanguage, 0, true)
-              .then(result => {
-                sendBackgroundLog(`已为 ${currentHostname} 应用回退语言(${fallbackLanguage}): ${result.status}`, 'info');
-                if (result.status === 'success') {
-                  notifyPopupUIUpdate(true, fallbackLanguage);
-                }
-              })
-              .catch(error => {
-                sendBackgroundLog(`为 ${currentHostname} 应用回退语言失败: ${error.message}`, 'error');
-              });
+            const result = await updateHeaderRules(fallbackLanguage, 0, true);
+            sendBackgroundLog(`已为 ${currentHostname} 应用回退语言(${fallbackLanguage}): ${result.status}`, 'info');
+            if (result.status === 'success') {
+              notifyPopupUIUpdate(true, fallbackLanguage);
+            }
           } else {
             sendBackgroundLog(`当前语言已是回退语言(${fallbackLanguage})，跳过更新`, 'info');
           }
-        });
+        } catch (error) {
+          sendBackgroundLog(`为 ${currentHostname} 应用回退语言失败: ${error.message}`, 'error');
+        }
       }
     } catch (e) {
       // 捕获并记录解析URL或处理过程中可能发生的任何错误
