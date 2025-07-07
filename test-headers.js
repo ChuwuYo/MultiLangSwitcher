@@ -320,7 +320,7 @@ async function fetchAndDisplayHeaders() {
   headerLanguageInfo.textContent = testI18n.t('detecting');
 
   const timestamp = new Date().getTime();
-  const TIMEOUT_MS = 5000;
+  const TIMEOUT_MS = 10000;
 
   const urls = [
     `https://postman-echo.com/headers?_=${timestamp}`,
