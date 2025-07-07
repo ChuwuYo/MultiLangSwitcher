@@ -14,6 +14,12 @@ MultiLangSwitcher/
 │   └── shared-language-options.js  - 共享语言选项列表
 ├── fonts/                          - 字体资源目录
 ├── i18n/                           - 国际化文本资源目录
+│   ├── background-en.js            - 后台页面英文文本
+│   ├── background-i18n.js          - 后台页面国际化配置
+│   ├── background-zh.js            - 后台页面中文文本
+│   ├── domain-manager-en.js        - 域名管理页面英文文本
+│   ├── domain-manager-i18n.js      - 域名管理页面国际化配置
+│   ├── domain-manager-zh.js        - 域名管理页面中文文本
 │   ├── debug-en.js                 - 调试页面英文文本
 │   ├── debug-i18n.js               - 调试页面国际化配置
 │   ├── debug-zh.js                 - 调试页面中文文本
