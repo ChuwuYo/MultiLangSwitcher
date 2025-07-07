@@ -8,6 +8,10 @@ class DebugI18n {
   detectLanguage() {
     const saved = localStorage.getItem('app-lang');
     if (saved) return saved;
+    // 使用与后台脚本相同的检测方法
+    if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+      return chrome.i18n.getUILanguage().toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    }
     return navigator.language.startsWith('zh') ? 'zh' : 'en';
   }
 

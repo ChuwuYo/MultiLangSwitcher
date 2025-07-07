@@ -218,5 +218,7 @@ const debugEn = {
   "failed_get_domain_rules_empty": "Failed to get domain mapping rules or rules are empty",
   "failed_get_domain_rules_response": "Failed to get domain mapping rules or rules are empty. Response content:",
   "received_auto_switch_update": "Received auto switch status update:",
-  "current_language_colon": "current language:"
+  "current_language_colon": "current language:",
+  "auto_switch_status_sync": "Auto switch status synchronized",
+  "status_sync_received": "Status sync received: auto switch"
 };

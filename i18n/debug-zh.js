@@ -218,5 +218,7 @@ const debugZh = {
   "failed_get_domain_rules_empty": "未能获取域名映射规则或规则为空",
   "failed_get_domain_rules_response": "未能获取域名映射规则或规则为空。响应内容：",
   "received_auto_switch_update": "收到自动切换状态更新：",
-  "current_language_colon": "当前语言："
+  "current_language_colon": "当前语言：",
+  "auto_switch_status_sync": "自动切换状态已同步",
+  "status_sync_received": "收到状态同步: 自动切换"
 };

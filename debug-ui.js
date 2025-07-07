@@ -138,7 +138,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // 监听来自扩展其他部分的日志消息
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.type === 'DEBUG_LOG') {
-      addLogMessage(request.message, request.logType);
+      // 过滤掉后台脚本的日志消息
+      if (!request.message.startsWith('[后台]') && !request.message.startsWith('[Background]')) {
+        addLogMessage(request.message, request.logType);
+      }
     }
   });
 
@@ -165,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (autoSwitchToggle) {
       autoSwitchToggle.checked = !!result.autoSwitchEnabled;
-      addLogMessage(`页面加载时同步自动切换状态: ${result.autoSwitchEnabled ? '启用' : '禁用'}`, 'info');
+      addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
     }
   });
 
@@ -619,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = request.enabled;
-        addLogMessage(`收到状态同步: 自动切换${request.enabled ? '启用' : '禁用'}`, 'info');
+        addLogMessage(`${request.enabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
       }
     }
     return true;
