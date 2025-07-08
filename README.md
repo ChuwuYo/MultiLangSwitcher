@@ -39,7 +39,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 ---
 
-建议同时在浏览器语言设置中进行相应配置，这样可以混淆一些简单的 `navigator.languages` 检测。(但是也会提升您的浏览器指纹唯一性)
+同时可以在浏览器语言设置中进行相应配置，这样可以混淆一些简单的 `navigator.languages` 检测。(但是也会提高您的浏览器指纹唯一性)
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">

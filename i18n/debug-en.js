@@ -33,7 +33,7 @@ const debugEn = {
   "show_domain_rules": "Show Domain Mapping Rules",
 
   // Labels and forms
-  "test_language_label": "Test Language:",
+  "test_language_label": "Test Target Language:",
   "custom_language_label": "Custom Language String:",
   "custom_language_placeholder": "Example: en-US,en;q=0.9,fr;q=0.8",
   "info": "Info",

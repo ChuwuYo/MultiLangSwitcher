@@ -4,7 +4,8 @@ const debugZh = {
   "heading": "MultiLangSwitcher 调试工具",
   "subtitle": "此页面帮助您诊断和解决语言偏好问题",
   "tip_label": "提示：",
-  "tip": "如果您的请求头无法成功更改，可以使用此页面进行诊断。打开此页面后，在扩展的其他部分（如弹出页面）的操作将在此处显示日志。",
+  "tip": "如果您的语言偏好请求头无法成功更改，可以使用此页面进行诊断。打开此页面后，在扩展的其他部分（如弹出页面）的操作将在此处显示日志。",
+
 
   // 各个功能区域标题和描述
   "current_rules": "当前规则信息",
@@ -15,7 +16,7 @@ const debugZh = {
   "custom_language_desc": "输入完整的 Accept-Language 字符串，如 \"en-US,en;q=0.9,fr;q=0.8\"。",
   "format_explanation": "Accept-Language 格式说明",
   "format_explanation_desc": "了解 Accept-Language 请求头的结构。",
-  "live_logs": "实时日志",
+  "live_logs": "运行日志",
   "live_logs_desc": "显示扩展在运行时发送的日志消息，帮助追踪问题。",
   "common_fixes": "常见问题修复",
   "common_fixes_desc": "尝试自动修复一些常见的配置问题。",
@@ -33,7 +34,7 @@ const debugZh = {
   "show_domain_rules": "显示域名映射规则",
 
   // 标签和表单
-  "test_language_label": "测试语言：",
+  "test_language_label": "测试目标语言：",
   "custom_language_label": "自定义语言字符串：",
   "custom_language_placeholder": "示例：en-US,en;q=0.9,fr;q=0.8",
   "info": "信息",
