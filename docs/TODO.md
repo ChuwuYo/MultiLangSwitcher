@@ -56,3 +56,9 @@ Popup 和调试页面使用大量 `addEventListener()`，但在 `DOMContentLoade
 | **i18n** | 封装 `translate()` 简化多处代码 |
 | **日志处理** | 统一 logger + UI 展示机制 |
 | **UI 事件管理** | 适时移除或使用 `once` 绑定事件 |
+
+---
+
+## 📝 后续计划
+
+- [ ] 新增 Accept-Language 重置按钮及对应功能逻辑（以及相应i18n信息）
