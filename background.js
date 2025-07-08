@@ -233,9 +233,13 @@ chrome.runtime.onInstalled.addListener(function (details) {
         // 当自动切换启用时，使用回退语言，直到访问特定域名时再切换或用户手动更改
         updateHeaderRules(DEFAULT_LANG_EN, 0, true).then(() => {
           notifyPopupUIUpdate(true, DEFAULT_LANG_EN, true);
+        }).catch(error => {
+          sendBackgroundLog(`${backgroundI18n.t('auto_switch_init_failed')}: ${error.message}`, 'error');
         });
       } else if (result.currentLanguage) {
-        updateHeaderRules(result.currentLanguage);
+        updateHeaderRules(result.currentLanguage).catch(error => {
+          sendBackgroundLog(`${backgroundI18n.t('load_language_failed')}: ${error.message}`, 'error');
+        });
         sendBackgroundLog(`${backgroundI18n.t('loaded_applied_language')}: ${result.currentLanguage}`, 'info');
         notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage, true);
       } else {
@@ -250,7 +254,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
           if (chrome.runtime.lastError) {
             sendBackgroundLog(`${backgroundI18n.t('save_language_failed', {language: initialLanguage})}: ${chrome.runtime.lastError.message}`, 'error');
           }
-          updateHeaderRules(initialLanguage);
+          updateHeaderRules(initialLanguage).catch(error => {
+            sendBackgroundLog(`${backgroundI18n.t('set_default_language_failed')}: ${error.message}`, 'error');
+          });
           sendBackgroundLog(`${backgroundI18n.t('set_default_language')}: ${initialLanguage}`, 'info');
           notifyPopupUIUpdate(autoSwitchEnabled, initialLanguage, true);
         });
