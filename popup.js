@@ -31,7 +31,7 @@ function updateHeaderRules(language, autoCheck = false) {
     language: language
   }, function (response) {
     if (chrome.runtime.lastError) {
-      sendDebugLog(`发送更新请求失败: ${chrome.runtime.lastError.message}`, 'error');
+      sendDebugLog(popupI18n.t('send_update_request_failed', {message: chrome.runtime.lastError.message}), 'error');
       return;
     }
 
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // 从后台获取当前状态
   chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, function (response) {
     if (chrome.runtime.lastError) {
-      sendDebugLog(`获取后台状态失败: ${chrome.runtime.lastError.message}`, 'error');
+      sendDebugLog(popupI18n.t('get_background_status_failed', {message: chrome.runtime.lastError.message}), 'error');
       // 回退到本地存储
       chrome.storage.local.get(['currentLanguage'], function (result) {
         if (result.currentLanguage) {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (response && response.currentLanguage) {
       updateLanguageDisplay(response.currentLanguage);
-      sendDebugLog(`从后台获取当前语言: ${response.currentLanguage}`, 'info');
+      sendDebugLog(popupI18n.t('get_current_language_from_background', {language: response.currentLanguage}), 'info');
     }
   });
 
@@ -255,9 +255,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function () {
           if (chrome.runtime.lastError) {
-            sendDebugLog(`更新存储状态失败: ${chrome.runtime.lastError.message}`, 'error');
+            sendDebugLog(popupI18n.t('update_storage_status_failed', {message: chrome.runtime.lastError.message}), 'error');
           } else {
-            sendDebugLog(`已同步自动切换状态到存储: ${autoSwitchEnabled}`, 'info');
+            sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', {status: autoSwitchEnabled}), 'info');
           }
         });
 
@@ -265,6 +265,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (request.currentLanguage) {
           updateLanguageDisplay(request.currentLanguage);
+          // 同步更新语言选择器
+          if (languageSelect) {
+            languageSelect.value = request.currentLanguage;
+          }
           sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
         }
       });
@@ -274,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = request.enabled;
         updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
-        sendDebugLog(`收到状态同步: 自动切换${request.enabled ? '启用' : '禁用'}`, 'info');
+        sendDebugLog(popupI18n.t('received_status_sync', {status: request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}), 'info');
       }
     }
     return true;

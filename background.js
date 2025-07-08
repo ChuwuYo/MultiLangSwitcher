@@ -52,7 +52,13 @@ async function initDomainRulesManager() {
 }
 
 // 在浏览器启动时初始化
-chrome.runtime.onStartup.addListener(initDomainRulesManager);
+chrome.runtime.onStartup.addListener(async () => {
+  await initDomainRulesManager();
+  // 加载自动切换状态
+  const result = await chrome.storage.local.get(['autoSwitchEnabled']);
+  autoSwitchEnabled = !!result.autoSwitchEnabled;
+  sendBackgroundLog(backgroundI18n.t('startup_load_auto_switch_status', {status: autoSwitchEnabled}), 'info');
+});
 
 // 在扩展安装或更新时初始化
 chrome.runtime.onInstalled.addListener(initDomainRulesManager);
@@ -436,13 +442,19 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
     return true;
   } else if (request.type === 'GET_CURRENT_LANG') {
-    chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
-      if (typeof sendResponse === 'function') {
-        sendResponse({
-          currentLanguage: result.currentLanguage || lastAppliedLanguage,
-          autoSwitchEnabled: !!result.autoSwitchEnabled
-        });
-      }
+    // 获取实际当前语言从活动规则
+    chrome.declarativeNetRequest.getDynamicRules(rules => {
+      const currentRule = rules.find(rule => rule.id === RULE_ID);
+      const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
+      
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
+        if (typeof sendResponse === 'function') {
+          sendResponse({
+            currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
+            autoSwitchEnabled: !!result.autoSwitchEnabled
+          });
+        }
+      });
     });
     return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
@@ -474,8 +486,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  // 不再记录所有 onUpdated 事件，只记录相关的
-  // sendBackgroundLog(`Tab: tabId=${tabId}, status=${changeInfo.status}, autoSwitch=${autoSwitchEnabled}, url=${tab?.url}`, 'info');
+  // 调试日志：记录所有相关事件
+  if (changeInfo.status === 'complete' && tab?.url?.startsWith('http')) {
+    sendBackgroundLog(backgroundI18n.t('tab_update_debug', {url: tab.url, autoSwitch: autoSwitchEnabled}), 'info');
+  }
 
   // 确保自动切换已启用，标签页加载完成，并且有有效的URL (http or https)
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab && tab.url && (tab.url.startsWith('http:') || tab.url.startsWith('https://'))) {

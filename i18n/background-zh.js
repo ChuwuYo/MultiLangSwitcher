@@ -50,5 +50,10 @@ const backgroundZh = {
   "language": "语言",
   "delayed_ui_update": "延迟UI更新",
   "rules_update_error": "规则更新时发生错误",
-  "unexpected_rules_update_error": "处理规则更新时发生意外错误"
+  "unexpected_rules_update_error": "处理规则更新时发生意外错误",
+  "startup_load_auto_switch_status": "启动时加载自动切换状态: {status}",
+  "tab_update_debug": "Tab更新: {url}, 自动切换={autoSwitch}",
+  "auto_switch_init_failed": "自动切换初始化失败",
+  "load_language_failed": "加载语言失败",
+  "set_default_language_failed": "设置默认语言失败"
 };
