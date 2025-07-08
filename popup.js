@@ -127,33 +127,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // });
   }
 
-  // 优先从网络请求规则获取当前语言，然后回退到存储
-  const RULE_ID_FOR_INIT = 1; // 确保和 updateHeaderRules 中的 RULE_ID 一致
-  chrome.declarativeNetRequest.getDynamicRules(function (rules) {
-    const activeRule = rules.find(rule => rule.id === RULE_ID_FOR_INIT && rule.action.type === 'modifyHeaders' && rule.action.requestHeaders?.some(h => h.header.toLowerCase() === 'accept-language'));
-    let activeLanguage = null;
-
-    if (activeRule) {
-      const headerAction = activeRule.action.requestHeaders.find(h => h.header.toLowerCase() === 'accept-language');
-      if (headerAction) {
-        activeLanguage = headerAction.value;
-        sendDebugLog(`${popupI18n.t('get_current_language_from_rules')} ${activeLanguage}.`, 'info');
-        updateLanguageDisplay(activeLanguage);
-      }
-    }
-
-    if (!activeLanguage) {
-      sendDebugLog(popupI18n.t('no_language_from_rules'), 'info');
+  // 从后台获取当前状态
+  chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, function (response) {
+    if (chrome.runtime.lastError) {
+      sendDebugLog(`获取后台状态失败: ${chrome.runtime.lastError.message}`, 'error');
+      // 回退到本地存储
       chrome.storage.local.get(['currentLanguage'], function (result) {
         if (result.currentLanguage) {
           updateLanguageDisplay(result.currentLanguage);
           sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
-        } else {
-          const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
-          sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
-          if (currentLanguageSpan) currentLanguageSpan.textContent = defaultLanguage;
         }
       });
+      return;
+    }
+
+    if (response && response.currentLanguage) {
+      updateLanguageDisplay(response.currentLanguage);
+      sendDebugLog(`从后台获取当前语言: ${response.currentLanguage}`, 'info');
     }
   });
 

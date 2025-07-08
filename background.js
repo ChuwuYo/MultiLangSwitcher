@@ -435,6 +435,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       });
     }
     return true;
+  } else if (request.type === 'GET_CURRENT_LANG') {
+    chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
+      if (typeof sendResponse === 'function') {
+        sendResponse({
+          currentLanguage: result.currentLanguage || lastAppliedLanguage,
+          autoSwitchEnabled: !!result.autoSwitchEnabled
+        });
+      }
+    });
+    return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog(backgroundI18n.t('received_domain_rules_request'), 'info');
     try {
