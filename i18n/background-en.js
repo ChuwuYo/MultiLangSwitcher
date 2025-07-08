@@ -50,5 +50,11 @@ const backgroundEn = {
   "language": "language",
   "delayed_ui_update": "Delayed UI update",
   "rules_update_error": "Error occurred during rules update",
-  "unexpected_rules_update_error": "Unexpected error occurred during rules update"
+  "unexpected_rules_update_error": "Unexpected error occurred during rules update",
+  "startup_load_auto_switch_status": "Startup loaded auto switch status: {status}",
+  "tab_update_debug": "Tab update: {url}, auto switch={autoSwitch}",
+  "auto_switch_init_failed": "Auto switch initialization failed",
+  "load_language_failed": "Load language failed",
+  "set_default_language_failed": "Set default language failed",
+  "get_current_lang_error": "GET_CURRENT_LANG error"
 };

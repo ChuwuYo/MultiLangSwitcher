@@ -52,7 +52,13 @@ async function initDomainRulesManager() {
 }
 
 // 在浏览器启动时初始化
-chrome.runtime.onStartup.addListener(initDomainRulesManager);
+chrome.runtime.onStartup.addListener(async () => {
+  await initDomainRulesManager();
+  // 加载自动切换状态
+  const result = await chrome.storage.local.get(['autoSwitchEnabled']);
+  autoSwitchEnabled = !!result.autoSwitchEnabled;
+  sendBackgroundLog(backgroundI18n.t('startup_load_auto_switch_status', {status: autoSwitchEnabled}), 'info');
+});
 
 // 在扩展安装或更新时初始化
 chrome.runtime.onInstalled.addListener(initDomainRulesManager);
@@ -233,9 +239,13 @@ chrome.runtime.onInstalled.addListener(function (details) {
         // 当自动切换启用时，使用回退语言，直到访问特定域名时再切换或用户手动更改
         updateHeaderRules(DEFAULT_LANG_EN, 0, true).then(() => {
           notifyPopupUIUpdate(true, DEFAULT_LANG_EN, true);
+        }).catch(error => {
+          sendBackgroundLog(`${backgroundI18n.t('auto_switch_init_failed')}: ${error.message}`, 'error');
         });
       } else if (result.currentLanguage) {
-        updateHeaderRules(result.currentLanguage);
+        updateHeaderRules(result.currentLanguage).catch(error => {
+          sendBackgroundLog(`${backgroundI18n.t('load_language_failed')}: ${error.message}`, 'error');
+        });
         sendBackgroundLog(`${backgroundI18n.t('loaded_applied_language')}: ${result.currentLanguage}`, 'info');
         notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage, true);
       } else {
@@ -250,7 +260,9 @@ chrome.runtime.onInstalled.addListener(function (details) {
           if (chrome.runtime.lastError) {
             sendBackgroundLog(`${backgroundI18n.t('save_language_failed', {language: initialLanguage})}: ${chrome.runtime.lastError.message}`, 'error');
           }
-          updateHeaderRules(initialLanguage);
+          updateHeaderRules(initialLanguage).catch(error => {
+            sendBackgroundLog(`${backgroundI18n.t('set_default_language_failed')}: ${error.message}`, 'error');
+          });
           sendBackgroundLog(`${backgroundI18n.t('set_default_language')}: ${initialLanguage}`, 'info');
           notifyPopupUIUpdate(autoSwitchEnabled, initialLanguage, true);
         });
@@ -429,6 +441,28 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       });
     }
     return true;
+  } else if (request.type === 'GET_CURRENT_LANG') {
+    (async () => {
+      try {
+        const rules = await chrome.declarativeNetRequest.getDynamicRules();
+        const currentRule = rules.find(rule => rule.id === RULE_ID);
+        const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
+        
+        const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+        if (typeof sendResponse === 'function') {
+          sendResponse({
+            currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
+            autoSwitchEnabled: !!result.autoSwitchEnabled
+          });
+        }
+      } catch (error) {
+        sendBackgroundLog(`${backgroundI18n.t('get_current_lang_error')}: ${error.message}`, 'error');
+        if (typeof sendResponse === 'function') {
+          sendResponse({ error: error.message });
+        }
+      }
+    })();
+    return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog(backgroundI18n.t('received_domain_rules_request'), 'info');
     try {
@@ -458,8 +492,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  // 不再记录所有 onUpdated 事件，只记录相关的
-  // sendBackgroundLog(`Tab: tabId=${tabId}, status=${changeInfo.status}, autoSwitch=${autoSwitchEnabled}, url=${tab?.url}`, 'info');
+  // 调试日志：记录所有相关事件
+  if (changeInfo.status === 'complete' && tab?.url?.startsWith('http')) {
+    sendBackgroundLog(backgroundI18n.t('tab_update_debug', {url: tab.url, autoSwitch: autoSwitchEnabled}), 'info');
+  }
 
   // 确保自动切换已启用，标签页加载完成，并且有有效的URL (http or https)
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab && tab.url && (tab.url.startsWith('http:') || tab.url.startsWith('https://'))) {

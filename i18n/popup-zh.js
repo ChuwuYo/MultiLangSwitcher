@@ -59,5 +59,12 @@ const popupZh = {
   "or": "或",
   "to_view": "进行查看。",
   "received_background_message": "接收到后台消息：当前语言已更新为",
-  "update_ui": "，更新UI。"
+  "update_ui": "，更新UI。",
+  "send_update_request_failed": "发送更新请求失败: {message}",
+  "get_background_status_failed": "获取后台状态失败: {message}",
+  "get_current_language_from_background": "从后台获取当前语言: {language}",
+  "update_storage_status_failed": "更新存储状态失败: {message}",
+  "synced_auto_switch_status_to_storage": "已同步自动切换状态到存储: {status}",
+  //"received_status_sync": "收到状态同步: 自动切换{status}",
+  //"language_select_blur": "语言选择框失去焦点，收起下拉框"
 };

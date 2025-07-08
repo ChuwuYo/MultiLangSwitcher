@@ -60,5 +60,12 @@ const popupEn = {
   "or": "or",
   "to_view": "to view.",
   "received_background_message": "Received background message: Current language updated to",
-  "update_ui": ", updating UI."
+  "update_ui": ", updating UI.",
+  "send_update_request_failed": "Send update request failed: {message}",
+  "get_background_status_failed": "Get background status failed: {message}",
+  "get_current_language_from_background": "Get current language from background: {language}",
+  "update_storage_status_failed": "Update storage status failed: {message}",
+  "synced_auto_switch_status_to_storage": "Synced auto switch status to storage: {status}",
+  //"received_status_sync": "Received status sync: auto switch {status}",
+  //"language_select_blur": "Language select box lost focus, collapsing dropdown"
 };

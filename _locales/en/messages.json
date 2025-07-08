@@ -1,5 +1,5 @@
 {
   "extension_description": {
-    "message": "Quickly switch browser request header language with manual selection and automatic domain-based switching for localized web content experience"
+    "message": "Quickly switch the Accept-Language request header via manual selection or automatic domain-based switching to provide a better localized web content experience."
   }
 }
