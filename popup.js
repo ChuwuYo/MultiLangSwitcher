@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 添加 blur 事件，当选择框失去焦点时收起 (apply按钮已处理)
     // languageSelect.addEventListener('blur', function() {
     //   this.size = 1;
-    //   sendDebugLog('语言选择框失去焦点，收起下拉框.', 'info');
+    //   sendDebugLog(popupI18n.t('language_select_blur'), 'info');
     // });
   }
 
@@ -136,6 +136,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (result.currentLanguage) {
           updateLanguageDisplay(result.currentLanguage);
           sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
+        } else {
+          const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
+          sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
+          if (currentLanguageSpan) currentLanguageSpan.textContent = defaultLanguage;
         }
       });
       return;

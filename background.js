@@ -442,20 +442,26 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     }
     return true;
   } else if (request.type === 'GET_CURRENT_LANG') {
-    // 获取实际当前语言从活动规则
-    chrome.declarativeNetRequest.getDynamicRules(rules => {
-      const currentRule = rules.find(rule => rule.id === RULE_ID);
-      const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
-      
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
+    (async () => {
+      try {
+        const rules = await chrome.declarativeNetRequest.getDynamicRules();
+        const currentRule = rules.find(rule => rule.id === RULE_ID);
+        const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
+        
+        const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
         if (typeof sendResponse === 'function') {
           sendResponse({
             currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
             autoSwitchEnabled: !!result.autoSwitchEnabled
           });
         }
-      });
-    });
+      } catch (error) {
+        sendBackgroundLog(`${backgroundI18n.t('get_current_lang_error')}: ${error.message}`, 'error');
+        if (typeof sendResponse === 'function') {
+          sendResponse({ error: error.message });
+        }
+      }
+    })();
     return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog(backgroundI18n.t('received_domain_rules_request'), 'info');

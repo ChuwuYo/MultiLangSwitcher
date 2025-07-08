@@ -55,5 +55,6 @@ const backgroundEn = {
   "tab_update_debug": "Tab update: {url}, auto switch={autoSwitch}",
   "auto_switch_init_failed": "Auto switch initialization failed",
   "load_language_failed": "Load language failed",
-  "set_default_language_failed": "Set default language failed"
+  "set_default_language_failed": "Set default language failed",
+  "get_current_lang_error": "GET_CURRENT_LANG error"
 };

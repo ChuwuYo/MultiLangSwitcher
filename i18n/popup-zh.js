@@ -65,5 +65,6 @@ const popupZh = {
   "get_current_language_from_background": "从后台获取当前语言: {language}",
   "update_storage_status_failed": "更新存储状态失败: {message}",
   "synced_auto_switch_status_to_storage": "已同步自动切换状态到存储: {status}",
-  "received_status_sync": "收到状态同步: 自动切换{status}"
+  //"received_status_sync": "收到状态同步: 自动切换{status}",
+  //"language_select_blur": "语言选择框失去焦点，收起下拉框"
 };

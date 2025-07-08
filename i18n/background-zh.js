@@ -55,5 +55,6 @@ const backgroundZh = {
   "tab_update_debug": "Tab更新: {url}, 自动切换={autoSwitch}",
   "auto_switch_init_failed": "自动切换初始化失败",
   "load_language_failed": "加载语言失败",
-  "set_default_language_failed": "设置默认语言失败"
+  "set_default_language_failed": "设置默认语言失败",
+  "get_current_lang_error": "获取当前语言错误"
 };
