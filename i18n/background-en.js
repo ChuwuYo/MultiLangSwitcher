@@ -56,5 +56,8 @@ const backgroundEn = {
   "auto_switch_init_failed": "Auto switch initialization failed",
   "load_language_failed": "Load language failed",
   "set_default_language_failed": "Set default language failed",
-  "get_current_lang_error": "GET_CURRENT_LANG error"
+  "get_current_lang_error": "GET_CURRENT_LANG error",
+  "reset_rules_failed": "Reset rules failed",
+  "accept_language_reset_successful": "Accept-Language reset successful",
+  "reset_error": "Reset error"
 };

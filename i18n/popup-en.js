@@ -66,6 +66,11 @@ const popupEn = {
   "get_current_language_from_background": "Get current language from background: {language}",
   "update_storage_status_failed": "Update storage status failed: {message}",
   "synced_auto_switch_status_to_storage": "Synced auto switch status to storage: {status}",
-  //"received_status_sync": "Received status sync: auto switch {status}",
-  //"language_select_blur": "Language select box lost focus, collapsing dropdown"
+  "received_status_sync": "Received status sync: auto switch {status}",
+  "clicked_reset_button": "Clicked reset button",
+  "reset_request_failed": "Reset request failed: {message}",
+  "reset_successful": "Reset successful",
+  "reset_failed": "Reset failed: {message}",
+  "reset_failed_alert": "Reset Accept-Language failed:",
+  "reset_accept_language_tooltip": "Reset Accept-Language"
 };
