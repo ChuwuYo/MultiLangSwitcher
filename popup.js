@@ -223,6 +223,12 @@ document.addEventListener('DOMContentLoaded', function () {
     autoSwitchChange: function () {
       const enabled = this.checked;
       chrome.storage.local.set({ autoSwitchEnabled: enabled }, function () {
+        if (chrome.runtime.lastError) {
+          const message = chrome.runtime.lastError.message;
+          showError(popupI18n.t('update_storage_status_failed', { message }));
+          sendDebugLog(popupI18n.t('update_storage_status_failed', { message }), 'error');
+          return;
+        }
         sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
         chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
       });
@@ -237,6 +243,12 @@ document.addEventListener('DOMContentLoaded', function () {
       const selectedLanguage = languageSelect.value;
       sendDebugLog(`${popupI18n.t('clicked_apply_button')} ${selectedLanguage}.`, 'info');
       chrome.storage.local.set({ currentLanguage: selectedLanguage }, function () {
+        if (chrome.runtime.lastError) {
+          const message = chrome.runtime.lastError.message;
+          showError(popupI18n.t('update_storage_status_failed', { message }));
+          sendDebugLog(popupI18n.t('update_storage_status_failed', { message }), 'error');
+          return;
+        }
         sendDebugLog(`${popupI18n.t('language_settings_saved')} ${selectedLanguage}.`, 'info');
         if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
       });
@@ -249,13 +261,14 @@ document.addEventListener('DOMContentLoaded', function () {
         sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
         const response = await chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' });
         
-        if (response && response.status === 'success') {
+        if (response?.status === 'success') {
           sendDebugLog(popupI18n.t('reset_successful'), 'success');
           updateLanguageDisplay(popupI18n.t('not_set'));
           if (languageSelect) languageSelect.value = '';
-        } else if (response && response.status === 'error') {
-          sendDebugLog(popupI18n.t('reset_failed', {message: response.message}), 'error');
-          showError(popupI18n.t('reset_failed_alert') + ' ' + response.message);
+        } else {
+          const errorMessage = response?.message || popupI18n.t('unknown_error');
+          sendDebugLog(popupI18n.t('reset_failed', {message: errorMessage}), 'error');
+          showError(popupI18n.t('reset_failed_alert') + ' ' + errorMessage);
         }
       } catch (error) {
         sendDebugLog(popupI18n.t('reset_request_failed', {message: error.message}), 'error');

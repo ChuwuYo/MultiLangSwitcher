@@ -466,16 +466,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   } else if (request.type === 'RESET_ACCEPT_LANGUAGE') {
     (async () => {
       try {
-        await new Promise((resolve, reject) => {
-          chrome.declarativeNetRequest.updateDynamicRules({
-            removeRuleIds: [RULE_ID]
-          }, () => {
-            if (chrome.runtime.lastError) {
-              reject(chrome.runtime.lastError);
-            } else {
-              resolve();
-            }
-          });
+        await chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: [RULE_ID]
         });
         
         await chrome.storage.local.remove(['currentLanguage']);
