@@ -102,31 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateAutoSwitchUI(result.autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
   });
 
-  // 自动切换按钮事件监听
-  if (autoSwitchToggle) {
-    autoSwitchToggle.addEventListener('change', function () {
-      const enabled = this.checked;
-      chrome.storage.local.set({ autoSwitchEnabled: enabled }, function () {
-        sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
-        chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
-      });
 
-      updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
-    });
-  }
-
-  // 添加焦点事件监听器来展开下拉框
-  if (languageSelect) {
-    languageSelect.addEventListener('focus', function () {
-      this.size = 6;
-      sendDebugLog(popupI18n.t('language_select_focus'), 'info');
-    });
-    // 添加 blur 事件，当选择框失去焦点时收起 (apply按钮已处理)
-    // languageSelect.addEventListener('blur', function() {
-    //   this.size = 1;
-    //   sendDebugLog(popupI18n.t('language_select_blur'), 'info');
-    // });
-  }
 
   // 从后台获取当前状态
   chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, function (response) {
@@ -152,51 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // 应用按钮点击事件
-  if (applyButton) {
-    applyButton.addEventListener('click', function () {
-      if (!languageSelect) return; // 防御性编程
-      const selectedLanguage = languageSelect.value;
-      sendDebugLog(`${popupI18n.t('clicked_apply_button')} ${selectedLanguage}.`, 'info');
 
-      chrome.storage.local.set({
-        currentLanguage: selectedLanguage
-      }, function () {
-        sendDebugLog(`${popupI18n.t('language_settings_saved')} ${selectedLanguage}.`, 'info');
-        if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
-      });
-
-      // 直接调用updateHeaderRules，通过background处理
-      updateHeaderRules(selectedLanguage, true);
-
-      languageSelect.size = 1;
-      sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
-    });
-  }
-
-  // 重置按钮点击事件
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
-      sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
-      
-      // 发送重置消息到后台
-      chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' }, function (response) {
-        if (chrome.runtime.lastError) {
-          sendDebugLog(popupI18n.t('reset_request_failed', {message: chrome.runtime.lastError.message}), 'error');
-          return;
-        }
-        
-        if (response && response.status === 'success') {
-          sendDebugLog(popupI18n.t('reset_successful'), 'success');
-          updateLanguageDisplay(popupI18n.t('not_set'));
-          if (languageSelect) languageSelect.value = '';
-        } else if (response && response.status === 'error') {
-          sendDebugLog(popupI18n.t('reset_failed', {message: response.message}), 'error');
-          alert(popupI18n.t('reset_failed_alert') + ' ' + response.message);
-        }
-      });
-    });
-  }
 
   // 快速检查按钮点击事件
   if (checkHeaderBtn) {
@@ -272,6 +204,81 @@ document.addEventListener('DOMContentLoaded', function () {
       }, delay);
     }
   }
+
+  // 事件处理函数引用，用于解绑
+  const eventHandlers = {
+    autoSwitchChange: function () {
+      const enabled = this.checked;
+      chrome.storage.local.set({ autoSwitchEnabled: enabled }, function () {
+        sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
+        chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
+      });
+      updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
+    },
+    languageSelectFocus: function () {
+      this.size = 6;
+      sendDebugLog(popupI18n.t('language_select_focus'), 'info');
+    },
+    applyButtonClick: function () {
+      if (!languageSelect) return;
+      const selectedLanguage = languageSelect.value;
+      sendDebugLog(`${popupI18n.t('clicked_apply_button')} ${selectedLanguage}.`, 'info');
+      chrome.storage.local.set({ currentLanguage: selectedLanguage }, function () {
+        sendDebugLog(`${popupI18n.t('language_settings_saved')} ${selectedLanguage}.`, 'info');
+        if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
+      });
+      updateHeaderRules(selectedLanguage, true);
+      languageSelect.size = 1;
+      sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
+    },
+    resetButtonClick: function () {
+      sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
+      chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' }, function (response) {
+        if (chrome.runtime.lastError) {
+          sendDebugLog(popupI18n.t('reset_request_failed', {message: chrome.runtime.lastError.message}), 'error');
+          return;
+        }
+        if (response && response.status === 'success') {
+          sendDebugLog(popupI18n.t('reset_successful'), 'success');
+          updateLanguageDisplay(popupI18n.t('not_set'));
+          if (languageSelect) languageSelect.value = '';
+        } else if (response && response.status === 'error') {
+          sendDebugLog(popupI18n.t('reset_failed', {message: response.message}), 'error');
+          alert(popupI18n.t('reset_failed_alert') + ' ' + response.message);
+        }
+      });
+    }
+  };
+
+  // 绑定事件
+  if (autoSwitchToggle) {
+    autoSwitchToggle.addEventListener('change', eventHandlers.autoSwitchChange);
+  }
+  if (languageSelect) {
+    languageSelect.addEventListener('focus', eventHandlers.languageSelectFocus);
+  }
+  if (applyButton) {
+    applyButton.addEventListener('click', eventHandlers.applyButtonClick);
+  }
+  if (resetBtn) {
+    resetBtn.addEventListener('click', eventHandlers.resetButtonClick);
+  }
+
+  // 页面卸载时清理事件
+  window.addEventListener('beforeunload', function () {
+    if (autoSwitchToggle) {
+      autoSwitchToggle.removeEventListener('change', eventHandlers.autoSwitchChange);
+    }
+    if (languageSelect) {
+      languageSelect.removeEventListener('focus', eventHandlers.languageSelectFocus);
+    }
+    if (applyButton) {
+      applyButton.removeEventListener('click', eventHandlers.applyButtonClick);
+    }
+    if (resetBtn) {
+      resetBtn.removeEventListener('click', eventHandlers.resetButtonClick);
+    }
+  }, { once: true });
 
   // 监听来自 background.js 的消息
   chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
