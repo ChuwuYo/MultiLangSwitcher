@@ -59,5 +59,10 @@ const backgroundZh = {
   "get_current_lang_error": "获取当前语言错误",
   "reset_rules_failed": "重置规则失败",
   "accept_language_reset_successful": "Accept-Language 重置成功",
-  "reset_error": "重置错误"
+  "reset_error": "重置错误",
+  "clearing_existing_rules": "正在清理 {count} 条现有规则",
+  "rules_cleared_successfully": "规则清理成功",
+  "clear_rules_failed": "清理规则失败",
+  "auto_switch_toggle_failed": "自动切换状态切换失败",
+  "startup_init_failed": "启动初始化失败"
 };
