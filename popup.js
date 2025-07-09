@@ -293,10 +293,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 页面卸载时清理事件
   window.addEventListener('beforeunload', function () {
-    autoSwitchToggle?.removeEventListener('change', eventHandlers.autoSwitchChange);
-    languageSelect?.removeEventListener('focus', eventHandlers.languageSelectFocus);
-    applyButton?.removeEventListener('click', eventHandlers.applyButtonClick);
-    resetBtn?.removeEventListener('click', eventHandlers.resetButtonClick);
+    if (autoSwitchToggle && eventHandlers.autoSwitchChange) autoSwitchToggle.removeEventListener('change', eventHandlers.autoSwitchChange);
+    if (languageSelect && eventHandlers.languageSelectFocus) languageSelect.removeEventListener('focus', eventHandlers.languageSelectFocus);
+    if (applyButton && eventHandlers.applyButtonClick) applyButton.removeEventListener('click', eventHandlers.applyButtonClick);
+    if (resetBtn && eventHandlers.resetButtonClick) resetBtn.removeEventListener('click', eventHandlers.resetButtonClick);
   }, { once: true });
 
   // 监听来自 background.js 的消息
