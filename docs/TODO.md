@@ -21,16 +21,7 @@
 
 ---
 
-### 3\. **UI 与事件解绑**
-
-Popup 和调试页面使用大量 `addEventListener()`，但在 `DOMContentLoaded` 完成后没有移除：
-
--   建议在页面卸载时解绑事件或使用 `once: true` 参数，否则会重复绑定。
-    
-
----
-
-### 4\. **i18n 实现方式建议优化**
+### 3\. **i18n 实现方式建议优化**
 
 当前 i18n 通过 `i18n/` 目录 JSON +页面直接引用：
 
@@ -39,7 +30,7 @@ Popup 和调试页面使用大量 `addEventListener()`，但在 `DOMContentLoade
 
 ---
 
-### 5\. **错误/异常日志统一**
+### 4\. **错误/异常日志统一**
 
 各方式中 `console.error(...)` 分散，建议封装日志器：
 
@@ -55,10 +46,7 @@ Popup 和调试页面使用大量 `addEventListener()`，但在 `DOMContentLoade
 | **domain 配置** | 启动时自动 sync JSON & 规则 |
 | **i18n** | 封装 `translate()` 简化多处代码 |
 | **日志处理** | 统一 logger + UI 展示机制 |
-| **UI 事件管理** | 适时移除或使用 `once` 绑定事件 |
 
 ---
 
 ## 📝 后续计划
-
-- [ ] 新增 Accept-Language 重置按钮及对应功能逻辑（以及相应i18n信息）
