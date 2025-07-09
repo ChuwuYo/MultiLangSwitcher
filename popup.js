@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const statusTextElement = document.getElementById('statusText');
   const checkHeaderBtn = document.getElementById('checkHeaderBtn');
   const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+  const resetBtn = document.getElementById('resetBtn');
 
   // 初始化语言选项
   populateLanguageSelect(languageSelect);
@@ -170,6 +171,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
       languageSelect.size = 1;
       sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
+    });
+  }
+
+  // 重置按钮点击事件
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
+      
+      // 发送重置消息到后台
+      chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' }, function (response) {
+        if (chrome.runtime.lastError) {
+          sendDebugLog(popupI18n.t('reset_request_failed', {message: chrome.runtime.lastError.message}), 'error');
+          return;
+        }
+        
+        if (response && response.status === 'success') {
+          sendDebugLog(popupI18n.t('reset_successful'), 'success');
+          updateLanguageDisplay(popupI18n.t('not_set'));
+          if (languageSelect) languageSelect.value = '';
+        } else if (response && response.status === 'error') {
+          sendDebugLog(popupI18n.t('reset_failed', {message: response.message}), 'error');
+          alert(popupI18n.t('reset_failed_alert') + ' ' + response.message);
+        }
+      });
     });
   }
 

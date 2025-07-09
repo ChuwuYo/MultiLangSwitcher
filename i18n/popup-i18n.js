@@ -52,6 +52,11 @@ class PopupI18n {
     document.querySelector('#checkHeaderBtn').textContent = this.t('quick_check');
     document.querySelector('.card-header').textContent = this.t('header_check_result');
     document.querySelector('#headerCheckContent').textContent = this.t('click_quick_check');
+    
+    const resetBtn = document.querySelector('#resetBtn');
+    if (resetBtn) {
+      resetBtn.title = this.t('reset_accept_language_tooltip');
+    }
   }
 
   switchLanguage(lang) {

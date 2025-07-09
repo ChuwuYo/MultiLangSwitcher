@@ -463,6 +463,37 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       }
     })();
     return true;
+  } else if (request.type === 'RESET_ACCEPT_LANGUAGE') {
+    try {
+      // 移除所有动态规则
+      chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: [RULE_ID]
+      }, function () {
+        if (chrome.runtime.lastError) {
+          sendBackgroundLog(`${backgroundI18n.t('reset_rules_failed')}: ${chrome.runtime.lastError.message}`, 'error');
+          if (typeof sendResponse === 'function') {
+            sendResponse({ status: 'error', message: chrome.runtime.lastError.message });
+          }
+          return;
+        }
+        
+        // 清除存储的语言设置
+        chrome.storage.local.remove(['currentLanguage'], function () {
+          lastAppliedLanguage = null;
+          sendBackgroundLog(backgroundI18n.t('accept_language_reset_successful'), 'success');
+          if (typeof sendResponse === 'function') {
+            sendResponse({ status: 'success' });
+          }
+          notifyPopupUIUpdate(autoSwitchEnabled, null, true);
+        });
+      });
+    } catch (error) {
+      sendBackgroundLog(`${backgroundI18n.t('reset_error')}: ${error.message}`, 'error');
+      if (typeof sendResponse === 'function') {
+        sendResponse({ status: 'error', message: error.message });
+      }
+    }
+    return true;
   } else if (request.type === 'GET_DOMAIN_RULES') {
     sendBackgroundLog(backgroundI18n.t('received_domain_rules_request'), 'info');
     try {

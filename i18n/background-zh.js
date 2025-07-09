@@ -56,5 +56,8 @@ const backgroundZh = {
   "auto_switch_init_failed": "自动切换初始化失败",
   "load_language_failed": "加载语言失败",
   "set_default_language_failed": "设置默认语言失败",
-  "get_current_lang_error": "获取当前语言错误"
+  "get_current_lang_error": "获取当前语言错误",
+  "reset_rules_failed": "重置规则失败",
+  "accept_language_reset_successful": "Accept-Language 重置成功",
+  "reset_error": "重置错误"
 };
