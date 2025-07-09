@@ -66,7 +66,6 @@ const popupZh = {
   "update_storage_status_failed": "更新存储状态失败: {message}",
   "synced_auto_switch_status_to_storage": "已同步自动切换状态到存储: {status}",
   "received_status_sync": "收到状态同步: 自动切换{status}",
-  "language_select_blur": "语言选择框失去焦点，收起下拉框",
   "clicked_reset_button": "点击了重置按钮",
   "reset_request_failed": "重置请求失败: {message}",
   "reset_successful": "重置成功",

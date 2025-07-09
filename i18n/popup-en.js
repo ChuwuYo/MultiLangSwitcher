@@ -67,7 +67,6 @@ const popupEn = {
   "update_storage_status_failed": "Update storage status failed: {message}",
   "synced_auto_switch_status_to_storage": "Synced auto switch status to storage: {status}",
   "received_status_sync": "Received status sync: auto switch {status}",
-  "language_select_blur": "Language select box lost focus, collapsing dropdown",
   "clicked_reset_button": "Clicked reset button",
   "reset_request_failed": "Reset request failed: {message}",
   "reset_successful": "Reset successful",
