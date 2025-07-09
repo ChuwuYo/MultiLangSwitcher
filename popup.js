@@ -48,9 +48,22 @@ function updateHeaderRules(language, autoCheck = false) {
       }
     } else if (response && response.status === 'error') {
       sendDebugLog(`${popupI18n.t('update_rules_failed')} ${response.message}`, 'error');
-      alert(popupI18n.t('update_request_header_failed') + ' ' + response.message);
+      showError(popupI18n.t('update_request_header_failed') + ' ' + response.message);
     }
   });
+}
+
+// 显示错误消息
+function showError(message) {
+  const errorAlert = document.getElementById('errorAlert');
+  const errorMessage = document.getElementById('errorMessage');
+  if (errorAlert && errorMessage) {
+    errorMessage.textContent = message;
+    errorAlert.classList.remove('d-none');
+    setTimeout(() => {
+      errorAlert.classList.add('d-none');
+    }, 5000);
+  }
 }
 
 // 更新语言显示
@@ -231,22 +244,23 @@ document.addEventListener('DOMContentLoaded', function () {
       languageSelect.size = 1;
       sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
     },
-    resetButtonClick: function () {
-      sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
-      chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' }, function (response) {
-        if (chrome.runtime.lastError) {
-          sendDebugLog(popupI18n.t('reset_request_failed', {message: chrome.runtime.lastError.message}), 'error');
-          return;
-        }
+    resetButtonClick: async function () {
+      try {
+        sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
+        const response = await chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' });
+        
         if (response && response.status === 'success') {
           sendDebugLog(popupI18n.t('reset_successful'), 'success');
           updateLanguageDisplay(popupI18n.t('not_set'));
           if (languageSelect) languageSelect.value = '';
         } else if (response && response.status === 'error') {
           sendDebugLog(popupI18n.t('reset_failed', {message: response.message}), 'error');
-          alert(popupI18n.t('reset_failed_alert') + ' ' + response.message);
+          showError(popupI18n.t('reset_failed_alert') + ' ' + response.message);
         }
-      });
+      } catch (error) {
+        sendDebugLog(popupI18n.t('reset_request_failed', {message: error.message}), 'error');
+        showError(popupI18n.t('reset_failed_alert') + ' ' + error.message);
+      }
     }
   };
 
@@ -266,18 +280,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 页面卸载时清理事件
   window.addEventListener('beforeunload', function () {
-    if (autoSwitchToggle) {
-      autoSwitchToggle.removeEventListener('change', eventHandlers.autoSwitchChange);
-    }
-    if (languageSelect) {
-      languageSelect.removeEventListener('focus', eventHandlers.languageSelectFocus);
-    }
-    if (applyButton) {
-      applyButton.removeEventListener('click', eventHandlers.applyButtonClick);
-    }
-    if (resetBtn) {
-      resetBtn.removeEventListener('click', eventHandlers.resetButtonClick);
-    }
+    autoSwitchToggle?.removeEventListener('change', eventHandlers.autoSwitchChange);
+    languageSelect?.removeEventListener('focus', eventHandlers.languageSelectFocus);
+    applyButton?.removeEventListener('click', eventHandlers.applyButtonClick);
+    resetBtn?.removeEventListener('click', eventHandlers.resetButtonClick);
   }, { once: true });
 
   // 监听来自 background.js 的消息
