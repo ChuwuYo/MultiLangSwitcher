@@ -13,6 +13,7 @@
     }
 
     .debug-section {
+      position: relative;
       margin-bottom: 20px;
       padding: 15px;
       border-radius: 5px;
@@ -75,6 +76,12 @@
       padding-left: 10px;
       margin-bottom: 5px;
     }
+
+    .reset-btn-corner {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
   </style>
 </head>
 
@@ -121,6 +128,7 @@
       <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
+          <button id="resetCustomLangBtn" class="toggle reset-btn-corner" title="Reset Accept-Language"><img src="images/reset.svg" alt="Reset" width="16" height="16"></button>
           <h4>Custom Language Preference</h4>
           <p class="text-muted">Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".</p>
           <div class="mb-3">
@@ -223,6 +231,7 @@
 
   <script src="shared/shared-utils.js"></script>
   <script src="shared/shared-language-options.js"></script>
+  <script src="shared/shared-actions.js"></script>
   <script src="i18n/debug-i18n.js"></script>
   <script src="debug-headers.js"></script>
   <script src="debug-ui.js"></script>

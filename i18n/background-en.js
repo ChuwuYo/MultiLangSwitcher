@@ -59,5 +59,10 @@ const backgroundEn = {
   "get_current_lang_error": "GET_CURRENT_LANG error",
   "reset_rules_failed": "Reset rules failed",
   "accept_language_reset_successful": "Accept-Language reset successful",
-  "reset_error": "Reset error"
+  "reset_error": "Reset error",
+  "clearing_existing_rules": "Clearing {count} existing rules",
+  "rules_cleared_successfully": "Rules cleared successfully",
+  "clear_rules_failed": "Failed to clear rules",
+  "auto_switch_toggle_failed": "Auto switch toggle failed",
+  "startup_init_failed": "Startup initialization failed"
 };

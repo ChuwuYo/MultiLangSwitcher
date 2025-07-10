@@ -9,25 +9,31 @@ const LANGUAGE_OPTIONS = [
   { value: "en-US", label: "English (US) (en-US)" }, // 美国
   { value: "en-GB", label: "English (UK) (en-GB)" }, // 英国
   { value: "en-AU", label: "English (Australia) (en-AU)" }, // 澳大利亚
+  { value: "en-IE", label: "English (Ireland) (en-IE)" }, // 爱尔兰
+  { value: "en-NZ", label: "English (New Zealand) (en-NZ)" }, // 新西兰
   { value: "en-CA", label: "English (Canada) (en-CA)" }, // 加拿大
   { value: "en-IN", label: "English (India) (en-IN)" }, // 印度
   { value: "en-SG", label: "English (Singapore) (en-SG)" }, // 新加坡
 
   // 西班牙语
-  { value: "es", label: "Español (es)" }, // 西班牙、墨西哥等
-  { value: "es-419", label: "Español (Latinoamérica) (es-419)" }, // 拉丁美洲通用
+  { value: "es-ES", label: "Español (es-ES)" }, // 西班牙
+  { value: "es-AR", label: "Español (Argentina) (es-AR)" }, // 阿根廷
+  { value: "es-MX", label: "Español (México) (es-MX)" }, // 墨西哥
 
   // 法语
-  { value: "fr", label: "Français (fr)" }, // 法国
+  { value: "fr-FR", label: "Français (fr-FR)" }, // 法国
   { value: "fr-CA", label: "Français (Canada) (fr-CA)" }, // 加拿大魁北克
+  { value: "fr-BE", label: "Français (Belgique) (fr-BE)" }, // 比利时
 
   // 德语
-  { value: "de", label: "Deutsch (de)" }, // 德国
+  { value: "de-DE", label: "Deutsch (de-DE)" }, // 德国
   { value: "de-AT", label: "Deutsch (Österreich) (de-AT)" }, // 奥地利
+  { value: "de-CH", label: "Deutsch (Schweiz) (de-CH)" }, // 瑞士
 
   // 亚洲高频语种
   { value: "ja", label: "日本語 (ja)" }, // 日本
   { value: "ko", label: "한국어 (ko)" }, // 韩国
+  { value: "ms", label: "Bahasa Melayu (ms)" }, // 马来西亚
   { value: "id", label: "Bahasa Indonesia (id)" }, // 印度尼西亚
   { value: "vi", label: "Tiếng Việt (vi)" }, // 越南
   { value: "th", label: "ไทย (th)" }, // 泰国
@@ -74,7 +80,6 @@ const LANGUAGE_OPTIONS = [
   { value: "et", label: "Eesti (et)" }, // 爱沙尼亚
   { value: "lv", label: "Latviešu (lv)" }, // 拉脱维亚
   { value: "sk", label: "Slovenčina (sk)" }, // 斯洛伐克
-  { value: "ms", label: "Bahasa Melayu (ms)" }, // 马来西亚、新加坡
   { value: "fa", label: "فارسی (fa)" } // 伊朗
 ];
 

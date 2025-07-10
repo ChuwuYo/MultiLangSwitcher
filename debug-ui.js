@@ -375,6 +375,25 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // 重置自定义语言设置
+  document.getElementById('resetCustomLangBtn').addEventListener('click', async function () {
+    const customLangResult = document.getElementById('customLangResult');
+    const customLangInput = document.getElementById('customLanguageInput');
+    
+    addLogMessage('Attempting to reset Accept-Language settings via debug page.', 'info');
+    
+    try {
+      await resetAcceptLanguage();
+      customLangResult.innerHTML = `<p class="success">${debugI18n.t('reset_accept_language_success')}</p>`;
+      addLogMessage(debugI18n.t('reset_accept_language_success'), 'success');
+      if(customLangInput) customLangInput.value = ''; // 清空输入框
+    } catch (error) {
+      const errorMessage = debugI18n.t('reset_accept_language_failed', { message: error.message });
+      customLangResult.innerHTML = `<p class="error">${errorMessage}</p>`;
+      addLogMessage(errorMessage, 'error');
+    }
+  });
+
   // 显示诊断信息
   document.getElementById('showDiagnosticsBtn').addEventListener('click', function () {
     const resultElement = document.getElementById('diagnosticsResult');

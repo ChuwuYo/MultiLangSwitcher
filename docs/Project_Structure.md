@@ -31,6 +31,7 @@ MultiLangSwitcher/
 │   └── test-zh.js                  - 测试页面中文文本
 ├── images/                         - 图片资源目录
 ├── manifest.json                   - 扩展配置清单文件
+├── .gitignore                      - Git 忽略文件
 ├── popup.html                      - 扩展弹窗页面
 ├── popup.js                        - 弹窗交互逻辑脚本
 ├── test-headers.html               - 请求头测试页面
