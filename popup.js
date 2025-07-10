@@ -264,9 +264,10 @@ document.addEventListener('DOMContentLoaded', function () {
         updateLanguageDisplay(popupI18n.t('not_set'));
         if (languageSelect) languageSelect.value = '';
       } catch (error) {
-        const errorMessage = popupI18n.t('reset_failed_alert', { message: error.message || popupI18n.t('unknown_error') });
-        sendDebugLog(errorMessage, 'error');
-        showError(errorMessage);
+        const errorDetails = error.message || popupI18n.t('unknown_error');
+        const userMessage = popupI18n.t('reset_failed_alert') + ': ' + errorDetails;
+        sendDebugLog(popupI18n.t('reset_request_failed', { message: errorDetails }), 'error');
+        showError(userMessage);
       }
     }
   };
