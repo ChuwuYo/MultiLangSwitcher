@@ -18,6 +18,8 @@ MultiLangSwitcher is a Chromium - based browser extension that helps users quick
 
 The extension utilizes the `chrome.declarativeNetRequest` API to modify the request header, ensuring performance and privacy.
 
+### Note: This extension is not suitable for websites that determine language based on IP address.
+
 The website's layout and styling are built with Bootstrap.
 
 If the built-in request header detection encounters an error or does not return results, you can manually navigate to [BrowserScan](https://www.browserscan.net) or [header-echo](https://header-echo.addr.tools/) for further inspection.

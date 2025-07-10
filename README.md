@@ -17,6 +17,8 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 扩展利用 `chrome.declarativeNetRequest` API 来修改请求头，确保性能和隐私。
 
+### 注意：本拓展不适用于通过检测IP地址来确定语言的网站。
+
 页面样式采用Bootstrap框架。
 
 如果拓展自带的请求头检测报错或不返回结果，可以自行跳转到 [浏览器检测](https://webcha.cn/) 、 [BrowserScan](https://www.browserscan.net/zh) 、 [header-echo](https://header-echo.addr.tools/) 进行查看。
