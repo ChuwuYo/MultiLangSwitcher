@@ -257,22 +257,16 @@ document.addEventListener('DOMContentLoaded', function () {
       sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
     },
     resetButtonClick: async function () {
+      sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
       try {
-        sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
-        const response = await chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' });
-        
-        if (response?.status === 'success') {
-          sendDebugLog(popupI18n.t('reset_successful'), 'success');
-          updateLanguageDisplay(popupI18n.t('not_set'));
-          if (languageSelect) languageSelect.value = '';
-        } else {
-          const errorMessage = response?.message || popupI18n.t('unknown_error');
-          sendDebugLog(popupI18n.t('reset_failed', {message: errorMessage}), 'error');
-          showError(popupI18n.t('reset_failed_alert') + ' ' + errorMessage);
-        }
+        await resetAcceptLanguage();
+        sendDebugLog(popupI18n.t('reset_successful'), 'success');
+        updateLanguageDisplay(popupI18n.t('not_set'));
+        if (languageSelect) languageSelect.value = '';
       } catch (error) {
-        sendDebugLog(popupI18n.t('reset_request_failed', {message: error.message}), 'error');
-        showError(popupI18n.t('reset_failed_alert') + ' ' + error.message);
+        const errorMessage = popupI18n.t('reset_failed_alert', { message: error.message || popupI18n.t('unknown_error') });
+        sendDebugLog(errorMessage, 'error');
+        showError(errorMessage);
       }
     }
   };
