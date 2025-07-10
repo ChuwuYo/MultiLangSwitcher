@@ -10,6 +10,7 @@ MultiLangSwitcher/
 ├── docs/                           - 项目文档目录
 │   └── README/                     - 多语言说明文档
 ├── shared/                         - 共享资源目录
+│   ├── shared-actions.js           - 共享常量定义
 │   ├── shared-utils.js             - 共享工具函数
 │   └── shared-language-options.js  - 共享语言选项列表
 ├── fonts/                          - 字体资源目录
