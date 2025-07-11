@@ -81,9 +81,14 @@ html[data-bs-theme="dark"] .toggle[data-state="on"] {
   border: 1px solid var(--bs-border-color);
 }
 
-html[data-bs-theme="dark"] .toggle img {
+html[data-bs-theme="dark"] .toggle[data-state="on"] img,
+html[data-bs-theme="dark"] .toggle[data-state="off"] img {
   filter: invert(1) brightness(1.5);
   /* 在暗色模式下使 SVG 变白 */
+}
+
+html[data-bs-theme="dark"] .invert-on-dark {
+  filter: invert(1) brightness(1.5);
 }
 
 /* 主题切换按钮样式结束 */

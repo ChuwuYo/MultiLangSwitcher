@@ -52,11 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 定义主题按钮的细节（图标和状态）
   const themeButtonDetails = {
     'dark': {
-      icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16">', // 浅色模式图标
+      icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">', // 浅色模式图标
       state: 'on'
     },
     'light': {
-      icon: '<img src="images/moon.svg" alt="Dark Mode" width="16" height="16">', // 深色模式图标
+      icon: '<img src="images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">', // 深色模式图标
       state: 'off'
     }
   };
