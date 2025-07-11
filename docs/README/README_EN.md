@@ -30,10 +30,10 @@ If you need to switch the browser UA, you can take a look at this project:[User-
     <table>
         <tr>
             <td>
-                <img src="https://github.com/user-attachments/assets/03607306-3e19-4492-8055-92d23fe2f73c" alt="CN_Light">
+                <img src="https://github.com/user-attachments/assets/e1ec3c75-d149-420d-a43c-adc48d1111fb" alt="CN_Light">
             </td>
             <td>
-                <img src="https://github.com/user-attachments/assets/f6b21816-f589-44ef-8681-628be3d9c912" alt="EN_Dark">
+                <img src="https://github.com/user-attachments/assets/0e4a355d-5157-4873-b7f7-11173e1a79f7" alt="EN_Dark">
             </td>
         </tr>
     </table>
