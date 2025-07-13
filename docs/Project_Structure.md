@@ -4,7 +4,7 @@
 MultiLangSwitcher/
 ├── LICENSE                         - 许可证文件
 ├── README.md                       - 项目说明文档
-├── _locales/                       - 浏览器扩展国际化资源目录
+├── _locales/                       - 扩展描述的国际化目录
 │   ├── en/                         - 英文语言包
 │   └── zh/                         - 中文语言包
 ├── docs/                           - 项目文档目录
