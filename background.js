@@ -52,16 +52,8 @@ async function initDomainRulesManager() {
 }
 
 // 在浏览器启动时初始化
-chrome.runtime.onStartup.addListener(async () => {
-  try {
-    await initDomainRulesManager();
-    // 加载自动切换状态
-    const result = await chrome.storage.local.get(['autoSwitchEnabled']);
-    autoSwitchEnabled = !!result.autoSwitchEnabled;
-    sendBackgroundLog(backgroundI18n.t('startup_load_auto_switch_status', {status: autoSwitchEnabled}), 'info');
-  } catch (error) {
-    sendBackgroundLog(`${backgroundI18n.t('startup_init_failed')}: ${error.message}`, 'error');
-  }
+chrome.runtime.onStartup.addListener(() => {
+  initializeState('startup');
 });
 
 // 在扩展安装或更新时初始化
@@ -226,54 +218,74 @@ async function handleRuleUpdateError(error, language, retryCount) {
 }
 
 
-// 当扩展安装或更新时触发
-chrome.runtime.onInstalled.addListener(async function (details) {
-  sendBackgroundLog(backgroundI18n.t('extension_installed', {reason: details.reason}), 'info');
-
+/**
+ * 统一的初始化函数，用于设置扩展的初始状态
+ * @param {string} reason - 触发初始化的原因 (e.g., 'install', 'update', 'startup')
+ */
+async function initializeState(reason) {
+  sendBackgroundLog(backgroundI18n.t('initializing_state', { reason }), 'info');
   try {
-    // 初始化域名规则管理器
-    await domainRulesManager.loadRules();
-    sendBackgroundLog(backgroundI18n.t('domain_rules_loaded'), 'info');
+    // 1. 初始化域名规则管理器
+    await initDomainRulesManager();
 
-    // 从存储中获取当前语言设置和自动切换状态并应用
+    // 2. 从存储中获取设置
     const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
     autoSwitchEnabled = !!result.autoSwitchEnabled;
     sendBackgroundLog(`${backgroundI18n.t('loaded_auto_switch_status')}: ${autoSwitchEnabled}`, 'info');
 
-    if (autoSwitchEnabled) {
-      sendBackgroundLog(backgroundI18n.t('auto_switch_enabled_default_lang', {language: DEFAULT_LANG_EN}), 'info');
-      try {
-        await updateHeaderRules(DEFAULT_LANG_EN, 0, true);
-        notifyPopupUIUpdate(true, DEFAULT_LANG_EN);
-      } catch (error) {
-        sendBackgroundLog(`${backgroundI18n.t('auto_switch_init_failed')}: ${error.message}`, 'error');
-      }
-    } else if (result.currentLanguage) {
-      try {
-        await updateHeaderRules(result.currentLanguage);
-        sendBackgroundLog(`${backgroundI18n.t('loaded_applied_language')}: ${result.currentLanguage}`, 'info');
-        notifyPopupUIUpdate(autoSwitchEnabled, result.currentLanguage);
-      } catch (error) {
-        sendBackgroundLog(`${backgroundI18n.t('load_language_failed')}: ${error.message}`, 'error');
-      }
-    } else {
-      // 如果没有保存的语言设置，根据浏览器语言自动检测
-      const detectedLang = detectBrowserLanguage();
-      sendBackgroundLog(`${backgroundI18n.t('first_install_detected_lang')}: ${detectedLang}`, 'info');
-      const initialLanguage = detectedLang === 'zh' ? DEFAULT_LANG_ZH : DEFAULT_LANG_EN;
+    let initialLanguage = null;
+    let isAuto = autoSwitchEnabled;
 
-      try {
-        await chrome.storage.local.set({ currentLanguage: initialLanguage });
-        await updateHeaderRules(initialLanguage);
-        sendBackgroundLog(`${backgroundI18n.t('set_default_language')}: ${initialLanguage}`, 'info');
-        notifyPopupUIUpdate(autoSwitchEnabled, initialLanguage);
-      } catch (error) {
-        sendBackgroundLog(`${backgroundI18n.t('set_default_language_failed')}: ${error.message}`, 'error');
-      }
+    if (autoSwitchEnabled) {
+      // 如果自动切换开启，则应用默认的回退语言
+      initialLanguage = DEFAULT_LANG_EN;
+      sendBackgroundLog(backgroundI18n.t('auto_switch_enabled_default_lang', { language: initialLanguage }), 'info');
+    } else if (result.currentLanguage) {
+      // 如果有关闭自动切换且有已保存的语言
+      initialLanguage = result.currentLanguage;
+      sendBackgroundLog(`${backgroundI18n.t('loaded_applied_language')}: ${initialLanguage}`, 'info');
+    } else {
+      // 首次安装，检测浏览器语言
+      const detectedLang = detectBrowserLanguage();
+      const lang = detectedLang === 'zh' ? DEFAULT_LANG_ZH : DEFAULT_LANG_EN;
+      initialLanguage = lang;
+      sendBackgroundLog(`${backgroundI18n.t('first_install_detected_lang')}: ${detectedLang} -> ${initialLanguage}`, 'info');
+      // 将首次设置的语言保存到存储中
+      await chrome.storage.local.set({ currentLanguage: initialLanguage });
     }
+
+    // 3. 应用请求头规则
+    if (initialLanguage) {
+      await updateHeaderRules(initialLanguage, 0, isAuto);
+    } else {
+      // 如果没有目标语言（例如，重置后），则清理规则
+      await clearAllDynamicRules();
+    }
+
+    // 4. 通知UI更新
+    notifyPopupUIUpdate(isAuto, initialLanguage);
+    sendBackgroundLog(backgroundI18n.t('initialization_complete'), 'success');
+
   } catch (error) {
-    sendBackgroundLog(`${backgroundI18n.t('domain_rules_load_failed')}: ${error.message}`, 'error');
+    sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error');
+    // 设置一个明确、安全的回退状态
+    autoSwitchEnabled = false;
+    lastAppliedLanguage = null;
+    try {
+      await clearAllDynamicRules();
+      await chrome.storage.local.set({ autoSwitchEnabled: false, currentLanguage: '' });
+      notifyPopupUIUpdate(false, null);
+      sendBackgroundLog(backgroundI18n.t('fallback_state_set'), 'warning');
+    } catch (cleanupError) {
+      sendBackgroundLog(backgroundI18n.t('fallback_state_failed', { message: cleanupError.message }), 'error');
+    }
   }
+}
+
+
+// 当扩展安装或更新时触发
+chrome.runtime.onInstalled.addListener(details => {
+  initializeState(details.reason);
 });
 
 /**
