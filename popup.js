@@ -92,6 +92,63 @@ function updateLanguageDisplay(language, showSuccess = false) {
   }
 }
 
+/**
+ * 执行头部快速检查
+ * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
+ */
+async function performHeaderCheck(headerCheckContentPre) {
+  const timestamp = new Date().getTime();
+  const testUrls = [
+    `https://httpbin.org/headers?_=${timestamp}`,
+    `https://postman-echo.com/headers?_=${timestamp}`,
+    `https://header-echo.addr.tools/?_=${timestamp}`
+  ];
+  let lastError = null;
+
+  for (const url of testUrls) {
+    try {
+      const hostname = new URL(url).hostname;
+      const checkingMsg = `${popupI18n.t('fetching_headers')} (${hostname})...`;
+      headerCheckContentPre.textContent = checkingMsg;
+      sendDebugLog(`${popupI18n.t('trying_to_get_headers_from')} ${url}`, 'info');
+
+      const response = await fetch(url, { cache: 'no-cache', signal: AbortSignal.timeout(5000) }); // 5秒超时
+      if (!response.ok) {
+        const errorMsg = `HTTP error! status: ${response.status} from ${url}`;
+        sendDebugLog(`${popupI18n.t('quick_check_request_failed')} ${errorMsg}`, 'warning');
+        lastError = new Error(errorMsg);
+        continue;
+      }
+
+      const data = await response.json();
+      sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${url}`, 'success');
+      const headers = data.headers;
+      const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
+
+      if (acceptLangHeader) {
+        sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${acceptLangHeader}.`, 'success');
+        headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
+      } else {
+        sendDebugLog(`${popupI18n.t('quick_check_no_accept_language')} ${url}`, 'warning');
+        headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
+      }
+      return; // 成功，退出函数
+    } catch (error) {
+      sendDebugLog(`${popupI18n.t('error_getting_headers_from')} ${url}: ${error.message}`, 'warning');
+      lastError = error;
+    }
+  }
+
+  // 所有尝试均失败
+  if (lastError) {
+    console.error(popupI18n.t('all_detection_points_failed'), lastError);
+    sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')} ${lastError.message}`, 'error');
+  }
+
+  const finalErrorMsg = `${popupI18n.t('all_detection_points_failed_info')}<br>${popupI18n.t('please_visit_manually')} <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a>`;
+  headerCheckContentPre.innerHTML = finalErrorMsg;
+}
+
 
 // --- 初始化扩展 ---
 document.addEventListener('DOMContentLoaded', function () {
@@ -145,60 +202,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 快速检查按钮点击事件
   if (checkHeaderBtn) {
-    checkHeaderBtn.addEventListener('click', async function () {
+    checkHeaderBtn.addEventListener('click', function () {
       sendDebugLog(popupI18n.t('clicked_quick_check'), 'info');
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
 
       if (headerCheckResultDiv) headerCheckResultDiv.classList.remove('d-none');
-      if (headerCheckContentPre) headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
-
-      const timestamp = new Date().getTime();
-      const testUrls = [
-        `https://httpbin.org/headers?_=${timestamp}`,
-        `https://postman-echo.com/headers?_=${timestamp}`,
-        `https://header-echo.addr.tools/?_=${timestamp}`
-      ];
-      let success = false;
-      let lastError = null;
-
-      for (const url of testUrls) {
-        try {
-          sendDebugLog(`${popupI18n.t('trying_to_get_headers_from')} ${url} ${popupI18n.t('get_request_headers')}`, 'info');
-          const response = await fetch(url, { cache: 'no-cache' });
-          if (!response.ok) {
-            const errorMsg = `${popupI18n.t('http_error_status')} ${response.status} ${popupI18n.t('from')} ${url}`;
-            sendDebugLog(`${popupI18n.t('quick_check_request_failed')} ${errorMsg}`, 'warning');
-            lastError = new Error(errorMsg);
-            continue;
-          }
-          const data = await response.json();
-          sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${url}${popupI18n.t('displaying_results')}`, 'info');
-          const headers = data.headers;
-          const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
-
-          if (headerCheckContentPre) {
-            if (acceptLangHeader) {
-              sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${acceptLangHeader}.`, 'success');
-              headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
-            } else {
-              sendDebugLog(`${popupI18n.t('quick_check_no_accept_language')} ${url} ${popupI18n.t('detected_accept_language_header')}`, 'warning');
-              headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
-            }
-          }
-          success = true;
-          break;
-        } catch (error) {
-          sendDebugLog(`${popupI18n.t('error_getting_headers_from')} ${url}: ${error.message}`, 'warning');
-          lastError = error;
-        }
-      }
-
-      if (!success && headerCheckContentPre) {
-        console.error(popupI18n.t('all_detection_points_failed'), lastError);
-        sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')} ${lastError ? lastError.message : popupI18n.t('unknown_error')}`, 'error');
-        headerCheckContentPre.innerHTML = popupI18n.t('all_detection_points_failed_info') + ' ' + (lastError ? lastError.message : popupI18n.t('unknown_error')) +
-          '\n' + popupI18n.t('please_visit_manually') + ' <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a> ' + popupI18n.t('or') + ' <a href="https://www.browserscan.net/zh" target="_blank" style="color: #007bff;">https://www.browserscan.net/zh</a> ' + popupI18n.t('to_view');
+      if (headerCheckContentPre) {
+        headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
+        performHeaderCheck(headerCheckContentPre); // 调用独立的检查函数
       }
     });
   }
