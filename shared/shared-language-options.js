@@ -16,17 +16,17 @@ const LANGUAGE_OPTIONS = [
   { value: "en-SG", label: "English (Singapore) (en-SG)" }, // 新加坡
 
   // 西班牙语
-  { value: "es-ES", label: "Español (es-ES)" }, // 西班牙
+  { value: "es-ES", label: "Español (Spain) (es-ES)" }, // 西班牙
   { value: "es-AR", label: "Español (Argentina) (es-AR)" }, // 阿根廷
   { value: "es-MX", label: "Español (México) (es-MX)" }, // 墨西哥
 
   // 法语
-  { value: "fr-FR", label: "Français (fr-FR)" }, // 法国
+  { value: "fr-FR", label: "Français (France) (fr-FR)" }, // 法国
   { value: "fr-CA", label: "Français (Canada) (fr-CA)" }, // 加拿大魁北克
   { value: "fr-BE", label: "Français (Belgique) (fr-BE)" }, // 比利时
 
   // 德语
-  { value: "de-DE", label: "Deutsch (de-DE)" }, // 德国
+  { value: "de-DE", label: "Deutsch (Germany) (de-DE)" }, // 德国
   { value: "de-AT", label: "Deutsch (Österreich) (de-AT)" }, // 奥地利
   { value: "de-CH", label: "Deutsch (Schweiz) (de-CH)" }, // 瑞士
 
