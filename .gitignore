@@ -4,6 +4,7 @@
 .idea/
 *.swp
 .amazonq
+.kiro
 *~
 
 # OS-specific files
