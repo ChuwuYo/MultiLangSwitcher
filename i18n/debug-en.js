@@ -222,5 +222,10 @@ const debugEn = {
   "auto_switch_status_sync": "Auto switch status synchronized",
   "status_sync_received": "Status sync received: auto switch",
   "reset_accept_language_success": "Accept-Language has been successfully reset.",
-  "reset_accept_language_failed": "Reset failed: {message}"
+  "reset_accept_language_failed": "Reset failed: {message}",
+
+  // debug-headers.js messages
+  "get_rules_error": "Error getting rules: ",
+  "invalid_language_code": "Error: Please provide a valid language code",
+  "network_check_suggestion": "Suggestion: Check network connection or try other test services"
 };

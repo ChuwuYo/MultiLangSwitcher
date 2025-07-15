@@ -223,5 +223,10 @@ const debugZh = {
   "auto_switch_status_sync": "自动切换状态已同步",
   "status_sync_received": "收到状态同步: 自动切换",
   "reset_accept_language_success": "Accept-Language 已成功重置。",
-  "reset_accept_language_failed": "重置失败：{message}"
+  "reset_accept_language_failed": "重置失败：{message}",
+
+  // debug-headers.js 消息
+  "get_rules_error": "获取规则时发生错误: ",
+  "invalid_language_code": "错误: 请提供有效的语言代码",
+  "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务"
 };

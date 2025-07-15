@@ -60,11 +60,18 @@ document.addEventListener('DOMContentLoaded', function () {
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
+          // 去重处理，避免显示重复的规则
+          const uniqueRules = new Map();
           matchedRules.rulesMatchedInfo.forEach(info => {
-            // 提取并显示匹配规则和请求的更多细节
-            // info 对象包含 rule 和 request 属性
+            const key = `${info.rule.rulesetId || '_dynamic'}_${info.rule.ruleId}`;
+            if (!uniqueRules.has(key)) {
+              uniqueRules.set(key, info);
+            }
+          });
+
+          uniqueRules.forEach(info => {
             html += `<li>`;
-            html += `${debugI18n.t('ruleset_id')} ${info.rule.rulesetId ? info.rule.rulesetId : debugI18n.t('dynamic_rules').replace(':', '')}, ${debugI18n.t('rule_id')} ${info.rule.ruleId}`;
+            html += `${debugI18n.t('ruleset_id')} ${info.rule.rulesetId || '_dynamic'}, ${debugI18n.t('rule_id')} ${info.rule.ruleId}`;
             if (info.request) {
               html += `<div class="matched-rule-detail">`;
               html += `${debugI18n.t('matched_url')} <code>${info.request.url}</code><br>`;
@@ -72,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function () {
               html += `</div>`;
             }
             html += '</li>';
-            html += '<hr>'; // 分隔不同匹配项
           });
           html += '</ul>';
           html += `<p class="text-muted">${debugI18n.t('recent_match_note')}</p>`;

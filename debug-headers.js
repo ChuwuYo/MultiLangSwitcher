@@ -1,59 +1,73 @@
-// 调试脚本，用于验证请求头更改是否生效
-
-
-
+/**
+ * 调试脚本 - 用于验证请求头更改是否生效
+ */
 
 /**
  * 显示当前生效的动态规则和最近匹配的规则
  */
-function showCurrentRules() {
-  sendDebugLog(debugI18n.t('getting_rules'), 'info');
-  chrome.declarativeNetRequest.getDynamicRules(function (rules) {
+async function showCurrentRules() {
+  try {
+    sendDebugLog(debugI18n.t('getting_rules'), 'info');
+    
+    const rules = await chrome.declarativeNetRequest.getDynamicRules();
     sendDebugLog(debugI18n.t('current_rules') + ' ' + JSON.stringify(rules, null, 2), 'info');
 
     if (rules.length === 0) {
       sendDebugLog(debugI18n.t('no_rules_warning'), 'warning');
-    } else {
-      // Check rule priority
     }
-  });
 
-  // Get matched rules
-  chrome.declarativeNetRequest.getMatchedRules({}, function (matchedRules) {
+    const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
     sendDebugLog(debugI18n.t('matched_rules') + ' ' + JSON.stringify(matchedRules, null, 2), 'info');
-  });
+    
+  } catch (error) {
+    sendDebugLog(debugI18n.t('get_rules_error') + error.message, 'error');
+  }
 }
-
 
 /**
  * 测试指定语言的 Accept-Language 请求头是否生效
  * @param {string} language - 要测试的语言代码
  */
-function testHeaderChange(language) {
-  sendDebugLog(`${debugI18n.t('testing_language')} "${language}" ${debugI18n.t('header_effective')}`, 'info');
+async function testHeaderChange(language) {
+  if (!language) {
+    sendDebugLog(debugI18n.t('invalid_language_code'), 'error');
+    return;
+  }
 
-  // Use random parameters to avoid cache
-  const timestamp = new Date().getTime();
+  try {
+    sendDebugLog(`${debugI18n.t('testing_language')} "${language}" ${debugI18n.t('header_effective')}`, 'info');
 
-  fetchWithRetry(`https://httpbin.org/headers?_=${timestamp}`, { cache: 'no-store', credentials: 'omit' })
-    .then(data => handleHeaderResponse(data, language))
-    .catch(error => sendDebugLog(`${debugI18n.t('test_failed')} ${error.message}`, 'error'));
+    const timestamp = Date.now();
+    const data = await fetchWithRetry(`https://httpbin.org/headers?_=${timestamp}`, { 
+      cache: 'no-store', 
+      credentials: 'omit' 
+    });
+    
+    handleHeaderResponse(data, language);
+    
+  } catch (error) {
+    sendDebugLog(`${debugI18n.t('test_failed')} ${error.message}`, 'error');
+    
+    if (error.message.includes('Failed to fetch')) {
+      sendDebugLog(debugI18n.t('network_check_suggestion'), 'info');
+    }
+  }
 }
 
 /**
- * 带验证的fetch请求
+ * 带重试机制的fetch请求
  * @param {string} url - 请求URL
  * @param {Object} options - fetch选项
  * @returns {Promise<Object>} 响应数据
  */
-function fetchWithRetry(url, options = {}) {
-  return fetch(url, options)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`${debugI18n.t('http_error_status')} ${response.status}`);
-      }
-      return response.json();
-    });
+async function fetchWithRetry(url, options = {}) {
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    throw new Error(`${debugI18n.t('http_error_status')} ${response.status}`);
+  }
+  
+  return response.json();
 }
 
 /**
@@ -86,9 +100,5 @@ window.debugHeaders = {
   testHeader: testHeaderChange
 };
 
-// Show usage instructions in console
+// 显示使用说明
 sendDebugLog(debugI18n.t('debug_tool_loaded'), 'info');
-// console.log('%c请求头调试工具已加载', 'color: blue; font-weight: bold');
-// console.log('使用方法:');
-// console.log('1. debugHeaders.showRules() - 显示当前规则');
-// console.log('2. debugHeaders.testHeader("en-US") - 测试指定语言的请求头是否生效');
