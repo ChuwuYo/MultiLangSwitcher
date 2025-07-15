@@ -91,7 +91,7 @@ const debugEn = {
   "ruleset_id": "Ruleset ID:",
   "matched_url": "Matched URL:",
   "resource_type": "Resource type:",
-  "recent_match_note": "Note: This shows rules matched in recent page loads, not necessarily all rule match history.",
+  "recent_match_note": "Note: This shows rules matched in recent page loads, not necessarily all rules match history.",
   "no_recent_matches": "No recent rule matches",
   "debug_log_started": "Debug log started",
 
