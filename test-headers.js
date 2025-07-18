@@ -201,6 +201,10 @@ function md5(string) {
 // --- End MD5 Hashing Function ---
 
 // --- 浏览器兼容性检查 ---
+/**
+ * 获取浏览器信息
+ * @returns {Object} 浏览器信息对象
+ */
 function getBrowserInfo() {
   const ua = navigator.userAgent;
   let browserName = testI18n.t('unknown_browser');
@@ -242,10 +246,6 @@ function getBrowserInfo() {
     browserName = 'Internet Explorer';
     browserVersion = M[2];
     fullVersion = browserVersion;
-  } else {
-    browserName = testI18n.t('unknown_browser');
-    browserVersion = testI18n.t('unknown_version');
-    fullVersion = testI18n.t('unknown_version');
   }
 
   let os = testI18n.t('unknown_os');
@@ -263,59 +263,75 @@ function getBrowserInfo() {
   };
 }
 
+/**
+ * 检查API支持情况
+ * @returns {Array} API支持情况列表
+ */
 function checkApiSupport() {
   const apis = [
     { name: 'localStorage', supported: typeof localStorage !== 'undefined' },
     { name: 'sessionStorage', supported: typeof sessionStorage !== 'undefined' },
     { name: 'IndexedDB', supported: !!window.indexedDB },
-    { name: 'WebSockets', supported: 'WebSocket' in window || 'MozWebSocket' in window },
+    { name: 'WebSockets', supported: 'WebSocket' in window },
     { name: 'Promises', supported: typeof Promise !== 'undefined' && Promise.toString().indexOf('[native code]') !== -1 },
     { name: 'fetch API', supported: typeof fetch === 'function' },
     { name: 'Service Workers', supported: 'serviceWorker' in navigator },
     { name: 'Intl (Internationalization)', supported: typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function' },
     { name: 'URL API (URLSearchParams)', supported: typeof URL !== 'undefined' && typeof URLSearchParams !== 'undefined' },
     { name: 'Beacon API', supported: 'sendBeacon' in navigator },
-    { name: 'WebRTC (RTCPeerConnection)', supported: !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection) },
-    { name: 'WebGL', supported: (function () { try { const canvas = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))); } catch (e) { return false; } })() }
+    { name: 'WebRTC (RTCPeerConnection)', supported: !!window.RTCPeerConnection },
+    { name: 'WebGL', supported: (function () { 
+      try { 
+        const canvas = document.createElement('canvas'); 
+        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))); 
+      } catch (e) { 
+        return false; 
+      } 
+    })() }
   ];
   return apis;
 }
 
+/**
+ * 执行浏览器兼容性检查
+ */
 function performCompatibilityChecks() {
   const browserInfoEl = document.getElementById('browserInfoDisplay');
   const apiListEl = document.getElementById('apiCompatibilityList');
+  if (!browserInfoEl || !apiListEl) return;
 
   const browser = getBrowserInfo();
-  if (browserInfoEl) {
-    browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
-  }
+  browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
 
-  if (apiListEl) {
-    apiListEl.innerHTML = '';
-    const apis = checkApiSupport();
-    apis.forEach(api => {
-      const listItem = document.createElement('li');
-      listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? 'list-group-item-success' : 'list-group-item-danger'}`;
+  apiListEl.innerHTML = '';
+  const apis = checkApiSupport();
+  apis.forEach(api => {
+    const listItem = document.createElement('li');
+    listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? 'list-group-item-success' : 'list-group-item-danger'}`;
 
-      const apiNameSpan = document.createElement('span');
-      apiNameSpan.textContent = api.name;
+    const apiNameSpan = document.createElement('span');
+    apiNameSpan.textContent = api.name;
 
-      const badgeSpan = document.createElement('span');
-      badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`;
-      badgeSpan.textContent = api.supported ? testI18n.t('supported') : testI18n.t('not_supported');
+    const badgeSpan = document.createElement('span');
+    badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`;
+    badgeSpan.textContent = api.supported ? testI18n.t('supported') : testI18n.t('not_supported');
 
-      listItem.appendChild(apiNameSpan);
-      listItem.appendChild(badgeSpan);
-      apiListEl.appendChild(listItem);
-    });
-  }
+    listItem.appendChild(apiNameSpan);
+    listItem.appendChild(badgeSpan);
+    apiListEl.appendChild(listItem);
+  });
 }
 // --- 兼容性检查功能结束 ---
 
-// 获取并显示当前请求头 (并行请求与超时)
+/**
+ * 获取并显示当前请求头
+ * @returns {Promise<void>}
+ */
 async function fetchAndDisplayHeaders() {
   const headerInfoElement = document.getElementById('headerInfo');
   const headerLanguageInfo = document.getElementById('headerLanguageInfo');
+  if (!headerInfoElement || !headerLanguageInfo) return;
+
   headerInfoElement.textContent = testI18n.t('fetching_headers');
   headerLanguageInfo.textContent = testI18n.t('detecting');
 
@@ -328,81 +344,123 @@ async function fetchAndDisplayHeaders() {
     `https://header-echo.addr.tools/?_=${timestamp}`,
   ];
 
-  function processHeadersData(data) {
-    const headers = data.headers;
-    let formattedHeaders = JSON.stringify(headers, null, 2);
-    headerInfoElement.textContent = formattedHeaders;
-
-    const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
-    if (existingAlertInfoP) {
-      existingAlertInfoP.remove();
-    }
-
-    const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
-
-    if (acceptLanguage) {
-      console.log(testI18n.t('detected_accept_language'), acceptLanguage);
-      headerLanguageInfo.innerHTML = `
-        <p class="mb-1"><strong>${testI18n.t('current_value')}</strong></p>
-        <p class="text-success fw-bold">${acceptLanguage}</p>
-        <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('request_header_method'))}</p>
-      `;
-    } else {
-      console.log(testI18n.t('no_accept_language'));
-      headerLanguageInfo.innerHTML = `
-        <p class="text-warning">${testI18n.t('not_detected_accept_language')}</p>
-        <p class="mt-2">${testI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${testI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${testI18n.t('to_view')}</p>
-      `;
-    }
+  try {
+    const data = await fetchFromAnySource(urls, TIMEOUT_MS);
+    processHeadersData(data, headerInfoElement, headerLanguageInfo);
+  } catch (error) {
+    console.error(testI18n.t('all_attempts_failed'), error);
+    handleHeaderFetchError(error, headerInfoElement, headerLanguageInfo);
   }
+}
 
-  function fetchWithTimeout(url, timeoutMs) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+/**
+ * 从多个源尝试获取数据，返回第一个成功的响应
+ * @param {Array<string>} urls - 要尝试的URL列表
+ * @param {number} timeoutMs - 超时时间（毫秒）
+ * @returns {Promise<Object>} - 解析为第一个成功的响应数据
+ */
+async function fetchFromAnySource(urls, timeoutMs) {
+  const promises = urls.map(url => fetchWithTimeout(url, timeoutMs));
+  return await Promise.any(promises);
+}
 
-    return fetch(url, {
+/**
+ * 带超时的fetch请求
+ * @param {string} url - 请求URL
+ * @param {number} timeoutMs - 超时时间（毫秒）
+ * @returns {Promise<Object>} - 解析为响应数据
+ */
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
       cache: 'no-store',
       credentials: 'omit',
       signal: controller.signal
-    })
-      .then(response => {
-        clearTimeout(timeoutId);
-        if (!response.ok) {
-          throw new Error(`${testI18n.t('http_error_status')} ${response.status} ${testI18n.t('from')} ${url}`);
-        }
-        return response.json();
-      })
-      .catch(error => {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error(testI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
-        }
-        throw error;
-      });
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`${testI18n.t('http_error_status')} ${response.status} ${testI18n.t('from')} ${url}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error(testI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * 处理请求头数据
+ * @param {Object} data - 响应数据
+ * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
+ * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
+ */
+function processHeadersData(data, headerInfoElement, headerLanguageInfo) {
+  const headers = data.headers;
+  const formattedHeaders = JSON.stringify(headers, null, 2);
+  headerInfoElement.textContent = formattedHeaders;
+
+  const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
+  if (existingAlertInfoP) {
+    existingAlertInfoP.remove();
   }
 
-  try {
-    const promises = urls.map(url => fetchWithTimeout(url, TIMEOUT_MS));
-    const firstSuccessfulResponse = await Promise.any(promises);
-    processHeadersData(firstSuccessfulResponse);
-  } catch (error) {
-    console.error(testI18n.t('all_attempts_failed'), error);
-    let combinedErrorMessage = testI18n.t('fetch_failed_all_services');
-    if (error instanceof AggregateError) {
-      combinedErrorMessage += ' ' + testI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
-    }
-    headerInfoElement.textContent = combinedErrorMessage;
+  const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
+
+  if (acceptLanguage) {
+    console.log(testI18n.t('detected_accept_language'), acceptLanguage);
     headerLanguageInfo.innerHTML = `
-      <p class="text-danger">${testI18n.t('detection_failed_all_services')}</p>
-      <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
+      <p class="mb-1"><strong>${testI18n.t('current_value')}</strong></p>
+      <p class="text-success fw-bold">${acceptLanguage}</p>
+      <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('request_header_method'))}</p>
+    `;
+  } else {
+    console.log(testI18n.t('no_accept_language'));
+    headerLanguageInfo.innerHTML = `
+      <p class="text-warning">${testI18n.t('not_detected_accept_language')}</p>
       <p class="mt-2">${testI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${testI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${testI18n.t('to_view')}</p>
     `;
   }
 }
 
-// 检测 JavaScript 语言偏好
+/**
+ * 处理请求头获取错误
+ * @param {Error} error - 错误对象
+ * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
+ * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
+ */
+function handleHeaderFetchError(error, headerInfoElement, headerLanguageInfo) {
+  let combinedErrorMessage = testI18n.t('fetch_failed_all_services');
+  
+  if (error instanceof AggregateError) {
+    combinedErrorMessage += ' ' + testI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
+  }
+  
+  headerInfoElement.textContent = combinedErrorMessage;
+  headerLanguageInfo.innerHTML = `
+    <p class="text-danger">${testI18n.t('detection_failed_all_services')}</p>
+    <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
+    <p class="mt-2">${testI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${testI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${testI18n.t('to_view')}</p>
+  `;
+}
+
+/**
+ * 检测 JavaScript 语言偏好
+ */
 function detectJsLanguage() {
   const jsLanguageInfoElement = document.getElementById('jsLanguageInfo');
+  if (!jsLanguageInfoElement) return;
+  
   try {
     const lang = navigator.language || 'N/A';
     const langs = navigator.languages ? navigator.languages.join(', ') : 'N/A';
@@ -420,9 +478,13 @@ function detectJsLanguage() {
   }
 }
 
-// 检测 Canvas 指纹
+/**
+ * 检测 Canvas 指纹
+ */
 function detectCanvasFingerprint() {
   const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
+  if (!canvasInfoElement) return;
+  
   try {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -452,9 +514,13 @@ function detectCanvasFingerprint() {
   }
 }
 
-// 检测 WebGL 指纹
+/**
+ * 检测 WebGL 指纹
+ */
 function detectWebglFingerprint() {
   const webglInfoElement = document.getElementById('webglFingerprintInfo');
+  if (!webglInfoElement) return;
+  
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -494,12 +560,18 @@ function detectWebglFingerprint() {
   }
 }
 
-// 检测 AudioContext 指纹 (异步)
+/**
+ * 检测 AudioContext 指纹
+ * @returns {Promise<void>}
+ */
 async function detectAudioFingerprint() {
   const audioInfoElement = document.getElementById('audioFingerprintInfo');
+  if (!audioInfoElement) return;
+  
   audioInfoElement.innerHTML = `<p>${testI18n.t('detecting')}</p>`;
+  
   try {
-    const audioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const audioCtx = window.OfflineAudioContext;
     if (!audioCtx) {
       audioInfoElement.innerHTML = `<p class="text-warning">${testI18n.t('audio_not_supported')}</p>`;
       console.warn('AudioContext not supported');
@@ -539,16 +611,19 @@ async function detectAudioFingerprint() {
       <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('audio_method'))}</p>
     `;
     console.log('Audio Fingerprint (MD5):', fingerprint);
-
   } catch (error) {
     audioInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('detection_failed')}: ${error.message}</p>`;
     console.error(testI18n.t('audio_fingerprint_detection_failed'), error);
   }
 }
 
-// 检测国际化 API
+/**
+ * 检测国际化 API
+ */
 function detectIntlApi() {
   const intlApiInfoElement = document.getElementById('intlApiInfo');
+  if (!intlApiInfoElement) return;
+  
   try {
     const dateTimeLocale = Intl.DateTimeFormat().resolvedOptions().locale || 'N/A';
     const numberFormatLocale = Intl.NumberFormat().resolvedOptions().locale || 'N/A';
@@ -566,53 +641,83 @@ function detectIntlApi() {
   }
 }
 
-// 检测 WebRTC IP 泄露
-function detectWebRtc() {
+/**
+ * 检测 WebRTC IP 泄露
+ */
+async function detectWebRtc() {
   const webRtcInfoElement = document.getElementById('webRtcInfo');
+  if (!webRtcInfoElement) return;
+  
   webRtcInfoElement.innerHTML = `<p>${testI18n.t('trying_webrtc')}</p>`;
-  let ips = [];
-
+  
   try {
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.createDataChannel('');
-    pc.onicecandidate = (e) => {
-      if (!e || !e.candidate || !e.candidate.candidate) return;
-      const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
-      const ipMatch = ipRegex.exec(e.candidate.candidate);
-      if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
-        ips.push(ipMatch[1]);
-      }
-    };
-    pc.createOffer()
-      .then(offer => pc.setLocalDescription(offer))
-      .catch(err => console.error(testI18n.t('webrtc_setlocaldescription_failed'), err));
-
-    setTimeout(() => {
-      pc.close();
-      if (ips.length > 0) {
-        webRtcInfoElement.innerHTML = `
-          <p class="mb-1"><strong>${testI18n.t('webrtc_local_ip')}</strong></p>
-          <p class="small text-muted mb-1">${testI18n.t('webrtc_description')}</p>
-          <ul class="list-unstyled mb-0">
-            ${ips.map(ip => `<li class="text-info fw-bold">${ip}</li>`).join('')}
-          </ul>
-          <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>
-        `;
-        console.info(testI18n.t('webrtc_detected_local_ip'), ips);
-      } else {
-        webRtcInfoElement.innerHTML = `<p class="text-success">${testI18n.t('webrtc_no_ip_detected')}</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
-        console.log(testI18n.t('webrtc_no_local_ip'));
-      }
-    }, 1000);
+    const ips = await collectWebRtcIps();
+    
+    if (ips.length > 0) {
+      webRtcInfoElement.innerHTML = `
+        <p class="mb-1"><strong>${testI18n.t('webrtc_local_ip')}</strong></p>
+        <p class="small text-muted mb-1">${testI18n.t('webrtc_description')}</p>
+        <ul class="list-unstyled mb-0">
+          ${ips.map(ip => `<li class="text-info fw-bold">${ip}</li>`).join('')}
+        </ul>
+        <p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>
+      `;
+      console.info(testI18n.t('webrtc_detected_local_ip'), ips);
+    } else {
+      webRtcInfoElement.innerHTML = `<p class="text-success">${testI18n.t('webrtc_no_ip_detected')}</p><p class="mb-0 mt-2 small text-muted">${testI18n.t('detected_via').replace('{method}', testI18n.t('webrtc_method'))}</p>`;
+      console.log(testI18n.t('webrtc_no_local_ip'));
+    }
   } catch (error) {
     webRtcInfoElement.innerHTML = `<p class="text-danger">${testI18n.t('webrtc_not_supported')}: ${error.message}</p>`;
     console.error(testI18n.t('webrtc_detection_failed'), error);
   }
 }
 
-// 检测部分浏览器指纹信息
+/**
+ * 收集WebRTC IP地址
+ * @returns {Promise<Array<string>>} IP地址列表
+ */
+async function collectWebRtcIps() {
+  return new Promise((resolve) => {
+    const ips = [];
+    
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel('');
+      
+      pc.onicecandidate = (e) => {
+        if (!e || !e.candidate || !e.candidate.candidate) return;
+        
+        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
+        const ipMatch = ipRegex.exec(e.candidate.candidate);
+        
+        if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
+          ips.push(ipMatch[1]);
+        }
+      };
+      
+      pc.createOffer()
+        .then(offer => pc.setLocalDescription(offer))
+        .catch(err => console.error(testI18n.t('webrtc_setlocaldescription_failed'), err));
+      
+      setTimeout(() => {
+        pc.close();
+        resolve(ips);
+      }, 1000);
+    } catch (error) {
+      console.error('WebRTC collection error:', error);
+      resolve([]);
+    }
+  });
+}
+
+/**
+ * 检测部分浏览器指纹信息
+ */
 function detectFingerprint() {
   const fingerprintInfoElement = document.getElementById('fingerprintInfo');
+  if (!fingerprintInfoElement) return;
+  
   try {
     const ua = navigator.userAgent || 'N/A';
     const screenRes = `${screen.width}x${screen.height}x${screen.colorDepth}` || 'N/A';
@@ -635,55 +740,60 @@ function detectFingerprint() {
   }
 }
 
-// 页面加载完成后获取请求头和执行其他检测
-window.addEventListener('DOMContentLoaded', function () {
-  // 延迟执行，确保扩展规则已应用
-  setTimeout(function () {
-    fetchAndDisplayHeaders();
-    detectJsLanguage();
-    detectIntlApi();
-    detectWebRtc();
-    detectFingerprint();
-    detectCanvasFingerprint();
-    detectWebglFingerprint();
-    detectAudioFingerprint(); // 异步
-    performCompatibilityChecks(); // 兼容性检查
-  }, 1000);
-
-  // 添加刷新按钮功能
+/**
+ * 添加刷新按钮
+ */
+function addRefreshButton() {
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
   refreshButton.textContent = testI18n.t('Refresh detection');
-  refreshButton.onclick = function () {
-    fetchAndDisplayHeaders();
-    detectJsLanguage();
-    detectIntlApi();
-    detectWebRtc();
-    detectFingerprint();
-    detectCanvasFingerprint();
-    detectWebglFingerprint();
-    detectAudioFingerprint(); // 异步
-    performCompatibilityChecks(); // 刷新时也执行兼容性检查
-  };
+  refreshButton.onclick = runAllDetections;
 
   // 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
   const headerInfoDiv = document.querySelector('.header-info.mt-4');
   if (headerInfoDiv) {
     headerInfoDiv.appendChild(refreshButton);
-  } else {
-    // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
-    const container = document.querySelector('.container');
-    if (container) {
-      const allHeaderInfoDivs = container.querySelectorAll('.header-info');
-      if (allHeaderInfoDivs.length > 0) {
-        allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
-      } else {
-        // 如果还是找不到，就直接附加到 container 的末尾
-        container.appendChild(refreshButton);
-        console.warn(testI18n.t('button_add_failed_container'));
-      }
-    } else {
-      console.error(testI18n.t('button_add_failed_no_container'));
-    }
+    return;
   }
+  
+  // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
+  const container = document.querySelector('.container');
+  if (container) {
+    const allHeaderInfoDivs = container.querySelectorAll('.header-info');
+    if (allHeaderInfoDivs.length > 0) {
+      allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
+      return;
+    }
+    
+    // 如果还是找不到，就直接附加到 container 的末尾
+    container.appendChild(refreshButton);
+    console.warn(testI18n.t('button_add_failed_container'));
+    return;
+  }
+  
+  console.error(testI18n.t('button_add_failed_no_container'));
+}
+
+/**
+ * 运行所有检测
+ */
+function runAllDetections() {
+  fetchAndDisplayHeaders();
+  detectJsLanguage();
+  detectIntlApi();
+  detectWebRtc();
+  detectFingerprint();
+  detectCanvasFingerprint();
+  detectWebglFingerprint();
+  detectAudioFingerprint();
+  performCompatibilityChecks();
+}
+
+// 页面加载完成后获取请求头和执行其他检测
+window.addEventListener('DOMContentLoaded', function() {
+  // 延迟执行，确保扩展规则已应用
+  setTimeout(runAllDetections, 1000);
+  
+  // 添加刷新按钮
+  addRefreshButton();
 });
