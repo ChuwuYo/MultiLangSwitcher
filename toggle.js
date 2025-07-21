@@ -12,12 +12,12 @@ class LanguageToggle {
     return navigator.language.startsWith('zh') ? 'zh' : 'en';
   }
 
-  switchLanguage(lang) {
-    if (lang !== this.currentLang) {
-      this.currentLang = lang;
-      localStorage.setItem('app-lang', lang);
-      location.reload();
-    }
+  async switchLanguage(lang) {
+    if (lang === this.currentLang) return;
+    
+    this.currentLang = lang;
+    localStorage.setItem('app-lang', lang);
+    location.reload();
   }
 
   addLanguageSelector() {
@@ -29,11 +29,7 @@ class LanguageToggle {
 
     // 根据页面类型设置位置
     const isPopup = document.body.classList.contains('popup-body');
-    if (isPopup) {
-      langBtn.style.left = '10px';
-    } else {
-      langBtn.style.right = '60px';
-    }
+    langBtn.style[isPopup ? 'left' : 'right'] = isPopup ? '10px' : '60px';
 
     document.body.appendChild(langBtn);
 
@@ -43,69 +39,83 @@ class LanguageToggle {
   }
 }
 
-// 监听页面加载，初始化按钮和主题状态
-document.addEventListener('DOMContentLoaded', () => {
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
-  const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+// 主题管理功能
+class ThemeManager {
+  constructor() {
+    this.themeToggleBtn = document.getElementById('themeToggleBtn');
+    this.currentTheme = localStorage.getItem('theme') || null;
+    this.prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    this.themeButtonDetails = {
+      'dark': {
+        icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
+        state: 'on'
+      },
+      'light': {
+        icon: '<img src="images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">',
+        state: 'off'
+      }
+    };
+  }
 
-  // 定义主题按钮的细节（图标和状态）
-  const themeButtonDetails = {
-    'dark': {
-      icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">', // 浅色模式图标
-      state: 'on'
-    },
-    'light': {
-      icon: '<img src="images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">', // 深色模式图标
-      state: 'off'
+  init() {
+    // 应用初始主题
+    if (this.currentTheme) {
+      this.applyTheme(this.currentTheme);
+    } else {
+      this.applyTheme(this.prefersDarkScheme.matches ? 'dark' : 'light');
     }
-  };
 
-  // 主题切换应用函数
-  function applyTheme(theme) {
-    // 设置文档根元素的主题属性
+    this.setupEventListeners();
+  }
+
+  applyTheme(theme) {
     document.documentElement.setAttribute('data-bs-theme', theme);
-    // 将当前主题存储到本地存储
     localStorage.setItem('theme', theme);
 
-    // 如果主题切换按钮存在，更新其内容和状态
-    if (themeToggleBtn) {
-      const details = themeButtonDetails[theme];
-      if (details) {
-        themeToggleBtn.innerHTML = details.icon;
-        themeToggleBtn.setAttribute('data-state', details.state);
-      }
+    if (!this.themeToggleBtn) return;
+    
+    const details = this.themeButtonDetails[theme];
+    if (details) {
+      this.themeToggleBtn.innerHTML = details.icon;
+      this.themeToggleBtn.setAttribute('data-state', details.state);
     }
   }
 
-  // 应用初始主题
-  if (currentTheme) {
-    applyTheme(currentTheme);
-  } else if (prefersDarkScheme.matches) {
-    applyTheme('dark');
-  } else {
-    applyTheme('light'); // 默认浅色主题
-  }
+  setupEventListeners() {
+    // 主题切换按钮监听器
+    if (this.themeToggleBtn) {
+      this.themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.applyTheme(newTheme);
+      });
+    }
 
-  // 主题切换按钮监听器
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      // 根据当前主题确定新主题
-      let newTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-      // 应用新主题
-      applyTheme(newTheme);
+    // 监听操作系统主题变化
+    this.prefersDarkScheme.addEventListener('change', (e) => {
+      // 仅当用户未设置偏好时才更改
+      if (!localStorage.getItem('theme')) {
+        this.applyTheme(e.matches ? 'dark' : 'light');
+      }
     });
   }
+}
 
-  // 监听操作系统主题变化
-  prefersDarkScheme.addEventListener('change', (e) => {
-    // 仅当用户未设置偏好时才更改
-    if (!localStorage.getItem('theme')) {
-      applyTheme(e.matches ? 'dark' : 'light');
-    }
-  });
+// 初始化页面功能
+async function initializePage() {
+  try {
+    // 初始化主题管理
+    const themeManager = new ThemeManager();
+    themeManager.init();
 
-  // 初始化语言切换按钮
-  const languageToggle = new LanguageToggle();
-  languageToggle.addLanguageSelector();
-});
+    // 初始化语言切换按钮
+    const languageToggle = new LanguageToggle();
+    languageToggle.addLanguageSelector();
+  } catch (error) {
+    console.error('Error initializing page:', error);
+  }
+}
+
+// 监听页面加载，初始化按钮和主题状态
+document.addEventListener('DOMContentLoaded', initializePage);
