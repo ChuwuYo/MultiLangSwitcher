@@ -70,5 +70,45 @@ const popupZh = {
   "reset_successful": "重置成功",
   "reset_failed": "重置失败: {message}",
   "reset_failed_alert": "重置 Accept-Language 失败:",
-  "reset_accept_language_tooltip": "重置 Accept-Language"
+  "reset_accept_language_tooltip": "重置 Accept-Language",
+  
+  // Update checker related keys
+  "check_for_updates": "检查更新",
+  "checking_updates": "正在检查更新...",
+  "fetching_version_info": "正在获取版本信息...",
+  "update_available": "发现新版本: v{version}",
+  "no_updates_available": "您正在使用最新版本",
+  "current_version": "当前版本: v{current}",
+  "latest_version": "最新版本: v{latest}",
+  "view_release": "查看发布页面",
+  "download_update": "下载更新",
+  "update_check_failed": "检查更新失败",
+  "network_error": "网络错误",
+  "rate_limit_exceeded": "请求频率超限，请稍后再试",
+  "invalid_response": "服务器响应无效",
+  "update_check_success": "更新检查完成",
+  "update_notification_title": "扩展更新可用",
+  
+  // Enhanced error handling keys
+  "update_timeout_error": "更新检查超时",
+  "api_unavailable_error": "GitHub API 暂时不可用",
+  "repository_not_found_error": "未找到仓库或发布信息",
+  "version_parse_error": "无法解析版本信息",
+  "ssl_error": "SSL/TLS 连接错误",
+  "dns_error": "无法解析 GitHub API 地址",
+  "cors_error": "跨域请求被阻止",
+  "retry_update_check": "重试",
+  
+  // Fallback suggestion messages
+  "rate_limit_fallback": "GitHub API 请求频率超限，请等待几分钟后再试。",
+  "api_error_fallback": "GitHub 服务可能正在经历问题，请几分钟后再试。",
+  "manual_check_fallback": "请访问 https://github.com/ChuwuYo/MultiLangSwitcher 手动检查更新。",
+  "ssl_error_fallback": "请检查您的防火墙或杀毒软件设置，或稍后再试。",
+  "connection_error_fallback": "请检查您的网络连接和 DNS 设置。",
+  "extension_reload_fallback": "请尝试重新加载扩展或手动检查更新。",
+  
+  // Fallback mode messages
+  "update_check_fallback_title": "无法检查更新",
+  "update_check_fallback_message": "GitHub API 当前不可用。下方显示您的当前版本。",
+  "check_manually": "手动检查"
 };

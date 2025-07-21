@@ -2,32 +2,39 @@
 <html>
 
 <head>
+  <!-- 基础页面配置 -->
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
   <title>MultiLangSwitcher</title>
+  <!-- 样式表引入 -->
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
   <style>
+    /* 主体布局样式 */
     body {
       width: 300px;
       padding: 10px;
     }
 
+    /* 头部区域样式 */
     .header {
       margin-bottom: 15px;
       text-align: center;
     }
 
+    /* 语言选择区域样式 */
     .language-select {
       margin-bottom: 15px;
     }
 
+    /* 状态显示区域样式 */
     .status {
       margin-top: 15px;
       font-style: italic;
     }
 
+    /* 当前语言代码高亮样式 */
     #currentLanguage {
       background-color: #f4fccc;
       color: #0d6efd;
@@ -42,12 +49,13 @@
       color: #86b7fe;
     }
 
-    /* 字体 */
+    /* 自定义字体定义 */
     @font-face {
       font-family: 'MapleMonoNL';
       src: url('fonts/MapleMonoNL-Regular.woff2') format('woff2');
     }
 
+    /* 全局字体应用 */
     body {
       font-family: 'MapleMonoNL', sans-serif;
     }
@@ -84,7 +92,7 @@
       /* 滑块和轨道颜色 */
     }
 
-    /* Toggle Switch CSS */
+    /* 切换开关CSS样式 */
     .toggle-wrapper {
       display: flex;
       justify-content: center;
@@ -98,6 +106,7 @@
       margin-top: 15px;
     }
 
+    /* 切换开关复选框样式 */
     .toggle-checkbox {
       appearance: none;
       position: absolute;
@@ -110,6 +119,7 @@
       cursor: pointer;
     }
 
+    /* 切换开关容器样式 */
     .toggle-container {
       display: flex;
       align-items: center;
@@ -122,10 +132,12 @@
       transition: background-color .4s linear;
     }
 
+    /* 切换开关选中状态样式 */
     .toggle-checkbox:checked+.toggle-container {
       background-color: #f3b519;
     }
 
+    /* 切换开关按钮样式 */
     .toggle-button {
       display: flex;
       justify-content: center;
@@ -140,10 +152,12 @@
       transition: left .4s;
     }
 
+    /* 切换开关按钮选中位置 */
     .toggle-checkbox:checked+.toggle-container>.toggle-button {
       left: 1.5625em;
     }
 
+    /* 切换开关按钮圆点容器 */
     .toggle-button-circles-container {
       display: grid;
       grid-template-columns: repeat(3, min-content);
@@ -152,6 +166,7 @@
       margin: 0 auto;
     }
 
+    /* 切换开关按钮圆点样式 */
     .toggle-button-circle {
       border-radius: 50%;
       width: .125em;
@@ -159,22 +174,164 @@
       background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
     }
 
+    /* 重置按钮位置 */
     #resetBtn {
       top: 42px;
+    }
+
+    /* 更新检查器样式 */
+    #updateCheckBtn {
+      position: relative;
+    }
+
+    /* 更新通知样式 */
+    .update-notification {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.9em;
+      border: 1px solid;
+    }
+
+    /* 成功状态更新通知样式 */
+    .update-notification.success {
+      background-color: #d1edff;
+      border-color: #0d6efd;
+      color: #0d6efd;
+    }
+
+    /* 信息状态更新通知样式 */
+    .update-notification.info {
+      background-color: #e2f3ff;
+      border-color: #0dcaf0;
+      color: #055160;
+    }
+
+    /* 暗色主题下的更新通知样式 */
+    html[data-bs-theme="dark"] .update-notification.success {
+      background-color: #1e3a5f;
+      border-color: #86b7fe;
+      color: #86b7fe;
+    }
+
+    html[data-bs-theme="dark"] .update-notification.info {
+      background-color: #1f4a54;
+      border-color: #6edff6;
+      color: #6edff6;
+    }
+
+    /* 更新操作按钮容器样式 */
+    .update-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* 更新操作按钮样式 */
+    .update-actions .btn {
+      font-size: 0.8em;
+      padding: 6px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 更新版本信息样式 */
+    .update-version-info {
+      margin: 8px 0;
+      font-size: 0.85em;
+      line-height: 1.4;
+    }
+
+    /* 更新版本信息标题样式 */
+    .update-version-info strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1em;
+    }
+
+    /* 版本对比容器样式 */
+    .version-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* 版本对比行样式 */
+    .version-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 版本标签样式 */
+    .version-badge {
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'MapleMonoNL', monospace;
+      font-size: 0.9em;
+    }
+
+    /* 更新通知动画效果 */
+    .update-notification {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* 滑入动画关键帧 */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 更新检查加载旋转器样式 */
+    .update-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* 旋转动画关键帧 */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
 
 <body class="popup-body">
+  <!-- 主题切换按钮 -->
   <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
-  <button id="resetBtn" class="toggle" title="Reset Accept-Language"><img src="images/reset.svg" alt="Reset" width="16" height="16" class="invert-on-dark"></button>
+  <!-- 重置Accept-Language按钮 -->
+  <button id="resetBtn" class="toggle" title="Reset Accept-Language"><img src="images/reset.svg" alt="Reset" width="16"
+      height="16" class="invert-on-dark"></button>
 
   <div class="container">
+    <!-- 页面头部 -->
     <div class="header">
       <h4>MultiLangSwitcher</h4>
       <p class="text-muted">Quickly switch Accept-Language</p>
     </div>
 
+    <!-- 语言选择区域 -->
     <div class="language-select">
       <label for="languageSelect" class="form-label">Language:</label>
       <select class="form-select" id="languageSelect">
@@ -182,16 +339,20 @@
       </select>
     </div>
 
+    <!-- 应用按钮 -->
     <button id="applyButton" class="btn btn-primary w-100">Apply</button>
 
+    <!-- 状态显示区域 -->
     <div class="status mt-3">
       <p id="statusText">Current Language: <span id="currentLanguage">Not Set</span></p>
     </div>
 
+    <!-- 错误提示区域 -->
     <div id="errorAlert" class="alert alert-danger d-none mt-2" role="alert">
       <span id="errorMessage"></span>
     </div>
 
+    <!-- 自动切换语言开关区域 -->
     <div class="text-center mt-2 mb-2">
       <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">Auto Switch Language
         (by domain)</label>
@@ -200,6 +361,7 @@
         <div class="toggle-container">
           <div class="toggle-button">
             <div class="toggle-button-circles-container">
+              <!-- 切换按钮装饰圆点 -->
               <div class="toggle-button-circle"></div>
               <div class="toggle-button-circle"></div>
               <div class="toggle-button-circle"></div>
@@ -218,12 +380,14 @@
       </div>
     </div>
 
+    <!-- 功能按钮区域 -->
     <div class="mt-3 text-center">
       <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">Detection</a>
       <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2">Debug</a>
       <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2">Quick Check</button>
     </div>
 
+    <!-- 请求头检查结果显示区域 -->
     <div class="mt-3 d-none" id="headerCheckResult">
       <div class="card">
         <div class="card-header bg-light">Current Request Header</div>
@@ -233,12 +397,39 @@
         </div>
       </div>
     </div>
+
+    <!-- 更新检查器区域 -->
+    <div class="mt-3 text-center">
+      <button id="updateCheckBtn" class="btn btn-outline-primary w-100">
+        <span id="updateCheckText"></span>
+        <span id="updateCheckSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
+          aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- 更新通知显示区域 -->
+    <div id="updateNotification" class="mt-2 d-none">
+      <div class="alert mb-0" role="alert">
+        <div id="updateNotificationContent"></div>
+      </div>
+    </div>
+
+    <!-- 更新错误显示区域 -->
+    <div id="updateErrorAlert" class="alert alert-danger mt-2 d-none" role="alert">
+      <span id="updateErrorMessage"></span>
+    </div>
   </div>
 
+  <!-- 共享工具脚本 -->
   <script src="shared/shared-utils.js"></script>
   <script src="shared/shared-language-options.js"></script>
   <script src="shared/shared-actions.js"></script>
+  <script src="shared/shared-update-checker.js"></script>
+  <!-- 预加载翻译文件以避免延迟 -->
+  <script src="i18n/popup-en.js"></script>
+  <script src="i18n/popup-zh.js"></script>
   <script src="i18n/popup-i18n.js"></script>
+  <!-- 主要功能脚本 -->
   <script src="popup.js"></script>
   <script type="module" src="toggle.js"></script>
 </body>

@@ -69,5 +69,21 @@ const backgroundZh = {
   "rules_cleared_successfully": "规则清理成功",
   "clear_rules_failed": "清理规则失败",
   "auto_switch_toggle_failed": "自动切换状态切换失败",
-  "startup_init_failed": "启动初始化失败"
+  "startup_init_failed": "启动初始化失败",
+
+  // Update checker related keys for background logging
+  "update_check_initiated": "已启动更新检查，仓库: {repo}",
+  "update_check_api_request": "正在向 GitHub releases 端点发起 API 请求",
+  "update_check_success": "更新检查成功完成",
+  "update_check_failed": "更新检查失败: {error}",
+  "update_check_network_error": "更新检查时发生网络错误: {error}",
+  "update_check_rate_limited": "更新检查时 GitHub API 请求频率超限",
+  "update_check_invalid_response": "GitHub API 响应无效: {response}",
+  "update_check_version_comparison": "版本比较: 当前={current}, 最新={latest}, 结果={result}",
+  "update_check_no_update_needed": "无需更新，当前版本已是最新",
+  "update_check_update_available": "发现可用更新: {current} -> {latest}",
+  "update_check_timeout": "更新检查超时，超时时间 {timeout}ms",
+  "update_check_parsing_error": "解析版本信息时出错: {error}",
+  "update_check_cache_hit": "使用缓存的更新检查结果",
+  "update_check_cache_expired": "更新检查缓存已过期，正在获取最新数据"
 };

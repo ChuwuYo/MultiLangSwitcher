@@ -72,5 +72,45 @@ const popupEn = {
   "reset_successful": "Reset successful",
   "reset_failed": "Reset failed: {message}",
   "reset_failed_alert": "Reset Accept-Language failed:",
-  "reset_accept_language_tooltip": "Reset Accept-Language"
+  "reset_accept_language_tooltip": "Reset Accept-Language",
+  
+  // Update checker related keys
+  "check_for_updates": "Check for updates",
+  "checking_updates": "Checking for updates...",
+  "fetching_version_info": "Fetching version information...",
+  "update_available": "Update available: v{version}",
+  "no_updates_available": "You're using the latest version",
+  "current_version": "Current: v{current}",
+  "latest_version": "Latest: v{latest}",
+  "view_release": "View Release",
+  "download_update": "Download Update",
+  "update_check_failed": "Failed to check for updates",
+  "network_error": "Network error occurred",
+  "rate_limit_exceeded": "Rate limit exceeded, try again later",
+  "invalid_response": "Invalid response from server",
+  "update_check_success": "Update check completed successfully",
+  "update_notification_title": "Extension Update Available",
+  
+  // Enhanced error handling keys
+  "update_timeout_error": "Update check timed out",
+  "api_unavailable_error": "GitHub API is temporarily unavailable",
+  "repository_not_found_error": "Repository or release information not found",
+  "version_parse_error": "Unable to parse version information",
+  "ssl_error": "SSL/TLS connection error occurred",
+  "dns_error": "Unable to resolve GitHub API address",
+  "cors_error": "Cross-origin request blocked",
+  "retry_update_check": "Try again",
+  
+  // Fallback suggestion messages
+  "rate_limit_fallback": "GitHub API rate limit exceeded. Wait a few minutes before trying again.",
+  "api_error_fallback": "GitHub services may be experiencing issues. Try again in a few minutes.",
+  "manual_check_fallback": "Visit https://github.com/ChuwuYo/MultiLangSwitcher to check for updates manually.",
+  "ssl_error_fallback": "Check your firewall or antivirus settings, or try again later.",
+  "connection_error_fallback": "Check your internet connection and DNS settings.",
+  "extension_reload_fallback": "Try reloading the extension or checking for updates manually.",
+  
+  // Fallback mode messages
+  "update_check_fallback_title": "Unable to Check for Updates",
+  "update_check_fallback_message": "GitHub API is currently unavailable. Your current version is shown below.",
+  "check_manually": "Check Manually"
 };

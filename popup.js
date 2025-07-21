@@ -1,4 +1,40 @@
-// --- 全局函数 ---
+// --- 全局变量和配置 ---
+
+// 更新检查器实例和请求管理
+let updateChecker = null;
+let updateCheckInProgress = false;
+let updateCheckController = null;
+let updateCheckDebounceTimer = null;
+let lastUpdateCheckTime = 0;
+
+// 防抖配置
+const UPDATE_CHECK_DEBOUNCE_DELAY = 1000; // 1秒防抖延迟
+const UPDATE_CHECK_MIN_INTERVAL = 5000; // 最小检查间隔5秒
+
+// 性能优化 - DOM元素缓存
+let domCache = {
+  // 更新检查相关元素
+  updateCheckBtn: null,
+  updateCheckText: null,
+  updateCheckSpinner: null,
+  updateNotification: null,
+  updateNotificationContent: null,
+  updateErrorAlert: null,
+  updateErrorMessage: null,
+  // 主要功能元素缓存
+  languageSelect: null,
+  applyButton: null,
+  currentLanguageSpan: null,
+  checkHeaderBtn: null,
+  autoSwitchToggle: null,
+  resetBtn: null,
+  errorAlert: null,
+  errorMessage: null
+};
+
+// 性能优化 - 批量DOM更新
+let pendingDOMUpdates = [];
+let domUpdateScheduled = false;
 
 /**
  * 更新自动切换UI状态
@@ -8,10 +44,13 @@
  * @param {HTMLElement} applyButton - 应用按钮元素
  */
 function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton) {
+  // 更新开关状态
   if (autoSwitchToggle) autoSwitchToggle.checked = !!enabled;
+  // 根据自动切换状态禁用/启用手动选择控件
   if (languageSelect) languageSelect.disabled = !!enabled;
   if (applyButton) applyButton.disabled = !!enabled;
 
+  // 记录状态变更日志
   const statusMsg = enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
   const actionMsg = enabled ? popupI18n.t('disable_manual_selection') : popupI18n.t('enable_manual_selection');
 
@@ -25,10 +64,12 @@ function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButt
  * @returns {Promise<void>}
  */
 async function updateHeaderRules(language, autoCheck = false) {
+  // 清理语言代码
   language = language.trim();
   sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${language}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
   try {
+    // 向background脚本发送更新规则请求
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({
         type: 'UPDATE_RULES',
@@ -42,10 +83,12 @@ async function updateHeaderRules(language, autoCheck = false) {
       });
     });
 
+    // 处理响应结果
     if (response?.status === 'success') {
       sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${response.language}.`, 'success');
       updateLanguageDisplay(response.language, true);
 
+      // 如果启用自动检查，触发快速检查
       if (autoCheck) {
         const checkHeaderBtn = document.getElementById('checkHeaderBtn');
         if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
@@ -58,54 +101,76 @@ async function updateHeaderRules(language, autoCheck = false) {
       showError(popupI18n.t('update_request_header_failed') + ' ' + response.message);
     }
   } catch (error) {
-    sendDebugLog(`${popupI18n.t('send_update_request_failed', {message: error.message})}`, 'error');
+    sendDebugLog(`${popupI18n.t('send_update_request_failed', { message: error.message })}`, 'error');
   }
 }
 
 /**
- * 显示错误消息
+ * 显示错误消息 (优化版本)
  * @param {string} message - 错误消息
  */
 function showError(message) {
-  const errorAlert = document.getElementById('errorAlert');
-  const errorMessage = document.getElementById('errorMessage');
+  // 使用缓存的DOM元素提高性能
+  const errorAlert = domCache.errorAlert || document.getElementById('errorAlert');
+  const errorMessage = domCache.errorMessage || document.getElementById('errorMessage');
   if (!errorAlert || !errorMessage) return;
-  
-  errorMessage.textContent = message;
-  errorAlert.classList.remove('d-none');
-  setTimeout(() => errorAlert.classList.add('d-none'), 5000);
+
+  // 使用批量DOM更新提高性能
+  scheduleDOMUpdate(() => {
+    errorMessage.textContent = message;
+    errorAlert.classList.remove('d-none');
+  });
+
+  // 5秒后自动隐藏错误消息
+  setTimeout(() => {
+    scheduleDOMUpdate(() => {
+      errorAlert.classList.add('d-none');
+    });
+  }, 5000);
 }
 
 /**
- * 更新语言显示
+ * 更新语言显示 (优化版本)
  * @param {string} language - 语言代码
  * @param {boolean} showSuccess - 是否显示成功提示
  */
 function updateLanguageDisplay(language, showSuccess = false) {
-  const currentLanguageSpan = document.getElementById('currentLanguage');
-  const languageSelect = document.getElementById('languageSelect');
+  // 使用缓存的DOM元素提高性能
+  const currentLanguageSpan = domCache.currentLanguageSpan || document.getElementById('currentLanguage');
+  const languageSelect = domCache.languageSelect || document.getElementById('languageSelect');
 
-  if (currentLanguageSpan) currentLanguageSpan.textContent = language;
-  if (languageSelect) languageSelect.value = language;
+  // 使用批量DOM更新提高性能
+  scheduleDOMUpdate(() => {
+    // 更新当前语言显示
+    if (currentLanguageSpan) currentLanguageSpan.textContent = language;
+    // 同步语言选择框的值
+    if (languageSelect) languageSelect.value = language;
 
-  if (showSuccess) {
-    const statusTextElement = document.getElementById('statusText');
-    if (!statusTextElement) return;
-    
-    const oldSuccessSpan = statusTextElement.querySelector('.text-success');
-    if (oldSuccessSpan) oldSuccessSpan.remove();
+    // 如果需要显示成功提示
+    if (showSuccess) {
+      const statusTextElement = document.getElementById('statusText');
+      if (!statusTextElement) return;
 
-    const successSpan = document.createElement('span');
-    successSpan.className = 'text-success ms-1';
-    successSpan.textContent = popupI18n.t('applied');
-    currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+      // 移除之前的成功提示
+      const oldSuccessSpan = statusTextElement.querySelector('.text-success');
+      if (oldSuccessSpan) oldSuccessSpan.remove();
 
-    setTimeout(() => {
-      if (successSpan.parentNode === statusTextElement) {
-        successSpan.remove();
-      }
-    }, 2000);
-  }
+      // 创建新的成功提示
+      const successSpan = document.createElement('span');
+      successSpan.className = 'text-success ms-1';
+      successSpan.textContent = popupI18n.t('applied');
+      currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+
+      // 2秒后移除成功提示
+      setTimeout(() => {
+        scheduleDOMUpdate(() => {
+          if (successSpan.parentNode === statusTextElement) {
+            successSpan.remove();
+          }
+        });
+      }, 2000);
+    }
+  });
 }
 
 /**
@@ -113,34 +178,42 @@ function updateLanguageDisplay(language, showSuccess = false) {
  * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
  */
 async function performHeaderCheck(headerCheckContentPre) {
+  // 生成时间戳避免缓存
   const timestamp = new Date().getTime();
+  // 定义测试URL列表
   const testUrls = [
     `https://httpbin.org/headers?_=${timestamp}`,
     `https://postman-echo.com/headers?_=${timestamp}`,
     `https://header-echo.addr.tools/?_=${timestamp}`
   ];
-  
+
+  // 显示初始加载状态
   headerCheckContentPre.textContent = popupI18n.t('fetching_headers') + '...';
-  
+
+  // 依次尝试每个测试URL
   for (const url of testUrls) {
     try {
       const hostname = new URL(url).hostname;
       headerCheckContentPre.textContent = `${popupI18n.t('fetching_headers')} (${hostname})...`;
       sendDebugLog(`${popupI18n.t('trying_to_get_headers_from')} ${url}`, 'info');
 
-      const response = await fetch(url, { 
-        cache: 'no-cache', 
+      // 发送请求获取头部信息
+      const response = await fetch(url, {
+        cache: 'no-cache',
         signal: AbortSignal.timeout(5000) // 5秒超时
       });
-      
+
+      // 检查响应状态
       if (!response.ok) {
         sendDebugLog(`${popupI18n.t('quick_check_request_failed')} HTTP error! status: ${response.status} from ${url}`, 'warning');
         continue;
       }
 
+      // 解析响应数据
       const data = await response.json();
       sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${url}`, 'success');
-      
+
+      // 查找Accept-Language头部
       const headers = data.headers;
       const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
 
@@ -148,8 +221,9 @@ async function performHeaderCheck(headerCheckContentPre) {
         sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${acceptLangHeader}.`, 'success');
         headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
         return;
-      } 
-      
+      }
+
+      // 未找到Accept-Language头部
       sendDebugLog(`${popupI18n.t('quick_check_no_accept_language')} ${url}`, 'warning');
       headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
       return;
@@ -158,7 +232,7 @@ async function performHeaderCheck(headerCheckContentPre) {
     }
   }
 
-  // 所有尝试均失败
+  // 所有尝试均失败，显示错误信息
   sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}`, 'error');
   const finalErrorMsg = `${popupI18n.t('all_detection_points_failed_info')}<br>${popupI18n.t('please_visit_manually')} <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a>`;
   headerCheckContentPre.innerHTML = finalErrorMsg;
@@ -170,6 +244,7 @@ async function performHeaderCheck(headerCheckContentPre) {
  */
 async function getCurrentLanguage() {
   try {
+    // 首先尝试从background脚本获取当前语言
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, response => {
         if (chrome.runtime.lastError) {
@@ -181,19 +256,19 @@ async function getCurrentLanguage() {
     });
 
     if (response?.currentLanguage) {
-      sendDebugLog(popupI18n.t('get_current_language_from_background', {language: response.currentLanguage}), 'info');
+      sendDebugLog(popupI18n.t('get_current_language_from_background', { language: response.currentLanguage }), 'info');
       return response.currentLanguage;
     }
     throw new Error('No language in response');
   } catch (error) {
-    sendDebugLog(popupI18n.t('get_background_status_failed', {message: error.message}), 'error');
-    
+    sendDebugLog(popupI18n.t('get_background_status_failed', { message: error.message }), 'error');
+
     // 回退到本地存储
     try {
       const result = await new Promise(resolve => {
         chrome.storage.local.get(['currentLanguage'], resolve);
       });
-      
+
       if (result.currentLanguage) {
         sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
         return result.currentLanguage;
@@ -201,8 +276,8 @@ async function getCurrentLanguage() {
     } catch (storageError) {
       sendDebugLog(`Error accessing storage: ${storageError.message}`, 'error');
     }
-    
-    // 默认语言
+
+    // 使用默认语言作为最后的回退
     const languageSelect = document.getElementById('languageSelect');
     const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
     sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
@@ -216,6 +291,7 @@ async function getCurrentLanguage() {
  */
 async function getAutoSwitchStatus() {
   try {
+    // 从本地存储获取自动切换状态
     const result = await new Promise(resolve => {
       chrome.storage.local.get(['autoSwitchEnabled'], resolve);
     });
@@ -232,6 +308,7 @@ async function getAutoSwitchStatus() {
  */
 async function setAutoSwitchStatus(enabled) {
   try {
+    // 保存自动切换状态到本地存储
     await new Promise((resolve, reject) => {
       chrome.storage.local.set({ autoSwitchEnabled: enabled }, () => {
         if (chrome.runtime.lastError) {
@@ -241,8 +318,10 @@ async function setAutoSwitchStatus(enabled) {
         resolve();
       });
     });
-    
+
+    // 记录状态变更日志
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
+    // 通知background脚本状态变更
     chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
     return true;
   } catch (error) {
@@ -259,6 +338,7 @@ async function setAutoSwitchStatus(enabled) {
  */
 async function saveLanguageSetting(language) {
   try {
+    // 保存语言设置到本地存储
     await new Promise((resolve, reject) => {
       chrome.storage.local.set({ currentLanguage: language }, () => {
         if (chrome.runtime.lastError) {
@@ -268,7 +348,7 @@ async function saveLanguageSetting(language) {
         resolve();
       });
     });
-    
+
     sendDebugLog(`${popupI18n.t('language_settings_saved')} ${language}.`, 'info');
     return true;
   } catch (error) {
@@ -279,7 +359,476 @@ async function saveLanguageSetting(language) {
   }
 }
 
-// 防抖的UI更新
+/**
+ * 初始化DOM元素缓存以优化性能
+ */
+function initializeDOMCache() {
+  // 更新检查器相关元素
+  domCache.updateCheckBtn = document.getElementById('updateCheckBtn');
+  domCache.updateCheckText = document.getElementById('updateCheckText');
+  domCache.updateCheckSpinner = document.getElementById('updateCheckSpinner');
+  domCache.updateNotification = document.getElementById('updateNotification');
+  domCache.updateNotificationContent = document.getElementById('updateNotificationContent');
+  domCache.updateErrorAlert = document.getElementById('updateErrorAlert');
+  domCache.updateErrorMessage = document.getElementById('updateErrorMessage');
+
+  // 主要弹窗功能元素
+  domCache.languageSelect = document.getElementById('languageSelect');
+  domCache.applyButton = document.getElementById('applyButton');
+  domCache.currentLanguageSpan = document.getElementById('currentLanguage');
+  domCache.checkHeaderBtn = document.getElementById('checkHeaderBtn');
+  domCache.autoSwitchToggle = document.getElementById('autoSwitchToggle');
+  domCache.resetBtn = document.getElementById('resetBtn');
+  domCache.errorAlert = document.getElementById('errorAlert');
+  domCache.errorMessage = document.getElementById('errorMessage');
+
+  sendDebugLog('DOM cache initialized for all elements', 'info');
+}
+
+/**
+ * 调度批量DOM更新以提高性能
+ * @param {Function} updateFn - 执行DOM更新的函数
+ */
+function scheduleDOMUpdate(updateFn) {
+  // 将更新函数添加到待处理队列
+  pendingDOMUpdates.push(updateFn);
+
+  // 如果没有已调度的更新，则调度一个
+  if (!domUpdateScheduled) {
+    domUpdateScheduled = true;
+
+    // 使用requestAnimationFrame获得最佳性能
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(processPendingDOMUpdates);
+    } else {
+      // 对于不支持requestAnimationFrame的环境的回退方案
+      setTimeout(processPendingDOMUpdates, 16); // ~60fps
+    }
+  }
+}
+
+/**
+ * 在单个批次中处理所有待处理的DOM更新
+ */
+function processPendingDOMUpdates() {
+  if (pendingDOMUpdates.length === 0) {
+    domUpdateScheduled = false;
+    return;
+  }
+
+  // 执行所有待处理的更新
+  const updates = pendingDOMUpdates.splice(0);
+  for (const updateFn of updates) {
+    try {
+      updateFn();
+    } catch (error) {
+      sendDebugLog(`DOM update error: ${error.message}`, 'error');
+    }
+  }
+
+  domUpdateScheduled = false;
+
+  // 如果在处理过程中添加了更多更新，则调度另一个批次
+  if (pendingDOMUpdates.length > 0) {
+    scheduleDOMUpdate(() => { }); // 空函数用于触发处理
+  }
+}
+
+/**
+ * 初始化更新检查器实例
+ */
+function initializeUpdateChecker() {
+  if (!updateChecker) {
+    // 动态获取manifest.json中的版本号
+    const currentVersion = chrome.runtime.getManifest().version;
+    updateChecker = new UpdateChecker('ChuwuYo', 'MultiLangSwitcher', currentVersion);
+    sendDebugLog(`Update checker initialized with version ${currentVersion}`, 'info');
+  }
+}
+
+/**
+ * Show update error message with enhanced error handling (optimized)
+ * @param {string} message - Primary error message
+ * @param {string} [fallbackMessage] - Optional fallback suggestion
+ * @param {boolean} [showRetryOption] - Whether to show retry option
+ */
+function showUpdateError(message, fallbackMessage = null, showRetryOption = false) {
+  // Use cached DOM elements for better performance
+  const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
+  const updateErrorMessage = domCache.updateErrorMessage || document.getElementById('updateErrorMessage');
+
+  if (!updateErrorAlert || !updateErrorMessage) return;
+
+  // Build error message content
+  let errorContent = message;
+
+  // Add fallback suggestion if provided
+  if (fallbackMessage) {
+    errorContent += `<br><small class="text-muted mt-1">${fallbackMessage}</small>`;
+  }
+
+  // Add retry option if applicable
+  if (showRetryOption) {
+    errorContent += `<br><small class="mt-2">
+      <a href="#" onclick="debouncedUpdateCheck(); return false;" class="text-primary">
+        ${popupI18n.t('retry_update_check')}
+      </a>
+    </small>`;
+  }
+
+  // Use batched DOM updates for better performance
+  scheduleDOMUpdate(() => {
+    updateErrorMessage.innerHTML = errorContent;
+    updateErrorAlert.classList.remove('d-none');
+  });
+
+  // Auto-hide after longer duration for complex errors
+  const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
+  setTimeout(() => {
+    scheduleDOMUpdate(() => {
+      updateErrorAlert.classList.add('d-none');
+    });
+  }, hideDelay);
+}
+
+/**
+ * Show loading state for update check - immediate execution for better UX
+ */
+function showUpdateLoadingState() {
+  // 直接获取DOM元素，不使用缓存，确保立即响应
+  const updateNotification = document.getElementById('updateNotification');
+  const updateNotificationContent = document.getElementById('updateNotificationContent');
+
+  if (!updateNotification || !updateNotificationContent) return;
+
+  const alertDiv = updateNotification.querySelector('.alert');
+
+  // 立即执行DOM操作，不使用批处理
+  // 保持动画类，确保slideIn动画效果
+  updateNotification.style.display = 'block'; // 强制显示
+  alertDiv.className = 'alert alert-info mb-0 update-notification info';
+  updateNotificationContent.innerHTML = `
+    <div class="text-center update-version-info">
+      <div class="d-flex align-items-center justify-content-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+        <strong>${popupI18n.t('fetching_version_info')}</strong>
+      </div>
+    </div>
+  `;
+
+  // 确保立即显示，不依赖任何异步操作
+  updateNotification.classList.remove('d-none');
+
+  // 强制重绘以确保动画效果
+  updateNotification.offsetHeight; // 触发重绘
+
+  // 强制浏览器立即渲染
+  void updateNotification.getBoundingClientRect();
+}
+
+/**
+ * Show update notification with support for fallback mode (optimized)
+ * @param {Object} updateInfo - Update information
+ */
+function showUpdateNotification(updateInfo) {
+  // Use cached DOM elements for better performance
+  const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
+  const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
+
+  if (!updateNotification || !updateNotificationContent) return;
+
+  const alertDiv = updateNotification.querySelector('.alert');
+
+  // Use batched DOM updates for better performance
+  scheduleDOMUpdate(() => {
+    // Handle fallback mode when GitHub API is unavailable
+    if (updateInfo.fallbackMode) {
+      alertDiv.className = 'alert alert-warning mb-0 update-notification warning';
+      updateNotificationContent.innerHTML = `
+        <div class="text-center update-version-info">
+          <strong>${popupI18n.t('update_check_fallback_title')}</strong>
+          <div class="version-comparison">
+            <div class="version-line" style="justify-content: center;">
+              <span class="version-badge">v${updateInfo.currentVersion}</span>
+            </div>
+          </div>
+          <div class="fallback-message mt-2">
+            <small class="text-muted">${popupI18n.t('update_check_fallback_message')}</small>
+          </div>
+          <div class="update-actions mt-2">
+            <a href="${updateInfo.releaseUrl}" target="_blank" class="btn btn-outline-warning btn-sm">
+              ${popupI18n.t('check_manually')}
+            </a>
+          </div>
+        </div>
+      `;
+      sendDebugLog('Showing fallback update notification', 'warning');
+
+      // Auto-hide fallback notification after 6 seconds
+      setTimeout(() => {
+        scheduleDOMUpdate(() => {
+          updateNotification.classList.add('d-none');
+        });
+      }, 6000);
+
+    } else if (updateInfo.updateAvailable) {
+      // Update available
+      alertDiv.className = 'alert alert-info mb-0 update-notification info';
+
+      const versionInfo = `
+        <div class="update-version-info">
+          <strong>${popupI18n.t('update_notification_title')}</strong>
+          <div class="version-comparison">
+            <div class="version-line">
+              <span>${popupI18n.t('current_version').replace('v{current}', '').replace('{current}', '')}</span>
+              <span class="version-badge">v${updateInfo.currentVersion}</span>
+            </div>
+            <div class="version-line">
+              <span>${popupI18n.t('latest_version').replace('v{latest}', '').replace('{latest}', '')}</span>
+              <span class="version-badge">v${updateInfo.latestVersion}</span>
+            </div>
+          </div>
+        </div>
+        <div class="update-actions">
+          <a href="${updateInfo.releaseUrl}" target="_blank" class="btn btn-outline-primary">
+            ${popupI18n.t('view_release')}
+          </a>
+          <a href="https://github.com/ChuwuYo/MultiLangSwitcher/archive/refs/tags/v${updateInfo.latestVersion}.zip" target="_blank" class="btn btn-primary">
+            ${popupI18n.t('download_update')}
+          </a>
+        </div>
+      `;
+
+      updateNotificationContent.innerHTML = versionInfo;
+      sendDebugLog(`Update available: ${updateInfo.latestVersion}`, 'info');
+    } else {
+      // No update available
+      alertDiv.className = 'alert alert-success mb-0 update-notification success';
+      updateNotificationContent.innerHTML = `
+        <div class="text-center update-version-info">
+          <strong>${popupI18n.t('no_updates_available')}</strong>
+          <div class="version-comparison">
+            <div class="version-line" style="justify-content: center;">
+              <span class="version-badge">v${updateInfo.currentVersion}</span>
+            </div>
+          </div>
+        </div>
+      `;
+      sendDebugLog('Extension is up to date', 'info');
+
+      // Auto-hide success notification after 4 seconds
+      setTimeout(() => {
+        scheduleDOMUpdate(() => {
+          updateNotification.classList.add('d-none');
+        });
+      }, 4000);
+    }
+
+    updateNotification.classList.remove('d-none');
+  });
+}
+
+/**
+ * Update button UI state during update check (optimized)
+ * @param {boolean} isChecking - Whether update check is in progress
+ */
+function updateCheckButtonState(isChecking) {
+  // Use cached DOM elements for better performance
+  const updateCheckBtn = domCache.updateCheckBtn || document.getElementById('updateCheckBtn');
+  const updateCheckText = domCache.updateCheckText || document.getElementById('updateCheckText');
+  const updateCheckSpinner = domCache.updateCheckSpinner || document.getElementById('updateCheckSpinner');
+
+  if (!updateCheckBtn || !updateCheckText || !updateCheckSpinner) return;
+
+  // Use batched DOM updates for better performance
+  scheduleDOMUpdate(() => {
+    if (isChecking) {
+      updateCheckBtn.disabled = true;
+      updateCheckText.textContent = popupI18n.t('checking_updates');
+      updateCheckSpinner.classList.remove('d-none');
+    } else {
+      updateCheckBtn.disabled = false;
+      updateCheckText.textContent = popupI18n.t('check_for_updates');
+      updateCheckSpinner.classList.add('d-none');
+    }
+  });
+}
+
+/**
+ * Cancel ongoing update check request
+ */
+function cancelUpdateCheck() {
+  if (updateCheckController) {
+    updateCheckController.abort();
+    updateCheckController = null;
+    sendDebugLog('Update check request cancelled', 'info');
+  }
+
+  if (updateCheckInProgress) {
+    updateCheckInProgress = false;
+    updateCheckButtonState(false);
+  }
+}
+
+/**
+ * Debounced update check function - optimized for immediate UI response
+ */
+function debouncedUpdateCheck() {
+  // Clear existing debounce timer
+  if (updateCheckDebounceTimer) {
+    clearTimeout(updateCheckDebounceTimer);
+    updateCheckDebounceTimer = null;
+  }
+
+  // Check minimum interval between requests
+  const now = Date.now();
+  const timeSinceLastCheck = now - lastUpdateCheckTime;
+
+  if (timeSinceLastCheck < UPDATE_CHECK_MIN_INTERVAL) {
+    const remainingTime = UPDATE_CHECK_MIN_INTERVAL - timeSinceLastCheck;
+    sendDebugLog(`Update check rate limited. Please wait ${Math.ceil(remainingTime / 1000)} seconds`, 'warning');
+    return;
+  }
+
+  // 立即执行，不使用任何延迟
+  sendDebugLog('Update check starting immediately', 'info');
+
+  // 立即执行，不使用setTimeout
+  performUpdateCheck();
+}
+
+/**
+ * Perform update check with request management (optimized for non-blocking operation)
+ */
+async function performUpdateCheck() {
+  if (updateCheckInProgress) {
+    sendDebugLog('Update check already in progress, ignoring request', 'warning');
+    return;
+  }
+
+  // Cancel any existing request
+  cancelUpdateCheck();
+
+  updateCheckInProgress = true;
+  lastUpdateCheckTime = Date.now();
+
+  // 隐藏之前的错误通知 - 直接使用DOM操作，不使用缓存
+  const updateErrorAlert = document.getElementById('updateErrorAlert');
+  if (updateErrorAlert) updateErrorAlert.classList.add('d-none');
+
+  // 立即显示加载状态 - 同步执行确保立即响应
+  showUpdateLoadingState();
+
+  // 更新按钮状态 - 放在加载状态显示之后，避免阻塞UI更新
+  updateCheckButtonState(true);
+
+  // Create new abort controller for this request
+  updateCheckController = new AbortController();
+
+  try {
+    initializeUpdateChecker();
+    sendDebugLog('Starting update check...', 'info');
+
+    // Add abort signal support to update checker with graceful fallback
+    const updateInfo = await updateChecker.checkForUpdatesWithFallback(updateCheckController.signal, true);
+
+    // 检查请求是否被取消
+    if (updateCheckController?.signal.aborted) {
+      sendDebugLog('Update check was cancelled', 'info');
+      return;
+    }
+
+    sendDebugLog(popupI18n.t('update_check_success'), 'success');
+    showUpdateNotification(updateInfo);
+
+  } catch (error) {
+    // 检查错误是否由于取消导致
+    if (error.name === 'AbortError' || updateCheckController?.signal.aborted) {
+      sendDebugLog('Update check was cancelled', 'info');
+      return;
+    }
+
+    sendDebugLog(`Update check failed: ${error.message}`, 'error');
+
+    let errorMessage = popupI18n.t('update_check_failed');
+    let showRetryOption = false;
+    let fallbackMessage = null;
+
+    // 将错误类型映射到本地化消息，增强错误处理
+    if (error.type) {
+      switch (error.type) {
+        case 'TIMEOUT':
+          errorMessage = popupI18n.t('update_timeout_error');
+          showRetryOption = true;
+          break;
+        case 'NETWORK_ERROR':
+          errorMessage = popupI18n.t('network_error');
+          showRetryOption = true;
+          break;
+        case 'RATE_LIMIT':
+          errorMessage = popupI18n.t('rate_limit_exceeded');
+          showRetryOption = true;
+          fallbackMessage = popupI18n.t('rate_limit_fallback');
+          break;
+        case 'INVALID_RESPONSE':
+          errorMessage = popupI18n.t('invalid_response');
+          showRetryOption = true;
+          break;
+        case 'API_ERROR':
+          errorMessage = popupI18n.t('api_unavailable_error');
+          showRetryOption = true;
+          fallbackMessage = popupI18n.t('api_error_fallback');
+          break;
+        case 'NOT_FOUND':
+          errorMessage = popupI18n.t('repository_not_found_error');
+          showRetryOption = false;
+          fallbackMessage = popupI18n.t('manual_check_fallback');
+          break;
+        case 'VERSION_ERROR':
+          errorMessage = popupI18n.t('version_parse_error');
+          showRetryOption = false;
+          fallbackMessage = popupI18n.t('manual_check_fallback');
+          break;
+        case 'SSL_ERROR':
+          errorMessage = popupI18n.t('ssl_error');
+          showRetryOption = true;
+          fallbackMessage = popupI18n.t('ssl_error_fallback');
+          break;
+        case 'DNS_ERROR':
+          errorMessage = popupI18n.t('dns_error');
+          showRetryOption = true;
+          fallbackMessage = popupI18n.t('connection_error_fallback');
+          break;
+        case 'CORS_ERROR':
+          errorMessage = popupI18n.t('cors_error');
+          showRetryOption = false;
+          fallbackMessage = popupI18n.t('extension_reload_fallback');
+          break;
+        case 'CANCELLED':
+          // 对于取消的请求不显示错误
+          return;
+        default:
+          errorMessage = error.message || popupI18n.t('update_check_failed');
+          showRetryOption = error.canRetry || false;
+          fallbackMessage = popupI18n.t('manual_check_fallback');
+      }
+    } else {
+      // 对于没有类型信息的错误的回退处理
+      errorMessage = error.message || popupI18n.t('update_check_failed');
+      fallbackMessage = popupI18n.t('manual_check_fallback');
+    }
+
+    // 显示增强的错误信息和回退建议
+    showUpdateError(errorMessage, fallbackMessage, showRetryOption);
+  } finally {
+    // 清理更新检查状态
+    updateCheckInProgress = false;
+    updateCheckController = null;
+    updateCheckButtonState(false);
+  }
+}
+
+// 防抖的UI更新函数
 let lastUIUpdate = 0;
 function debouncedUIUpdate(updateFn, delay = 100) {
   const now = Date.now();
@@ -294,58 +843,76 @@ function debouncedUIUpdate(updateFn, delay = 100) {
   }
 }
 
-// --- 初始化扩展 ---
-document.addEventListener('DOMContentLoaded', async function() {
-  // 获取DOM元素
-  const languageSelect = document.getElementById('languageSelect');
-  const applyButton = document.getElementById('applyButton');
-  const currentLanguageSpan = document.getElementById('currentLanguage');
-  const checkHeaderBtn = document.getElementById('checkHeaderBtn');
-  const autoSwitchToggle = document.getElementById('autoSwitchToggle');
-  const resetBtn = document.getElementById('resetBtn');
+// --- 扩展初始化 ---
+document.addEventListener('DOMContentLoaded', async function () {
+  // 等待翻译系统加载完成
+  await new Promise(resolve => {
+    if (popupI18n.isReady) {
+      resolve();
+    } else {
+      popupI18n.ready(resolve);
+    }
+  });
 
-  // 初始化语言选项
+  // 初始化DOM缓存以提高性能
+  initializeDOMCache();
+
+  // 获取DOM元素（使用缓存）
+  const languageSelect = domCache.languageSelect;
+  const applyButton = domCache.applyButton;
+  const currentLanguageSpan = domCache.currentLanguageSpan;
+  const checkHeaderBtn = domCache.checkHeaderBtn;
+  const autoSwitchToggle = domCache.autoSwitchToggle;
+  const resetBtn = domCache.resetBtn;
+
+  // 初始化语言选项下拉列表
   populateLanguageSelect(languageSelect);
   sendDebugLog(popupI18n.t('popup_script_loaded'));
 
-  // 加载自动切换状态
+  // 加载并应用自动切换状态
   const autoSwitchEnabled = await getAutoSwitchStatus();
   updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
 
-  // 加载当前语言设置
+  // 加载并显示当前语言设置
   const currentLanguage = await getCurrentLanguage();
   updateLanguageDisplay(currentLanguage);
 
-  // 事件处理函数
+  // 事件处理函数定义
   const eventHandlers = {
-    autoSwitchChange: async function() {
+    // 自动切换开关变更处理
+    autoSwitchChange: async function () {
       const enabled = this.checked;
       const success = await setAutoSwitchStatus(enabled);
       if (success) {
         updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
       }
     },
-    
-    languageSelectFocus: function() {
+
+    // 语言选择框获得焦点处理
+    languageSelectFocus: function () {
       this.size = 6;
       sendDebugLog(popupI18n.t('language_select_focus'), 'info');
     },
-    
-    applyButtonClick: async function() {
+
+    // 应用按钮点击处理
+    applyButtonClick: async function () {
       if (!languageSelect) return;
-      
+
       const selectedLanguage = languageSelect.value;
       sendDebugLog(`${popupI18n.t('clicked_apply_button')} ${selectedLanguage}.`, 'info');
-      
+
+      // 保存语言设置并更新显示
       await saveLanguageSetting(selectedLanguage);
       if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
-      
+
+      // 更新请求头规则并触发自动检查
       await updateHeaderRules(selectedLanguage, true);
       languageSelect.size = 1;
       sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
     },
-    
-    resetButtonClick: async function() {
+
+    // 重置按钮点击处理
+    resetButtonClick: async function () {
       sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
       try {
         await resetAcceptLanguage();
@@ -359,69 +926,134 @@ document.addEventListener('DOMContentLoaded', async function() {
         showError(userMessage);
       }
     },
-    
-    checkHeaderBtnClick: function() {
+
+    // 快速检查按钮点击处理
+    checkHeaderBtnClick: function () {
       sendDebugLog(popupI18n.t('clicked_quick_check'), 'info');
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
 
+      // 显示检查结果区域并开始检查
       if (headerCheckResultDiv) headerCheckResultDiv.classList.remove('d-none');
       if (headerCheckContentPre) {
         headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
         performHeaderCheck(headerCheckContentPre);
       }
+    },
+
+    // 更新检查按钮点击处理
+    updateCheckBtnClick: function () {
+      sendDebugLog('Clicked update check button', 'info');
+      debouncedUpdateCheck();
     }
   };
 
-  // 绑定事件
+  // 绑定事件监听器
   if (autoSwitchToggle) {
     autoSwitchToggle.addEventListener('change', eventHandlers.autoSwitchChange);
   }
-  
+
   if (languageSelect) {
     languageSelect.addEventListener('focus', eventHandlers.languageSelectFocus);
   }
-  
+
   if (applyButton) {
     applyButton.addEventListener('click', eventHandlers.applyButtonClick);
   }
-  
+
   if (resetBtn) {
     resetBtn.addEventListener('click', eventHandlers.resetButtonClick);
   }
-  
+
   if (checkHeaderBtn) {
     checkHeaderBtn.addEventListener('click', eventHandlers.checkHeaderBtnClick);
   }
 
-  // 页面卸载时清理事件
-  window.addEventListener('beforeunload', function() {
+  // 为性能优化初始化DOM缓存
+  initializeDOMCache();
+
+  // 初始化更新检查器并预加载缓存以提高性能
+  initializeUpdateChecker();
+  if (updateChecker) {
+    // 在后台预加载缓存以加快后续请求
+    updateChecker.preloadCache().then(preloaded => {
+      if (preloaded) {
+        sendDebugLog('Update checker cache preloaded successfully', 'info');
+      }
+    }).catch(error => {
+      sendDebugLog(`Cache preload failed: ${error.message}`, 'warning');
+    });
+
+    // 通过清理过期条目来优化缓存
+    updateChecker.optimizeCache().then(optimized => {
+      if (optimized) {
+        sendDebugLog('Update checker cache optimized', 'info');
+      }
+    }).catch(error => {
+      sendDebugLog(`Cache optimization failed: ${error.message}`, 'warning');
+    });
+  }
+
+  // 添加更新检查按钮事件监听器
+  const updateCheckBtn = document.getElementById('updateCheckBtn');
+  if (updateCheckBtn) {
+    updateCheckBtn.addEventListener('click', eventHandlers.updateCheckBtnClick);
+  }
+
+  // 页面卸载时清理事件和请求
+  window.addEventListener('beforeunload', function () {
+    // 取消正在进行的更新检查
+    cancelUpdateCheck();
+
+    // 清除防抖定时器
+    if (updateCheckDebounceTimer) {
+      clearTimeout(updateCheckDebounceTimer);
+      updateCheckDebounceTimer = null;
+    }
+
+    // 移除事件监听器
     if (autoSwitchToggle) autoSwitchToggle.removeEventListener('change', eventHandlers.autoSwitchChange);
     if (languageSelect) languageSelect.removeEventListener('focus', eventHandlers.languageSelectFocus);
     if (applyButton) applyButton.removeEventListener('click', eventHandlers.applyButtonClick);
     if (resetBtn) resetBtn.removeEventListener('click', eventHandlers.resetButtonClick);
     if (checkHeaderBtn) checkHeaderBtn.removeEventListener('click', eventHandlers.checkHeaderBtnClick);
+    if (updateCheckBtn) updateCheckBtn.removeEventListener('click', eventHandlers.updateCheckBtnClick);
+
+    sendDebugLog('Popup cleanup completed', 'info');
   }, { once: true });
 
+  // 通过可见性变化处理弹窗关闭
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      // 当弹窗变为隐藏时取消正在进行的更新检查
+      cancelUpdateCheck();
+      sendDebugLog('Popup hidden, cancelled ongoing update check', 'info');
+    }
+  });
+
   // 监听来自 background.js 的消息
-  chrome.runtime.onMessage.addListener(function(request, _, sendResponse) {
+  chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
+      // 处理自动切换UI更新消息
       debouncedUIUpdate(() => {
         const autoSwitchEnabled = request.autoSwitchEnabled;
         if (autoSwitchToggle) {
           autoSwitchToggle.checked = autoSwitchEnabled;
         }
 
-        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function() {
+        // 同步状态到本地存储
+        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function () {
           if (chrome.runtime.lastError) {
-            sendDebugLog(popupI18n.t('update_storage_status_failed', {message: chrome.runtime.lastError.message}), 'error');
+            sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
           } else {
-            sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', {status: autoSwitchEnabled}), 'info');
+            sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
           }
         });
 
+        // 更新UI状态
         updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
 
+        // 如果有当前语言信息，更新显示
         if (request.currentLanguage) {
           updateLanguageDisplay(request.currentLanguage);
           // 同步更新语言选择器
@@ -433,11 +1065,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
       sendResponse({ status: "UI updated" });
     } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
-      // 同步自动切换状态
+      // 同步自动切换状态变更
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = request.enabled;
         updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
-        sendDebugLog(popupI18n.t('received_status_sync', {status: request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}), 'info');
+        sendDebugLog(popupI18n.t('received_status_sync', { status: request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled') }), 'info');
       }
     }
     return true;

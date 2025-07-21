@@ -6,6 +6,8 @@ importScripts('i18n/background-i18n.js');
 importScripts('i18n/domain-manager-i18n.js');
 // 导入域名规则管理器
 importScripts('domain-rules-manager.js');
+// 导入更新检查器
+importScripts('shared/shared-update-checker.js');
 
 // 常量定义
 const RULE_ID = 1;
@@ -448,6 +450,88 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         sendResponse({ error: `${backgroundI18n.t('process_get_domain_rules_error')}: ${e.message}` });
       }
     }
+    return true;
+  } else if (request.type === 'UPDATE_CHECK') {
+    (async () => {
+      try {
+        const repoOwner = 'ChuwuYo';
+        const repoName = 'MultiLangSwitcher';
+        const currentVersion = '1.8.17'; // From manifest.json
+        
+        sendBackgroundLog(backgroundI18n.t('update_check_initiated', {repo: `${repoOwner}/${repoName}`}), 'info');
+        
+        // Create update checker instance
+        const updateChecker = new UpdateChecker(repoOwner, repoName, currentVersion);
+        
+        // Check cache status first
+        const cacheStatus = updateChecker.getCacheStatus();
+        if (cacheStatus.hasCachedData && !cacheStatus.isExpired) {
+          sendBackgroundLog(backgroundI18n.t('update_check_cache_hit'), 'info');
+        } else if (cacheStatus.hasCachedData && cacheStatus.isExpired) {
+          sendBackgroundLog(backgroundI18n.t('update_check_cache_expired'), 'info');
+        }
+        
+        sendBackgroundLog(backgroundI18n.t('update_check_api_request'), 'info');
+        
+        // Perform update check
+        const updateInfo = await updateChecker.checkForUpdates();
+        
+        // Log version comparison details
+        sendBackgroundLog(backgroundI18n.t('update_check_version_comparison', {
+          current: updateInfo.currentVersion,
+          latest: updateInfo.latestVersion,
+          result: updateInfo.updateAvailable ? 'newer' : 'same_or_older'
+        }), 'info');
+        
+        if (updateInfo.updateAvailable) {
+          sendBackgroundLog(backgroundI18n.t('update_check_update_available', {
+            current: updateInfo.currentVersion,
+            latest: updateInfo.latestVersion
+          }), 'success');
+        } else {
+          sendBackgroundLog(backgroundI18n.t('update_check_no_update_needed'), 'info');
+        }
+        
+        sendBackgroundLog(backgroundI18n.t('update_check_success'), 'success');
+        
+        if (typeof sendResponse === 'function') {
+          sendResponse({
+            status: 'success',
+            updateInfo: updateInfo
+          });
+        }
+        
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        
+        // Log specific error types with appropriate translations
+        if (error.type === 'TIMEOUT') {
+          sendBackgroundLog(backgroundI18n.t('update_check_timeout', {timeout: 10000}), 'error');
+        } else if (error.type === 'NETWORK_ERROR') {
+          sendBackgroundLog(backgroundI18n.t('update_check_network_error', {error: errorMessage}), 'error');
+        } else if (error.type === 'RATE_LIMIT') {
+          sendBackgroundLog(backgroundI18n.t('update_check_rate_limited'), 'error');
+        } else if (error.type === 'INVALID_RESPONSE') {
+          sendBackgroundLog(backgroundI18n.t('update_check_invalid_response', {response: errorMessage}), 'error');
+        } else if (error.type === 'VERSION_ERROR') {
+          sendBackgroundLog(backgroundI18n.t('update_check_parsing_error', {error: errorMessage}), 'error');
+        } else {
+          sendBackgroundLog(backgroundI18n.t('update_check_failed', {error: errorMessage}), 'error');
+        }
+        
+        if (typeof sendResponse === 'function') {
+          sendResponse({
+            status: 'error',
+            error: {
+              type: error.type || 'UNKNOWN_ERROR',
+              message: error.message || errorMessage,
+              userMessage: error.message || 'An unexpected error occurred',
+              retryable: error.retryable || false
+            }
+          });
+        }
+      }
+    })();
     return true;
   }
 });
