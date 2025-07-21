@@ -5,7 +5,7 @@
   "minimum_chrome_version": "88.0",
   "description": "__MSG_extension_description__",
   "default_locale": "zh",
-  "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",  
+  "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",
   "author": "ChuwuYo",
   "incognito": "spanning",
   "action": {
@@ -42,8 +42,13 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["images/*", "domain-rules.json"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "images/*",
+        "domain-rules.json"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "content_security_policy": {
