@@ -39,9 +39,15 @@ class BackgroundI18n {
 
   t(key, params = {}) {
     let text = this.translations[key] || key;
-    Object.keys(params).forEach(param => {
-      text = text.replace(`{${param}}`, params[param]);
-    });
+    
+    // 处理参数替换
+    if (params && typeof params === 'object') {
+      Object.keys(params).forEach(param => {
+        const placeholder = `{${param}}`;
+        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
+      });
+    }
+    
     return text;
   }
 }

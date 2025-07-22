@@ -56,6 +56,7 @@ const backgroundEn = {
   "delayed_ui_update": "Delayed UI update",
   "rules_update_error": "Error occurred during rules update",
   "unexpected_rules_update_error": "Unexpected error occurred during rules update",
+  "original_error": "Original error",
   "startup_load_auto_switch_status": "Startup loaded auto switch status: {status}",
   "tab_update_debug": "Tab update: {url}, auto switch={autoSwitch}",
   "auto_switch_init_failed": "Auto switch initialization failed",
