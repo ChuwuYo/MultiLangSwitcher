@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
-  <title>MultiLangSwitcher Debug Page</title>
+  <title></title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
@@ -90,54 +90,49 @@
   <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
 
   <div class="container">
-    <h2>MultiLangSwitcher Debug Tools</h2>
-    <p class="lead">This page helps you diagnose and solve language preference issues</p>
+    <h2 id="pageHeading"></h2>
+    <p class="lead" id="pageSubtitle"></p>
 
     <div class="alert alert-info">
-      <strong>Tip:</strong> If your request headers cannot be successfully changed, you can use this page for diagnosis.
-      After opening this page, operations in other parts of the extension (such as the popup page) will display logs
-      here.
+      <strong id="tipLabel"></strong> <span id="tipText"></span>
     </div>
 
     <div class="row">
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>Current Rules Information</h4>
-          <p class="text-muted">Shows the dynamic rules currently in effect by the extension and details of recently
-            matched rules.</p>
-          <button id="showRulesBtn" class="btn btn-primary">Show Current Rules</button>
-          <div id="rulesResult" class="debug-result">Click the button to view current rules...</div>
+          <h4 id="currentRulesTitle"></h4>
+          <p class="text-muted" id="currentRulesDesc"></p>
+          <button id="showRulesBtn" class="btn btn-primary"></button>
+          <div id="rulesResult" class="debug-result"></div>
         </div>
       </div>
 
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>Request Header Test</h4>
-          <p class="text-muted">Send a request to the test address to check if the Accept-Language header is set as
-            expected.</p>
+          <h4 id="headerTestTitle"></h4>
+          <p class="text-muted" id="headerTestDesc"></p>
           <div class="mb-3">
-            <label for="testLanguage" class="form-label">Test Language:</label>
+            <label for="testLanguage" class="form-label" id="testLanguageLabel"></label>
             <select class="form-select" id="testLanguage">
               <!-- 语言选项将由JavaScript动态生成 -->
             </select>
           </div>
-          <button id="testHeaderBtn" class="btn btn-success">Test Request Header</button>
-          <div id="headerTestResult" class="debug-result">Click the button to test request header...</div>
+          <button id="testHeaderBtn" class="btn btn-success"></button>
+          <div id="headerTestResult" class="debug-result"></div>
         </div>
       </div>
 
       <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <button id="resetCustomLangBtn" class="toggle reset-btn-corner" title="Reset Accept-Language"><img src="images/reset.svg" alt="Reset" width="16" height="16" class="invert-on-dark"></button>
-          <h4>Custom Language Preference</h4>
-          <p class="text-muted">Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".</p>
+          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16" class="invert-on-dark"></button>
+          <h4 id="customLangTitle"></h4>
+          <p class="text-muted" id="customLangDesc"></p>
           <div class="mb-3">
-            <label for="customLanguageInput" class="form-label">Custom Language String:</label>
-            <input type="text" class="form-control" id="customLanguageInput"
-              placeholder="Example: en-US,en;q=0.9,fr;q=0.8">
+            <label for="customLanguageInput" class="form-label" id="customLangInputLabel"></label>
+            <input type="text" class="form-control" id="customLanguageInput">
           </div>
-          <button id="applyCustomLangBtn" class="btn btn-primary">Apply Custom Language</button>
+          <button id="applyCustomLangBtn" class="btn btn-primary"></button>
           <div id="customLangResult" class="debug-result mt-2"></div>
         </div>
       </div>
@@ -146,86 +141,83 @@
       <!-- Accept-Language 格式说明卡片 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <h4>Accept-Language Format Explanation</h4>
-          <p class="text-muted">Understand the structure of the Accept-Language request header.</p>
-          <p><strong>Basic Format:</strong></p>
-          <ul>
-            <li><code>Language code</code> (required): e.g. <code>en</code> (English), <code>zh</code> (Chinese). Uses
-              ISO 639-1 standard.</li>
-            <li><code>-Region code</code> (optional): e.g. <code>US</code> (United States), <code>CN</code> (Mainland
-              China), <code>HK</code> (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.</li>
-            <li><code>;q=Quality value</code> (optional): Range 0 to 1, indicates priority, default is 1.</li>
+          <h4 id="formatExplanationTitle"></h4>
+          <p class="text-muted" id="formatExplanationDesc"></p>
+          <p><strong id="basicFormatTitle"></strong></p>
+          <ul id="formatList">
+            <li id="languageCodeItem"></li>
+            <li id="regionCodeItem"></li>
+            <li id="qualityValueItem"></li>
           </ul>
-          <p><strong>Examples:</strong></p>
-          <ul>
-            <li><code>en-US</code>: American English</li>
-            <li><code>zh-CN</code>: Simplified Chinese (Mainland China)</li>
-            <li><code>fr</code>: French (no region specified)</li>
-            <li><code>en-US,en;q=0.9,zh-CN;q=0.8</code>: Priority American English, followed by general English, then
-              Simplified Chinese.</li>
+          <p><strong id="examplesTitle"></strong></p>
+          <ul id="examplesList">
+            <li id="exampleEnUs"></li>
+            <li id="exampleZhCn"></li>
+            <li id="exampleFr"></li>
+            <li id="exampleComplex"></li>
           </ul>
-          <p class="small text-muted">Please follow this format in the input box above to set custom language.</p>
+          <p class="small text-muted" id="formatNote"></p>
         </div>
       </div>
       <!-- Accept-Language 格式说明卡片结束 -->
     </div>
 
     <div class="debug-section mt-4">
-      <h4>Live Logs</h4>
-      <p class="text-muted">Shows log messages sent by the extension at runtime to help track issues.</p>
+      <h4 id="liveLogsTitle"></h4>
+      <p class="text-muted" id="liveLogsDesc"></p>
       <div class="mb-3">
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterInfo" value="info" checked>
-          <label class="form-check-label" for="filterInfo">Info</label>
+          <label class="form-check-label" for="filterInfo" id="infoLabel"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterWarning" value="warning" checked>
-          <label class="form-check-label" for="filterWarning">Warning</label>
+          <label class="form-check-label" for="filterWarning" id="warningLabel"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterError" value="error" checked>
-          <label class="form-check-label" for="filterError">Error</label>
+          <label class="form-check-label" for="filterError" id="errorLabel"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterSuccess" value="success" checked>
-          <label class="form-check-label" for="filterSuccess">Success</label>
+          <label class="form-check-label" for="filterSuccess" id="successLabel"></label>
         </div>
       </div>
       <div id="logOutput" class="debug-result"></div>
-      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2">Clear Logs</button>
+      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2"></button>
     </div>
 
     <div class="debug-section mt-4">
-      <h4>Common Problem Fixes</h4>
-      <p class="text-muted">Try to automatically fix some common configuration issues.</p>
+      <h4 id="commonFixesTitle"></h4>
+      <p class="text-muted" id="commonFixesDesc"></p>
       <div class="list-group">
         <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
-          <strong>Fix Rule Priority</strong> - Increase dynamic rule priority to 100 to override static rules
+          <strong id="fixPriorityTitle"></strong> <span id="fixPriorityDesc"></span>
         </button>
         <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
-          <strong>Clear and Reapply Rules</strong> - Delete all dynamic rules and recreate with current settings
+          <strong id="clearReapplyTitle"></strong> <span id="clearReapplyDesc"></span>
         </button>
       </div>
-      <div id="fixResult" class="debug-result mt-3">Select a fix option...</div>
+      <div id="fixResult" class="debug-result mt-3"></div>
     </div>
 
     <div class="debug-section mt-4">
-      <h4>Extension Diagnostic Information</h4>
-      <p class="text-muted">Shows basic information, permissions, and configuration of the extension.</p>
-      <button id="showDiagnosticsBtn" class="btn btn-info">Show Diagnostic Information</button>
-      <div id="diagnosticsResult" class="debug-result">Click the button to view diagnostic information...</div>
+      <h4 id="diagnosticsTitle"></h4>
+      <p class="text-muted" id="diagnosticsDesc"></p>
+      <button id="showDiagnosticsBtn" class="btn btn-info"></button>
+      <div id="diagnosticsResult" class="debug-result"></div>
     </div>
 
     <!-- 自动切换功能控制 -->
     <div class="debug-section mt-4">
-      <h4>Auto Switch Feature</h4>
-      <p class="text-muted">Control the feature to automatically switch language by domain. (May detect incorrectly)</p>
+      <h4 id="autoSwitchTitle"></h4>
+      <p class="text-muted" id="autoSwitchDesc"></p>
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="autoSwitchToggle">
-        <label class="form-check-label" for="autoSwitchToggle">Enable Auto Switch (by domain)</label>
+        <label class="form-check-label" for="autoSwitchToggle" id="enableAutoSwitchLabel"></label>
       </div>
-      <button id="showDomainRulesBtn" class="btn btn-outline-primary">Show Domain Mapping Rules</button>
-      <div id="domainRulesResult" class="debug-result">Click the button to view domain mapping rules...</div>
+      <button id="showDomainRulesBtn" class="btn btn-outline-primary"></button>
+      <div id="domainRulesResult" class="debug-result"></div>
     </div>
     <!-- 自动切换功能控制结束 -->
   </div>

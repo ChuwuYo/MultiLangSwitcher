@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
-  <title>MultiLangSwitcher Detection Page</title>
+  <title></title>
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
@@ -48,52 +48,51 @@
   <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
 
   <div class="container">
-    <h2>MultiLangSwitcher Detection Page</h2>
-    <p class="lead">This page is used to verify the effect of MultiLangSwitcher extension settings</p>
+    <h2 id="pageHeading"></h2>
+    <p class="lead" id="pageSubtitle"></p>
 
     <div class="alert alert-info">
-      <strong>Tip:</strong> Pay special attention to the value of the <code>Accept-Language</code> request header, which
-      should match the language you set in the extension.
+      <strong id="tipLabel"></strong> <span id="tipText"></span>
     </div>
 
     <div class="row">
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-primary text-white">Request Header Language Accept-Language</div>
+          <div class="card-header bg-primary text-white" id="requestHeaderTitle"></div>
           <div class="card-body">
-            <div id="headerLanguageInfo">Detecting...</div>
+            <div id="headerLanguageInfo"></div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-info text-white">JS Language Preference</div>
+          <div class="card-header bg-info text-white" id="jsLanguageTitle"></div>
           <div class="card-body">
-            <div id="jsLanguageInfo">Detecting...</div>
+            <div id="jsLanguageInfo"></div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-secondary text-white">Internationalization API</div>
+          <div class="card-header bg-secondary text-white" id="intlApiTitle"></div>
           <div class="card-body">
-            <div id="intlApiInfo">Detecting...</div>
+            <div id="intlApiInfo"></div>
           </div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="card mb-3">
-          <div class="card-header bg-warning text-dark">WebRTC Detection</div>
+          <div class="card-header bg-warning text-dark" id="webRtcTitle"></div>
           <div class="card-body">
-            <div id="webRtcInfo">Detecting...</div>
+            <div id="webRtcInfo"></div>
           </div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="card mb-3">
-          <div class="card-header bg-success text-white">Browser Fingerprint (Partial)</div>
+          <div class="card-header bg-success text-white" id="browserFingerprintTitle"></div>
           <div class="card-body">
-            <div id="fingerprintInfo">Detecting...</div>
+            <div id="fingerprintInfo"></div>
           </div>
         </div>
       </div>
@@ -103,13 +102,13 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card mb-3">
-          <div class="card-header bg-dark text-white">Browser Compatibility Check</div>
+          <div class="card-header bg-dark text-white" id="browserCompatibilityTitle"></div>
           <div class="card-body">
-            <p><strong>Browser Information:</strong> <span id="browserInfoDisplay">Detecting...</span></p>
-            <h5>API Support Status:</h5>
+            <p><strong id="browserInfoLabel"></strong> <span id="browserInfoDisplay"></span></p>
+            <h5 id="apiSupportTitle"></h5>
             <ul id="apiCompatibilityList" class="list-group">
               <!-- JS will populate API compatibility info here -->
-              <li class="list-group-item">Detecting...</li>
+              <li class="list-group-item" id="detectingItem"></li>
             </ul>
           </div>
         </div>
@@ -120,30 +119,30 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card mb-3">
-          <div class="card-header bg-dark text-white">Hardware Fingerprint Detection</div>
+          <div class="card-header bg-dark text-white" id="hardwareFingerprintTitle"></div>
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark">Canvas Fingerprint</div>
+                  <div class="card-header bg-light text-dark" id="canvasFingerprintTitle"></div>
                   <div class="card-body">
-                    <div id="canvasFingerprintInfo">Detecting...</div>
+                    <div id="canvasFingerprintInfo"></div>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark">WebGL Fingerprint</div>
+                  <div class="card-header bg-light text-dark" id="webglFingerprintTitle"></div>
                   <div class="card-body">
-                    <div id="webglFingerprintInfo">Detecting...</div>
+                    <div id="webglFingerprintInfo"></div>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark">AudioContext Fingerprint</div>
+                  <div class="card-header bg-light text-dark" id="audioFingerprintTitle"></div>
                   <div class="card-body">
-                    <div id="audioFingerprintInfo">Detecting...</div>
+                    <div id="audioFingerprintInfo"></div>
                   </div>
                 </div>
               </div>
@@ -154,8 +153,8 @@
     </div>
 
     <div class="header-info mt-4">
-      <h4>Complete Request Header Information:</h4>
-      <pre id="headerInfo">Loading...</pre>
+      <h4 id="completeHeadersTitle"></h4>
+      <pre id="headerInfo"></pre>
     </div>
   </div>
 

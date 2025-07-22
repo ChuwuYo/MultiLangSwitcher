@@ -53,33 +53,125 @@ class DebugI18n {
   }
 
   applyTranslations() {
+    // 设置页面标题和基本信息
     document.title = this.t('title');
-    document.querySelector('h2').textContent = this.t('heading');
-    document.querySelector('.lead').textContent = this.t('subtitle');
-    document.querySelector('.alert-info').innerHTML = `<strong>${this.t('tip_label')}</strong> ${this.t('tip')}`;
     
-    // 处理所有section标题和描述
-    const sections = [
-      { h4: 'Current Rules Information', p: 'Shows the dynamic rules currently in effect by the extension and details of recently matched rules.', keys: ['current_rules', 'current_rules_desc'] },
-      { h4: 'Request Header Test', p: 'Send a request to the test address to check if the Accept-Language header is set as expected.', keys: ['header_test', 'header_test_desc'] },
-      { h4: 'Custom Language Preference', p: 'Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".', keys: ['custom_language', 'custom_language_desc'] },
-      { h4: 'Accept-Language Format Explanation', p: 'Understand the structure of the Accept-Language request header.', keys: ['format_explanation', 'format_explanation_desc'] },
-      { h4: 'Live Logs', p: 'Shows log messages sent by the extension at runtime to help track issues.', keys: ['live_logs', 'live_logs_desc'] },
-      { h4: 'Common Problem Fixes', p: 'Try to automatically fix some common configuration issues.', keys: ['common_fixes', 'common_fixes_desc'] },
-      { h4: 'Extension Diagnostic Information', p: 'Shows basic information, permissions, and configuration of the extension.', keys: ['diagnostics', 'diagnostics_desc'] },
-      { h4: 'Auto Switch Feature', p: 'Control the feature to automatically switch language by domain. (May detect incorrectly)', keys: ['auto_switch_feature', 'auto_switch_desc'] }
-    ];
+    // 主题切换按钮
+    const themeToggleBtn = document.querySelector('#themeToggleBtn');
+    if (themeToggleBtn) {
+      themeToggleBtn.title = this.t('theme_toggle');
+    }
     
-    const sectionElements = document.querySelectorAll('.debug-section');
-    sectionElements.forEach((section, index) => {
-      if (sections[index]) {
-        const h4 = section.querySelector('h4');
-        const p = section.querySelector('p.text-muted');
-        if (h4) h4.textContent = this.t(sections[index].keys[0]);
-        if (p) p.textContent = this.t(sections[index].keys[1]);
-      }
-    });
-
+    // 页面标题和副标题
+    const pageHeading = document.querySelector('#pageHeading');
+    if (pageHeading) {
+      pageHeading.textContent = this.t('heading');
+    }
+    
+    const pageSubtitle = document.querySelector('#pageSubtitle');
+    if (pageSubtitle) {
+      pageSubtitle.textContent = this.t('subtitle');
+    }
+    
+    // 提示信息
+    const tipLabel = document.querySelector('#tipLabel');
+    if (tipLabel) {
+      tipLabel.textContent = this.t('tip_label');
+    }
+    
+    const tipText = document.querySelector('#tipText');
+    if (tipText) {
+      tipText.textContent = this.t('tip');
+    }
+    
+    // 当前规则信息部分
+    const currentRulesTitle = document.querySelector('#currentRulesTitle');
+    if (currentRulesTitle) {
+      currentRulesTitle.textContent = this.t('current_rules');
+    }
+    
+    const currentRulesDesc = document.querySelector('#currentRulesDesc');
+    if (currentRulesDesc) {
+      currentRulesDesc.textContent = this.t('current_rules_desc');
+    }
+    
+    // 请求头测试部分
+    const headerTestTitle = document.querySelector('#headerTestTitle');
+    if (headerTestTitle) {
+      headerTestTitle.textContent = this.t('header_test');
+    }
+    
+    const headerTestDesc = document.querySelector('#headerTestDesc');
+    if (headerTestDesc) {
+      headerTestDesc.textContent = this.t('header_test_desc');
+    }
+    
+    // 自定义语言部分
+    const customLangTitle = document.querySelector('#customLangTitle');
+    if (customLangTitle) {
+      customLangTitle.textContent = this.t('custom_language');
+    }
+    
+    const customLangDesc = document.querySelector('#customLangDesc');
+    if (customLangDesc) {
+      customLangDesc.textContent = this.t('custom_language_desc');
+    }
+    
+    // Accept-Language 格式说明部分
+    const formatExplanationTitle = document.querySelector('#formatExplanationTitle');
+    if (formatExplanationTitle) {
+      formatExplanationTitle.textContent = this.t('format_explanation');
+    }
+    
+    const formatExplanationDesc = document.querySelector('#formatExplanationDesc');
+    if (formatExplanationDesc) {
+      formatExplanationDesc.textContent = this.t('format_explanation_desc');
+    }
+    
+    // 实时日志部分
+    const liveLogsTitle = document.querySelector('#liveLogsTitle');
+    if (liveLogsTitle) {
+      liveLogsTitle.textContent = this.t('live_logs');
+    }
+    
+    const liveLogsDesc = document.querySelector('#liveLogsDesc');
+    if (liveLogsDesc) {
+      liveLogsDesc.textContent = this.t('live_logs_desc');
+    }
+    
+    // 常见问题修复部分
+    const commonFixesTitle = document.querySelector('#commonFixesTitle');
+    if (commonFixesTitle) {
+      commonFixesTitle.textContent = this.t('common_fixes');
+    }
+    
+    const commonFixesDesc = document.querySelector('#commonFixesDesc');
+    if (commonFixesDesc) {
+      commonFixesDesc.textContent = this.t('common_fixes_desc');
+    }
+    
+    // 扩展诊断信息部分
+    const diagnosticsTitle = document.querySelector('#diagnosticsTitle');
+    if (diagnosticsTitle) {
+      diagnosticsTitle.textContent = this.t('diagnostics');
+    }
+    
+    const diagnosticsDesc = document.querySelector('#diagnosticsDesc');
+    if (diagnosticsDesc) {
+      diagnosticsDesc.textContent = this.t('diagnostics_desc');
+    }
+    
+    // 自动切换功能部分
+    const autoSwitchTitle = document.querySelector('#autoSwitchTitle');
+    if (autoSwitchTitle) {
+      autoSwitchTitle.textContent = this.t('auto_switch_feature');
+    }
+    
+    const autoSwitchDesc = document.querySelector('#autoSwitchDesc');
+    if (autoSwitchDesc) {
+      autoSwitchDesc.textContent = this.t('auto_switch_desc');
+    }
+    
     // 处理按钮文本
     const buttons = {
       '#showRulesBtn': 'show_rules',
@@ -96,24 +188,46 @@ class DebugI18n {
     });
     
     // 处理标签文本
-    const labels = {
-      'label[for="testLanguage"]': 'test_language_label',
-      'label[for="customLanguageInput"]': 'custom_language_label',
-      'label[for="filterInfo"]': 'info',
-      'label[for="filterWarning"]': 'warning', 
-      'label[for="filterError"]': 'error',
-      'label[for="filterSuccess"]': 'success',
-      'label[for="autoSwitchToggle"]': 'enable_auto_switch'
-    };
+    const testLanguageLabel = document.querySelector('#testLanguageLabel');
+    if (testLanguageLabel) {
+      testLanguageLabel.textContent = this.t('test_language_label');
+    }
     
-    Object.entries(labels).forEach(([selector, key]) => {
-      const el = document.querySelector(selector);
-      if (el) el.textContent = this.t(key);
-    });
+    const customLangInputLabel = document.querySelector('#customLangInputLabel');
+    if (customLangInputLabel) {
+      customLangInputLabel.textContent = this.t('custom_language_label');
+    }
+    
+    const infoLabel = document.querySelector('#infoLabel');
+    if (infoLabel) {
+      infoLabel.textContent = this.t('info');
+    }
+    
+    const warningLabel = document.querySelector('#warningLabel');
+    if (warningLabel) {
+      warningLabel.textContent = this.t('warning');
+    }
+    
+    const errorLabel = document.querySelector('#errorLabel');
+    if (errorLabel) {
+      errorLabel.textContent = this.t('error');
+    }
+    
+    const successLabel = document.querySelector('#successLabel');
+    if (successLabel) {
+      successLabel.textContent = this.t('success');
+    }
+    
+    const enableAutoSwitchLabel = document.querySelector('#enableAutoSwitchLabel');
+    if (enableAutoSwitchLabel) {
+      enableAutoSwitchLabel.textContent = this.t('enable_auto_switch');
+    }
     
     // 处理占位符文本
-    const placeholder = document.querySelector('#customLanguageInput');
-    if (placeholder) placeholder.placeholder = this.t('custom_language_placeholder');
+    const customLanguageInput = document.querySelector('#customLanguageInput');
+    if (customLanguageInput) {
+      customLanguageInput.placeholder = this.t('custom_language_placeholder');
+    }
     
     // 处理初始显示文本
     const initialTexts = {
@@ -130,59 +244,87 @@ class DebugI18n {
     });
     
     // 处理修复选项按钮
-    const fixButtons = document.querySelectorAll('.list-group-item');
-    if (fixButtons.length >= 2) {
-      fixButtons[0].innerHTML = `<strong>${this.t('fix_priority')}</strong> - ${this.t('fix_priority_desc')}`;
-      fixButtons[1].innerHTML = `<strong>${this.t('clear_reapply')}</strong> - ${this.t('clear_reapply_desc')}`;
+    const fixPriorityTitle = document.querySelector('#fixPriorityTitle');
+    if (fixPriorityTitle) {
+      fixPriorityTitle.textContent = this.t('fix_priority');
     }
     
-    // 延迟处理Accept-Language格式说明，确保 DOM 完全加载
-    setTimeout(() => {
-      const formatSections = document.querySelectorAll('.debug-section');
-      let formatSection = null;
-      formatSections.forEach(section => {
-        const h4 = section.querySelector('h4');
-        if (h4 && (h4.textContent.includes('Accept-Language Format') || h4.textContent.includes('Accept-Language 格式'))) {
-          formatSection = section;
-        }
-      });
-      
-      if (formatSection) {
-        // 处理所有段落
-        const paragraphs = formatSection.querySelectorAll('p');
-        paragraphs.forEach(p => {
-          const text = p.textContent || p.innerHTML;
-          if (text.includes('Basic Format') || text.includes('基本格式')) {
-            p.innerHTML = `<strong>${this.t('basic_format')}</strong>`;
-          } else if (text.includes('Examples') || text.includes('示例')) {
-            p.innerHTML = `<strong>${this.t('examples')}</strong>`;
-          } else if (p.classList.contains('small') || text.includes('Please follow this format') || text.includes('请按照此格式')) {
-            p.textContent = this.t('format_note');
-          }
-        });
-        
-        // 处理列表
-        const allLists = formatSection.querySelectorAll('ul');
-        if (allLists.length >= 2) {
-          // 第一个列表：格式说明
-          const formatList = allLists[0].querySelectorAll('li');
-          if (formatList.length >= 3) {
-            formatList[0].innerHTML = `<code>${this.t('language_code')}</code> (${this.t('required')}): ${this.t('language_code_required')}`;
-            formatList[1].innerHTML = `<code>-${this.t('region_code')}</code> (${this.t('optional')}): ${this.t('region_code_optional')}`;
-            formatList[2].innerHTML = `<code>;q=${this.t('quality_value')}</code> (${this.t('optional')}): ${this.t('quality_value_optional')}`;
-          }
-          
-          // 第二个列表：示例
-          const exampleList = allLists[1].querySelectorAll('li');
-          if (exampleList.length >= 4) {
-            exampleList[0].innerHTML = `<code>en-US</code>: ${this.t('example_en_us')}`;
-            exampleList[1].innerHTML = `<code>zh-CN</code>: ${this.t('example_zh_cn')}`;
-            exampleList[2].innerHTML = `<code>fr</code>: ${this.t('example_fr')}`;
-            exampleList[3].innerHTML = `<code>en-US,en;q=0.9,zh-CN;q=0.8</code>: ${this.t('example_complex')}`;
-          }
-        }
-      }
-    }, 200);
+    const fixPriorityDesc = document.querySelector('#fixPriorityDesc');
+    if (fixPriorityDesc) {
+      fixPriorityDesc.textContent = this.t('fix_priority_desc');
+    }
+    
+    const clearReapplyTitle = document.querySelector('#clearReapplyTitle');
+    if (clearReapplyTitle) {
+      clearReapplyTitle.textContent = this.t('clear_reapply');
+    }
+    
+    const clearReapplyDesc = document.querySelector('#clearReapplyDesc');
+    if (clearReapplyDesc) {
+      clearReapplyDesc.textContent = this.t('clear_reapply_desc');
+    }
+    
+    // 处理 Accept-Language 格式说明
+    const basicFormatTitle = document.querySelector('#basicFormatTitle');
+    if (basicFormatTitle) {
+      basicFormatTitle.textContent = this.t('basic_format');
+    }
+    
+    const languageCodeItem = document.querySelector('#languageCodeItem');
+    if (languageCodeItem) {
+      languageCodeItem.innerHTML = `<code>${this.t('language_code')}</code> (${this.t('required')}): ${this.t('language_code_required')}`;
+    }
+    
+    const regionCodeItem = document.querySelector('#regionCodeItem');
+    if (regionCodeItem) {
+      regionCodeItem.innerHTML = `<code>-${this.t('region_code')}</code> (${this.t('optional')}): ${this.t('region_code_optional')}`;
+    }
+    
+    const qualityValueItem = document.querySelector('#qualityValueItem');
+    if (qualityValueItem) {
+      qualityValueItem.innerHTML = `<code>;q=${this.t('quality_value')}</code> (${this.t('optional')}): ${this.t('quality_value_optional')}`;
+    }
+    
+    const examplesTitle = document.querySelector('#examplesTitle');
+    if (examplesTitle) {
+      examplesTitle.textContent = this.t('examples');
+    }
+    
+    const exampleEnUs = document.querySelector('#exampleEnUs');
+    if (exampleEnUs) {
+      exampleEnUs.innerHTML = `<code>en-US</code>: ${this.t('example_en_us')}`;
+    }
+    
+    const exampleZhCn = document.querySelector('#exampleZhCn');
+    if (exampleZhCn) {
+      exampleZhCn.innerHTML = `<code>zh-CN</code>: ${this.t('example_zh_cn')}`;
+    }
+    
+    const exampleFr = document.querySelector('#exampleFr');
+    if (exampleFr) {
+      exampleFr.innerHTML = `<code>fr</code>: ${this.t('example_fr')}`;
+    }
+    
+    const exampleComplex = document.querySelector('#exampleComplex');
+    if (exampleComplex) {
+      exampleComplex.innerHTML = `<code>en-US,en;q=0.9,zh-CN;q=0.8</code>: ${this.t('example_complex')}`;
+    }
+    
+    const formatNote = document.querySelector('#formatNote');
+    if (formatNote) {
+      formatNote.textContent = this.t('format_note');
+    }
+    
+    // 重置按钮
+    const resetCustomLangBtn = document.querySelector('#resetCustomLangBtn');
+    if (resetCustomLangBtn) {
+      resetCustomLangBtn.title = this.t('reset_accept_language_tooltip');
+    }
+    
+    const resetBtnImg = document.querySelector('#resetBtnImg');
+    if (resetBtnImg) {
+      resetBtnImg.alt = this.t('reset_accept_language_tooltip');
+    }
   }
 
   switchLanguage(lang) {

@@ -5,7 +5,7 @@
   <!-- 基础页面配置 -->
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
-  <title>MultiLangSwitcher</title>
+  <title></title>
   <!-- 样式表引入 -->
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
@@ -386,32 +386,32 @@
 
 <body class="popup-body">
   <!-- 主题切换按钮 -->
-  <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
+  <button id="themeToggleBtn" class="toggle"></button>
   <!-- 重置Accept-Language按钮 -->
-  <button id="resetBtn" class="toggle" title="Reset Accept-Language"><img src="images/reset.svg" alt="Reset" width="16"
+  <button id="resetBtn" class="toggle"><img src="images/reset.svg" id="resetBtnImg" width="16"
       height="16" class="invert-on-dark"></button>
 
   <div class="container">
     <!-- 页面头部 -->
     <div class="header">
-      <h4>MultiLangSwitcher</h4>
-      <p class="text-muted">Quickly switch Accept-Language</p>
+      <h4 id="extensionName"></h4>
+      <p class="text-muted" id="extensionSubtitle"></p>
     </div>
 
     <!-- 语言选择区域 -->
     <div class="language-select">
-      <label for="languageSelect" class="form-label">Language:</label>
+      <label for="languageSelect" class="form-label" id="languageSelectLabel"></label>
       <select class="form-select" id="languageSelect">
         <!-- 语言选项将由JavaScript动态生成 -->
       </select>
     </div>
 
     <!-- 应用按钮 -->
-    <button id="applyButton" class="btn btn-primary w-100">Apply</button>
+    <button id="applyButton" class="btn btn-primary w-100"></button>
 
     <!-- 状态显示区域 -->
     <div class="status mt-3">
-      <p id="statusText">Current Language: <span id="currentLanguage">Not Set</span></p>
+      <p id="statusText"></p>
     </div>
 
     <!-- 错误提示区域 -->
@@ -421,8 +421,7 @@
 
     <!-- 自动切换语言开关区域 -->
     <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" style="font-size: 0.8em; display: block; margin-bottom: 5px;">Auto Switch Language
-        (by domain)</label>
+      <label for="autoSwitchToggle" id="autoSwitchLabel" style="font-size: 0.8em; display: block; margin-bottom: 5px;"></label>
       <div class="toggle-wrapper" style="font-size: 1em; margin: 0 auto; width: fit-content;">
         <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle">
         <div class="toggle-container">
@@ -449,18 +448,18 @@
 
     <!-- 功能按钮区域 -->
     <div class="mt-3 text-center">
-      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary">Detection</a>
-      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2">Debug</a>
-      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2">Quick Check</button>
+      <a href="test-headers.html" target="_blank" class="btn btn-sm btn-outline-secondary" id="detectionPageLink"></a>
+      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2" id="debugPageLink"></a>
+      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2"></button>
     </div>
 
     <!-- 请求头检查结果显示区域 -->
     <div class="mt-3 d-none header-check-result" id="headerCheckResult">
       <div class="card">
-        <div class="card-header bg-light">Current Request Header</div>
+        <div class="card-header bg-light" id="headerCheckResultTitle"></div>
         <div class="card-body">
           <pre id="headerCheckContent" class="mb-0"
-            style="font-size: 12px; max-height: 150px; overflow-y: auto;">Click "Quick Check" button to see results</pre>
+            style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
         </div>
       </div>
     </div>
