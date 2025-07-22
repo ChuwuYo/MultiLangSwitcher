@@ -174,7 +174,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (autoSwitchToggle) {
       autoSwitchToggle.checked = !!result.autoSwitchEnabled;
-      addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
+      
+      // 等待i18n系统初始化完成后再输出日志
+      const checkI18nAndLog = () => {
+        if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
+          addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
+        } else {
+          setTimeout(checkI18nAndLog, 100);
+        }
+      };
+      
+      checkI18nAndLog();
     }
   });
 

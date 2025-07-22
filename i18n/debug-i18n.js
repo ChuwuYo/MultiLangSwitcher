@@ -38,8 +38,18 @@ class DebugI18n {
     }
   }
 
-  t(key) {
-    return this.translations[key] || key;
+  t(key, params = {}) {
+    let text = this.translations[key] || key;
+    
+    // 处理参数替换
+    if (params && typeof params === 'object') {
+      Object.keys(params).forEach(param => {
+        const placeholder = `{${param}}`;
+        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
+      });
+    }
+    
+    return text;
   }
 
   applyTranslations() {
