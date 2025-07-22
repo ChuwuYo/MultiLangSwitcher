@@ -39,7 +39,7 @@ class UpdateChecker {
    */
   async checkForUpdates(signal = null) {
     try {
-      sendDebugLog('Starting update check...', 'info');
+      // 内部调试信息，不输出到用户日志
 
       // 在开始前检查请求是否已被取消
       if (signal?.aborted) {
@@ -48,7 +48,7 @@ class UpdateChecker {
 
       // 首先检查内存缓存
       if (this.cache && this.cacheExpiry && Date.now() < this.cacheExpiry) {
-        sendDebugLog('Using memory cached update information', 'info');
+        // 使用缓存信息，不需要用户日志
         return this.cache;
       }
 
@@ -572,7 +572,7 @@ class UpdateChecker {
         return null;
       }
 
-      sendDebugLog('Loaded valid persistent cache', 'info');
+      // 内部缓存操作，不输出到用户日志
       return cacheData;
 
     } catch (error) {
@@ -695,7 +695,7 @@ class UpdateChecker {
       if (cacheData && cacheData.expiry && Date.now() < cacheData.expiry) {
         this.cache = cacheData.data;
         this.cacheExpiry = cacheData.expiry;
-        sendDebugLog('Cache preloaded from persistent storage', 'info');
+        // 内部缓存操作，不输出到用户日志
         return true;
       }
       return false;
