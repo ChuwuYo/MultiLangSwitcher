@@ -336,9 +336,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage}`, 'error');
+        const errorType = error.type || 'UNKNOWN_ERROR';
+        
+        // 详细的错误日志，便于Debug页面查看
+        sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage} (${backgroundI18n.t('rule_update_error_type')}: ${errorType})`, 'error');
+        
+        // 如果有原始错误，也记录下来
+        if (error.originalError) {
+          sendBackgroundLog(`${backgroundI18n.t('original_error')}: ${error.originalError}`, 'error');
+        }
+        
         if (typeof sendResponse === 'function') {
-          sendResponse({ status: 'error', message: `${backgroundI18n.t('rules_update_error')}: ${errorMessage}` });
+          sendResponse({ 
+            status: 'error', 
+            message: errorMessage,
+            errorType: errorType
+          });
         }
       }
     })();
