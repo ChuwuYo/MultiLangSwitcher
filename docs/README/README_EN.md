@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="../../images/icon128.png" alt="MultiLangSwitcher Icon" width="150" height="150"> <h1>MultiLangSwitcher</h1>
+    <img src="../../images/icon256.png" alt="MultiLangSwitcher Icon" width="150" height="150"> <h1>MultiLangSwitcher</h1>
     <a href="../../README.md">简体中文</a> | <a href="README_EN.md">English</a> </div>
 
 
