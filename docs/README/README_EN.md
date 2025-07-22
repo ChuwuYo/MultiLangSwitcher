@@ -70,6 +70,8 @@ Features
 * **Efficient Header Modification**: Uses `declarativeNetRequest` API for better performance than WebRequest API
 * **Background Auto-Application**: Extension automatically loads settings on startup with error retry mechanism
 * **Theme Switching**: Support for light/dark theme switching
+* **Update Checker**: Automatically checks GitHub Releases for the latest version information
+* **Reset Function**: One-click reset of Accept-Language request header
 * **Detection Page**: `test-headers.html` for verifying request header modifications, detecting:
   - `Accept-Language` request headers
   - JavaScript language preferences (`navigator.language`, `navigator.languages`)
@@ -84,6 +86,7 @@ Features
   - Rule priority fixes and rule rebuilding
   - Extension diagnostic information (version, permissions, configuration, storage status)
   - Domain-language mapping rules viewer
+  - Reset Accept-Language request header
 
 ***
 
