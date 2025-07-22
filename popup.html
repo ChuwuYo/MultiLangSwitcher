@@ -179,9 +179,66 @@
       top: 42px;
     }
 
-    /* 更新检查器样式 */
-    #updateCheckBtn {
+    /* 更新检查按钮基础样式 - 独特的淡紫色调 */
+    .update-check-button {
       position: relative;
+      font-size: 0.8em;
+      border: 1px solid #e6e3f0;
+      background-color: #f8f6fc;
+      color: #7c6f9a;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+    }
+
+    /* 更新检查按钮旋转器样式 */
+    .update-check-button .spinner-border {
+      width: 0.8rem;
+      height: 0.8rem;
+    }
+
+    /* 更新检查按钮悬停效果 */
+    .update-check-button:hover {
+      border-color: #d4c8e8;
+      background-color: #f0ebf8;
+      color: #6b5b85;
+      transform: translateY(-1px);
+    }
+
+    /* 更新检查按钮焦点状态 */
+    .update-check-button:focus {
+      box-shadow: 0 0 0 2px rgba(124, 111, 154, 0.25);
+      outline: none;
+      border-color: #d4c8e8;
+    }
+
+    /* 更新检查按钮激活状态 */
+    .update-check-button:active {
+      transform: translateY(0);
+      background-color: #e8ddf4;
+      border-color: #c7b8dd;
+    }
+
+    /* 暗色主题下的更新检查按钮 */
+    html[data-bs-theme="dark"] .update-check-button {
+      border-color: #4a4458;
+      background-color: #2d2838;
+      color: #b8a8d1;
+    }
+
+    html[data-bs-theme="dark"] .update-check-button:hover {
+      border-color: #5d5470;
+      background-color: #3a3447;
+      color: #c9bce0;
+    }
+
+    html[data-bs-theme="dark"] .update-check-button:focus {
+      box-shadow: 0 0 0 2px rgba(184, 168, 209, 0.25);
+      border-color: #5d5470;
+    }
+
+    html[data-bs-theme="dark"] .update-check-button:active {
+      background-color: #453f56;
+      border-color: #6b6080;
     }
 
     /* 更新通知样式 */
@@ -276,8 +333,18 @@
       font-size: 0.9em;
     }
 
-    /* 更新通知动画效果 */
+    /* 通用滑入动画效果 - 可复用的动画类 */
+    .slide-in-animation {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* 更新通知动画效果 - 复用通用动画 */
     .update-notification {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* 快速检查结果动画效果 - 复用通用动画 */
+    .header-check-result {
       animation: slideIn 0.3s ease-out;
     }
 
@@ -388,7 +455,7 @@
     </div>
 
     <!-- 请求头检查结果显示区域 -->
-    <div class="mt-3 d-none" id="headerCheckResult">
+    <div class="mt-3 d-none header-check-result" id="headerCheckResult">
       <div class="card">
         <div class="card-header bg-light">Current Request Header</div>
         <div class="card-body">
@@ -400,9 +467,9 @@
 
     <!-- 更新检查器区域 -->
     <div class="mt-3 text-center">
-      <button id="updateCheckBtn" class="btn btn-outline-primary w-100">
+      <button id="updateCheckBtn" class="btn btn-sm w-100 update-check-button">
         <span id="updateCheckText"></span>
-        <span id="updateCheckSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
+        <span id="updateCheckSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"
           aria-hidden="true"></span>
       </button>
     </div>
