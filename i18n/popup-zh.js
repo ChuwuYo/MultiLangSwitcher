@@ -11,7 +11,7 @@ const popupZh = {
   "debug_tools": "调试工具",
   "quick_check": "快速检查",
   "header_check_result": "当前请求头检查结果",
-  "click_quick_check": "点击\"快速检查\"按钮查看结果",  "fetching_headers": "正在获取请求头信息 (尝试多个检测点)...",
+  "click_quick_check": "点击\"快速检查\"按钮查看结果", "fetching_headers": "正在获取请求头信息 (尝试多个检测点)...",
   "enabled": "启用",
   "disabled": "禁用",
   "disable_manual_selection": "禁用手动选择",
@@ -33,7 +33,6 @@ const popupZh = {
   "no_language_from_rules": "未从动态规则中获取到语言，尝试从存储加载.",
   "loaded_stored_language": "已加载存储的语言设置:",
   "no_stored_language": "未找到存储的语言设置. 使用默认值:",
-  "not_set": "未设置",
   "clicked_apply_button": "点击了应用更改按钮. 选择的语言:",
   "language_settings_saved": "语言设置已保存:",
   "auto_switch_enabled_ignored": "自动切换已启用，手动应用更改按钮被忽略。",
@@ -69,14 +68,12 @@ const popupZh = {
   "update_check_failed_with_message": "更新检查失败: {message}",
   "showing_fallback_notification": "显示回退更新通知",
   "dom_update_error": "DOM更新错误: {message}",
-  "update_available": "发现新版本: {version}",
   "update_check_cancelled": "更新检查请求已取消",
   "update_check_rate_limited": "更新检查频率限制，请等待 {seconds} 秒",
   "no_accept_language_header": "未检测到 Accept-Language 请求头。",
   "error_getting_headers_from": "获取请求头时发生错误:",
   "all_detection_points_failed": "所有检测点获取请求头均失败:",
   "quick_check_failed_all_points": "快速检查获取请求头失败 (所有检测点):",
-  "unknown_error": "未知错误",
   "all_detection_points_failed_info": "所有检测点获取请求头信息均失败:",
   "please_visit_manually": "请自行跳转到",
   "or": "或",
@@ -95,7 +92,7 @@ const popupZh = {
   "reset_failed": "重置失败: {message}",
   "reset_failed_alert": "重置 Accept-Language 失败:",
   "reset_accept_language_tooltip": "重置 Accept-Language",
-  
+
   // Update checker related keys
   "check_for_updates": "检查更新",
   "checking_updates": "正在检查更新...",
@@ -112,7 +109,7 @@ const popupZh = {
   "invalid_response": "服务器响应无效",
   "update_check_success": "更新检查完成",
   "update_notification_title": "扩展更新可用",
-  
+
   // Enhanced error handling keys
   "update_timeout_error": "更新检查超时",
   "api_unavailable_error": "GitHub API 暂时不可用",
@@ -122,7 +119,7 @@ const popupZh = {
   "dns_error": "无法解析 GitHub API 地址",
   "cors_error": "跨域请求被阻止",
   "retry_update_check": "重试",
-  
+
   // Fallback suggestion messages
   "rate_limit_fallback": "GitHub API 请求频率超限，请等待几分钟后再试。",
   "api_error_fallback": "GitHub 服务可能正在经历问题，请几分钟后再试。",
@@ -130,7 +127,7 @@ const popupZh = {
   "ssl_error_fallback": "请检查您的防火墙或杀毒软件设置，或稍后再试。",
   "connection_error_fallback": "请检查您的网络连接和 DNS 设置。",
   "extension_reload_fallback": "请尝试重新加载扩展或手动检查更新。",
-  
+
   // Fallback mode messages
   "update_check_fallback_title": "无法检查更新",
   "update_check_fallback_message": "GitHub API 当前不可用。下方显示您的当前版本。",
