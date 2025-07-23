@@ -1,4 +1,4 @@
-class TestI18n {
+class DetectI18n {
   constructor() {
     this.currentLang = this.detectLanguage();
     this.translations = {};
@@ -14,14 +14,14 @@ class TestI18n {
   async loadTranslations() {
     try {
       const script = document.createElement('script');
-      script.src = `i18n/test-${this.currentLang}.js`;
+      script.src = `i18n/detect-${this.currentLang}.js`;
       document.head.appendChild(script);
       
       await new Promise(resolve => {
         script.onload = resolve;
       });
       
-      this.translations = this.currentLang === 'zh' ? testZh : testEn;
+      this.translations = this.currentLang === 'zh' ? detectZh : detectEn;
       this.applyTranslations();
     } catch (error) {
       console.error('Failed to load translations:', error);
@@ -176,4 +176,4 @@ class TestI18n {
 
 }
 
-const testI18n = new TestI18n();
+const detectI18n = new DetectI18n();

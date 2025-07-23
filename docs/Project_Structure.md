@@ -28,16 +28,16 @@ MultiLangSwitcher/
 │   ├── popup-en.js                 - 弹窗页面英文文本
 │   ├── popup-i18n.js               - 弹窗页面国际化配置
 │   ├── popup-zh.js                 - 弹窗页面中文文本
-│   ├── test-en.js                  - 测试页面英文文本
-│   ├── test-i18n.js                - 测试页面国际化配置
-│   └── test-zh.js                  - 测试页面中文文本
+│   ├── detect-en.js                  - 测试页面英文文本
+│   ├── detect-i18n.js                - 测试页面国际化配置
+│   └── detect-zh.js                  - 测试页面中文文本
 ├── images/                         - 图片资源目录
 ├── manifest.json                   - 扩展配置清单文件
 ├── .gitignore                      - Git 忽略文件
 ├── popup.html                      - 扩展弹窗页面
 ├── popup.js                        - 弹窗交互逻辑脚本
-├── test-headers.html               - 请求头测试页面
-├── test-headers.js                 - 请求头测试脚本
+├── detect.html               - 请求头测试页面
+├── detect.js                 - 请求头测试脚本
 ├── toggle.css                      - 切换按钮样式文件
 ├── toggle.js                       - 切换按钮交互脚本
 ├── domain-rules-manager.js         - 域名规则管理模块

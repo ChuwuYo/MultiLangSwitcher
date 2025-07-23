@@ -1,4 +1,4 @@
-const testEn = {
+const detectEn = {
   "title": "MultiLangSwitcher Detection Page",
   "heading": "MultiLangSwitcher Detection Page",
   "subtitle": "This page is used to verify the effect of MultiLangSwitcher extension settings",
