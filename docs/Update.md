@@ -37,7 +37,7 @@
 
 ### 修改文件
 
-- README.md/README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
+- README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
 - manifest.json - 版本号更新（v1.8.27、v1.8.28）
 - docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28）
 - Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28）
@@ -49,6 +49,7 @@
 - i18n/detect-en.js - 更新变量名（testEn → detectEn）（v1.8.28）
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
+- i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
 
 
 ### 移除内容
