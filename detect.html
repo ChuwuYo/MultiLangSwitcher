@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light dark">
+  <title></title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
+  <link href="toggle.css" rel="stylesheet">
+  <style>
+    body {
+      padding: 20px;
+    }
+
+    .header-info {
+      margin-top: 20px;
+    }
+
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+    }
+
+    @font-face {
+      font-family: 'MapleMonoNL';
+      src: url('fonts/MapleMonoNL-Regular.woff2') format('woff2');
+    }
+
+    body {
+      font-family: 'MapleMonoNL', sans-serif;
+    }
+
+    .list-group-item-success .badge {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .list-group-item-danger .badge {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
+
+  <div class="container">
+    <h2 id="pageHeading"></h2>
+    <p class="lead" id="pageSubtitle"></p>
+
+    <div class="alert alert-info">
+      <strong id="tipLabel"></strong> <span id="tipText"></span>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-primary text-white" id="requestHeaderTitle"></div>
+          <div class="card-body">
+            <div id="headerLanguageInfo"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-info text-white" id="jsLanguageTitle"></div>
+          <div class="card-body">
+            <div id="jsLanguageInfo"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header bg-secondary text-white" id="intlApiTitle"></div>
+          <div class="card-body">
+            <div id="intlApiInfo"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header bg-warning text-dark" id="webRtcTitle"></div>
+          <div class="card-body">
+            <div id="webRtcInfo"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-3">
+          <div class="card-header bg-success text-white" id="browserFingerprintTitle"></div>
+          <div class="card-body">
+            <div id="fingerprintInfo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 兼容性检查 -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-3">
+          <div class="card-header bg-dark text-white" id="browserCompatibilityTitle"></div>
+          <div class="card-body">
+            <p><strong id="browserInfoLabel"></strong> <span id="browserInfoDisplay"></span></p>
+            <h5 id="apiSupportTitle"></h5>
+            <ul id="apiCompatibilityList" class="list-group">
+              <!-- JS will populate API compatibility info here -->
+              <li class="list-group-item" id="detectingItem"></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-3">
+          <div class="card-header bg-dark text-white" id="hardwareFingerprintTitle"></div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark" id="canvasFingerprintTitle"></div>
+                  <div class="card-body">
+                    <div id="canvasFingerprintInfo"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark" id="webglFingerprintTitle"></div>
+                  <div class="card-body">
+                    <div id="webglFingerprintInfo"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card h-100">
+                  <div class="card-header bg-light text-dark" id="audioFingerprintTitle"></div>
+                  <div class="card-body">
+                    <div id="audioFingerprintInfo"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-info mt-4">
+      <h4 id="completeHeadersTitle"></h4>
+      <pre id="headerInfo"></pre>
+    </div>
+  </div>
+
+  <script src="i18n/detect-i18n.js"></script>
+  <script src="detect.js"></script>
+  <script type="module" src="toggle.js"></script>
+</body>
+
+</html>

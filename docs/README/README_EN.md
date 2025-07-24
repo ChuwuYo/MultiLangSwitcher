@@ -72,7 +72,7 @@ Features
 * **Theme Switching**: Support for light/dark theme switching
 * **Update Checker**: Automatically checks GitHub Releases for the latest version information
 * **Reset Function**: One-click reset of Accept-Language request header
-* **Detection Page**: `test-headers.html` for verifying request header modifications, detecting:
+* **Detection Page**: `detect.html` for verifying request header modifications, detecting:
   - `Accept-Language` request headers
   - JavaScript language preferences (`navigator.language`, `navigator.languages`)
   - Internationalization API (Intl) information

@@ -1,4 +1,4 @@
-const testZh = {
+const detectZh = {
   "title": "MultiLangSwitcher 检测页面",
   "heading": "MultiLangSwitcher 检测页面",
   "subtitle": "此页面用于验证MultiLangSwitcher扩展的设置效果",

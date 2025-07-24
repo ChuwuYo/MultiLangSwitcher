@@ -9,7 +9,7 @@ let lastUpdateCheckTime = 0;
 
 // 防抖配置
 const UPDATE_CHECK_DEBOUNCE_DELAY = 1000; // 1秒防抖延迟
-const UPDATE_CHECK_MIN_INTERVAL = 5000; // 最小检查间隔5秒
+const UPDATE_CHECK_MIN_INTERVAL = 2000; // 最小检查间隔2秒
 
 // 性能优化 - DOM元素缓存
 let domCache = {
@@ -257,13 +257,13 @@ async function getCurrentLanguage() {
       sendDebugLog(popupI18n.t('get_current_language_from_background', { language: response.currentLanguage }), 'info');
       return response.currentLanguage;
     }
-    
+
     // 如果没有语言信息，抛出错误进入catch处理
     throw new Error('No language in response');
-    
+
   } catch (error) {
     sendDebugLog(popupI18n.t('get_background_status_failed', { message: error.message }), 'error');
-    
+
     try {
       // 回退到本地存储
       const result = await new Promise(resolve => {
@@ -280,7 +280,7 @@ async function getCurrentLanguage() {
       const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
       sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
       return defaultLanguage;
-      
+
     } catch (storageError) {
       sendDebugLog(popupI18n.t('error_accessing_storage', { message: storageError.message }), 'error');
       // 最终回退
@@ -447,27 +447,27 @@ function initializeUpdateChecker() {
 }
 
 /**
- * Show update error message with enhanced error handling (optimized)
- * @param {string} message - Primary error message
- * @param {string} [fallbackMessage] - Optional fallback suggestion
- * @param {boolean} [showRetryOption] - Whether to show retry option
+ * 显示更新错误消息，具有增强的错误处理
+ * @param {string} message - 主要错误消息
+ * @param {string} [fallbackMessage] - 可选的回退建议
+ * @param {boolean} [showRetryOption] - 是否显示重试选项
  */
 function showUpdateError(message, fallbackMessage = null, showRetryOption = false) {
-  // Use cached DOM elements for better performance
+  // 使用缓存的DOM元素提高性能
   const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
   const updateErrorMessage = domCache.updateErrorMessage || document.getElementById('updateErrorMessage');
 
   if (!updateErrorAlert || !updateErrorMessage) return;
 
-  // Build error message content
+  // 构建错误消息内容
   let errorContent = message;
 
-  // Add fallback suggestion if provided
+  // 如果提供了回退建议，则添加
   if (fallbackMessage) {
     errorContent += `<br><small class="text-muted mt-1">${fallbackMessage}</small>`;
   }
 
-  // Add retry option if applicable
+  // 如果适用，添加重试选项
   if (showRetryOption) {
     errorContent += `<br><small class="mt-2">
       <a href="#" onclick="debouncedUpdateCheck(); return false;" class="text-primary">
@@ -476,13 +476,13 @@ function showUpdateError(message, fallbackMessage = null, showRetryOption = fals
     </small>`;
   }
 
-  // Use batched DOM updates for better performance
+  // 使用批量DOM更新提高性能
   scheduleDOMUpdate(() => {
     updateErrorMessage.innerHTML = errorContent;
     updateErrorAlert.classList.remove('d-none');
   });
 
-  // Auto-hide after longer duration for complex errors
+  // 对于复杂错误使用更长的自动隐藏时间
   const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
   setTimeout(() => {
     scheduleDOMUpdate(() => {
@@ -492,7 +492,7 @@ function showUpdateError(message, fallbackMessage = null, showRetryOption = fals
 }
 
 /**
- * Show loading state for update check - immediate execution for better UX
+ * 显示更新检查的加载状态 - 立即执行
  */
 function showUpdateLoadingState() {
   // 直接获取DOM元素，不使用缓存，确保立即响应
@@ -527,11 +527,11 @@ function showUpdateLoadingState() {
 }
 
 /**
- * Show update notification with support for fallback mode (optimized)
- * @param {Object} updateInfo - Update information
+ * 显示更新通知，支持回退模式
+ * @param {Object} updateInfo - 更新信息
  */
 function showUpdateNotification(updateInfo) {
-  // Use cached DOM elements for better performance
+  // 使用缓存的DOM元素提高性能
   const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
   const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
 
@@ -539,9 +539,9 @@ function showUpdateNotification(updateInfo) {
 
   const alertDiv = updateNotification.querySelector('.alert');
 
-  // Use batched DOM updates for better performance
+  // 使用批量DOM更新提高性能
   scheduleDOMUpdate(() => {
-    // Handle fallback mode when GitHub API is unavailable
+    // 当GitHub API不可用时处理回退模式
     if (updateInfo.fallbackMode) {
       alertDiv.className = 'alert alert-warning mb-0 update-notification warning';
       updateNotificationContent.innerHTML = `
@@ -564,7 +564,7 @@ function showUpdateNotification(updateInfo) {
       `;
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
-      // Auto-hide fallback notification after 6 seconds
+      // 6秒后自动隐藏回退通知
       setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
@@ -572,7 +572,7 @@ function showUpdateNotification(updateInfo) {
       }, 6000);
 
     } else if (updateInfo.updateAvailable) {
-      // Update available
+      // 有可用更新
       alertDiv.className = 'alert alert-info mb-0 update-notification info';
 
       const versionInfo = `
@@ -602,7 +602,7 @@ function showUpdateNotification(updateInfo) {
       updateNotificationContent.innerHTML = versionInfo;
       sendDebugLog(popupI18n.t('update_available', { version: updateInfo.latestVersion }), 'info');
     } else {
-      // No update available
+      // 没有可用更新
       alertDiv.className = 'alert alert-success mb-0 update-notification success';
       updateNotificationContent.innerHTML = `
         <div class="text-center update-version-info">
@@ -616,7 +616,7 @@ function showUpdateNotification(updateInfo) {
       `;
       sendDebugLog(popupI18n.t('extension_is_up_to_date'), 'info');
 
-      // Auto-hide success notification after 4 seconds
+      // 4秒后自动隐藏成功通知
       setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
@@ -629,18 +629,18 @@ function showUpdateNotification(updateInfo) {
 }
 
 /**
- * Update button UI state during update check (optimized)
- * @param {boolean} isChecking - Whether update check is in progress
+ * 更新检查按钮UI状态
+ * @param {boolean} isChecking - 是否正在进行更新检查
  */
 function updateCheckButtonState(isChecking) {
-  // Use cached DOM elements for better performance
+  // 使用缓存的DOM元素提高性能
   const updateCheckBtn = domCache.updateCheckBtn || document.getElementById('updateCheckBtn');
   const updateCheckText = domCache.updateCheckText || document.getElementById('updateCheckText');
   const updateCheckSpinner = domCache.updateCheckSpinner || document.getElementById('updateCheckSpinner');
 
   if (!updateCheckBtn || !updateCheckText || !updateCheckSpinner) return;
 
-  // Use batched DOM updates for better performance
+  // 使用批量DOM更新提高性能
   scheduleDOMUpdate(() => {
     if (isChecking) {
       updateCheckBtn.disabled = true;
@@ -655,7 +655,7 @@ function updateCheckButtonState(isChecking) {
 }
 
 /**
- * Cancel ongoing update check request
+ * 取消正在进行的更新检查请求
  */
 function cancelUpdateCheck() {
   if (updateCheckController) {
@@ -671,16 +671,16 @@ function cancelUpdateCheck() {
 }
 
 /**
- * Debounced update check function - optimized for immediate UI response
+ * 防抖的更新检查函数 - 即时UI响应
  */
 function debouncedUpdateCheck() {
-  // Clear existing debounce timer
+  // 清除现有的防抖定时器
   if (updateCheckDebounceTimer) {
     clearTimeout(updateCheckDebounceTimer);
     updateCheckDebounceTimer = null;
   }
 
-  // Check minimum interval between requests
+  // 检查请求之间的最小间隔
   const now = Date.now();
   const timeSinceLastCheck = now - lastUpdateCheckTime;
 
@@ -698,7 +698,7 @@ function debouncedUpdateCheck() {
 }
 
 /**
- * Perform update check with request management (optimized for non-blocking operation)
+ * 执行更新检查，请求管理（非阻塞操作）
  */
 async function performUpdateCheck() {
   if (updateCheckInProgress) {
@@ -706,7 +706,7 @@ async function performUpdateCheck() {
     return;
   }
 
-  // Cancel any existing request
+  // 取消任何已有的请求
   cancelUpdateCheck();
 
   updateCheckInProgress = true;
@@ -722,14 +722,14 @@ async function performUpdateCheck() {
   // 更新按钮状态 - 放在加载状态显示之后，避免阻塞UI更新
   updateCheckButtonState(true);
 
-  // Create new abort controller for this request
+  // 为此请求创建新的中止控制器
   updateCheckController = new AbortController();
 
   try {
     initializeUpdateChecker();
     sendDebugLog(popupI18n.t('starting_update_check'), 'info');
 
-    // Add abort signal support to update checker with graceful fallback
+    // 为更新检查器添加中止信号支持，具有优雅的回退机制
     const updateInfo = await updateChecker.checkForUpdatesWithFallback(updateCheckController.signal, true);
 
     // 检查请求是否被取消
