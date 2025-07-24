@@ -73,20 +73,7 @@ class DomainManagerI18n {
     return text;
   }
 
-  // 获取当前语言
-  getCurrentLanguage() {
-    return this.currentLang;
-  }
 
-  // 检查是否已初始化
-  isInitialized() {
-    return this.initialized;
-  }
-
-  // 获取所有翻译
-  getAllTranslations() {
-    return this.translations;
-  }
 }
 
 // 创建全局实例

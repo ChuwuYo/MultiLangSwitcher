@@ -73,30 +73,7 @@ class BackgroundI18n {
     return text;
   }
 
-  // 获取当前语言
-  getCurrentLanguage() {
-    return this.currentLang;
-  }
 
-  // 检查是否已初始化
-  isInitialized() {
-    return this.initialized;
-  }
-
-  // 获取所有翻译
-  getAllTranslations() {
-    return this.translations;
-  }
-
-  // 检查翻译键是否存在
-  hasTranslation(key) {
-    return key in this.translations;
-  }
-
-  // 获取翻译键的数量
-  getTranslationCount() {
-    return Object.keys(this.translations).length;
-  }
 }
 
 // 创建全局实例
