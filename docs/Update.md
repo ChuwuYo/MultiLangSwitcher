@@ -53,8 +53,8 @@
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
 - i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
-- i18n/domain-manager-i18n.js - 重构代码结构，统一编码风格与最佳实践（v1.8.29）
-- i18n/background-i18n.js - 重构代码结构，统一编码风格与最佳实践（v1.8.29）
+- i18n/domain-manager-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29）
+- i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29）
 
 ### 移除内容
 
