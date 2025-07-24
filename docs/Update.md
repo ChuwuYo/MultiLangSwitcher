@@ -1,16 +1,17 @@
-# v1.8.28（含迭代内容）
+# v1.8.29（含迭代内容）
 
 ## 主要改动
 
 ### 1. 功能增强
 
 - ✅ 完善HTML相关i18n的错误处理，增加回退机制（v1.8.27）
+- ✅ 优化HTML相关i18n实现，均在页面加载前检测用户语言并加载相应的语言文件（v1.8.27）
 - ✅ 将test-headers相关文件重命名为detect，统一命名规范（v1.8.28）
+- ✅ 重构domain-manager-i18n.js，优化翻译加载逻辑，增加回退机制（v1.8.29）
 
 ### 2. 代码优化
 
 - ✅ 优化HTML的i18n结构，不包含任何硬编码文本，使用 ID 属性标识需要国际化的元素（v1.8.27）
-- ✅ 优化HTML相关i18n实现，均在页面加载前检测用户语言并加载相应的语言文件（v1.8.27）
 - ✅ 更新所有相关引用，包括HTML、JavaScript和文档（v1.8.28）
 - ✅ 优化i18n类名和变量名，从TestI18n改为DetectI18n（v1.8.28）
 
@@ -38,10 +39,10 @@
 ### 修改文件
 
 - README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- manifest.json - 版本号更新（v1.8.27、v1.8.28）
+- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29）
 - docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28）
 - Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28）
-- Update.md - 更新文档内容更新（v1.8.27、v1.8.28）
+- Update.md - 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
 - /images - icons更新（v1.8.27）
 - detect.html - 更新脚本引用路径（v1.8.28）
 - detect.js - 更新i18n对象引用（testI18n → detectI18n）（v1.8.28）
@@ -50,7 +51,7 @@
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
 - i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
-
+- i18n/domain-manager-i18n.js - 重构代码结构，统一编码风格与最佳实践（v1.8.29）
 
 ### 移除内容
 
