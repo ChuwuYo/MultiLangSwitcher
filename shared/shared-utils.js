@@ -49,25 +49,35 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
   try {
     // 尝试从全局i18n实例获取翻译
     let translation = key; // 默认返回键名作为fallback
-    
-    if (context === 'popup' && typeof popupI18n !== 'undefined') {
-      translation = popupI18n.t(key);
-    } else if (context === 'background' && typeof backgroundI18n !== 'undefined') {
+
+    // 智能检测上下文：如果指定了background但backgroundI18n不可用，尝试其他i18n实例
+    if (context === 'background' && typeof backgroundI18n !== 'undefined' && backgroundI18n.initialized) {
       translation = backgroundI18n.t(key, params);
+    } else if (context === 'popup' && typeof popupI18n !== 'undefined') {
+      translation = popupI18n.t(key);
+    } else {
+      // 自动检测可用的i18n实例
+      if (typeof backgroundI18n !== 'undefined' && backgroundI18n.initialized) {
+        translation = backgroundI18n.t(key, params);
+      } else if (typeof popupI18n !== 'undefined') {
+        translation = popupI18n.t(key);
+      } else if (typeof debugI18n !== 'undefined') {
+        translation = debugI18n.t(key);
+      }
     }
-    
+
     // 如果没有找到翻译或翻译就是键名本身，使用fallback机制
     if (translation === key) {
       translation = getFallbackUpdateTranslation(key, params);
     }
-    
+
     // 替换参数占位符（针对popup上下文，因为popup的t方法不支持参数）
-    if (context === 'popup' && Object.keys(params).length > 0) {
+    if ((context === 'popup' || typeof popupI18n !== 'undefined') && Object.keys(params).length > 0) {
       Object.keys(params).forEach(param => {
         translation = translation.replace(`{${param}}`, params[param]);
       });
     }
-    
+
     return translation;
   } catch (error) {
     console.warn('Failed to get update translation:', error);
@@ -82,42 +92,140 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
  * @returns {string} fallback翻译文本
  */
 function getFallbackUpdateTranslation(key, params = {}) {
+  // 检测当前语言
+  let currentLang = 'en';
+  try {
+    if (typeof detectBrowserLanguage === 'function') {
+      currentLang = detectBrowserLanguage();
+    } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+      const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+      currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+    }
+  } catch (error) {
+    currentLang = 'en';
+  }
+
   const fallbackTranslations = {
-    'check_for_updates': 'Check for updates',
-    'checking_updates': 'Checking for updates...',
-    'update_available': 'Update available: v{version}',
-    'no_updates_available': "You're using the latest version",
-    'current_version': 'Current: v{current}',
-    'latest_version': 'Latest: v{latest}',
-    'view_release': 'View Release',
-    'download_update': 'Download Update',
-    'update_check_failed': 'Failed to check for updates',
-    'network_error': 'Network error occurred',
-    'rate_limit_exceeded': 'Rate limit exceeded, try again later',
-    'invalid_response': 'Invalid response from server',
-    'update_check_success': 'Update check completed successfully',
-    'update_notification_title': 'Extension Update Available',
-    'update_check_initiated': 'Update check initiated for repository: {repo}',
-    'update_check_api_request': 'Making API request to GitHub releases endpoint',
-    'update_check_network_error': 'Network error during update check: {error}',
-    'update_check_rate_limited': 'GitHub API rate limit exceeded during update check',
-    'update_check_invalid_response': 'Invalid response from GitHub API: {response}',
-    'update_check_version_comparison': 'Version comparison: current={current}, latest={latest}, result={result}',
-    'update_check_no_update_needed': 'No update needed, current version is latest',
-    'update_check_update_available': 'Update available: {current} -> {latest}',
-    'update_check_timeout': 'Update check timed out after {timeout}ms',
-    'update_check_parsing_error': 'Error parsing version information: {error}',
-    'update_check_cache_hit': 'Using cached update check result',
-    'update_check_cache_expired': 'Update check cache expired, fetching fresh data'
+    en: {
+      'check_for_updates': 'Check for updates',
+      'checking_updates': 'Checking for updates...',
+      'update_available': 'Update available: v{version}',
+      'no_updates_available': "You're using the latest version",
+      'current_version': 'Current: v{current}',
+      'latest_version': 'Latest: v{latest}',
+      'view_release': 'View Release',
+      'download_update': 'Download Update',
+      'update_check_failed': 'Failed to check for updates',
+      'network_error': 'Network error occurred',
+      'rate_limit_exceeded': 'Rate limit exceeded, try again later',
+      'invalid_response': 'Invalid response from server',
+      'update_check_success': 'Update check completed successfully',
+      'update_notification_title': 'Extension Update Available',
+      'update_check_initiated': 'Update check initiated for repository: {repo}',
+      'update_check_api_request': 'Making API request to GitHub releases endpoint',
+      'update_check_network_error': 'Network error during update check: {error}',
+      'update_check_rate_limited': 'GitHub API rate limit exceeded during update check',
+      'update_check_invalid_response': 'Invalid response from GitHub API: {response}',
+      'update_check_version_comparison': 'Version comparison: current={current}, latest={latest}, result={result}',
+      'update_check_no_update_needed': 'No update needed, current version is latest',
+      'update_check_update_available': 'Update available: {current} -> {latest}',
+      'update_check_timeout': 'Update check timed out after {timeout}ms',
+      'update_check_parsing_error': 'Error parsing version information: {error}',
+      'update_check_cache_hit': 'Using cached update check result',
+      'update_check_cache_expired': 'Update check cache expired, fetching fresh data',
+      // Cache management messages
+      'using_persistent_cached_update_info': 'Using persistent cached update information',
+      'update_check_cancelled': 'Update check was cancelled',
+      'update_info_cached_persistently': 'Update information cached persistently',
+      'failed_cache_update_info': 'Failed to cache update info persistently: {error}',
+      'invalid_persistent_cache_structure': 'Invalid persistent cache structure, clearing',
+      'persistent_cache_different_version': 'Persistent cache is for different version, clearing',
+      'persistent_cache_expired': 'Persistent cache expired, clearing',
+      'failed_load_persistent_cache': 'Failed to load persistent cache: {error}',
+      'persistent_cache_cleared': 'Persistent cache cleared',
+      'failed_clear_persistent_cache': 'Failed to clear persistent cache: {error}',
+      'update_checker_cache_cleared': 'Update checker cache cleared',
+      'expired_memory_cache_cleaned': 'Expired memory cache cleaned up',
+      'persistent_cache_optimization_completed': 'Persistent cache optimization completed - no cleanup needed',
+      'cache_optimization_failed': 'Cache optimization failed: {error}',
+      'cache_preload_failed': 'Cache preload failed: {error}',
+      'providing_graceful_fallback': 'Providing graceful fallback for update check',
+      'using_graceful_fallback': 'Using graceful fallback due to {error}',
+      'update_check_attempt': 'Update check attempt {attempt}/{maxAttempts}',
+      'update_check_succeeded_on_attempt': 'Update check succeeded on attempt {attempt}',
+      'update_check_failed_after_attempts': 'Update check failed after {attempt} attempts. Error: {error}',
+      'update_check_retry_delay': 'Update check attempt {attempt} failed ({error}), retrying in {delay}ms...',
+      'version_comparison_failed': 'Version comparison failed: {error}',
+      'error_details': 'Error details - Type: {type}, Original: {message}, Stack: {stack}',
+      'error_getting_cache_status': 'Error getting persistent cache status: {error}',
+      'update_check_completed': 'Update check completed. Update available: {updateAvailable}',
+      'update_check_failed': 'Update check failed: {error}'
+    },
+    zh: {
+      'check_for_updates': '检查更新',
+      'checking_updates': '正在检查更新...',
+      'update_available': '发现可用更新: v{version}',
+      'no_updates_available': '您正在使用最新版本',
+      'current_version': '当前: v{current}',
+      'latest_version': '最新: v{latest}',
+      'view_release': '查看发布',
+      'download_update': '下载更新',
+      'update_check_failed': '检查更新失败',
+      'network_error': '发生网络错误',
+      'rate_limit_exceeded': '请求频率超限，请稍后重试',
+      'invalid_response': '服务器响应无效',
+      'update_check_success': '更新检查成功完成',
+      'update_notification_title': '扩展更新可用',
+      'update_check_initiated': '为仓库启动更新检查: {repo}',
+      'update_check_api_request': '向 GitHub releases 端点发起 API 请求',
+      'update_check_network_error': '更新检查时发生网络错误: {error}',
+      'update_check_rate_limited': '更新检查时 GitHub API 请求频率超限',
+      'update_check_invalid_response': 'GitHub API 响应无效: {response}',
+      'update_check_version_comparison': '版本比较: 当前={current}, 最新={latest}, 结果={result}',
+      'update_check_no_update_needed': '无需更新，当前版本已是最新',
+      'update_check_update_available': '发现可用更新: {current} -> {latest}',
+      'update_check_timeout': '更新检查超时，超时时间 {timeout}ms',
+      'update_check_parsing_error': '解析版本信息时出错: {error}',
+      'update_check_cache_hit': '使用缓存的更新检查结果',
+      'update_check_cache_expired': '更新检查缓存已过期，正在获取最新数据',
+      // 缓存管理消息
+      'using_persistent_cached_update_info': '使用持久化缓存的更新信息',
+      'update_check_cancelled': '更新检查已取消',
+      'update_info_cached_persistently': '更新信息已持久化缓存',
+      'failed_cache_update_info': '持久化缓存更新信息失败: {error}',
+      'invalid_persistent_cache_structure': '持久化缓存结构无效，正在清除',
+      'persistent_cache_different_version': '持久化缓存版本不同，正在清除',
+      'persistent_cache_expired': '持久化缓存已过期，正在清除',
+      'failed_load_persistent_cache': '加载持久化缓存失败: {error}',
+      'persistent_cache_cleared': '持久化缓存已清除',
+      'failed_clear_persistent_cache': '清除持久化缓存失败: {error}',
+      'update_checker_cache_cleared': '更新检查器缓存已清除',
+      'expired_memory_cache_cleaned': '过期内存缓存已清理',
+      'persistent_cache_optimization_completed': '持久化缓存优化完成 - 无需清理',
+      'cache_optimization_failed': '缓存优化失败: {error}',
+      'cache_preload_failed': '缓存预加载失败: {error}',
+      'providing_graceful_fallback': '为更新检查提供优雅降级',
+      'using_graceful_fallback': '由于 {error} 使用优雅降级',
+      'update_check_attempt': '更新检查尝试 {attempt}/{maxAttempts}',
+      'update_check_succeeded_on_attempt': '更新检查在第 {attempt} 次尝试时成功',
+      'update_check_failed_after_attempts': '更新检查在 {attempt} 次尝试后失败。错误: {error}',
+      'update_check_retry_delay': '更新检查第 {attempt} 次尝试失败 ({error})，将在 {delay}ms 后重试...',
+      'version_comparison_failed': '版本比较失败: {error}',
+      'error_details': '错误详情 - 类型: {type}, 原始: {message}, 堆栈: {stack}',
+      'error_getting_cache_status': '获取持久化缓存状态时出错: {error}',
+      'update_check_completed': '更新检查完成。有可用更新: {updateAvailable}',
+      'update_check_failed': '更新检查失败: {error}'
+    }
   };
-  
-  let text = fallbackTranslations[key] || key;
-  
+
+  const translations = fallbackTranslations[currentLang] || fallbackTranslations['en'];
+  let text = translations[key] || key;
+
   // 替换参数占位符
   Object.keys(params).forEach(param => {
     text = text.replace(`{${param}}`, params[param]);
   });
-  
+
   return text;
 }
 
@@ -128,6 +236,13 @@ function getFallbackUpdateTranslation(key, params = {}) {
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
 function sendLocalizedUpdateLog(key, params = {}, logType = 'info') {
-  const message = getUpdateTranslation(key, params, 'background');
-  sendDebugLog(message, logType);
+  try {
+    const message = getUpdateTranslation(key, params, 'background');
+    sendDebugLog(message, logType);
+  } catch (error) {
+    console.error('Error in sendLocalizedUpdateLog:', error);
+    // 如果翻译失败，直接使用fallback
+    const fallbackMessage = getFallbackUpdateTranslation(key, params);
+    sendDebugLog(fallbackMessage, logType);
+  }
 }

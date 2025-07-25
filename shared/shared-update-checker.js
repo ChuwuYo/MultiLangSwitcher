@@ -55,7 +55,7 @@ class UpdateChecker {
       // 如果内存缓存过期/为空，检查持久化缓存
       const persistentCache = await this.loadPersistentCache();
       if (persistentCache && persistentCache.expiry && Date.now() < persistentCache.expiry) {
-        sendDebugLog('Using persistent cached update information', 'info');
+        sendLocalizedUpdateLog('using_persistent_cached_update_info', {}, 'info');
         // 恢复到内存缓存
         this.cache = persistentCache.data;
         this.cacheExpiry = persistentCache.expiry;
@@ -76,17 +76,17 @@ class UpdateChecker {
       // 将结果缓存到内存和持久化存储
       await this.cacheUpdateInfo(updateInfo);
 
-      sendDebugLog(`Update check completed. Update available: ${updateInfo.updateAvailable}`, 'success');
+      sendLocalizedUpdateLog('update_check_completed', { updateAvailable: updateInfo.updateAvailable }, 'success');
       return updateInfo;
 
     } catch (error) {
       if (error.message === 'Request was cancelled' || error.name === 'AbortError') {
-        sendDebugLog('Update check was cancelled', 'info');
+        sendLocalizedUpdateLog('update_check_cancelled', {}, 'info');
         throw error;
       }
 
       const errorInfo = this.handleApiError(error);
-      sendDebugLog(`Update check failed: ${errorInfo.message}`, 'error');
+      sendLocalizedUpdateLog('update_check_failed', { error: errorInfo.message }, 'error');
       throw errorInfo;
     }
   }
@@ -107,14 +107,14 @@ class UpdateChecker {
           throw new Error('Request was cancelled');
         }
 
-        sendDebugLog(`Update check attempt ${attempt}/${this.retryConfig.maxAttempts}`, 'info');
+        sendLocalizedUpdateLog('update_check_attempt', { attempt: attempt, maxAttempts: this.retryConfig.maxAttempts }, 'info');
 
         // 尝试获取发布数据
         const releaseData = await this.fetchLatestRelease(signal);
 
         // 成功 - 返回数据
         if (attempt > 1) {
-          sendDebugLog(`Update check succeeded on attempt ${attempt}`, 'success');
+          sendLocalizedUpdateLog('update_check_succeeded_on_attempt', { attempt: attempt }, 'success');
         }
         return releaseData;
 
@@ -132,7 +132,7 @@ class UpdateChecker {
 
         // 如果这是最后一次尝试或错误不可重试，则不重试
         if (attempt === this.retryConfig.maxAttempts || !isRetryable) {
-          sendDebugLog(`Update check failed after ${attempt} attempts. Error: ${errorInfo.type}`, 'error');
+          sendLocalizedUpdateLog('update_check_failed_after_attempts', { attempt: attempt, error: errorInfo.type }, 'error');
           // 在抛出前增强错误信息
           const enhancedError = new Error(errorInfo.message);
           enhancedError.type = errorInfo.type;
@@ -147,7 +147,7 @@ class UpdateChecker {
 
         // 使用指数退避计算延迟
         const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
-        sendDebugLog(`Update check attempt ${attempt} failed (${errorInfo.type}), retrying in ${delay}ms...`, 'warning');
+        sendLocalizedUpdateLog('update_check_retry_delay', { attempt: attempt, error: errorInfo.type, delay: delay }, 'warning');
 
         // 重试前等待，但检查取消状态
         await this.delay(delay, signal);
@@ -300,7 +300,7 @@ class UpdateChecker {
       };
 
     } catch (error) {
-      sendDebugLog(`Version comparison failed: ${error.message}`, 'error');
+      sendLocalizedUpdateLog('version_comparison_failed', { error: error.message }, 'error');
       throw new Error(`Invalid version format: ${error.message}`);
     }
   }
@@ -473,7 +473,7 @@ class UpdateChecker {
     }
 
     // 记录详细错误信息用于调试
-    sendDebugLog(`Error details - Type: ${errorType}, Original: ${error.message}, Stack: ${error.stack || 'N/A'}`, 'error');
+    sendLocalizedUpdateLog('error_details', { type: errorType, message: error.message, stack: error.stack || 'N/A' }, 'error');
 
     return {
       type: errorType,
@@ -517,9 +517,9 @@ class UpdateChecker {
           });
         });
 
-        sendDebugLog('Update information cached persistently', 'info');
+        sendLocalizedUpdateLog('update_info_cached_persistently', {}, 'info');
       } catch (error) {
-        sendDebugLog(`Failed to cache update info persistently: ${error.message}`, 'warning');
+        sendLocalizedUpdateLog('failed_cache_update_info', { error: error.message }, 'warning');
         // 不抛出错误 - 内存缓存仍然工作
       }
     }
@@ -553,21 +553,21 @@ class UpdateChecker {
 
       // 验证缓存结构
       if (!cacheData.data || !cacheData.expiry || !cacheData.version) {
-        sendDebugLog('Invalid persistent cache structure, clearing', 'warning');
+        sendLocalizedUpdateLog('invalid_persistent_cache_structure', {}, 'warning');
         await this.clearPersistentCache();
         return null;
       }
 
       // 检查缓存是否为相同版本
       if (cacheData.version !== this.currentVersion) {
-        sendDebugLog('Persistent cache is for different version, clearing', 'info');
+        sendLocalizedUpdateLog('persistent_cache_different_version', {}, 'info');
         await this.clearPersistentCache();
         return null;
       }
 
       // 检查缓存是否已过期
       if (Date.now() >= cacheData.expiry) {
-        sendDebugLog('Persistent cache expired, clearing', 'info');
+        sendLocalizedUpdateLog('persistent_cache_expired', {}, 'info');
         await this.clearPersistentCache();
         return null;
       }
@@ -576,7 +576,7 @@ class UpdateChecker {
       return cacheData;
 
     } catch (error) {
-      sendDebugLog(`Failed to load persistent cache: ${error.message}`, 'warning');
+      sendLocalizedUpdateLog('failed_load_persistent_cache', { error: error.message }, 'warning');
       return null;
     }
   }
@@ -601,9 +601,9 @@ class UpdateChecker {
         });
       });
 
-      sendDebugLog('Persistent cache cleared', 'info');
+      sendLocalizedUpdateLog('persistent_cache_cleared', {}, 'info');
     } catch (error) {
-      sendDebugLog(`Failed to clear persistent cache: ${error.message}`, 'warning');
+      sendLocalizedUpdateLog('failed_clear_persistent_cache', { error: error.message }, 'warning');
     }
   }
 
@@ -614,7 +614,7 @@ class UpdateChecker {
     this.cache = null;
     this.cacheExpiry = null;
     await this.clearPersistentCache();
-    sendDebugLog('Update checker cache cleared', 'info');
+    sendLocalizedUpdateLog('update_checker_cache_cleared', {}, 'info');
   }
 
   /**
@@ -643,7 +643,7 @@ class UpdateChecker {
           timestamp: cacheData?.timestamp
         };
       } catch (error) {
-        sendDebugLog(`Error getting persistent cache status: ${error.message}`, 'warning');
+        sendLocalizedUpdateLog('error_getting_cache_status', { error: error.message }, 'warning');
       }
     }
 
@@ -664,20 +664,20 @@ class UpdateChecker {
       if (this.cacheExpiry && Date.now() >= this.cacheExpiry) {
         this.cache = null;
         this.cacheExpiry = null;
-        sendDebugLog('Expired memory cache cleaned up', 'info');
+        sendLocalizedUpdateLog('expired_memory_cache_cleaned', {}, 'info');
       }
 
       // 如果过期则清理持久化缓存
       if (this.persistentCacheEnabled) {
         const cacheData = await this.loadPersistentCache();
         if (!cacheData) {
-          sendDebugLog('Persistent cache optimization completed - no cleanup needed', 'info');
+          sendLocalizedUpdateLog('persistent_cache_optimization_completed', {}, 'info');
         }
       }
 
       return true;
     } catch (error) {
-      sendDebugLog(`Cache optimization failed: ${error.message}`, 'warning');
+      sendLocalizedUpdateLog('cache_optimization_failed', { error: error.message }, 'warning');
       return false;
     }
   }
@@ -700,7 +700,7 @@ class UpdateChecker {
       }
       return false;
     } catch (error) {
-      sendDebugLog(`Cache preload failed: ${error.message}`, 'warning');
+      sendLocalizedUpdateLog('cache_preload_failed', { error: error.message }, 'warning');
       return false;
     }
   }
@@ -710,7 +710,7 @@ class UpdateChecker {
    * @returns {Object} 回退更新信息
    */
   getGracefulFallback() {
-    sendDebugLog('Providing graceful fallback for update check', 'info');
+    sendLocalizedUpdateLog('providing_graceful_fallback', {}, 'info');
 
     return {
       updateAvailable: false,
@@ -748,7 +748,7 @@ class UpdateChecker {
 
       // 对于某些关键错误，如果启用，则提供优雅降级
       if (allowFallback && error.type && ['API_ERROR', 'NOT_FOUND', 'NETWORK_ERROR'].includes(error.type)) {
-        sendDebugLog(`Using graceful fallback due to ${error.type}`, 'warning');
+        sendLocalizedUpdateLog('using_graceful_fallback', { error: error.type }, 'warning');
         return this.getGracefulFallback();
       }
 
