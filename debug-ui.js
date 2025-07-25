@@ -356,11 +356,21 @@ document.addEventListener('DOMContentLoaded', function () {
   function validateAcceptLanguageFormat(languageString) {
     // 基本格式检查
     const trimmed = languageString.trim();
+    
+    // 空字符串检查
+    if (!trimmed) {
+      return true;
+    }
 
     // 检查是否包含不合法字符（Accept-Language 应该只包含字母、数字、连字符、逗号、分号、等号、点和空格）
     const invalidChars = /[^a-zA-Z0-9\-,;=.\s]/;
     if (invalidChars.test(trimmed)) {
       return true; // 包含不合法字符
+    }
+    
+    // 检查是否有连续的逗号或以逗号开头/结尾
+    if (/,,|^,|,$/.test(trimmed)) {
+      return true;
     }
 
     // 检查基本结构：应该是逗号分隔的语言标签列表
@@ -375,8 +385,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const qIndex = cleanPart.indexOf(';q=');
       const languageTag = qIndex === -1 ? cleanPart : cleanPart.substring(0, qIndex);
 
-      // 语言标签应该符合基本格式：2-3个字母，可选地跟连字符和2-3个字母
-      const languageTagPattern = /^[a-zA-Z]{2,3}(-[a-zA-Z]{2,3})?$/;
+      // 更宽松的语言标签验证：支持更复杂的格式如 zh-Hans-CN
+      // 基本格式：2-3个字母，可选地跟多个连字符分隔的2-8个字母/数字的子标签
+      const languageTagPattern = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/;
       if (!languageTagPattern.test(languageTag)) {
         return true; // 语言标签格式不正确
       }
@@ -384,6 +395,13 @@ document.addEventListener('DOMContentLoaded', function () {
       // 如果有质量值，检查其格式
       if (qIndex !== -1) {
         const qValue = cleanPart.substring(qIndex + 3);
+        
+        // 检查质量值格式：应该是0到1之间的数字，最多3位小数
+        const qValuePattern = /^(0(\.\d{1,3})?|1(\.0{1,3})?)$/;
+        if (!qValuePattern.test(qValue)) {
+          return true; // 质量值格式不正确
+        }
+        
         const qValueNum = parseFloat(qValue);
         if (isNaN(qValueNum) || qValueNum < 0 || qValueNum > 1) {
           return true; // 质量值不合法
