@@ -228,5 +228,8 @@ const debugZh = {
   // debug-headers.js 消息
   "get_rules_error": "获取规则时发生错误: ",
   "invalid_language_code": "错误: 请提供有效的语言代码",
-  "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务"
+  "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务",
+
+  // Accept-Language 格式验证
+  "accept_language_format_warning": "您自定义的 Accept-Language 格式可能有误，请您自行检查验证。"
 };

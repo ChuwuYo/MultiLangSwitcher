@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (autoSwitchToggle) {
       autoSwitchToggle.checked = !!result.autoSwitchEnabled;
-      
+
       // 等待i18n系统初始化完成后再输出日志
       const checkI18nAndLog = () => {
         if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
           setTimeout(checkI18nAndLog, 100);
         }
       };
-      
+
       checkI18nAndLog();
     }
   });
@@ -348,6 +348,52 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  /**
+   * 验证 Accept-Language 格式是否可能有问题
+   * @param {string} languageString - 要验证的语言字符串
+   * @returns {boolean} - 如果格式可能有问题返回 true
+   */
+  function validateAcceptLanguageFormat(languageString) {
+    // 基本格式检查
+    const trimmed = languageString.trim();
+
+    // 检查是否包含不合法字符（Accept-Language 应该只包含字母、数字、连字符、逗号、分号、等号、点和空格）
+    const invalidChars = /[^a-zA-Z0-9\-,;=.\s]/;
+    if (invalidChars.test(trimmed)) {
+      return true; // 包含不合法字符
+    }
+
+    // 检查基本结构：应该是逗号分隔的语言标签列表
+    const parts = trimmed.split(',');
+    for (const part of parts) {
+      const cleanPart = part.trim();
+      if (!cleanPart) {
+        return true; // 空的部分
+      }
+
+      // 检查每个部分的格式：language-tag 或 language-tag;q=value
+      const qIndex = cleanPart.indexOf(';q=');
+      const languageTag = qIndex === -1 ? cleanPart : cleanPart.substring(0, qIndex);
+
+      // 语言标签应该符合基本格式：2-3个字母，可选地跟连字符和2-3个字母
+      const languageTagPattern = /^[a-zA-Z]{2,3}(-[a-zA-Z]{2,3})?$/;
+      if (!languageTagPattern.test(languageTag)) {
+        return true; // 语言标签格式不正确
+      }
+
+      // 如果有质量值，检查其格式
+      if (qIndex !== -1) {
+        const qValue = cleanPart.substring(qIndex + 3);
+        const qValueNum = parseFloat(qValue);
+        if (isNaN(qValueNum) || qValueNum < 0 || qValueNum > 1) {
+          return true; // 质量值不合法
+        }
+      }
+    }
+
+    return false; // 格式看起来正常
+  }
+
   // 应用自定义语言设置
   document.getElementById('applyCustomLangBtn').addEventListener('click', function () {
     const customLangInput = document.getElementById('customLanguageInput');
@@ -363,10 +409,10 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // 简单的格式验证
-    // 例如，检查是否包含不允许的字符，或者是否大致符合逗号分隔的模式
-    // 这里只做非空检查
     customLangInput.classList.remove('is-invalid');
+
+    // 检查格式是否可能有问题
+    const hasFormatIssues = validateAcceptLanguageFormat(languageString);
 
     customLangResult.innerHTML = `${debugI18n.t('applying_custom_language')} ${languageString}...`;
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
@@ -377,8 +423,20 @@ document.addEventListener('DOMContentLoaded', function () {
         customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}</p>`;
         addLogMessage(`${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
       } else if (response && response.status === 'success') {
-        customLangResult.innerHTML = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
+        let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
+
+        // 如果格式可能有问题，添加警告信息
+        if (hasFormatIssues) {
+          successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
+        }
+
+        customLangResult.innerHTML = successHtml;
         addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
+
+        if (hasFormatIssues) {
+          addLogMessage(debugI18n.t('accept_language_format_warning'), 'warning');
+        }
+
         // 可选：更新存储中的语言，如果希望自定义设置持久化
         // chrome.storage.local.set({ currentLanguage: languageString });
       } else if (response && response.status === 'error') {
@@ -395,14 +453,14 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('resetCustomLangBtn').addEventListener('click', async function () {
     const customLangResult = document.getElementById('customLangResult');
     const customLangInput = document.getElementById('customLanguageInput');
-    
+
     addLogMessage('Attempting to reset Accept-Language settings via debug page.', 'info');
-    
+
     try {
       await resetAcceptLanguage();
       customLangResult.innerHTML = `<p class="success">${debugI18n.t('reset_accept_language_success')}</p>`;
       addLogMessage(debugI18n.t('reset_accept_language_success'), 'success');
-      if(customLangInput) customLangInput.value = ''; // 清空输入框
+      if (customLangInput) customLangInput.value = ''; // 清空输入框
     } catch (error) {
       const errorMessage = debugI18n.t('reset_accept_language_failed', { message: error.message });
       customLangResult.innerHTML = `<p class="error">${errorMessage}</p>`;

@@ -227,5 +227,8 @@ const debugEn = {
   // debug-headers.js messages
   "get_rules_error": "Error getting rules: ",
   "invalid_language_code": "Error: Please provide a valid language code",
-  "network_check_suggestion": "Suggestion: Check network connection or try other test services"
+  "network_check_suggestion": "Suggestion: Check network connection or try other test services",
+
+  // Accept-Language format validation
+  "accept_language_format_warning": "Your custom Accept-Language format may be incorrect, please verify it yourself."
 };
