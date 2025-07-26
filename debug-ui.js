@@ -162,10 +162,8 @@ document.addEventListener('DOMContentLoaded', function () {
     checkbox.addEventListener('change', renderLogs);
   });
 
-  // 延迟发送日志，确保翻译已加载
-  setTimeout(() => {
-    addLogMessage(debugI18n.t('debug_log_started'), 'info');
-  }, 100);
+  // 使用通用 fallback 翻译系统，避免依赖异步加载的 debugI18n
+  addLogMessage(getFallbackTranslation('debug_log_started'), 'info');
   // 初始渲染日志 (虽然此时allLogMessages是空的)
   renderLogs();
 
