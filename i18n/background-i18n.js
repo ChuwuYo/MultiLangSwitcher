@@ -57,10 +57,25 @@ class BackgroundI18n {
     }
   }
 
+  getFallbackTranslation(key) {
+    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
+    if (this.currentLang !== 'en' && !this.translations[key]) {
+      try {
+        // 尝试访问英文翻译
+        if (typeof backgroundEn !== 'undefined' && backgroundEn[key]) {
+          return backgroundEn[key];
+        }
+      } catch (error) {
+        // 忽略错误，继续使用键名作为最后回退
+      }
+    }
+    return null;
+  }
+
   t(key, params = {}) {
-    // 获取翻译文本，如果找不到则返回键名
-    let text = this.translations[key] || key;
-    
+    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
+    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
+
     // 处理参数替换，支持多种占位符格式
     if (params && typeof params === 'object') {
       Object.keys(params).forEach(param => {
@@ -69,7 +84,7 @@ class BackgroundI18n {
         text = text.replace(new RegExp(placeholder, 'g'), params[param]);
       });
     }
-    
+
     return text;
   }
 
