@@ -1,4 +1,4 @@
-# v1.8.29（含 v1.8.27 、 v1.8.28 迭代内容）
+# v1.8.31（含 v1.8.27 、 v1.8.28 、v1.8.29、v1.8.30 迭代内容）
 
 ## 主要改动
 
@@ -8,7 +8,11 @@
 - ✅ 优化HTML相关i18n实现，均在页面加载前检测用户语言并加载相应的语言文件（v1.8.27）
 - ✅ 重构domain-manager-i18n.js，优化翻译加载逻辑，增加回退机制（v1.8.29）
 - ✅ 重构background-i18n.js，优化翻译加载逻辑，增强错误处理（v1.8.29）
-- ✅ 清理i18n类中未使用的辅助方法，遵循YAGNI原则保持代码简洁（v1.8.29）
+- ✅ 完善自定义 Accept-Language 格式验证逻辑，增加用户友好的提醒功能（v1.8.30）
+- ✅ 增强调试页面自定义 Accept-Language 的格式检查与国际化的提醒（v1.8.30）
+- ✅ 新增统一的 fallback 系统作为回退机制（v1.8.31）
+- ✅ 使用通用 fallback 系统，避免依赖异步加载的 debugI18n（v1.8.31）
+- ✅ 使用fallback处理更新检查器消息的翻译（v1.8.31）
 
 ### 2. 代码优化
 
@@ -16,13 +20,17 @@
 - ✅ 将test-headers相关文件重命名为detect，统一命名规范（v1.8.28）
 - ✅ 更新所有相关引用，包括HTML、JavaScript和文档（v1.8.28）
 - ✅ 优化i18n类名和变量名，从TestI18n改为DetectI18n（v1.8.28）
+- ✅ 添加字体预加载（v1.8.30）
+- ✅ 改进Fallback方法（v1.8.31）
+- ✅ 优化语言选项表生成的缓存机制（v1.8.31）
 
 ### 3. 文档完善
 
 - ✅ TODO 更新（v1.8.27、v1.8.28）
 - ✅ 更新项目结构文档（v1.8.27、v1.8.28）
 - ✅ README 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
+- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31）
+
 
 ## 文件变更清单
 
@@ -41,7 +49,7 @@
 ### 修改文件
 
 - README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29）
+- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31）
 - docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28）
 - Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28）
 - Update.md - 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
@@ -53,9 +61,17 @@
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
 - i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
-- i18n/domain-manager-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29）
-- i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29）
+- i18n/domain-manager-i18n.js、i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29），引入统一的 fallback 系统（v1.8.31）
+- debug-ui.js - 添加 Accept-Language 格式验证和用户友好提醒（v1.8.30）
+- i18n/debug-en.js、debug-zh.js - 添加格式验证相关翻译键（v1.8.30）
+- i18n/background-en.js、background-zh.js - 添加更新检查器相关翻译（v1.8.30）
+- shared/shared-update-checker.js - 国际化所有英文日志消息（v1.8.31）
+- shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31）
+- popup.html、debug.html、detect.html - 添加字体预加载优化（v1.8.31）
+- debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31）
+- shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31）
 
 ### 移除内容
 
 - 以 `test-headers` 命名的相关文件与引用（v1.8.28）
+- i18n类中未使用的辅助方法（v1.8.29）

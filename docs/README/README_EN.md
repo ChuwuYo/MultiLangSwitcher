@@ -14,7 +14,7 @@ Project Overview
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ChuwuYo/MultiLangSwitcher)
 
-MultiLangSwitcher is a Chromium - based browser extension that helps users quickly switch the `Accept - Language` HTTP request header sent by the browser.Users can also customize the full `Accept - Language` string on the Debugging Tools page.
+MultiLangSwitcher is a Chromium-based browser extension that helps users quickly switch the `Accept - Language` HTTP request header sent by the browser.Users can also customize the full `Accept-Language` string on the Debugging Tools page.
 
 The extension utilizes the `chrome.declarativeNetRequest` API to modify the request header, ensuring performance and privacy.
 
@@ -47,7 +47,7 @@ At the same time, you can also set the browser language settings as shown in the
     <img src="https://github.com/user-attachments/assets/676cc724-c2da-481d-a605-9757df75c16c" alt="Suggestion">
 </div>
 
-This is a demonstration of customizing the `Accept - Language` string.
+This is a demonstration of customizing the `Accept-Language` string.
 
 <div align="center">
     <img src="https://github.com/user-attachments/assets/056a82cc-f89c-4aee-b0ce-0b490f206f00" alt="Custom Accept-Language">

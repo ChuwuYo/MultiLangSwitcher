@@ -77,14 +77,5 @@ const backgroundEn = {
   "update_check_api_request": "Making API request to GitHub releases endpoint",
   "update_check_success": "Update check completed successfully",
   "update_check_failed": "Update check failed: {error}",
-  "update_check_network_error": "Network error during update check: {error}",
-  "update_check_rate_limited": "GitHub API rate limit exceeded during update check",
-  "update_check_invalid_response": "Invalid response from GitHub API: {response}",
-  "update_check_version_comparison": "Version comparison: current={current}, latest={latest}, result={result}",
-  "update_check_no_update_needed": "No update needed, current version is latest",
-  "update_check_update_available": "Update available: {current} -> {latest}",
-  "update_check_timeout": "Update check timed out after {timeout}ms",
-  "update_check_parsing_error": "Error parsing version information: {error}",
-  "update_check_cache_hit": "Using cached update check result",
-  "update_check_cache_expired": "Update check cache expired, fetching fresh data"
+
 };

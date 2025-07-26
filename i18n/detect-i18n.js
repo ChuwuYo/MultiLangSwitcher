@@ -28,8 +28,34 @@ class DetectI18n {
     }
   }
 
-  t(key) {
-    return this.translations[key] || key;
+  getFallbackTranslation(key) {
+    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
+    if (this.currentLang !== 'en' && !this.translations[key]) {
+      try {
+        // 尝试访问英文翻译
+        if (typeof detectEn !== 'undefined' && detectEn[key]) {
+          return detectEn[key];
+        }
+      } catch (error) {
+        // 忽略错误，继续使用键名作为最后回退
+      }
+    }
+    return null;
+  }
+
+  t(key, params = {}) {
+    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
+    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
+    
+    // 处理参数替换
+    if (params && typeof params === 'object') {
+      Object.keys(params).forEach(param => {
+        const placeholder = `{${param}}`;
+        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
+      });
+    }
+    
+    return text;
   }
 
   applyTranslations() {

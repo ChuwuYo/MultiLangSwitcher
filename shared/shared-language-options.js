@@ -84,16 +84,42 @@ const LANGUAGE_OPTIONS = [
 ];
 
 
+// 缓存生成的HTML，避免重复计算
+let cachedLanguageOptionsHTML = null;
+
 // 生成语言选项HTML
-function generateLanguageOptions() {
-  return LANGUAGE_OPTIONS.map(option => 
-    `<option value="${option.value}">${option.label}</option>`
-  ).join('');
+function generateLanguageOptions(selectedValue = null) {
+  // 如果没有选中值且已有缓存，直接返回
+  if (!selectedValue && cachedLanguageOptionsHTML) {
+    return cachedLanguageOptionsHTML;
+  }
+
+  const html = LANGUAGE_OPTIONS.map(option => {
+    const selected = selectedValue === option.value ? ' selected' : '';
+    return `<option value="${option.value}"${selected}>${option.label}</option>`;
+  }).join('');
+
+  // 只在没有选中值时缓存
+  if (!selectedValue) {
+    cachedLanguageOptionsHTML = html;
+  }
+
+  return html;
 }
 
 // 填充语言选择框
-function populateLanguageSelect(selectElement) {
-  if (selectElement) {
-    selectElement.innerHTML = generateLanguageOptions();
+function populateLanguageSelect(selectElement, selectedValue = null) {
+  if (!selectElement) return;
+
+  selectElement.innerHTML = generateLanguageOptions(selectedValue);
+
+  // 如果指定了选中值但option中没有找到，添加自定义选项
+  if (selectedValue && !LANGUAGE_OPTIONS.find(opt => opt.value === selectedValue)) {
+    const customOption = document.createElement('option');
+    customOption.value = selectedValue;
+    customOption.textContent = `${selectedValue} (自定义)`;
+    customOption.selected = true;
+    selectElement.insertBefore(customOption, selectElement.firstChild);
   }
 }
+

@@ -50,6 +50,10 @@ const debugZh = {
   "click_view_diagnostics": "点击按钮查看诊断信息...",
   "click_view_domain_rules": "点击按钮查看域名映射规则...",
 
+  // 重置功能
+  "attempt_reset_accept_language": "正在通过调试页面尝试重置 Accept-Language 设置。",
+  "click_view_domain_rules": "点击按钮查看域名映射规则...",
+
   // 修复选项
   "fix_priority": "修复规则优先级",
   "fix_priority_desc": "将动态规则优先级提高到 100 以覆盖静态规则",
@@ -228,5 +232,8 @@ const debugZh = {
   // debug-headers.js 消息
   "get_rules_error": "获取规则时发生错误: ",
   "invalid_language_code": "错误: 请提供有效的语言代码",
-  "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务"
+  "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务",
+
+  // Accept-Language 格式验证
+  "accept_language_format_warning": "您自定义的 Accept-Language 格式可能有误，请您自行检查验证。"
 };
