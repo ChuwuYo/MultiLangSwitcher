@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function validateAcceptLanguageFormat(languageString) {
     // 基本格式检查
     const trimmed = languageString.trim();
-    
+
     // 空字符串检查
     if (!trimmed) {
       return true;
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (invalidChars.test(trimmed)) {
       return true; // 包含不合法字符
     }
-    
+
     // 检查是否有连续的逗号或以逗号开头/结尾
     if (/,,|^,|,$/.test(trimmed)) {
       return true;
@@ -393,16 +393,11 @@ document.addEventListener('DOMContentLoaded', function () {
       // 如果有质量值，检查其格式
       if (qIndex !== -1) {
         const qValue = cleanPart.substring(qIndex + 3);
-        
+
         // 检查质量值格式：应该是0到1之间的数字，最多3位小数
         const qValuePattern = /^(0(\.\d{1,3})?|1(\.0{1,3})?)$/;
         if (!qValuePattern.test(qValue)) {
           return true; // 质量值格式不正确
-        }
-        
-        const qValueNum = parseFloat(qValue);
-        if (isNaN(qValueNum) || qValueNum < 0 || qValueNum > 1) {
-          return true; // 质量值不合法
         }
       }
     }
@@ -470,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const customLangResult = document.getElementById('customLangResult');
     const customLangInput = document.getElementById('customLanguageInput');
 
-    addLogMessage('Attempting to reset Accept-Language settings via debug page.', 'info');
+    addLogMessage(debugI18n.t('attempt_reset_accept_language'), 'info');
 
     try {
       await resetAcceptLanguage();

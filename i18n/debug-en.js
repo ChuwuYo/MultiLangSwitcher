@@ -49,6 +49,9 @@ const debugEn = {
   "click_view_diagnostics": "Click the button to view diagnostic information...",
   "click_view_domain_rules": "Click the button to view domain mapping rules...",
 
+  // Reset functionality
+  "attempt_reset_accept_language": "Attempting to reset Accept-Language settings via debug page.",
+
   // Fix options
   "fix_priority": "Fix Rule Priority",
   "fix_priority_desc": "Increase dynamic rule priority to 100 to override static rules",

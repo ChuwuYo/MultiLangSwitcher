@@ -50,6 +50,10 @@ const debugZh = {
   "click_view_diagnostics": "点击按钮查看诊断信息...",
   "click_view_domain_rules": "点击按钮查看域名映射规则...",
 
+  // 重置功能
+  "attempt_reset_accept_language": "正在通过调试页面尝试重置 Accept-Language 设置。",
+  "click_view_domain_rules": "点击按钮查看域名映射规则...",
+
   // 修复选项
   "fix_priority": "修复规则优先级",
   "fix_priority_desc": "将动态规则优先级提高到 100 以覆盖静态规则",
