@@ -1,6 +1,22 @@
 // GitHub 更新检查器工具模块
 
 /**
+ * 获取本地化翻译的辅助函数
+ * @param {string} key - 翻译键
+ * @param {Object} params - 参数对象
+ * @returns {string} 本地化的文本
+ */
+function getLocalizedText(key, params = {}) {
+  // 使用通用的 fallback 翻译系统
+  if (typeof getFallbackTranslation === 'function') {
+    return getFallbackTranslation(key, params);
+  } else {
+    // 如果 getFallbackTranslation 不可用，最后的回退
+    return key;
+  }
+}
+
+/**
  * GitHub 发布版本更新检查器类
  * 集成 GitHub Releases API 来检查扩展更新
  */
@@ -43,7 +59,7 @@ class UpdateChecker {
 
       // 在开始前检查请求是否已被取消
       if (signal?.aborted) {
-        throw new Error('Request was cancelled');
+        throw new Error(getFallbackUpdateTranslation('request_was_cancelled'));
       }
 
       // 首先检查内存缓存
@@ -67,7 +83,7 @@ class UpdateChecker {
 
       // 获取后检查请求是否已被取消
       if (signal?.aborted) {
-        throw new Error('Request was cancelled');
+        throw new Error(getFallbackUpdateTranslation('request_was_cancelled'));
       }
 
       // 格式化更新信息
@@ -104,7 +120,7 @@ class UpdateChecker {
       try {
         // 在尝试前检查请求是否已被取消
         if (signal?.aborted) {
-          throw new Error('Request was cancelled');
+          throw new Error(getLocalizedText('request_was_cancelled'));
         }
 
         sendLocalizedUpdateLog('update_check_attempt', { attempt: attempt, maxAttempts: this.retryConfig.maxAttempts }, 'info');
@@ -154,7 +170,7 @@ class UpdateChecker {
       }
     }
 
-    throw lastError || new Error('Update check failed after all retry attempts');
+    throw lastError || new Error(getLocalizedText('update_check_failed_all_attempts'));
   }
 
   /**
@@ -180,7 +196,7 @@ class UpdateChecker {
       if (signal) {
         signal.addEventListener('abort', () => {
           clearTimeout(timeoutId);
-          reject(new Error('Request was cancelled'));
+          reject(new Error(getLocalizedText('request_was_cancelled')));
         }, { once: true });
       }
     });
@@ -226,7 +242,7 @@ class UpdateChecker {
 
       // 检查响应状态
       if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+        throw new Error(getLocalizedText('github_api_error', { status: response.status, statusText: response.statusText }));
       }
 
       // 解析响应数据
@@ -234,7 +250,7 @@ class UpdateChecker {
 
       // 验证响应数据
       if (!data.tag_name) {
-        throw new Error('Invalid API response: missing tag_name');
+        throw new Error(getLocalizedText('invalid_api_response_missing_tag'));
       }
 
       return data;
@@ -358,7 +374,7 @@ class UpdateChecker {
    */
   handleApiError(error) {
     let errorType = 'UNKNOWN_ERROR';
-    let userMessage = 'An unexpected error occurred';
+    let userMessage = getLocalizedText('unexpected_error_occurred');
     let retryable = false;
     let fallbackSuggestion = null;
 
@@ -371,35 +387,35 @@ class UpdateChecker {
       errorMessage.includes('network error') ||
       errorName === 'networkerror') {
       errorType = 'NETWORK_ERROR';
-      userMessage = 'Network connection failed. Please check your internet connection and try again.';
+      userMessage = getLocalizedText('network_connection_failed');
       retryable = true;
-      fallbackSuggestion = 'Check your internet connection or try again later.';
+      fallbackSuggestion = getLocalizedText('check_internet_connection');
 
       // 超时错误
     } else if (errorMessage.includes('timeout') ||
       errorMessage.includes('request timeout') ||
       errorName === 'aborterror') {
       errorType = 'TIMEOUT';
-      userMessage = 'Request timed out. The server may be slow or your connection is unstable.';
+      userMessage = getLocalizedText('request_timed_out');
       retryable = true;
-      fallbackSuggestion = 'Try again with a stable internet connection.';
+      fallbackSuggestion = getLocalizedText('try_stable_connection');
 
       // 速率限制 (403 状态码或特定消息)
     } else if (errorMessage.includes('403') ||
       errorMessage.includes('rate limit') ||
       errorMessage.includes('api rate limit exceeded')) {
       errorType = 'RATE_LIMIT';
-      userMessage = 'GitHub API rate limit exceeded. Please wait a few minutes before trying again.';
+      userMessage = getLocalizedText('github_rate_limit_exceeded');
       retryable = true; // 等待后可以重试
-      fallbackSuggestion = 'Visit the GitHub repository manually to check for updates.';
+      fallbackSuggestion = getLocalizedText('visit_github_manually');
 
       // 仓库或资源未找到
     } else if (errorMessage.includes('404') ||
       errorMessage.includes('not found')) {
       errorType = 'NOT_FOUND';
-      userMessage = 'Repository or release information not found. The repository may be private or moved.';
+      userMessage = getLocalizedText('repository_not_found');
       retryable = false;
-      fallbackSuggestion = 'Visit https://github.com/ChuwuYo/MultiLangSwitcher manually to check for updates.';
+      fallbackSuggestion = getLocalizedText('visit_github_repo_url');
 
       // 服务器错误 (5xx)
     } else if (errorMessage.includes('500') ||
@@ -408,9 +424,9 @@ class UpdateChecker {
       errorMessage.includes('504') ||
       errorMessage.includes('github api error')) {
       errorType = 'API_ERROR';
-      userMessage = 'GitHub API is temporarily unavailable. Please try again later.';
+      userMessage = getLocalizedText('github_api_unavailable');
       retryable = true;
-      fallbackSuggestion = 'GitHub services may be experiencing issues. Try again in a few minutes.';
+      fallbackSuggestion = getLocalizedText('github_services_issues');
 
       // 无效响应格式
     } else if (errorMessage.includes('invalid api response') ||
@@ -418,58 +434,58 @@ class UpdateChecker {
       errorMessage.includes('unexpected token') ||
       errorMessage.includes('json')) {
       errorType = 'INVALID_RESPONSE';
-      userMessage = 'Received invalid response from GitHub API. The service may be experiencing issues.';
+      userMessage = getLocalizedText('invalid_response_from_api');
       retryable = true;
-      fallbackSuggestion = 'GitHub API may be returning malformed data. Try again later.';
+      fallbackSuggestion = getLocalizedText('github_api_malformed_data');
 
       // 版本解析错误
     } else if (errorMessage.includes('invalid version format') ||
       errorMessage.includes('version must have exactly 3 parts') ||
       errorMessage.includes('invalid version part')) {
       errorType = 'VERSION_ERROR';
-      userMessage = 'Unable to parse version information. Please check for updates manually.';
+      userMessage = getLocalizedText('unable_to_parse_version');
       retryable = false;
-      fallbackSuggestion = 'Visit the GitHub repository to check the latest release version manually.';
+      fallbackSuggestion = getLocalizedText('visit_github_for_version');
 
       // SSL/TLS 错误
     } else if (errorMessage.includes('ssl') ||
       errorMessage.includes('tls') ||
       errorMessage.includes('certificate')) {
       errorType = 'SSL_ERROR';
-      userMessage = 'SSL/TLS connection error. Please check your network security settings.';
+      userMessage = getLocalizedText('ssl_connection_error');
       retryable = true;
-      fallbackSuggestion = 'Check your firewall or antivirus settings, or try again later.';
+      fallbackSuggestion = getLocalizedText('check_firewall_settings');
 
       // DNS 错误
     } else if (errorMessage.includes('dns') ||
       errorMessage.includes('name resolution')) {
       errorType = 'DNS_ERROR';
-      userMessage = 'Unable to resolve GitHub API address. Please check your DNS settings.';
+      userMessage = getLocalizedText('dns_resolution_error');
       retryable = true;
-      fallbackSuggestion = 'Check your internet connection and DNS settings.';
+      fallbackSuggestion = getLocalizedText('check_dns_settings');
 
       // CORS 错误 (在扩展环境中不应该发生，但以防万一)
     } else if (errorMessage.includes('cors') ||
       errorMessage.includes('cross-origin')) {
       errorType = 'CORS_ERROR';
-      userMessage = 'Cross-origin request blocked. This may be a browser security issue.';
+      userMessage = getLocalizedText('cors_request_blocked');
       retryable = false;
-      fallbackSuggestion = 'Try reloading the extension or checking for updates manually.';
+      fallbackSuggestion = getLocalizedText('reload_extension');
 
       // 用户取消请求
     } else if (errorMessage.includes('request was cancelled') ||
       errorMessage.includes('operation was aborted')) {
       errorType = 'CANCELLED';
-      userMessage = 'Update check was cancelled.';
+      userMessage = getLocalizedText('update_check_was_cancelled');
       retryable = false;
       fallbackSuggestion = null;
 
       // 通用未知错误
     } else {
       errorType = 'UNKNOWN_ERROR';
-      userMessage = 'An unexpected error occurred while checking for updates.';
+      userMessage = getLocalizedText('unexpected_error_occurred');
       retryable = false;
-      fallbackSuggestion = 'Visit https://github.com/ChuwuYo/MultiLangSwitcher to check for updates manually.';
+      fallbackSuggestion = getLocalizedText('visit_github_repo_url');
     }
 
     // 记录详细错误信息用于调试
