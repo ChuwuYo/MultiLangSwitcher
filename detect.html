@@ -160,6 +160,12 @@
     </div>
   </div>
 
+  <!-- 按正确顺序加载脚本 -->
+  <script src="shared/shared-utils.js"></script>
+  <script src="shared/shared-i18n-base.js"></script>
+  <!-- 预加载翻译文件 -->
+  <script src="i18n/detect-en.js"></script>
+  <script src="i18n/detect-zh.js"></script>
   <script src="i18n/detect-i18n.js"></script>
   <script src="detect.js"></script>
   <script type="module" src="toggle.js"></script>
