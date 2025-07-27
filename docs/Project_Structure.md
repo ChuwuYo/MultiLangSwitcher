@@ -12,6 +12,7 @@ MultiLangSwitcher/
 ├── shared/                         - 共享资源目录
 │   ├── shared-actions.js           - 共享常量定义
 │   ├── shared-utils.js             - 共享工具函数
+│   ├── shared-i18n-base.js         - 基础国际化类
 │   ├── shared-update-checker.js    - 共享更新检查器
 │   └── shared-language-options.js  - 共享语言选项列表
 ├── fonts/                          - 字体资源目录

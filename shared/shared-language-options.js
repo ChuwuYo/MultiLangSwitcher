@@ -5,8 +5,8 @@
 const LANGUAGE_OPTIONS = [
   // 中文圈
   { value: "zh-CN", label: "简体中文 (zh-CN)" }, // 中国大陆、新加坡
-  { value: "zh-HK", label: "繁体中文 (香港) (zh-HK)" }, // 中国香港特别行政区
-  { value: "zh-TW", label: "繁体中文 (台湾) (zh-TW)" }, // 中国台湾地区
+  { value: "zh-HK", label: "繁體中文 (香港) (zh-HK)" }, // 中国香港特别行政区
+  { value: "zh-TW", label: "繁體中文 (台湾) (zh-TW)" }, // 中国台湾地区
 
   // 英语主流变体
   { value: "en-US", label: "English (US) (en-US)" }, // 美国
