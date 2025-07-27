@@ -1,4 +1,4 @@
-# v1.8.50（含迭代内容）
+# v1.8.51（含迭代内容）
 
 ## 主要改动
 
@@ -58,9 +58,9 @@
 - README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
 - manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31）
 - docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28）
-- Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28）
+- Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28、v1.8.51）
 - Update.md - 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
-- /images - icons更新（v1.8.27）
+- /images - icons更新（v1.8.27、v1.8.51）
 - detect.html - 更新脚本引用路径（v1.8.28）
 - detect.js - 更新i18n对象引用（testI18n → detectI18n）（v1.8.28）
 - i18n/detect-i18n.js - 更新类名和变量名（TestI18n → DetectI18n）（v1.8.28）
