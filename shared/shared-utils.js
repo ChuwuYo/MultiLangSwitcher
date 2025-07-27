@@ -1,7 +1,10 @@
-// 共享工具函数
+/**
+ * 共享工具函数模块
+ * 提供调试日志、语言检测、本地化翻译等通用功能
+ */
 
 /**
- * 发送调试日志消息
+ * 发送调试日志消息到后台脚本
  * @param {string} message - 日志消息内容
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
@@ -15,7 +18,7 @@ function sendDebugLog(message, logType = 'info') {
         message: String(message),
         logType: logType
       }).catch(() => {
-        // 静默处理消息发送失败
+        // 静默处理消息发送失败，避免控制台噪音
       });
     }
   } catch (error) {
@@ -38,8 +41,7 @@ function detectBrowserLanguage() {
   }
 }
 /**
- *
- 获取更新相关的本地化翻译
+ * 获取更新相关的本地化翻译
  * @param {string} key - 翻译键
  * @param {Object} params - 参数对象，用于替换翻译文本中的占位符
  * @param {string} context - 上下文 ('popup' 或 'background')
@@ -80,7 +82,7 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
 
     return translation;
   } catch (error) {
-    console.warn('Failed to get update translation:', error);
+    console.warn('获取更新翻译失败:', error);
     return getFallbackTranslation(key, params);
   }
 }
