@@ -56,8 +56,8 @@
 ### 修改文件
 
 - README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31）
-- docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28）
+- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50、v1.8.51）
+- docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28、v1.8.30、v1.8.40）
 - Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28、v1.8.51）
 - Update.md - 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
 - /images - icons更新（v1.8.27、v1.8.51）
@@ -76,7 +76,7 @@
 - shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31）
 - popup.html、debug.html、detect.html - 添加字体预加载优化（v1.8.31），更新脚本引入顺序，添加shared-i18n-base.js引用（v1.8.50）
 - debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类，简化代码结构（v1.8.50）
-- shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31）
+- shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31），更新语言选项描述（v1.8.51）
 - shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31），添加中文注释和统一代码风格（v1.8.40）
 - background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50）
 - i18n/popup-en.js、popup-zh.js、debug-en.js、debug-zh.js、detect-en.js、detect-zh.js、background-en.js、background-zh.js、domain-manager-en.js、domain-manager-zh.js - 添加防重复声明机制，支持安全的多次加载（v1.8.50）
