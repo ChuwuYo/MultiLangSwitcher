@@ -88,7 +88,13 @@ class DomainManagerI18n {
     return text;
   }
 
-
+  switchLanguage(lang) {
+    if (lang !== this.currentLang) {
+      this.currentLang = lang;
+      localStorage.setItem('app-lang', lang);
+      location.reload();
+    }
+  }
 }
 
 // 创建全局实例

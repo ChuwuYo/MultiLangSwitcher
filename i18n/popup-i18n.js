@@ -1,15 +1,34 @@
 class PopupI18n {
   constructor() {
-    this.currentLang = this.detectLanguage();
+    this.currentLang = 'en';
     this.translations = {};
+    this.initialized = false;
     this.isReady = false;
     this.readyCallbacks = [];
+    this.init();
+  }
+
+  init() {
+    // 初始化，确保翻译系统正常工作
+    this.detectLanguage();
+    // 立即开始加载翻译，不等待
+    this.loadTranslations();
+    this.initialized = true;
   }
 
   detectLanguage() {
-    const saved = localStorage.getItem('app-lang');
-    if (saved) return saved;
-    return navigator.language.startsWith('zh') ? 'zh' : 'en';
+    try {
+      const saved = localStorage.getItem('app-lang');
+      if (saved) {
+        this.currentLang = saved;
+        return;
+      }
+      
+      this.currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+    } catch (error) {
+      // 发生错误时默认使用英文
+      this.currentLang = 'en';
+    }
   }
 
   async loadTranslations() {
@@ -43,9 +62,27 @@ class PopupI18n {
       this.readyCallbacks = [];
 
     } catch (error) {
-      console.error('Failed to load translations:', error);
-      // 使用英文作为回退
-      this.translations = typeof popupEn !== 'undefined' ? popupEn : {};
+      console.error('弹窗页面翻译文件加载失败:', error);
+      // 加载失败时尝试加载英文翻译作为回退
+      try {
+        if (this.currentLang !== 'en') {
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'i18n/popup-en.js';
+          document.head.appendChild(fallbackScript);
+          
+          await new Promise(resolve => {
+            fallbackScript.onload = resolve;
+          });
+          
+          this.translations = popupEn;
+        } else {
+          this.translations = {};
+        }
+      } catch (fallbackError) {
+        console.error('回退翻译文件也加载失败:', fallbackError);
+        this.translations = {};
+      }
+      
       this.isReady = true;
       this.readyCallbacks.forEach(callback => callback());
       this.readyCallbacks = [];
@@ -190,11 +227,7 @@ class PopupI18n {
       location.reload();
     }
   }
-
-
 }
 
-// 立即初始化并加载翻译
+// 创建全局实例
 const popupI18n = new PopupI18n();
-// 立即开始加载翻译，不等待
-popupI18n.loadTranslations();

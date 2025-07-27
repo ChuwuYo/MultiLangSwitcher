@@ -1,22 +1,42 @@
 class DebugI18n {
   constructor() {
-    this.currentLang = this.detectLanguage();
+    this.currentLang = 'en';
     this.translations = {};
+    this.initialized = false;
+    this.init();
+  }
+
+  init() {
+    // 初始化，确保翻译系统正常工作
+    this.detectLanguage();
     this.loadTranslations();
+    this.initialized = true;
   }
 
   detectLanguage() {
-    const saved = localStorage.getItem('app-lang');
-    if (saved) return saved;
-    // 使用与后台脚本相同的检测方法
-    if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-      return chrome.i18n.getUILanguage().toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    try {
+      const saved = localStorage.getItem('app-lang');
+      if (saved) {
+        this.currentLang = saved;
+        return;
+      }
+      
+      // 使用与后台脚本相同的检测方法
+      if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+        const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+        this.currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+      } else {
+        this.currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
+      }
+    } catch (error) {
+      // 发生错误时默认使用英文
+      this.currentLang = 'en';
     }
-    return navigator.language.startsWith('zh') ? 'zh' : 'en';
   }
 
   async loadTranslations() {
     try {
+      // 动态加载对应语言的翻译文件
       const script = document.createElement('script');
       script.src = `i18n/debug-${this.currentLang}.js`;
       document.head.appendChild(script);
@@ -34,7 +54,26 @@ class DebugI18n {
         this.applyTranslations();
       }
     } catch (error) {
-      console.error('Failed to load translations:', error);
+      console.error('调试页面翻译文件加载失败:', error);
+      // 加载失败时尝试加载英文翻译作为回退
+      try {
+        if (this.currentLang !== 'en') {
+          const fallbackScript = document.createElement('script');
+          fallbackScript.src = 'i18n/debug-en.js';
+          document.head.appendChild(fallbackScript);
+          
+          await new Promise(resolve => {
+            fallbackScript.onload = resolve;
+          });
+          
+          this.translations = debugEn;
+        } else {
+          this.translations = {};
+        }
+      } catch (fallbackError) {
+        console.error('回退翻译文件也加载失败:', fallbackError);
+        this.translations = {};
+      }
     }
   }
 
@@ -350,8 +389,6 @@ class DebugI18n {
       location.reload();
     }
   }
-
-
 }
 
 const debugI18n = new DebugI18n();
