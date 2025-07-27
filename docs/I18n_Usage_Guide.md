@@ -60,27 +60,26 @@ i18n/
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- 按正确顺序加载脚本 -->
-    <!-- 1. 基础工具函数 -->
-    <script src="shared/shared-utils.js"></script>
-    
-    <!-- 2. 基础国际化类 -->
-    <script src="shared/shared-i18n-base.js"></script>
-    
-    <!-- 3. 其他共享工具 -->
-    <script src="shared/shared-language-options.js"></script>
-    <script src="shared/shared-actions.js"></script>
-    
-    <!-- 4. 预加载翻译文件（提高性能） -->
-    <script src="i18n/popup-en.js"></script>
-    <script src="i18n/popup-zh.js"></script>
-    
-    <!-- 5. 具体的国际化类 -->
-    <script src="i18n/popup-i18n.js"></script>
+    <!-- 页面头部内容 -->
 </head>
 <body>
     <!-- 页面内容 -->
+    
+    <!-- 共享工具脚本 - 按正确顺序加载 -->
+    <script src="shared/shared-utils.js"></script>
+    <script src="shared/shared-i18n-base.js"></script>
+    <script src="shared/shared-language-options.js"></script>
+    <script src="shared/shared-actions.js"></script>
+    <script src="shared/shared-update-checker.js"></script>
+    
+    <!-- 预加载翻译文件以避免延迟 -->
+    <script src="i18n/popup-en.js"></script>
+    <script src="i18n/popup-zh.js"></script>
+    <script src="i18n/popup-i18n.js"></script>
+    
+    <!-- 主要功能脚本 -->
     <script src="popup.js"></script>
+    <script type="module" src="toggle.js"></script>
 </body>
 </html>
 ```
@@ -91,6 +90,11 @@ i18n/
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- 页面头部内容 -->
+</head>
+<body>
+    <!-- 页面内容 -->
+    
     <!-- 按正确顺序加载脚本 -->
     <script src="shared/shared-utils.js"></script>
     <script src="shared/shared-i18n-base.js"></script>
@@ -101,10 +105,9 @@ i18n/
     <script src="i18n/debug-en.js"></script>
     <script src="i18n/debug-zh.js"></script>
     <script src="i18n/debug-i18n.js"></script>
-</head>
-<body>
-    <!-- 页面内容 -->
+    <script src="debug-headers.js"></script>
     <script src="debug-ui.js"></script>
+    <script type="module" src="toggle.js"></script>
 </body>
 </html>
 ```
@@ -115,6 +118,11 @@ i18n/
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- 页面头部内容 -->
+</head>
+<body>
+    <!-- 页面内容 -->
+    
     <!-- 按正确顺序加载脚本 -->
     <script src="shared/shared-utils.js"></script>
     <script src="shared/shared-i18n-base.js"></script>
@@ -123,10 +131,8 @@ i18n/
     <script src="i18n/detect-en.js"></script>
     <script src="i18n/detect-zh.js"></script>
     <script src="i18n/detect-i18n.js"></script>
-</head>
-<body>
-    <!-- 页面内容 -->
     <script src="detect.js"></script>
+    <script type="module" src="toggle.js"></script>
 </body>
 </html>
 ```
