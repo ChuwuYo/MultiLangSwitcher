@@ -1,4 +1,6 @@
-const popupZh = {
+// 防止重复声明
+if (typeof popupZh === 'undefined') {
+  var popupZh = {
   "extension_name": "MultiLangSwitcher",
   "theme_toggle": "切换主题",
   "subtitle": "快速切换浏览器语言偏好设置",
@@ -133,3 +135,4 @@ const popupZh = {
   "update_check_fallback_message": "GitHub API 当前不可用。下方显示您的当前版本。",
   "check_manually": "手动检查"
 };
+} // 结束 if (typeof popupZh === 'undefined') 检查

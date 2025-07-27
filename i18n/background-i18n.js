@@ -1,99 +1,12 @@
-class BackgroundI18n {
+/**
+ * 后台脚本国际化类
+ * 继承基础国际化类，专门用于Service Worker环境
+ * 注意：BaseI18n类应该在background.js中已经通过importScripts加载
+ */
+class BackgroundI18n extends BaseI18n {
   constructor() {
-    this.currentLang = 'en';
-    this.translations = {};
-    this.initialized = false;
+    super('background', true); // 标记为Service Worker环境
     this.init();
-  }
-
-  init() {
-    // 同步初始化，避免 service worker 注册问题
-    this.detectLanguage();
-    this.loadTranslations();
-    this.initialized = true;
-  }
-
-  detectLanguage() {
-    try {
-      // 使用同步方式检测语言，优先使用 detectBrowserLanguage 函数
-      if (typeof detectBrowserLanguage === 'function') {
-        const detectedLang = detectBrowserLanguage();
-        this.currentLang = detectedLang.startsWith('zh') ? 'zh' : 'en';
-      } else {
-        // 回退到 Chrome 扩展 API 或浏览器语言检测
-        if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-          const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-          this.currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
-        } else {
-          // 最终回退到英文
-          this.currentLang = 'en';
-        }
-      }
-    } catch (error) {
-      // 发生错误时默认使用英文
-      this.currentLang = 'en';
-    }
-  }
-
-  loadTranslations() {
-    try {
-      // 动态加载对应语言的翻译文件
-      importScripts(`i18n/background-${this.currentLang}.js`);
-      this.translations = this.currentLang === 'zh' ? backgroundZh : backgroundEn;
-    } catch (error) {
-      console.error('后台脚本翻译文件加载失败:', error);
-      // 加载失败时尝试加载英文翻译作为回退
-      try {
-        if (this.currentLang !== 'en') {
-          importScripts('i18n/background-en.js');
-          this.translations = backgroundEn;
-        } else {
-          this.translations = {};
-        }
-      } catch (fallbackError) {
-        console.error('回退翻译文件也加载失败:', fallbackError);
-        this.translations = {};
-      }
-    }
-  }
-
-  getFallbackTranslation(key) {
-    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
-    if (this.currentLang !== 'en' && !this.translations[key]) {
-      try {
-        // 尝试访问英文翻译
-        if (typeof backgroundEn !== 'undefined' && backgroundEn[key]) {
-          return backgroundEn[key];
-        }
-      } catch (error) {
-        // 忽略错误，继续使用键名作为最后回退
-      }
-    }
-    return null;
-  }
-
-  t(key, params = {}) {
-    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
-
-    // 处理参数替换，支持多种占位符格式
-    if (params && typeof params === 'object') {
-      Object.keys(params).forEach(param => {
-        const placeholder = `{${param}}`;
-        // 使用全局替换，确保所有占位符都被替换
-        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-      });
-    }
-
-    return text;
-  }
-
-  switchLanguage(lang) {
-    if (lang !== this.currentLang) {
-      this.currentLang = lang;
-      localStorage.setItem('app-lang', lang);
-      location.reload();
-    }
   }
 }
 

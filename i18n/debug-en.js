@@ -1,4 +1,6 @@
-const debugEn = {
+// 防止重复声明
+if (typeof debugEn === 'undefined') {
+  var debugEn = {
   // Page basic information
   "title": "MultiLangSwitcher Debug Page",
   "heading": "MultiLangSwitcher Debug Tools",
@@ -235,3 +237,4 @@ const debugEn = {
   // Accept-Language format validation
   "accept_language_format_warning": "Your custom Accept-Language format may be incorrect, please verify it yourself."
 };
+} // 结束 if (typeof debugEn === 'undefined') 检查

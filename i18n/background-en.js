@@ -1,4 +1,6 @@
-const backgroundEn = {
+// 防止重复声明
+if (typeof backgroundEn === 'undefined') {
+  var backgroundEn = {
   "background": "Background",
   "extension_installed": "MultiLangSwitcher extension installed/updated. Reason: {reason}",
   "domain_rules_loaded": "Domain rules loaded successfully",
@@ -79,3 +81,4 @@ const backgroundEn = {
   "update_check_failed": "Update check failed: {error}",
 
 };
+} // 结束 if (typeof backgroundEn === 'undefined') 检查

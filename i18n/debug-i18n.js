@@ -1,110 +1,26 @@
-class DebugI18n {
+// 引入基础国际化类
+// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+
+/**
+ * 调试页面国际化类
+ * 继承基础国际化类，专门用于debug页面
+ */
+class DebugI18n extends BaseI18n {
   constructor() {
-    this.currentLang = 'en';
-    this.translations = {};
-    this.initialized = false;
+    super('debug', false); // 标记为浏览器环境
     this.init();
   }
 
-  init() {
-    // 初始化，确保翻译系统正常工作
-    this.detectLanguage();
-    this.loadTranslations();
-    this.initialized = true;
-  }
-
-  detectLanguage() {
-    try {
-      const saved = localStorage.getItem('app-lang');
-      if (saved) {
-        this.currentLang = saved;
-        return;
-      }
-      
-      // 使用与后台脚本相同的检测方法
-      if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-        const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-        this.currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
-      } else {
-        this.currentLang = navigator.language.startsWith('zh') ? 'zh' : 'en';
-      }
-    } catch (error) {
-      // 发生错误时默认使用英文
-      this.currentLang = 'en';
-    }
-  }
-
+  /**
+   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   */
   async loadTranslations() {
-    try {
-      // 动态加载对应语言的翻译文件
-      const script = document.createElement('script');
-      script.src = `i18n/debug-${this.currentLang}.js`;
-      document.head.appendChild(script);
-      
-      await new Promise(resolve => {
-        script.onload = resolve;
-      });
-      
-      this.translations = this.currentLang === 'zh' ? debugZh : debugEn;
-      
-      // 确保 DOM 完全加载后再应用翻译
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
-      } else {
-        this.applyTranslations();
-      }
-    } catch (error) {
-      console.error('调试页面翻译文件加载失败:', error);
-      // 加载失败时尝试加载英文翻译作为回退
-      try {
-        if (this.currentLang !== 'en') {
-          const fallbackScript = document.createElement('script');
-          fallbackScript.src = 'i18n/debug-en.js';
-          document.head.appendChild(fallbackScript);
-          
-          await new Promise(resolve => {
-            fallbackScript.onload = resolve;
-          });
-          
-          this.translations = debugEn;
-        } else {
-          this.translations = {};
-        }
-      } catch (fallbackError) {
-        console.error('回退翻译文件也加载失败:', fallbackError);
-        this.translations = {};
-      }
-    }
-  }
-
-  getFallbackTranslation(key) {
-    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
-    if (this.currentLang !== 'en' && !this.translations[key]) {
-      try {
-        // 尝试访问英文翻译
-        if (typeof debugEn !== 'undefined' && debugEn[key]) {
-          return debugEn[key];
-        }
-      } catch (error) {
-        // 忽略错误，继续使用键名作为最后回退
-      }
-    }
-    return null;
-  }
-
-  t(key, params = {}) {
-    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
+    await super.loadTranslations();
     
-    // 处理参数替换
-    if (params && typeof params === 'object') {
-      Object.keys(params).forEach(param => {
-        const placeholder = `{${param}}`;
-        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-      });
+    // 确保DOM完全加载后再应用翻译
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
     }
-    
-    return text;
   }
 
   applyTranslations() {

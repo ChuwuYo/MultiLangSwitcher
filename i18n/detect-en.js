@@ -1,4 +1,6 @@
-const detectEn = {
+// 防止重复声明
+if (typeof detectEn === 'undefined') {
+  var detectEn = {
   "title": "MultiLangSwitcher Detection Page",
   "heading": "MultiLangSwitcher Detection Page",
   "subtitle": "This page is used to verify the effect of MultiLangSwitcher extension settings",
@@ -70,3 +72,4 @@ const detectEn = {
   "button_add_failed_container": "Could not precisely find .header-info for adding refresh button, button has been added to the end of .container.",
   "button_add_failed_no_container": "Could not find .container for adding refresh button."
 };
+} // 结束 if (typeof detectEn === 'undefined') 检查

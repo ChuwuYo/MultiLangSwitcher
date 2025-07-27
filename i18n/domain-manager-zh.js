@@ -1,4 +1,6 @@
-const domainManagerZh = {
+// 防止重复声明
+if (typeof domainManagerZh === 'undefined') {
+  var domainManagerZh = {
   "trying_load_rules_file": "尝试加载规则文件",
   "rules_file_loaded_success": "规则文件加载成功，数据结构",
   "domain_rules_loaded_count": "成功加载 {count} 条域名规则",
@@ -22,3 +24,4 @@ const domainManagerZh = {
   "top_level": "顶级",
   "failed_get_custom_rules": "获取自定义规则失败"
 };
+} // 结束 if (typeof domainManagerZh === 'undefined') 检查
