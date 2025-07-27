@@ -99,7 +99,7 @@ class BaseI18n {
             this.loadCurrentLanguageSync();
             this.markAsReady();
         } catch (error) {
-            console.error(`${this.componentName}翻译文件加载失败:`, error);
+            console.error(`${this.componentName} translation file loading failed:`, error);
             this.loadFallbackTranslationsSync();
         }
     }
@@ -151,7 +151,7 @@ class BaseI18n {
             this.loadEnglishTranslationsSync();
             this.markAsReady();
         } catch (fallbackError) {
-            console.error('回退翻译文件也加载失败:', fallbackError);
+            console.error('Fallback translation file loading also failed:', fallbackError);
             this.translations = {};
             this.markAsReady();
         }
@@ -181,7 +181,7 @@ class BaseI18n {
             await this.loadTranslationsByEnvironment();
             this.markAsReady();
         } catch (error) {
-            console.error(`${this.componentName}翻译文件加载失败:`, error);
+            console.error(`${this.componentName} translation file loading failed:`, error);
             await this.loadFallbackTranslations();
             this.markAsReady();
         }
@@ -268,7 +268,7 @@ class BaseI18n {
         try {
             await this.loadEnglishTranslations();
         } catch (fallbackError) {
-            console.error('回退翻译文件也加载失败:', fallbackError);
+            console.error('Fallback translation file loading also failed:', fallbackError);
             this.translations = {};
         }
     }

@@ -21,9 +21,14 @@ const DEFAULT_LANG_EN = 'en';      // 为英文用户设置的默认语言，也
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
 function sendBackgroundLog(message, logType = 'info') {
+  // 安全获取翻译，如果翻译系统未准备好则使用英文回退
+  const backgroundLabel = (backgroundI18n && backgroundI18n.isReady) 
+    ? backgroundI18n.t('background') 
+    : 'Background';
+  
   // 确保同样的消息被用于控制台日志和调试日志
-  console.log(`[${backgroundI18n.t('background')} ${logType.toUpperCase()}] ${message}`);
-  sendDebugLog(`[${backgroundI18n.t('background')}] ${message}`, logType);
+  console.log(`[${backgroundLabel} ${logType.toUpperCase()}] ${message}`);
+  sendDebugLog(`[${backgroundLabel}] ${message}`, logType);
 }
 
 // 全局状态变量
