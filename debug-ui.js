@@ -5,11 +5,11 @@
  * @param {string} prefix - 链接前缀文本
  * @returns {string} 包含外部检查链接的HTML
  */
-function getExternalCheckLinks(prefix = debugI18n.t('please_visit')) {
+const getExternalCheckLinks = (prefix = debugI18n.t('please_visit')) => {
   return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${debugI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${debugI18n.t('to_view')}</p>`;
-}
+};
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   // 初始化语言选项
   const testLanguageSelect = document.getElementById('testLanguage');
   if (testLanguageSelect) {
@@ -17,12 +17,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 显示当前规则和匹配的规则详情
-  document.getElementById('showRulesBtn').addEventListener('click', function () {
+  document.getElementById('showRulesBtn').addEventListener('click', () => {
     const resultElement = document.getElementById('rulesResult');
     resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
     // 获取动态规则
-    chrome.declarativeNetRequest.getDynamicRules(function (rules) {
+    chrome.declarativeNetRequest.getDynamicRules((rules) => {
       let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
       if (rules.length === 0) {
@@ -142,17 +142,17 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 监听来自扩展其他部分的日志消息
-  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.type === 'DEBUG_LOG') {
-      // 过滤掉后台脚本的日志消息
-      if (!request.message.startsWith('[后台]') && !request.message.startsWith('[Background]')) {
-        addLogMessage(request.message, request.logType);
-      }
+  chrome.runtime.onMessage.addListener((request) => {
+    if (request.type !== 'DEBUG_LOG') return;
+    
+    // 过滤掉后台脚本的日志消息
+    if (!request.message.startsWith('[后台]') && !request.message.startsWith('[Background]')) {
+      addLogMessage(request.message, request.logType);
     }
   });
 
   // 清除日志按钮功能
-  clearLogsBtn.addEventListener('click', function () {
+  clearLogsBtn.addEventListener('click', () => {
     allLogMessages = []; // 清空存储的日志
     renderLogs(); // 渲染空日志列表
   });
@@ -168,27 +168,27 @@ document.addEventListener('DOMContentLoaded', function () {
   renderLogs();
 
   // 页面加载时同步自动切换状态
-  chrome.storage.local.get(['autoSwitchEnabled'], function (result) {
+  chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
-    if (autoSwitchToggle) {
-      autoSwitchToggle.checked = !!result.autoSwitchEnabled;
+    if (!autoSwitchToggle) return;
 
-      // 等待i18n系统初始化完成后再输出日志
-      const checkI18nAndLog = () => {
-        if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
-          addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
-        } else {
-          setTimeout(checkI18nAndLog, 100);
-        }
-      };
+    autoSwitchToggle.checked = !!result.autoSwitchEnabled;
 
-      checkI18nAndLog();
-    }
+    // 等待i18n系统初始化完成后再输出日志
+    const checkI18nAndLog = () => {
+      if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
+        addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
+      } else {
+        setTimeout(checkI18nAndLog, 100);
+      }
+    };
+
+    checkI18nAndLog();
   });
 
 
   // 测试请求头
-  document.getElementById('testHeaderBtn').addEventListener('click', async function () {
+  document.getElementById('testHeaderBtn').addEventListener('click', async () => {
     const language = document.getElementById('testLanguage').value;
     const resultElement = document.getElementById('headerTestResult');
     resultElement.innerHTML = `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`;
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // 修复规则优先级
-  document.getElementById('fixPriorityBtn').addEventListener('click', function () {
+  document.getElementById('fixPriorityBtn').addEventListener('click', () => {
     const resultElement = document.getElementById('fixResult');
     resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // 清除并重新应用规则
-  document.getElementById('clearAllRulesBtn').addEventListener('click', function () {
+  document.getElementById('clearAllRulesBtn').addEventListener('click', () => {
     const resultElement = document.getElementById('fixResult');
     resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // 应用自定义语言设置
-  document.getElementById('applyCustomLangBtn').addEventListener('click', function () {
+  document.getElementById('applyCustomLangBtn').addEventListener('click', () => {
     const customLangInput = document.getElementById('customLanguageInput');
     const customLangResult = document.getElementById('customLangResult');
     const languageString = customLangInput.value.trim();
@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // 重置自定义语言设置
-  document.getElementById('resetCustomLangBtn').addEventListener('click', async function () {
+  document.getElementById('resetCustomLangBtn').addEventListener('click', async () => {
     const customLangResult = document.getElementById('customLangResult');
     const customLangInput = document.getElementById('customLanguageInput');
 
@@ -480,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // 显示诊断信息
-  document.getElementById('showDiagnosticsBtn').addEventListener('click', function () {
+  document.getElementById('showDiagnosticsBtn').addEventListener('click', () => {
     const resultElement = document.getElementById('diagnosticsResult');
     resultElement.innerHTML = debugI18n.t('collecting_diagnostics');
     addLogMessage(debugI18n.t('try_show_diagnostics'), 'info');
@@ -578,10 +578,13 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.runtime.sendMessage({
       type: 'AUTO_SWITCH_TOGGLED',
       enabled: isEnabled
-    }, function (response) {
+    }, (response) => {
       if (chrome.runtime.lastError) {
         addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${chrome.runtime.lastError.message}`, 'error');
-      } else if (response && response.status === 'success') {
+        return;
+      }
+      
+      if (response && response.status === 'success') {
         addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
         // 更新存储中的状态
         chrome.storage.local.set({ autoSwitchEnabled: isEnabled });

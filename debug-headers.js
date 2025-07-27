@@ -10,17 +10,18 @@ async function showCurrentRules() {
     sendDebugLog(debugI18n.t('getting_rules'), 'info');
     
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    sendDebugLog(debugI18n.t('current_rules') + ' ' + JSON.stringify(rules, null, 2), 'info');
+    sendDebugLog(`${debugI18n.t('current_rules')} ${JSON.stringify(rules, null, 2)}`, 'info');
 
     if (rules.length === 0) {
       sendDebugLog(debugI18n.t('no_rules_warning'), 'warning');
+      return;
     }
 
     const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
-    sendDebugLog(debugI18n.t('matched_rules') + ' ' + JSON.stringify(matchedRules, null, 2), 'info');
+    sendDebugLog(`${debugI18n.t('matched_rules')} ${JSON.stringify(matchedRules, null, 2)}`, 'info');
     
   } catch (error) {
-    sendDebugLog(debugI18n.t('get_rules_error') + error.message, 'error');
+    sendDebugLog(`${debugI18n.t('get_rules_error')}${error.message}`, 'error');
   }
 }
 
@@ -77,7 +78,7 @@ async function fetchWithRetry(url, options = {}) {
  */
 function handleHeaderResponse(data, language) {
   const headers = data.headers;
-  sendDebugLog(debugI18n.t('received_headers') + ' ' + JSON.stringify(headers, null, 2), 'info');
+  sendDebugLog(`${debugI18n.t('received_headers')} ${JSON.stringify(headers, null, 2)}`, 'info');
 
   if (!headers['Accept-Language']) {
     sendDebugLog(debugI18n.t('no_accept_language'), 'error');
