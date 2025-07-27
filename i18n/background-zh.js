@@ -1,4 +1,6 @@
-const backgroundZh = {
+// 防止重复声明
+if (typeof backgroundZh === 'undefined') {
+  var backgroundZh = {
   "background": "后台",
   "extension_installed": "MultiLangSwitcher 扩展已安装/更新. 原因: {reason}",
   "domain_rules_loaded": "域名规则加载成功",
@@ -79,3 +81,4 @@ const backgroundZh = {
   "update_check_failed": "更新检查失败: {error}",
 
 };
+} // 结束 if (typeof backgroundZh === 'undefined') 检查

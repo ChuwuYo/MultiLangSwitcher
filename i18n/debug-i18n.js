@@ -1,71 +1,29 @@
-class DebugI18n {
+// 引入基础国际化类
+// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+
+/**
+ * 调试页面国际化类
+ * 继承基础国际化类，专门用于debug页面
+ */
+class DebugI18n extends BaseI18n {
   constructor() {
-    this.currentLang = this.detectLanguage();
-    this.translations = {};
-    this.loadTranslations();
+    super('debug', false); // 标记为浏览器环境
+    this.init();
   }
 
-  detectLanguage() {
-    const saved = localStorage.getItem('app-lang');
-    if (saved) return saved;
-    // 使用与后台脚本相同的检测方法
-    if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-      return chrome.i18n.getUILanguage().toLowerCase().startsWith('zh') ? 'zh' : 'en';
-    }
-    return navigator.language.startsWith('zh') ? 'zh' : 'en';
-  }
-
+  /**
+   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   */
   async loadTranslations() {
-    try {
-      const script = document.createElement('script');
-      script.src = `i18n/debug-${this.currentLang}.js`;
-      document.head.appendChild(script);
-      
-      await new Promise(resolve => {
-        script.onload = resolve;
-      });
-      
-      this.translations = this.currentLang === 'zh' ? debugZh : debugEn;
-      
-      // 确保 DOM 完全加载后再应用翻译
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
-      } else {
-        this.applyTranslations();
-      }
-    } catch (error) {
-      console.error('Failed to load translations:', error);
-    }
-  }
-
-  getFallbackTranslation(key) {
-    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
-    if (this.currentLang !== 'en' && !this.translations[key]) {
-      try {
-        // 尝试访问英文翻译
-        if (typeof debugEn !== 'undefined' && debugEn[key]) {
-          return debugEn[key];
-        }
-      } catch (error) {
-        // 忽略错误，继续使用键名作为最后回退
-      }
-    }
-    return null;
-  }
-
-  t(key, params = {}) {
-    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
+    await super.loadTranslations();
     
-    // 处理参数替换
-    if (params && typeof params === 'object') {
-      Object.keys(params).forEach(param => {
-        const placeholder = `{${param}}`;
-        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-      });
+    // 确保DOM完全加载后再应用翻译
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
+    } else {
+      // DOM已经加载完成，直接应用翻译
+      this.applyTranslations();
     }
-    
-    return text;
   }
 
   applyTranslations() {
@@ -350,8 +308,6 @@ class DebugI18n {
       location.reload();
     }
   }
-
-
 }
 
 const debugI18n = new DebugI18n();

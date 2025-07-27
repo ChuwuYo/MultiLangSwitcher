@@ -1,4 +1,7 @@
-// 共享的语言选项列表
+/**
+ * 共享的语言选项列表
+ * 包含常用的语言代码和对应的显示标签
+ */
 const LANGUAGE_OPTIONS = [
   // 中文圈
   { value: "zh-CN", label: "简体中文 (zh-CN)" }, // 中国大陆、新加坡
@@ -87,9 +90,13 @@ const LANGUAGE_OPTIONS = [
 // 缓存生成的HTML，避免重复计算
 let cachedLanguageOptionsHTML = null;
 
-// 生成语言选项HTML
+/**
+ * 生成语言选项HTML字符串
+ * @param {string|null} selectedValue - 选中的语言值，为null时不选中任何选项
+ * @returns {string} 生成的option元素HTML字符串
+ */
 function generateLanguageOptions(selectedValue = null) {
-  // 如果没有选中值且已有缓存，直接返回
+  // 如果没有选中值且已有缓存，直接返回缓存结果
   if (!selectedValue && cachedLanguageOptionsHTML) {
     return cachedLanguageOptionsHTML;
   }
@@ -99,7 +106,7 @@ function generateLanguageOptions(selectedValue = null) {
     return `<option value="${option.value}"${selected}>${option.label}</option>`;
   }).join('');
 
-  // 只在没有选中值时缓存
+  // 只在没有选中值时进行缓存
   if (!selectedValue) {
     cachedLanguageOptionsHTML = html;
   }
@@ -107,13 +114,17 @@ function generateLanguageOptions(selectedValue = null) {
   return html;
 }
 
-// 填充语言选择框
+/**
+ * 填充语言选择框元素
+ * @param {HTMLSelectElement} selectElement - 要填充的select元素
+ * @param {string|null} selectedValue - 要选中的语言值
+ */
 function populateLanguageSelect(selectElement, selectedValue = null) {
   if (!selectElement) return;
 
   selectElement.innerHTML = generateLanguageOptions(selectedValue);
 
-  // 如果指定了选中值但option中没有找到，添加自定义选项
+  // 如果指定了选中值但在预定义选项中没有找到，添加自定义选项
   if (selectedValue && !LANGUAGE_OPTIONS.find(opt => opt.value === selectedValue)) {
     const customOption = document.createElement('option');
     customOption.value = selectedValue;

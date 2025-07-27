@@ -1,94 +1,29 @@
-class PopupI18n {
+// 引入基础国际化类
+// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+
+/**
+ * 弹窗页面国际化类
+ * 继承基础国际化类，专门用于popup页面
+ */
+class PopupI18n extends BaseI18n {
   constructor() {
-    this.currentLang = this.detectLanguage();
-    this.translations = {};
-    this.isReady = false;
-    this.readyCallbacks = [];
+    super('popup', false); // 标记为浏览器环境
+    this.init();
   }
 
-  detectLanguage() {
-    const saved = localStorage.getItem('app-lang');
-    if (saved) return saved;
-    return navigator.language.startsWith('zh') ? 'zh' : 'en';
-  }
-
+  /**
+   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   */
   async loadTranslations() {
-    try {
-      // 预加载翻译文件，避免动态创建script标签的延迟
-      if (this.currentLang === 'zh' && typeof popupZh !== 'undefined') {
-        this.translations = popupZh;
-      } else if (this.currentLang === 'en' && typeof popupEn !== 'undefined') {
-        this.translations = popupEn;
-      } else {
-        // 回退到动态加载
-        const script = document.createElement('script');
-        script.src = `i18n/popup-${this.currentLang}.js`;
-        document.head.appendChild(script);
-
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          // 添加超时处理
-          setTimeout(() => reject(new Error('Translation loading timeout')), 3000);
-        });
-
-        this.translations = this.currentLang === 'zh' ? popupZh : popupEn;
-      }
-
-      this.isReady = true;
-      this.applyTranslations();
-
-      // 执行等待的回调
-      this.readyCallbacks.forEach(callback => callback());
-      this.readyCallbacks = [];
-
-    } catch (error) {
-      console.error('Failed to load translations:', error);
-      // 使用英文作为回退
-      this.translations = typeof popupEn !== 'undefined' ? popupEn : {};
-      this.isReady = true;
-      this.readyCallbacks.forEach(callback => callback());
-      this.readyCallbacks = [];
-    }
-  }
-
-  // 添加ready方法，确保翻译加载完成后再执行操作
-  ready(callback) {
-    if (this.isReady) {
-      callback();
+    await super.loadTranslations();
+    
+    // 确保DOM完全加载后再应用翻译
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
     } else {
-      this.readyCallbacks.push(callback);
+      // DOM已经加载完成，直接应用翻译
+      this.applyTranslations();
     }
-  }
-
-  getFallbackTranslation(key) {
-    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
-    if (this.currentLang !== 'en' && !this.translations[key]) {
-      try {
-        // 尝试访问英文翻译
-        if (typeof popupEn !== 'undefined' && popupEn[key]) {
-          return popupEn[key];
-        }
-      } catch (error) {
-        // 忽略错误，继续使用键名作为最后回退
-      }
-    }
-    return null;
-  }
-
-  t(key, params = {}) {
-    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
-
-    // 处理参数替换
-    if (params && typeof params === 'object') {
-      Object.keys(params).forEach(param => {
-        const placeholder = `{${param}}`;
-        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-      });
-    }
-
-    return text;
   }
 
   applyTranslations() {
@@ -190,11 +125,7 @@ class PopupI18n {
       location.reload();
     }
   }
-
-
 }
 
-// 立即初始化并加载翻译
+// 创建全局实例
 const popupI18n = new PopupI18n();
-// 立即开始加载翻译，不等待
-popupI18n.loadTranslations();

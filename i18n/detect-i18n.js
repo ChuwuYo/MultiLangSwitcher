@@ -1,61 +1,29 @@
-class DetectI18n {
+// 引入基础国际化类
+// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+
+/**
+ * 检测页面国际化类
+ * 继承基础国际化类，专门用于detect页面
+ */
+class DetectI18n extends BaseI18n {
   constructor() {
-    this.currentLang = this.detectLanguage();
-    this.translations = {};
-    this.loadTranslations();
+    super('detect', false); // 标记为浏览器环境
+    this.init();
   }
 
-  detectLanguage() {
-    const saved = localStorage.getItem('app-lang');
-    if (saved) return saved;
-    return navigator.language.startsWith('zh') ? 'zh' : 'en';
-  }
-
+  /**
+   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   */
   async loadTranslations() {
-    try {
-      const script = document.createElement('script');
-      script.src = `i18n/detect-${this.currentLang}.js`;
-      document.head.appendChild(script);
-      
-      await new Promise(resolve => {
-        script.onload = resolve;
-      });
-      
-      this.translations = this.currentLang === 'zh' ? detectZh : detectEn;
+    await super.loadTranslations();
+    
+    // 确保DOM完全加载后再应用翻译
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
+    } else {
+      // DOM已经加载完成，直接应用翻译
       this.applyTranslations();
-    } catch (error) {
-      console.error('Failed to load translations:', error);
     }
-  }
-
-  getFallbackTranslation(key) {
-    // 如果当前不是英文且找不到翻译，尝试从英文翻译中获取
-    if (this.currentLang !== 'en' && !this.translations[key]) {
-      try {
-        // 尝试访问英文翻译
-        if (typeof detectEn !== 'undefined' && detectEn[key]) {
-          return detectEn[key];
-        }
-      } catch (error) {
-        // 忽略错误，继续使用键名作为最后回退
-      }
-    }
-    return null;
-  }
-
-  t(key, params = {}) {
-    // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-    let text = this.translations[key] || this.getFallbackTranslation(key) || key;
-    
-    // 处理参数替换
-    if (params && typeof params === 'object') {
-      Object.keys(params).forEach(param => {
-        const placeholder = `{${param}}`;
-        text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-      });
-    }
-    
-    return text;
   }
 
   applyTranslations() {
@@ -198,8 +166,6 @@ class DetectI18n {
       location.reload();
     }
   }
-
-
 }
 
 const detectI18n = new DetectI18n();

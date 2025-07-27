@@ -1,4 +1,6 @@
-const detectZh = {
+// 防止重复声明
+if (typeof detectZh === 'undefined') {
+  var detectZh = {
   "title": "MultiLangSwitcher 检测页面",
   "heading": "MultiLangSwitcher 检测页面",
   "subtitle": "此页面用于验证MultiLangSwitcher扩展的设置效果",
@@ -70,3 +72,4 @@ const detectZh = {
   "button_add_failed_container": "未能精确找到 .header-info 用于附加刷新按钮，按钮已附加到 .container 末尾。",
   "button_add_failed_no_container": "未能找到 .container 用于附加刷新按钮。"
 };
+} // 结束 if (typeof detectZh === 'undefined') 检查

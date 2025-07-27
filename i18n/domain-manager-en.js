@@ -1,4 +1,6 @@
-const domainManagerEn = {
+// 防止重复声明
+if (typeof domainManagerEn === 'undefined') {
+  var domainManagerEn = {
   "trying_load_rules_file": "Trying to load rules file",
   "rules_file_loaded_success": "Rules file loaded successfully, data structure",
   "domain_rules_loaded_count": "Successfully loaded {count} domain rules",
@@ -22,3 +24,4 @@ const domainManagerEn = {
   "top_level": "Top-level",
   "failed_get_custom_rules": "Failed to get custom rules"
 };
+} // 结束 if (typeof domainManagerEn === 'undefined') 检查

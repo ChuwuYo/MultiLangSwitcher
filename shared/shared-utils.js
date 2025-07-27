@@ -1,7 +1,10 @@
-// 共享工具函数
+/**
+ * 共享工具函数模块
+ * 提供调试日志、语言检测、本地化翻译等通用功能
+ */
 
 /**
- * 发送调试日志消息
+ * 发送调试日志消息到后台脚本
  * @param {string} message - 日志消息内容
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
@@ -15,7 +18,7 @@ function sendDebugLog(message, logType = 'info') {
         message: String(message),
         logType: logType
       }).catch(() => {
-        // 静默处理消息发送失败
+        // 静默处理消息发送失败，避免控制台噪音
       });
     }
   } catch (error) {
@@ -38,8 +41,7 @@ function detectBrowserLanguage() {
   }
 }
 /**
- *
- 获取更新相关的本地化翻译
+ * 获取更新相关的本地化翻译
  * @param {string} key - 翻译键
  * @param {Object} params - 参数对象，用于替换翻译文本中的占位符
  * @param {string} context - 上下文 ('popup' 或 'background')
@@ -92,14 +94,42 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
  * @returns {string} fallback翻译文本
  */
 function getFallbackTranslation(key, params = {}) {
-  // 检测当前语言
+  // 检测当前语言，优先使用i18n实例的语言设置
   let currentLang = 'en';
   try {
-    if (typeof detectBrowserLanguage === 'function') {
-      currentLang = detectBrowserLanguage();
-    } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-      const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-      currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+    // 1. 优先从已初始化的i18n实例获取当前语言
+    if (typeof backgroundI18n !== 'undefined' && backgroundI18n.isReady) {
+      currentLang = backgroundI18n.currentLang;
+    } else if (typeof popupI18n !== 'undefined' && popupI18n.isReady) {
+      currentLang = popupI18n.currentLang;
+    } else if (typeof debugI18n !== 'undefined' && debugI18n.isReady) {
+      currentLang = debugI18n.currentLang;
+    } else if (typeof detectI18n !== 'undefined' && detectI18n.isReady) {
+      currentLang = detectI18n.currentLang;
+    } else {
+      // 2. 如果没有可用的i18n实例，使用localStorage中保存的用户语言设置
+      if (typeof localStorage !== 'undefined') {
+        const savedLang = localStorage.getItem('app-lang');
+        if (savedLang) {
+          currentLang = savedLang;
+        } else {
+          // 3. 如果没有保存的设置，使用浏览器语言检测
+          if (typeof detectBrowserLanguage === 'function') {
+            currentLang = detectBrowserLanguage();
+          } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+            const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+            currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+          }
+        }
+      } else {
+        // 4. 在Service Worker环境中，使用浏览器语言检测
+        if (typeof detectBrowserLanguage === 'function') {
+          currentLang = detectBrowserLanguage();
+        } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+          const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+          currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+        }
+      }
     }
   } catch (error) {
     currentLang = 'en';

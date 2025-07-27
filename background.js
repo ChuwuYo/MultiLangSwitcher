@@ -1,12 +1,16 @@
 // 后台脚本，确保扩展在浏览器启动时就能应用语言设置
 
-// 首先导入共享工具（包含 detectBrowserLanguage 函数）
+// 按正确顺序导入依赖
+// 1. 首先导入共享工具（包含 detectBrowserLanguage 函数）
 importScripts('shared/shared-utils.js');
+// 2. 然后导入基础国际化类
+importScripts('shared/shared-i18n-base.js');
+// 3. 导入具体的国际化类
 importScripts('i18n/background-i18n.js');
 importScripts('i18n/domain-manager-i18n.js');
-// 导入域名规则管理器
+// 4. 导入域名规则管理器
 importScripts('domain-rules-manager.js');
-// 导入更新检查器
+// 5. 导入更新检查器
 importScripts('shared/shared-update-checker.js');
 
 // 常量定义
@@ -17,9 +21,14 @@ const DEFAULT_LANG_EN = 'en';      // 为英文用户设置的默认语言，也
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
 function sendBackgroundLog(message, logType = 'info') {
+  // 安全获取翻译，如果翻译系统未准备好则使用英文回退
+  const backgroundLabel = (backgroundI18n && backgroundI18n.isReady) 
+    ? backgroundI18n.t('background') 
+    : 'Background';
+  
   // 确保同样的消息被用于控制台日志和调试日志
-  console.log(`[${backgroundI18n.t('background')} ${logType.toUpperCase()}] ${message}`);
-  sendDebugLog(`[${backgroundI18n.t('background')}] ${message}`, logType);
+  console.log(`[${backgroundLabel} ${logType.toUpperCase()}] ${message}`);
+  sendDebugLog(`[${backgroundLabel}] ${message}`, logType);
 }
 
 // 全局状态变量

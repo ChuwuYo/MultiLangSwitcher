@@ -1,4 +1,7 @@
-// GitHub 更新检查器工具模块
+/**
+ * GitHub 更新检查器工具模块
+ * 提供扩展版本更新检查功能
+ */
 
 /**
  * 获取本地化翻译的辅助函数
@@ -55,16 +58,13 @@ class UpdateChecker {
    */
   async checkForUpdates(signal = null) {
     try {
-      // 内部调试信息，不输出到用户日志
-
       // 在开始前检查请求是否已被取消
       if (signal?.aborted) {
-        throw new Error(getFallbackUpdateTranslation('request_was_cancelled'));
+        throw new Error(getLocalizedText('request_was_cancelled'));
       }
 
       // 首先检查内存缓存
       if (this.cache && this.cacheExpiry && Date.now() < this.cacheExpiry) {
-        // 使用缓存信息，不需要用户日志
         return this.cache;
       }
 
@@ -83,7 +83,7 @@ class UpdateChecker {
 
       // 获取后检查请求是否已被取消
       if (signal?.aborted) {
-        throw new Error(getFallbackUpdateTranslation('request_was_cancelled'));
+        throw new Error(getLocalizedText('request_was_cancelled'));
       }
 
       // 格式化更新信息

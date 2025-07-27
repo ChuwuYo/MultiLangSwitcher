@@ -1,4 +1,6 @@
-const popupEn = {
+// 防止重复声明
+if (typeof popupEn === 'undefined') {
+  var popupEn = {
   "extension_name": "MultiLangSwitcher",
   "theme_toggle": "Toggle Theme",
   "subtitle": "Quickly switch Accept-Language",
@@ -135,3 +137,4 @@ const popupEn = {
   "update_check_fallback_message": "GitHub API is currently unavailable. Your current version is shown below.",
   "check_manually": "Check Manually"
 };
+} // 结束 if (typeof popupEn === 'undefined') 检查

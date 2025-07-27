@@ -1,4 +1,4 @@
-# v1.8.31（含 v1.8.27 、 v1.8.28 、v1.8.29、v1.8.30 迭代内容）
+# v1.8.50（含迭代内容）
 
 ## 主要改动
 
@@ -13,6 +13,9 @@
 - ✅ 新增统一的 fallback 系统作为回退机制（v1.8.31）
 - ✅ 使用通用 fallback 系统，避免依赖异步加载的 debugI18n（v1.8.31）
 - ✅ 使用fallback处理更新检查器消息的翻译（v1.8.31）
+- ✅ 重构所有i18n类文件，减少代码重复和深层嵌套（v1.8.40）
+- ✅ 提取BaseI18n基础国际化类，统一所有i18n组件的继承结构（v1.8.50）
+- ✅ 添加防重复声明机制，修复翻译文件加载冲突问题（v1.8.50）
 
 ### 2. 代码优化
 
@@ -23,20 +26,24 @@
 - ✅ 添加字体预加载（v1.8.30）
 - ✅ 改进Fallback方法（v1.8.31）
 - ✅ 优化语言选项表生成的缓存机制（v1.8.31）
+- ✅ 提取单一职责的工具方法（v1.8.50）
+- ✅ 统一Service Worker和浏览器环境的翻译加载逻辑（v1.8.50）
 
 ### 3. 文档完善
 
 - ✅ TODO 更新（v1.8.27、v1.8.28）
 - ✅ 更新项目结构文档（v1.8.27、v1.8.28）
 - ✅ README 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31）
+- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50）
 
 
 ## 文件变更清单
 
 ### 新增文件
 
-- Update.md - 版本更新文档
+- Update.md - 版本更新文档（v1.8.27）
+- shared/shared-i18n-base.js - 基础国际化类，提供通用翻译功能（v1.8.50）
+- docs/I18n_Usage_Guide.md - 国际化系统使用指南文档（v1.8.50）
 
 ### 重命名文件
 
@@ -61,15 +68,18 @@
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
 - i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
-- i18n/domain-manager-i18n.js、i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29），引入统一的 fallback 系统（v1.8.31）
+- i18n/domain-manager-i18n.js、i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29），引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类（v1.8.50）
 - debug-ui.js - 添加 Accept-Language 格式验证和用户友好提醒（v1.8.30）
 - i18n/debug-en.js、debug-zh.js - 添加格式验证相关翻译键（v1.8.30）
 - i18n/background-en.js、background-zh.js - 添加更新检查器相关翻译（v1.8.30）
 - shared/shared-update-checker.js - 国际化所有英文日志消息（v1.8.31）
 - shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31）
-- popup.html、debug.html、detect.html - 添加字体预加载优化（v1.8.31）
-- debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31）
+- popup.html、debug.html、detect.html - 添加字体预加载优化（v1.8.31），更新脚本引入顺序，添加shared-i18n-base.js引用（v1.8.50）
+- debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类，简化代码结构（v1.8.50）
 - shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31）
+- shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31），添加中文注释和统一代码风格（v1.8.40）
+- background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50）
+- i18n/popup-en.js、popup-zh.js、debug-en.js、debug-zh.js、detect-en.js、detect-zh.js、background-en.js、background-zh.js、domain-manager-en.js、domain-manager-zh.js - 添加防重复声明机制，支持安全的多次加载（v1.8.50）
 
 ### 移除内容
 
