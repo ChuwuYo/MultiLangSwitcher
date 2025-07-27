@@ -122,9 +122,7 @@ class BaseI18n {
      * @returns {Object} 全局作用域对象
      */
     getGlobalScope() {
-        return typeof self !== 'undefined' ? self :
-            typeof window !== 'undefined' ? window :
-                globalThis;
+        return globalThis;
     }
 
     /**
