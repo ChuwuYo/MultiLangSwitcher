@@ -20,6 +20,9 @@ class DebugI18n extends BaseI18n {
     // 确保DOM完全加载后再应用翻译
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
+    } else {
+      // DOM已经加载完成，直接应用翻译
+      this.applyTranslations();
     }
   }
 

@@ -109,11 +109,11 @@ class BaseI18n {
      */
     loadCurrentLanguageSync() {
         importScripts(`i18n/${this.componentName}-${this.currentLang}.js`);
-        
+
         const translationVarName = this.getTranslationVariableName();
         const globalScope = this.getGlobalScope();
         const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
-        
+
         this.translations = globalScope[`${translationVarName}${langSuffix}`];
     }
 
@@ -122,9 +122,9 @@ class BaseI18n {
      * @returns {Object} 全局作用域对象
      */
     getGlobalScope() {
-        return typeof self !== 'undefined' ? self : 
-               typeof window !== 'undefined' ? window : 
-               globalThis;
+        return typeof self !== 'undefined' ? self :
+            typeof window !== 'undefined' ? window :
+                globalThis;
     }
 
     /**
@@ -179,7 +179,6 @@ class BaseI18n {
     async loadTranslations() {
         try {
             await this.loadTranslationsByEnvironment();
-            this.applyTranslationsIfAvailable();
             this.markAsReady();
         } catch (error) {
             console.error(`${this.componentName}翻译文件加载失败:`, error);
@@ -200,15 +199,6 @@ class BaseI18n {
     }
 
     /**
-     * 如果子类实现了applyTranslations方法，则应用翻译
-     */
-    applyTranslationsIfAvailable() {
-        if (typeof this.applyTranslations === 'function') {
-            this.applyTranslations();
-        }
-    }
-
-    /**
      * 在Service Worker环境中加载翻译文件
      */
     async loadTranslationsForServiceWorker() {
@@ -223,7 +213,7 @@ class BaseI18n {
         const translationVarName = this.getTranslationVariableName();
         const globalScope = this.getGlobalScope();
         const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
-        
+
         this.translations = globalScope[`${translationVarName}${langSuffix}`];
     }
 
@@ -232,7 +222,7 @@ class BaseI18n {
      */
     async loadTranslationsForBrowser() {
         const expectedVar = this.getExpectedTranslationVariable();
-        
+
         // 检查是否已经预加载了翻译文件
         if (typeof window[expectedVar] !== 'undefined') {
             this.translations = window[expectedVar];
@@ -360,7 +350,7 @@ class BaseI18n {
         const translationVarName = this.getTranslationVariableName();
         const globalScope = this.getGlobalScope();
         const enTranslations = globalScope[`${translationVarName}En`];
-        
+
         return typeof enTranslations !== 'undefined' ? enTranslations : null;
     }
 

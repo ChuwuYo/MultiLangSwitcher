@@ -11,6 +11,21 @@ class PopupI18n extends BaseI18n {
     this.init();
   }
 
+  /**
+   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   */
+  async loadTranslations() {
+    await super.loadTranslations();
+    
+    // 确保DOM完全加载后再应用翻译
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
+    } else {
+      // DOM已经加载完成，直接应用翻译
+      this.applyTranslations();
+    }
+  }
+
   applyTranslations() {
     // 设置页面标题
     document.title = this.t('extension_name');
