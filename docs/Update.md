@@ -1,4 +1,4 @@
-# v1.8.51（含迭代内容）
+# v1.8.52（含迭代内容）
 
 ## 主要改动
 
@@ -28,13 +28,16 @@
 - ✅ 优化语言选项表生成的缓存机制（v1.8.31）
 - ✅ 提取单一职责的工具方法（v1.8.50）
 - ✅ 统一Service Worker和浏览器环境的翻译加载逻辑（v1.8.50）
+- ✅ 统一多个核心文件代码风格，应用项目标准和现代JavaScript最佳实践（v1.8.52）
 
 ### 3. 文档完善
 
 - ✅ TODO 更新（v1.8.27、v1.8.28）
-- ✅ 更新项目结构文档（v1.8.27、v1.8.28）
+- ✅ 更新项目结构文档（v1.8.27、v1.8.28、v1.8.50）
 - ✅ README 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50）
+- ✅ Update 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50、v1.8.51、v1.8.52）
+- ✅ 添加国际化系统使用指南文档（v1.8.50）
+- ✅ 添加代码风格指南文档（v1.8.52）
 
 
 ## 文件变更清单
@@ -44,6 +47,7 @@
 - Update.md - 版本更新文档（v1.8.27）
 - shared/shared-i18n-base.js - 基础国际化类，提供通用翻译功能（v1.8.50）
 - docs/I18n_Usage_Guide.md - 国际化系统使用指南文档（v1.8.50）
+- docs/Code_Style_Guide.md - 代码风格指南文档（v1.8.52）
 
 ### 重命名文件
 
@@ -56,20 +60,23 @@
 ### 修改文件
 
 - README.md、README_EN.md - 内容与引用图片同步更新（v1.8.27、v1.8.28）
-- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50、v1.8.51）
+- manifest.json - 版本号更新（v1.8.27、v1.8.28、v1.8.29、v1.8.30、v1.8.31、v1.8.40、v1.8.50、v1.8.51、v1.8.52）
 - docs/TODO.md - 更新任务完成状态（v1.8.27、v1.8.28、v1.8.30、v1.8.40）
 - Project_Structure.md - 项目结构更新（v1.8.27、v1.8.28、v1.8.51）
 - Update.md - 更新文档内容更新（v1.8.27、v1.8.28、v1.8.29）
 - /images - icons更新（v1.8.27、v1.8.51）
 - detect.html - 更新脚本引用路径（v1.8.28）
-- detect.js - 更新i18n对象引用（testI18n → detectI18n）（v1.8.28）
+- detect.js - 更新i18n对象引用（testI18n → detectI18n）（v1.8.28），统一代码风格，转换所有函数为箭头函数，优化浏览器检测和指纹识别功能（v1.8.52）
 - i18n/detect-i18n.js - 更新类名和变量名（TestI18n → DetectI18n）（v1.8.28）
 - i18n/detect-en.js - 更新变量名（testEn → detectEn）（v1.8.28）
 - i18n/detect-zh.js - 更新变量名（testZh → detectZh）（v1.8.28）
 - popup.html - 更新检测页面链接（v1.8.28）
 - i18n/popup-en.js、popup-zh.js - 调整翻译，删除重复键（v1.8.28）
 - i18n/domain-manager-i18n.js、i18n/background-i18n.js - 重构代码，优化翻译加载逻辑，增强错误处理（v1.8.29），引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类（v1.8.50）
-- debug-ui.js - 添加 Accept-Language 格式验证和用户友好提醒（v1.8.30）
+- debug-ui.js - 添加 Accept-Language 格式验证和用户友好提醒（v1.8.30），统一代码风格，转换为箭头函数和现代JavaScript语法（v1.8.52）
+- debug-headers.js - 统一代码风格，转换为箭头函数，应用早期返回模式和模板字符串（v1.8.52）
+- domain-rules-manager.js - 重大重构，拆分复杂方法为单一职责的私有方法，添加完整JSDoc注释，优化规则匹配逻辑（v1.8.52）
+- toggle.js - 统一代码风格，将类方法转换为箭头函数，添加完整JSDoc注释，优化主题和语言切换功能（v1.8.52）
 - i18n/debug-en.js、debug-zh.js - 添加格式验证相关翻译键（v1.8.30）
 - i18n/background-en.js、background-zh.js - 添加更新检查器相关翻译（v1.8.30）
 - shared/shared-update-checker.js - 国际化所有英文日志消息（v1.8.31）
@@ -78,7 +85,7 @@
 - debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类，简化代码结构（v1.8.50）
 - shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31），更新语言选项描述（v1.8.51）
 - shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31），添加中文注释和统一代码风格（v1.8.40）
-- background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50）
+- background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50），统一代码风格，转换函数为箭头函数，移除未使用参数，优化事件监听器，重构消息处理器减少深层嵌套，提取单一职责的处理函数；修复硬编码的版本获取（v1.8.52）
 - i18n/popup-en.js、popup-zh.js、debug-en.js、debug-zh.js、detect-en.js、detect-zh.js、background-en.js、background-zh.js、domain-manager-en.js、domain-manager-zh.js - 添加防重复声明机制，支持安全的多次加载（v1.8.50）
 
 ### 移除内容
