@@ -176,8 +176,6 @@ if (typeof debugEn === 'undefined') {
   "declarative_feedback_permission_found": "✓ declarativeNetRequestFeedback permission found",
   "declarative_permission_missing": "✗ declarativeNetRequest permission missing",
   "using_dynamic_rules": "This extension uses dynamic rules (recommended approach)",
-  "static_rulesets": "Static Rulesets",
-  "no_static_rulesets": "No static rulesets configured (normal, using dynamic rules)",
   "storage_failed": "Get storage failed:",
   "stored_language_settings": "Stored Language Settings:",
   "current_language": "Current Language:",

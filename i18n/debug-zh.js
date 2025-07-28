@@ -178,8 +178,6 @@ if (typeof debugZh === 'undefined') {
     "declarative_feedback_permission_found": "✓ 已找到 declarativeNetRequestFeedback 权限",
     "declarative_permission_missing": "✗ 缺少 declarativeNetRequest 权限",
     "using_dynamic_rules": "此扩展使用动态规则（推荐方式）",
-    "static_rulesets": "静态规则集",
-    "no_static_rulesets": "未配置静态规则集（正常，使用动态规则）",
     "storage_failed": "获取存储失败：",
     "stored_language_settings": "存储的语言设置：",
     "current_language": "当前语言：",
