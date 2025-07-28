@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 监听来自扩展其他部分的日志消息
   chrome.runtime.onMessage.addListener((request) => {
     if (request.type !== 'DEBUG_LOG') return;
-    
+
     // 过滤掉后台脚本的日志消息
     if (!request.message.startsWith('[后台]') && !request.message.startsWith('[Background]')) {
       addLogMessage(request.message, request.logType);
@@ -505,27 +505,20 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `<p>${debugI18n.t('no_permissions')}</p>`;
       }
 
-      // 检查declarativeNetRequest配置
-      if (manifest.declarative_net_request) {
-        html += `<h5>${debugI18n.t('declarative_config')}</h5>`;
-        const ruleResources = manifest.declarative_net_request.rule_resources;
-        if (ruleResources && ruleResources.length > 0) {
-          html += '<ul>';
-          ruleResources.forEach(resource => {
-            // 这里显示的是 manifest 中定义的默认状态
-            const enabledStatus = resource.enabled === false ? `<span class="success">${debugI18n.t('disabled_manifest')}</span>` : `<span class="error">${debugI18n.t('enabled_manifest')}</span>`;
-            html += `<li>${debugI18n.t('ruleset_id')} ${resource.id}, ${debugI18n.t('path')} ${resource.path}, ${debugI18n.t('status')} ${enabledStatus}</li>`;
-          });
-          html += '</ul>';
-        } else {
-          html += `<p>${debugI18n.t('no_ruleset_found')}</p>`;
+      // 检查declarativeNetRequest权限
+      html += `<h5>${debugI18n.t('declarative_config')}</h5>`;
+
+      const hasDeclarativePermission = manifest.permissions && manifest.permissions.includes('declarativeNetRequest');
+      const hasFeedbackPermission = manifest.permissions && manifest.permissions.includes('declarativeNetRequestFeedback');
+
+      if (hasDeclarativePermission) {
+        html += `<p class="success">${debugI18n.t('declarative_permission_found')}</p>`;
+        if (hasFeedbackPermission) {
+          html += `<p class="success">${debugI18n.t('declarative_feedback_permission_found')}</p>`;
         }
-        // 'reason' 字段已弃用，但可以检查以兼容旧版
-        if (manifest.declarative_net_request.hasOwnProperty('reason')) {
-          html += `<p>${debugI18n.t('reason')} ${manifest.declarative_net_request.reason}</p>`;
-        }
+        html += `<p class="info">${debugI18n.t('using_dynamic_rules')}</p>`;
       } else {
-        html += `<p>${debugI18n.t('no_declarative_config')}</p>`;
+        html += `<p class="error">${debugI18n.t('declarative_permission_missing')}</p>`;
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
@@ -583,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${chrome.runtime.lastError.message}`, 'error');
         return;
       }
-      
+
       if (response && response.status === 'success') {
         addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
         // 更新存储中的状态
