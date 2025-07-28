@@ -508,8 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // 检查declarativeNetRequest权限
       html += `<h5>${debugI18n.t('declarative_config')}</h5>`;
 
-      const hasDeclarativePermission = manifest.permissions && manifest.permissions.includes('declarativeNetRequest');
-      const hasFeedbackPermission = manifest.permissions && manifest.permissions.includes('declarativeNetRequestFeedback');
+      const hasDeclarativePermission = manifest.permissions?.includes('declarativeNetRequest');
+      const hasFeedbackPermission = manifest.permissions?.includes('declarativeNetRequestFeedback');
 
       if (hasDeclarativePermission) {
         html += `<p class="success">${debugI18n.t('declarative_permission_found')}</p>`;
