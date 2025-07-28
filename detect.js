@@ -205,7 +205,7 @@ function md5(string) {
  * 获取浏览器信息
  * @returns {Object} 浏览器信息对象
  */
-function getBrowserInfo() {
+const getBrowserInfo = () => {
   const ua = navigator.userAgent;
   let browserName = detectI18n.t('unknown_browser');
   let browserVersion = detectI18n.t('unknown_version');
@@ -267,7 +267,7 @@ function getBrowserInfo() {
  * 检查API支持情况
  * @returns {Array} API支持情况列表
  */
-function checkApiSupport() {
+const checkApiSupport = () => {
   const apis = [
     { name: 'localStorage', supported: typeof localStorage !== 'undefined' },
     { name: 'sessionStorage', supported: typeof sessionStorage !== 'undefined' },
@@ -295,7 +295,7 @@ function checkApiSupport() {
 /**
  * 执行浏览器兼容性检查
  */
-function performCompatibilityChecks() {
+const performCompatibilityChecks = () => {
   const browserInfoEl = document.getElementById('browserInfoDisplay');
   const apiListEl = document.getElementById('apiCompatibilityList');
   if (!browserInfoEl || !apiListEl) return;
@@ -327,7 +327,7 @@ function performCompatibilityChecks() {
  * 获取并显示当前请求头
  * @returns {Promise<void>}
  */
-async function fetchAndDisplayHeaders() {
+const fetchAndDisplayHeaders = async () => {
   const headerInfoElement = document.getElementById('headerInfo');
   const headerLanguageInfo = document.getElementById('headerLanguageInfo');
   if (!headerInfoElement || !headerLanguageInfo) return;
@@ -359,7 +359,7 @@ async function fetchAndDisplayHeaders() {
  * @param {number} timeoutMs - 超时时间（毫秒）
  * @returns {Promise<Object>} - 解析为第一个成功的响应数据
  */
-async function fetchFromAnySource(urls, timeoutMs) {
+const fetchFromAnySource = async (urls, timeoutMs) => {
   const promises = urls.map(url => fetchWithTimeout(url, timeoutMs));
   return await Promise.any(promises);
 }
@@ -370,7 +370,7 @@ async function fetchFromAnySource(urls, timeoutMs) {
  * @param {number} timeoutMs - 超时时间（毫秒）
  * @returns {Promise<Object>} - 解析为响应数据
  */
-async function fetchWithTimeout(url, timeoutMs) {
+const fetchWithTimeout = async (url, timeoutMs) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -405,7 +405,7 @@ async function fetchWithTimeout(url, timeoutMs) {
  * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
  * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
  */
-function processHeadersData(data, headerInfoElement, headerLanguageInfo) {
+const processHeadersData = (data, headerInfoElement, headerLanguageInfo) => {
   const headers = data.headers;
   const formattedHeaders = JSON.stringify(headers, null, 2);
   headerInfoElement.textContent = formattedHeaders;
@@ -439,7 +439,7 @@ function processHeadersData(data, headerInfoElement, headerLanguageInfo) {
  * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
  * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
  */
-function handleHeaderFetchError(error, headerInfoElement, headerLanguageInfo) {
+const handleHeaderFetchError = (error, headerInfoElement, headerLanguageInfo) => {
   let combinedErrorMessage = detectI18n.t('fetch_failed_all_services');
   
   if (error instanceof AggregateError) {
@@ -457,7 +457,7 @@ function handleHeaderFetchError(error, headerInfoElement, headerLanguageInfo) {
 /**
  * 检测 JavaScript 语言偏好
  */
-function detectJsLanguage() {
+const detectJsLanguage = () => {
   const jsLanguageInfoElement = document.getElementById('jsLanguageInfo');
   if (!jsLanguageInfoElement) return;
   
@@ -481,7 +481,7 @@ function detectJsLanguage() {
 /**
  * 检测 Canvas 指纹
  */
-function detectCanvasFingerprint() {
+const detectCanvasFingerprint = () => {
   const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
   if (!canvasInfoElement) return;
   
@@ -517,7 +517,7 @@ function detectCanvasFingerprint() {
 /**
  * 检测 WebGL 指纹
  */
-function detectWebglFingerprint() {
+const detectWebglFingerprint = () => {
   const webglInfoElement = document.getElementById('webglFingerprintInfo');
   if (!webglInfoElement) return;
   
@@ -564,7 +564,7 @@ function detectWebglFingerprint() {
  * 检测 AudioContext 指纹
  * @returns {Promise<void>}
  */
-async function detectAudioFingerprint() {
+const detectAudioFingerprint = async () => {
   const audioInfoElement = document.getElementById('audioFingerprintInfo');
   if (!audioInfoElement) return;
   
@@ -620,7 +620,7 @@ async function detectAudioFingerprint() {
 /**
  * 检测国际化 API
  */
-function detectIntlApi() {
+const detectIntlApi = () => {
   const intlApiInfoElement = document.getElementById('intlApiInfo');
   if (!intlApiInfoElement) return;
   
@@ -644,7 +644,7 @@ function detectIntlApi() {
 /**
  * 检测 WebRTC IP 泄露
  */
-async function detectWebRtc() {
+const detectWebRtc = async () => {
   const webRtcInfoElement = document.getElementById('webRtcInfo');
   if (!webRtcInfoElement) return;
   
@@ -677,7 +677,7 @@ async function detectWebRtc() {
  * 收集WebRTC IP地址
  * @returns {Promise<Array<string>>} IP地址列表
  */
-async function collectWebRtcIps() {
+const collectWebRtcIps = async () => {
   return new Promise((resolve) => {
     const ips = [];
     
@@ -714,7 +714,7 @@ async function collectWebRtcIps() {
 /**
  * 检测部分浏览器指纹信息
  */
-function detectFingerprint() {
+const detectFingerprint = () => {
   const fingerprintInfoElement = document.getElementById('fingerprintInfo');
   if (!fingerprintInfoElement) return;
   
@@ -743,7 +743,7 @@ function detectFingerprint() {
 /**
  * 添加刷新按钮
  */
-function addRefreshButton() {
+const addRefreshButton = () => {
   const refreshButton = document.createElement('button');
   refreshButton.className = 'btn btn-primary mt-3';
   refreshButton.textContent = detectI18n.t('Refresh detection');
@@ -777,7 +777,7 @@ function addRefreshButton() {
 /**
  * 运行所有检测
  */
-function runAllDetections() {
+const runAllDetections = () => {
   fetchAndDisplayHeaders();
   detectJsLanguage();
   detectIntlApi();
