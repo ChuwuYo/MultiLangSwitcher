@@ -44,8 +44,8 @@ let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage �
  * @param {string} domain - 域名
  * @returns {Promise<string|null>} 对应的语言代码或null
  */
-const getLanguageForDomain = async (domain) => {
-  return await domainRulesManager.getLanguageForDomain(domain);
+const getLanguageForDomain = (domain) => {
+  return domainRulesManager.getLanguageForDomain(domain);
 };
 
 
@@ -521,14 +521,14 @@ const handleUpdateCheckRequest = async (sendResponse) => {
   try {
     const repoOwner = 'ChuwuYo';
     const repoName = 'MultiLangSwitcher';
-    const currentVersion = '1.8.17'; // From manifest.json
+    const currentVersion = chrome.runtime.getManifest().version; // 动态获取manifest.json中的版本号
 
     sendBackgroundLog(backgroundI18n.t('update_check_initiated', { repo: `${repoOwner}/${repoName}` }), 'info');
 
-    // Create update checker instance
+    // 创建更新检查器实例
     const updateChecker = new UpdateChecker(repoOwner, repoName, currentVersion);
 
-    // Check cache status first
+    // 首先检查缓存状态
     const cacheStatus = updateChecker.getCacheStatus();
     if (cacheStatus.hasCachedData && !cacheStatus.isExpired) {
       sendBackgroundLog(backgroundI18n.t('update_check_cache_hit'), 'info');
@@ -538,10 +538,10 @@ const handleUpdateCheckRequest = async (sendResponse) => {
 
     sendBackgroundLog(backgroundI18n.t('update_check_api_request'), 'info');
 
-    // Perform update check
+    // 执行更新检查
     const updateInfo = await updateChecker.checkForUpdates();
 
-    // Log version comparison details
+    // 记录版本比较详情
     sendBackgroundLog(backgroundI18n.t('update_check_version_comparison', {
       current: updateInfo.currentVersion,
       latest: updateInfo.latestVersion,
