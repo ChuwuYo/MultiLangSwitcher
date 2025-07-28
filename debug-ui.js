@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 获取最近匹配的规则信息
-      chrome.declarativeNetRequest.getMatchedRules({}, function (matchedRules) {
+      chrome.declarativeNetRequest.getMatchedRules({}, (matchedRules) => {
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
@@ -103,17 +103,17 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} message - 日志消息内容
    * @param {string} logType - 日志类型 (info, warning, error, success)
    */
-  function addLogMessage(message, logType = 'info') {
+  const addLogMessage = (message, logType = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = { timestamp, message, logType };
     allLogMessages.push(logEntry);
     renderLogs(); // 重新渲染日志以应用过滤
     // 自动滚动到底部
     logOutput.scrollTop = logOutput.scrollHeight;
-  }
+  };
 
   // 根据当前过滤器渲染日志
-  function renderLogs() {
+  const renderLogs = () => {
     logOutput.innerHTML = ''; // 清空当前显示
     const activeFilters = getActiveFilters();
 
@@ -125,21 +125,21 @@ document.addEventListener('DOMContentLoaded', () => {
         logOutput.appendChild(logElement);
       }
     });
-  }
+  };
 
 
   /**
    * 获取当前选中的日志类型过滤器
    * @returns {string[]} - 激活的日志类型数组
    */
-  function getActiveFilters() {
+  const getActiveFilters = () => {
     const filters = [];
     if (document.getElementById('filterInfo').checked) filters.push('info');
     if (document.getElementById('filterWarning').checked) filters.push('warning');
     if (document.getElementById('filterError').checked) filters.push('error');
     if (document.getElementById('filterSuccess').checked) filters.push('success');
     return filters;
-  }
+  };
 
   // 监听来自扩展其他部分的日志消息
   chrome.runtime.onMessage.addListener((request) => {
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules(function (existingRules) {
+    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
       const existingRuleIds = existingRules.map(rule => rule.id);
       const updatedRules = existingRules.map(rule => {
         return {
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingRuleIds,
         addRules: updatedRules
-      }, function () {
+      }, () => {
         if (chrome.runtime.lastError) {
           resultElement.innerHTML = `<p class="error">${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}</p>`;
           addLogMessage(`${debugI18n.t('fix_priority_failed')} ${chrome.runtime.lastError.message}`, 'error');
@@ -311,21 +311,21 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules(function (existingRules) {
+    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
       const existingRuleIds = existingRules.map(rule => rule.id);
 
       chrome.declarativeNetRequest.updateDynamicRules({
         removeRuleIds: existingRuleIds
-      }, function () {
+      }, () => {
         if (chrome.runtime.lastError) {
           resultElement.innerHTML = `<p class="error">${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}</p>`;
           addLogMessage(`${debugI18n.t('clear_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
-          chrome.storage.local.get(['currentLanguage'], function (result) {
+          chrome.storage.local.get(['currentLanguage'], (result) => {
             const languageToApply = result.currentLanguage || 'zh-CN';
             // Send message to background.js to request rule update
-            chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, function (response) {
+            chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, (response) => {
               if (chrome.runtime.lastError) {
                 resultElement.innerHTML = `<p class="error">${debugI18n.t('reapply_rules_error')} ${chrome.runtime.lastError.message}</p>`;
                 addLogMessage(`${debugI18n.t('request_background_reapply_failed')} ${chrome.runtime.lastError.message}`, 'error');
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} languageString - 要验证的语言字符串
    * @returns {boolean} - 如果格式可能有问题返回 true
    */
-  function validateAcceptLanguageFormat(languageString) {
+  const validateAcceptLanguageFormat = (languageString) => {
     // 基本格式检查
     const trimmed = languageString.trim();
 
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
 
     // 发送消息到 background.js 请求更新规则
-    chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString }, function (response) {
+    chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString }, (response) => {
       if (chrome.runtime.lastError) {
         customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}</p>`;
         addLogMessage(`${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], function (result) {
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
         try {
           if (chrome.runtime.lastError) {
             throw new Error(`${debugI18n.t('storage_failed')} ${chrome.runtime.lastError.message}`);
@@ -595,13 +595,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 显示域名映射规则
-  document.getElementById('showDomainRulesBtn').addEventListener('click', function () {
+  document.getElementById('showDomainRulesBtn').addEventListener('click', () => {
     const resultElement = document.getElementById('domainRulesResult');
     resultElement.innerHTML = debugI18n.t('getting_domain_rules');
     addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
 
     // 从 background.js 获取域名映射规则
-    chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, function (response) {
+    chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, (response) => {
       if (chrome.runtime.lastError) {
         resultElement.innerHTML = `<p class="error">${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}</p>`;
         addLogMessage(`${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
