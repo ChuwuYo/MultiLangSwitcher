@@ -359,9 +359,9 @@ const fetchAndDisplayHeaders = async () => {
  * @param {number} timeoutMs - 超时时间（毫秒）
  * @returns {Promise<Object>} - 解析为第一个成功的响应数据
  */
-const fetchFromAnySource = async (urls, timeoutMs) => {
+const fetchFromAnySource = (urls, timeoutMs) => {
   const promises = urls.map(url => fetchWithTimeout(url, timeoutMs));
-  return await Promise.any(promises);
+  return Promise.any(promises);
 }
 
 /**
