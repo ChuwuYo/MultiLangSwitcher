@@ -85,7 +85,7 @@
 - debug-i18n.js、detect-i18n.js、popup-i18n.js - 引入统一的 fallback 系统（v1.8.31），重构为继承BaseI18n基础类，简化代码结构（v1.8.50）
 - shared/shared-language-options.js - 优化语言选项生成的缓存机制（v1.8.31），更新语言选项描述（v1.8.51）
 - shared/shared-utils.js - 创建通用 fallback 翻译系统（v1.8.31），添加中文注释和统一代码风格（v1.8.40）
-- background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50），统一代码风格，转换函数为箭头函数，移除未使用参数，优化事件监听器，重构消息处理器减少深层嵌套，提取单一职责的处理函数（v1.8.52）
+- background.js - 更新脚本导入顺序，添加shared-i18n-base.js引用（v1.8.50），统一代码风格，转换函数为箭头函数，移除未使用参数，优化事件监听器，重构消息处理器减少深层嵌套，提取单一职责的处理函数；修复硬编码的版本获取（v1.8.52）
 - i18n/popup-en.js、popup-zh.js、debug-en.js、debug-zh.js、detect-en.js、detect-zh.js、background-en.js、background-zh.js、domain-manager-en.js、domain-manager-zh.js - 添加防重复声明机制，支持安全的多次加载（v1.8.50）
 
 ### 移除内容
