@@ -6,21 +6,32 @@ class LanguageToggle {
     this.currentLang = this.detectLanguage();
   }
 
-  detectLanguage() {
+  /**
+   * 检测当前语言设置
+   * @returns {string} 语言代码 ('zh' 或 'en')
+   */
+  detectLanguage = () => {
     const saved = localStorage.getItem('app-lang');
     if (saved) return saved;
     return navigator.language.startsWith('zh') ? 'zh' : 'en';
-  }
+  };
 
-  async switchLanguage(lang) {
+  /**
+   * 切换语言设置
+   * @param {string} lang - 目标语言代码
+   */
+  switchLanguage = async (lang) => {
     if (lang === this.currentLang) return;
-    
+
     this.currentLang = lang;
     localStorage.setItem('app-lang', lang);
     location.reload();
-  }
+  };
 
-  addLanguageSelector() {
+  /**
+   * 添加语言选择器按钮到页面
+   */
+  addLanguageSelector = () => {
     const langBtn = document.createElement('button');
     langBtn.id = 'langToggleBtn';
     langBtn.className = 'toggle';
@@ -36,16 +47,18 @@ class LanguageToggle {
     langBtn.addEventListener('click', () => {
       this.switchLanguage(this.currentLang === 'zh' ? 'en' : 'zh');
     });
-  }
+  };
 }
 
-// 主题管理功能
+/**
+ * 主题管理功能类
+ */
 class ThemeManager {
   constructor() {
     this.themeToggleBtn = document.getElementById('themeToggleBtn');
     this.currentTheme = localStorage.getItem('theme') || null;
     this.prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     this.themeButtonDetails = {
       'dark': {
         icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
@@ -58,7 +71,10 @@ class ThemeManager {
     };
   }
 
-  init() {
+  /**
+   * 初始化主题管理器
+   */
+  init = () => {
     // 应用初始主题
     if (this.currentTheme) {
       this.applyTheme(this.currentTheme);
@@ -67,22 +83,29 @@ class ThemeManager {
     }
 
     this.setupEventListeners();
-  }
+  };
 
-  applyTheme(theme) {
+  /**
+   * 应用指定主题
+   * @param {string} theme - 主题名称 ('dark' 或 'light')
+   */
+  applyTheme = (theme) => {
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
 
     if (!this.themeToggleBtn) return;
-    
+
     const details = this.themeButtonDetails[theme];
     if (details) {
       this.themeToggleBtn.innerHTML = details.icon;
       this.themeToggleBtn.setAttribute('data-state', details.state);
     }
-  }
+  };
 
-  setupEventListeners() {
+  /**
+   * 设置事件监听器
+   */
+  setupEventListeners = () => {
     // 主题切换按钮监听器
     if (this.themeToggleBtn) {
       this.themeToggleBtn.addEventListener('click', () => {
@@ -99,11 +122,13 @@ class ThemeManager {
         this.applyTheme(e.matches ? 'dark' : 'light');
       }
     });
-  }
+  };
 }
 
-// 初始化页面功能
-async function initializePage() {
+/**
+ * 初始化页面功能
+ */
+const initializePage = async () => {
   try {
     // 初始化主题管理
     const themeManager = new ThemeManager();
@@ -115,7 +140,7 @@ async function initializePage() {
   } catch (error) {
     console.error('Error initializing page:', error);
   }
-}
+};
 
 // 监听页面加载，初始化按钮和主题状态
 document.addEventListener('DOMContentLoaded', initializePage);
