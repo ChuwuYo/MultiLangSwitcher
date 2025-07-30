@@ -1,15 +1,16 @@
-// --- 全局变量和配置 ---
+// --- 导入共享模块 ---
+// 注意：这些脚本已在 popup.html 中通过 <script> 标签加载
 
-// 更新检查器实例和请求管理
+// --- 全局常量和配置 ---
+const UPDATE_CHECK_DEBOUNCE_DELAY = 2000; // 2秒防抖延迟
+const UPDATE_CHECK_MIN_INTERVAL = 30000; // 最小检查间隔30秒，防止频繁请求
+
+// --- 全局变量 ---
 let updateChecker = null;
 let updateCheckInProgress = false;
 let updateCheckController = null;
 let updateCheckDebounceTimer = null;
 let lastUpdateCheckTime = 0;
-
-// 防抖配置
-const UPDATE_CHECK_DEBOUNCE_DELAY = 1000; // 1秒防抖延迟
-const UPDATE_CHECK_MIN_INTERVAL = 2000; // 最小检查间隔2秒
 
 // 性能优化 - DOM元素缓存
 let domCache = {
@@ -43,9 +44,13 @@ let domUpdateScheduled = false;
  * @param {HTMLElement} languageSelect - 语言选择元素
  * @param {HTMLElement} applyButton - 应用按钮元素
  */
-function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton) {
+const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, applyButton) => {
+  // 早期返回模式 - 检查必要元素
+  if (!autoSwitchToggle) return;
+
   // 更新开关状态
-  if (autoSwitchToggle) autoSwitchToggle.checked = !!enabled;
+  autoSwitchToggle.checked = !!enabled;
+
   // 根据自动切换状态禁用/启用手动选择控件
   if (languageSelect) languageSelect.disabled = !!enabled;
   if (applyButton) applyButton.disabled = !!enabled;
@@ -55,7 +60,7 @@ function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButt
   const actionMsg = enabled ? popupI18n.t('disable_manual_selection') : popupI18n.t('enable_manual_selection');
 
   sendDebugLog(`${popupI18n.t('auto_switch_function')}${statusMsg}, ${actionMsg}.`, 'info');
-}
+};
 
 /**
  * 更新请求头规则，通过background脚本
@@ -63,16 +68,21 @@ function updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButt
  * @param {boolean} autoCheck - 是否自动检查
  * @returns {Promise<void>}
  */
-async function updateHeaderRules(language, autoCheck = false) {
-  // 清理语言代码（popup中的选项都是预设好的，不需要额外验证）
-  language = language.trim();
-  sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${language}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
+const updateHeaderRules = async (language, autoCheck = false) => {
+  // 早期返回模式 - 验证输入
+  if (!language) {
+    throw new Error('Language parameter is required');
+  }
+
+  // 清理语言代码
+  const cleanLanguage = language.trim();
+  sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${cleanLanguage}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
   // 使用Promise包装Chrome API调用
   const response = await new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({
       type: 'UPDATE_RULES',
-      language: language
+      language: cleanLanguage
     }, response => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
@@ -82,35 +92,42 @@ async function updateHeaderRules(language, autoCheck = false) {
     });
   });
 
-  // 处理响应结果
-  if (response?.status === 'success') {
-    sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${response.language}.`, 'success');
-    updateLanguageDisplay(response.language, true);
-
-    // 如果启用自动检查，触发快速检查
-    if (autoCheck) {
-      const checkHeaderBtn = document.getElementById('checkHeaderBtn');
-      if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
-        sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
-        setTimeout(() => checkHeaderBtn.click(), 500);
-      }
-    }
-  } else if (response?.status === 'error') {
+  // 早期返回模式 - 处理响应结果
+  if (response?.status === 'error') {
     throw new Error(response.message);
-  } else {
-    // 处理意外的响应格式
+  }
+
+  if (response?.status !== 'success') {
     throw new Error(popupI18n.t('unexpected_response_format'));
   }
-}
+
+  // 成功处理
+  sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${response.language}.`, 'success');
+  updateLanguageDisplay(response.language, true);
+
+  // 如果启用自动检查，触发快速检查
+  if (autoCheck) {
+    const checkHeaderBtn = document.getElementById('checkHeaderBtn');
+    if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
+      sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
+      setTimeout(() => checkHeaderBtn.click(), 500);
+    }
+  }
+};
 
 /**
  * 显示错误消息 (优化版本)
  * @param {string} message - 错误消息
  */
-function showError(message) {
+const showError = (message) => {
+  // 早期返回模式 - 验证输入
+  if (!message) return;
+
   // 使用缓存的DOM元素提高性能
   const errorAlert = domCache.errorAlert || document.getElementById('errorAlert');
   const errorMessage = domCache.errorMessage || document.getElementById('errorMessage');
+
+  // 早期返回模式 - 检查DOM元素
   if (!errorAlert || !errorMessage) return;
 
   // 使用批量DOM更新提高性能
@@ -125,14 +142,17 @@ function showError(message) {
       errorAlert.classList.add('d-none');
     });
   }, 5000);
-}
+};
 
 /**
  * 更新语言显示 (优化版本)
  * @param {string} language - 语言代码
  * @param {boolean} showSuccess - 是否显示成功提示
  */
-function updateLanguageDisplay(language, showSuccess = false) {
+const updateLanguageDisplay = (language, showSuccess = false) => {
+  // 早期返回模式 - 验证输入
+  if (!language) return;
+
   // 使用缓存的DOM元素提高性能
   const currentLanguageSpan = domCache.currentLanguageSpan || document.getElementById('currentLanguage');
   const languageSelect = domCache.languageSelect || document.getElementById('languageSelect');
@@ -169,13 +189,13 @@ function updateLanguageDisplay(language, showSuccess = false) {
       }, 2000);
     }
   });
-}
+};
 
 /**
  * 执行头部快速检查
  * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
  */
-async function performHeaderCheck(headerCheckContentPre) {
+const performHeaderCheck = async (headerCheckContentPre) => {
   // 生成时间戳避免缓存
   const timestamp = new Date().getTime();
   // 定义测试URL列表
@@ -240,7 +260,7 @@ async function performHeaderCheck(headerCheckContentPre) {
  * 获取当前语言设置
  * @returns {Promise<string>} 当前语言设置
  */
-async function getCurrentLanguage() {
+const getCurrentLanguage = async () => {
   try {
     // 首先尝试从background脚本获取当前语言
     const response = await new Promise((resolve, reject) => {
@@ -293,7 +313,7 @@ async function getCurrentLanguage() {
  * 获取自动切换状态
  * @returns {Promise<boolean>} 自动切换是否启用
  */
-async function getAutoSwitchStatus() {
+const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
     const result = await new Promise(resolve => {
@@ -304,14 +324,14 @@ async function getAutoSwitchStatus() {
     sendDebugLog(popupI18n.t('error_getting_auto_switch_status', { message: error.message }), 'error');
     return false; // 默认返回false
   }
-}
+};
 
 /**
  * 设置自动切换状态
  * @param {boolean} enabled - 是否启用
  * @returns {Promise<boolean>} 操作是否成功
  */
-async function setAutoSwitchStatus(enabled) {
+const setAutoSwitchStatus = async (enabled) => {
   try {
     // 保存自动切换状态到本地存储
     await new Promise((resolve, reject) => {
@@ -344,7 +364,12 @@ async function setAutoSwitchStatus(enabled) {
  * @param {string} language - 语言代码
  * @returns {Promise<void>} 
  */
-async function saveLanguageSetting(language) {
+const saveLanguageSetting = async (language) => {
+  // 早期返回模式 - 验证输入
+  if (!language) {
+    throw new Error('Language parameter is required');
+  }
+
   // 保存语言设置到本地存储
   await new Promise((resolve, reject) => {
     chrome.storage.local.set({ currentLanguage: language }, () => {
@@ -357,12 +382,12 @@ async function saveLanguageSetting(language) {
   });
 
   sendDebugLog(`${popupI18n.t('language_settings_saved')} ${language}.`, 'info');
-}
+};
 
 /**
  * 初始化DOM元素缓存以优化性能
  */
-function initializeDOMCache() {
+const initializeDOMCache = () => {
   // 更新检查器相关元素
   domCache.updateCheckBtn = document.getElementById('updateCheckBtn');
   domCache.updateCheckText = document.getElementById('updateCheckText');
@@ -389,7 +414,10 @@ function initializeDOMCache() {
  * 调度批量DOM更新以提高性能
  * @param {Function} updateFn - 执行DOM更新的函数
  */
-function scheduleDOMUpdate(updateFn) {
+const scheduleDOMUpdate = (updateFn) => {
+  // 早期返回模式 - 验证输入
+  if (typeof updateFn !== 'function') return;
+
   // 将更新函数添加到待处理队列
   pendingDOMUpdates.push(updateFn);
 
@@ -405,12 +433,13 @@ function scheduleDOMUpdate(updateFn) {
       setTimeout(processPendingDOMUpdates, 16); // ~60fps
     }
   }
-}
+};
 
 /**
  * 在单个批次中处理所有待处理的DOM更新
  */
-function processPendingDOMUpdates() {
+const processPendingDOMUpdates = () => {
+  // 早期返回模式 - 检查是否有待处理的更新
   if (pendingDOMUpdates.length === 0) {
     domUpdateScheduled = false;
     return;
@@ -432,19 +461,20 @@ function processPendingDOMUpdates() {
   if (pendingDOMUpdates.length > 0) {
     scheduleDOMUpdate(() => { }); // 空函数用于触发处理
   }
-}
+};
 
 /**
  * 初始化更新检查器实例
  */
-function initializeUpdateChecker() {
-  if (!updateChecker) {
-    // 动态获取manifest.json中的版本号
-    const currentVersion = chrome.runtime.getManifest().version;
-    updateChecker = new UpdateChecker('ChuwuYo', 'MultiLangSwitcher', currentVersion);
-    sendDebugLog(popupI18n.t('update_checker_initialized', { version: currentVersion }), 'info');
-  }
-}
+const initializeUpdateChecker = () => {
+  // 早期返回模式 - 检查是否已初始化
+  if (updateChecker) return;
+
+  // 动态获取manifest.json中的版本号
+  const currentVersion = chrome.runtime.getManifest().version;
+  updateChecker = new UpdateChecker('ChuwuYo', 'MultiLangSwitcher', currentVersion);
+  sendDebugLog(popupI18n.t('update_checker_initialized', { version: currentVersion }), 'info');
+};
 
 /**
  * 显示更新错误消息，具有增强的错误处理
@@ -452,7 +482,7 @@ function initializeUpdateChecker() {
  * @param {string} [fallbackMessage] - 可选的回退建议
  * @param {boolean} [showRetryOption] - 是否显示重试选项
  */
-function showUpdateError(message, fallbackMessage = null, showRetryOption = false) {
+const showUpdateError = (message, fallbackMessage = null, showRetryOption = false) => {
   // 使用缓存的DOM元素提高性能
   const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
   const updateErrorMessage = domCache.updateErrorMessage || document.getElementById('updateErrorMessage');
@@ -494,7 +524,7 @@ function showUpdateError(message, fallbackMessage = null, showRetryOption = fals
 /**
  * 显示更新检查的加载状态 - 立即执行
  */
-function showUpdateLoadingState() {
+const showUpdateLoadingState = () => {
   // 直接获取DOM元素，不使用缓存，确保立即响应
   const updateNotification = document.getElementById('updateNotification');
   const updateNotificationContent = document.getElementById('updateNotificationContent');
@@ -530,7 +560,7 @@ function showUpdateLoadingState() {
  * 显示更新通知，支持回退模式
  * @param {Object} updateInfo - 更新信息
  */
-function showUpdateNotification(updateInfo) {
+const showUpdateNotification = (updateInfo) => {
   // 使用缓存的DOM元素提高性能
   const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
   const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
@@ -632,12 +662,13 @@ function showUpdateNotification(updateInfo) {
  * 更新检查按钮UI状态
  * @param {boolean} isChecking - 是否正在进行更新检查
  */
-function updateCheckButtonState(isChecking) {
+const updateCheckButtonState = (isChecking) => {
   // 使用缓存的DOM元素提高性能
   const updateCheckBtn = domCache.updateCheckBtn || document.getElementById('updateCheckBtn');
   const updateCheckText = domCache.updateCheckText || document.getElementById('updateCheckText');
   const updateCheckSpinner = domCache.updateCheckSpinner || document.getElementById('updateCheckSpinner');
 
+  // 早期返回模式 - 检查DOM元素
   if (!updateCheckBtn || !updateCheckText || !updateCheckSpinner) return;
 
   // 使用批量DOM更新提高性能
@@ -652,12 +683,12 @@ function updateCheckButtonState(isChecking) {
       updateCheckSpinner.classList.add('d-none');
     }
   });
-}
+};
 
 /**
  * 取消正在进行的更新检查请求
  */
-function cancelUpdateCheck() {
+const cancelUpdateCheck = () => {
   if (updateCheckController) {
     updateCheckController.abort();
     updateCheckController = null;
@@ -668,12 +699,12 @@ function cancelUpdateCheck() {
     updateCheckInProgress = false;
     updateCheckButtonState(false);
   }
-}
+};
 
 /**
  * 防抖的更新检查函数 - 即时UI响应
  */
-function debouncedUpdateCheck() {
+const debouncedUpdateCheck = () => {
   // 清除现有的防抖定时器
   if (updateCheckDebounceTimer) {
     clearTimeout(updateCheckDebounceTimer);
@@ -684,6 +715,7 @@ function debouncedUpdateCheck() {
   const now = Date.now();
   const timeSinceLastCheck = now - lastUpdateCheckTime;
 
+  // 早期返回模式 - 检查频率限制
   if (timeSinceLastCheck < UPDATE_CHECK_MIN_INTERVAL) {
     const remainingTime = UPDATE_CHECK_MIN_INTERVAL - timeSinceLastCheck;
     sendDebugLog(popupI18n.t('update_check_rate_limited', { seconds: Math.ceil(remainingTime / 1000) }), 'warning');
@@ -695,12 +727,12 @@ function debouncedUpdateCheck() {
 
   // 立即执行，不使用setTimeout
   performUpdateCheck();
-}
+};
 
 /**
  * 执行更新检查，请求管理（非阻塞操作）
  */
-async function performUpdateCheck() {
+const performUpdateCheck = async () => {
   if (updateCheckInProgress) {
     sendDebugLog(popupI18n.t('update_check_in_progress'), 'warning');
     return;
@@ -767,7 +799,7 @@ async function performUpdateCheck() {
           break;
         case 'RATE_LIMIT':
           errorMessage = popupI18n.t('rate_limit_exceeded');
-          showRetryOption = true;
+          showRetryOption = false; // 不显示重试选项，避免加剧速率限制
           fallbackMessage = popupI18n.t('rate_limit_fallback');
           break;
         case 'INVALID_RESPONSE':
@@ -830,7 +862,10 @@ async function performUpdateCheck() {
 
 // 防抖的UI更新函数
 let lastUIUpdate = 0;
-function debouncedUIUpdate(updateFn, delay = 100) {
+const debouncedUIUpdate = (updateFn, delay = 100) => {
+  // 早期返回模式 - 验证输入
+  if (typeof updateFn !== 'function') return;
+
   const now = Date.now();
   if (now - lastUIUpdate > delay) {
     lastUIUpdate = now;
@@ -841,7 +876,7 @@ function debouncedUIUpdate(updateFn, delay = 100) {
       updateFn();
     }, delay);
   }
-}
+};
 
 // --- 扩展初始化 ---
 document.addEventListener('DOMContentLoaded', async function () {
@@ -971,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     },
 
     // 更新检查按钮点击处理
-    updateCheckBtnClick: function () {
+    updateCheckBtnClick: () => {
       sendDebugLog(popupI18n.t('clicked_update_check_button'), 'info');
       debouncedUpdateCheck();
     }
@@ -1029,7 +1064,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   // 页面卸载时清理事件和请求
-  window.addEventListener('beforeunload', function () {
+  window.addEventListener('beforeunload', () => {
     // 取消正在进行的更新检查
     cancelUpdateCheck();
 
@@ -1051,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   }, { once: true });
 
   // 通过可见性变化处理弹窗关闭
-  document.addEventListener('visibilitychange', function () {
+  document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       // 当弹窗变为隐藏时取消正在进行的更新检查
       cancelUpdateCheck();
@@ -1059,47 +1094,98 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
   });
 
-  // 监听来自 background.js 的消息
-  chrome.runtime.onMessage.addListener(function (request, _, sendResponse) {
-    if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
-      // 处理自动切换UI更新消息
-      debouncedUIUpdate(() => {
-        const autoSwitchEnabled = request.autoSwitchEnabled;
-        if (autoSwitchToggle) {
-          autoSwitchToggle.checked = autoSwitchEnabled;
-        }
+  /**
+   * 处理自动切换UI更新消息
+   * @param {Object} request - 消息请求对象
+   * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
+   * @param {HTMLElement} languageSelect - 语言选择元素
+   * @param {HTMLElement} applyButton - 应用按钮元素
+   */
+  const handleAutoSwitchUIUpdate = (request, autoSwitchToggle, languageSelect, applyButton) => {
+    debouncedUIUpdate(() => {
+      const autoSwitchEnabled = request.autoSwitchEnabled;
 
-        // 同步状态到本地存储
-        chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled }, function () {
-          if (chrome.runtime.lastError) {
-            sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
-          } else {
-            sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
-          }
-        });
-
-        // 更新UI状态
-        updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
-
-        // 如果有当前语言信息，更新显示
-        if (request.currentLanguage) {
-          updateLanguageDisplay(request.currentLanguage);
-          // 同步更新语言选择器
-          if (languageSelect) {
-            languageSelect.value = request.currentLanguage;
-          }
-          sendDebugLog(`${popupI18n.t('received_background_message')} ${request.currentLanguage}${popupI18n.t('update_ui')}`, 'info');
-        }
-      });
-      sendResponse({ status: "UI updated" });
-    } else if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
-      // 同步自动切换状态变更
+      // 更新开关状态
       if (autoSwitchToggle) {
-        autoSwitchToggle.checked = request.enabled;
-        updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
-        sendDebugLog(popupI18n.t('received_status_sync', { status: request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled') }), 'info');
+        autoSwitchToggle.checked = autoSwitchEnabled;
       }
+
+      // 同步状态到本地存储
+      syncAutoSwitchStatusToStorage(autoSwitchEnabled);
+
+      // 更新UI状态
+      updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
+
+      // 处理当前语言信息更新
+      if (request.currentLanguage) {
+        updateCurrentLanguageInfo(request.currentLanguage, languageSelect);
+      }
+    });
+  };
+
+  /**
+   * 同步自动切换状态到本地存储
+   * @param {boolean} autoSwitchEnabled - 自动切换是否启用
+   */
+  const syncAutoSwitchStatusToStorage = (autoSwitchEnabled) => {
+    chrome.storage.local.set({ autoSwitchEnabled }, () => {
+      if (chrome.runtime.lastError) {
+        sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
+      } else {
+        sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
+      }
+    });
+  };
+
+  /**
+   * 更新当前语言信息显示
+   * @param {string} currentLanguage - 当前语言
+   * @param {HTMLElement} languageSelect - 语言选择元素
+   */
+  const updateCurrentLanguageInfo = (currentLanguage, languageSelect) => {
+    updateLanguageDisplay(currentLanguage);
+
+    // 同步更新语言选择器
+    if (languageSelect) {
+      languageSelect.value = currentLanguage;
     }
+
+    sendDebugLog(`${popupI18n.t('received_background_message')} ${currentLanguage}${popupI18n.t('update_ui')}`, 'info');
+  };
+
+  /**
+   * 处理自动切换状态变更消息
+   * @param {Object} request - 消息请求对象
+   * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
+   * @param {HTMLElement} languageSelect - 语言选择元素
+   * @param {HTMLElement} applyButton - 应用按钮元素
+   */
+  const handleAutoSwitchStateChanged = (request, autoSwitchToggle, languageSelect, applyButton) => {
+    // 早期返回模式 - 检查必要元素
+    if (!autoSwitchToggle) return;
+
+    autoSwitchToggle.checked = request.enabled;
+    updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
+
+    const statusText = request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
+    sendDebugLog(popupI18n.t('received_status_sync', { status: statusText }), 'info');
+  };
+
+  // 监听来自 background.js 的消息
+  chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+    // 早期返回模式 - 处理 AUTO_SWITCH_UI_UPDATE
+    if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
+      handleAutoSwitchUIUpdate(request, autoSwitchToggle, languageSelect, applyButton);
+      sendResponse({ status: "UI updated" });
+      return true;
+    }
+
+    // 早期返回模式 - 处理 AUTO_SWITCH_STATE_CHANGED
+    if (request.type === 'AUTO_SWITCH_STATE_CHANGED') {
+      handleAutoSwitchStateChanged(request, autoSwitchToggle, languageSelect, applyButton);
+      return true;
+    }
+
     return true;
   });
 });
