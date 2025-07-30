@@ -2,8 +2,8 @@
 // 注意：这些脚本已在 popup.html 中通过 <script> 标签加载
 
 // --- 全局常量和配置 ---
-const UPDATE_CHECK_DEBOUNCE_DELAY = 2000; // 2秒防抖延迟
-const UPDATE_CHECK_MIN_INTERVAL = 30000; // 最小检查间隔30秒，防止频繁请求
+const UPDATE_CHECK_DEBOUNCE_DELAY = 1000; // 1秒防抖延迟
+const UPDATE_CHECK_MIN_INTERVAL = 3000; // 最小检查间隔3秒
 
 // --- 全局变量 ---
 let updateChecker = null;
