@@ -8,7 +8,7 @@ MultiLangSwitcher/
 │   ├── en/                         - 英文语言包
 │   └── zh/                         - 中文语言包
 ├── docs/                           - 项目文档目录
-│   └── README/                     - 多语言说明文档
+│   └── README/                     - 多语言说明文档目录
 ├── shared/                         - 共享资源目录
 │   ├── shared-actions.js           - 共享常量定义
 │   ├── shared-utils.js             - 共享工具函数
