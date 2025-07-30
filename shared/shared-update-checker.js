@@ -38,14 +38,14 @@ class UpdateChecker {
     this.timeout = 10000; // 10秒超时
     this.cache = null;
     this.cacheExpiry = null;
-    this.cacheTimeout = 6 * 60 * 60 * 1000; // 6小时缓存
+    this.cacheTimeout = 4 * 60 * 60 * 1000; // 4小时缓存
     this.cacheKey = `updateChecker_${repoOwner}_${repoName}`;
     this.persistentCacheEnabled = true;
 
     // 重试配置
     this.retryConfig = {
       maxAttempts: 3,
-      baseDelay: 2000,        // 1秒基础延迟
+      baseDelay: 2000,        // 2秒基础延迟
       backoffMultiplier: 2,   // 指数退避倍数
       retryableErrors: ['TIMEOUT', 'NETWORK_ERROR', 'API_ERROR', 'RATE_LIMIT']
     };
