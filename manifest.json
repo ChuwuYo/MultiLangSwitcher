@@ -16,7 +16,8 @@
       "48": "images/icon48.png",
       "64": "images/icon64.png",
       "128": "images/icon128.png",
-      "256": "images/icon256.png"
+      "256": "images/icon256.png",
+      "512": "images/icon512.png"
     }
   },
   "background": {
@@ -38,7 +39,8 @@
     "48": "images/icon48.png",
     "64": "images/icon64.png",
     "128": "images/icon128.png",
-    "256": "images/icon256.png"
+    "256": "images/icon256.png",
+    "512": "images/icon512.png"
   },
   "web_accessible_resources": [
     {
