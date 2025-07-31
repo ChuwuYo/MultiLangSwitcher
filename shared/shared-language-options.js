@@ -120,8 +120,8 @@ const generateLanguageOptions = (selectedValue = null) => {
  * @param {string|null} selectedValue - 要选中的语言值
  */
 const populateLanguageSelect = (selectElement, selectedValue = null) => {
-  // 早期返回 - 验证必需参数
-  if (!selectElement) return;
+  // 早期返回 - 验证必需参数和类型
+  if (!selectElement || !(selectElement instanceof HTMLElement)) return;
 
   selectElement.innerHTML = generateLanguageOptions(selectedValue);
 
