@@ -380,11 +380,12 @@ class BaseI18n {
                 Object.keys(params).forEach(param => {
                     const placeholder = `{${param}}`;
                     const value = String(params[param]); // 确保参数值为字符串
-                    // 使用全局替换，确保所有占位符都被替换
-                    text = text.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
+                    // 使用 split/join 方式更安全，避免正则表达式相关问题
+                    text = text.split(placeholder).join(value);
                 });
             } catch (error) {
-                // 忽略参数替换错误，返回原始文本
+                // 记录替换错误但继续处理其他参数
+                console.error(`Failed to replace placeholder for param "${param}" in key "${key}":`, error);
             }
         }
 
