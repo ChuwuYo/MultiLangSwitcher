@@ -72,23 +72,35 @@ fetch(url).then(response => response.json()).then(data => { // ❌
 #### 主要函数类型
 
 ```javascript
-// 1. 箭头函数（推荐用于大多数情况）
+// 1. 箭头函数（推荐用于独立函数）
 const processData = (data) => {
   return data.filter(item => item.active);
 };
 
-// 2. 类方法（使用箭头函数语法）
+// 2. 类方法（使用简写语法或箭头函数语法都可以）
 class LanguageManager {
   /**
-   * 更新语言设置
+   * 更新语言设置 - 简写语法（推荐）
    * @param {string} language - 语言代码
    */
-  updateLanguage = (language) => {
+  updateLanguage(language) {
     this.currentLanguage = language;
-  };
+  }
+
+  /**
+   * 异步方法 - 简写语法（推荐）
+   */
+  async loadData() {
+    // 实现
+  }
+
+  // 箭头函数语法也可以，但不是必须的
+  // updateLanguage = (language) => {
+  //   this.currentLanguage = language;
+  // };
 }
 
-// 3. 异步函数
+// 3. 独立的异步函数
 const loadTranslations = async (language) => {
   const translations = await import(`./i18n/${language}.js`);
   return translations.default;

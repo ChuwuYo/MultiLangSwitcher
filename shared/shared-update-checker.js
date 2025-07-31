@@ -9,15 +9,15 @@
  * @param {Object} params - 参数对象
  * @returns {string} 本地化的文本
  */
-function getLocalizedText(key, params = {}) {
-  // 使用通用的 fallback 翻译系统
+const getLocalizedText = (key, params = {}) => {
+  // 早期返回 - 使用通用的 fallback 翻译系统
   if (typeof getFallbackTranslation === 'function') {
     return getFallbackTranslation(key, params);
-  } else {
-    // 如果 getFallbackTranslation 不可用，最后的回退
-    return key;
   }
-}
+  
+  // 如果 getFallbackTranslation 不可用，最后的回退
+  return key;
+};
 
 /**
  * GitHub 发布版本更新检查器类
