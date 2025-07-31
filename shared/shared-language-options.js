@@ -95,8 +95,8 @@ let cachedLanguageOptionsHTML = null;
  * @param {string|null} selectedValue - 选中的语言值，为null时不选中任何选项
  * @returns {string} 生成的option元素HTML字符串
  */
-function generateLanguageOptions(selectedValue = null) {
-  // 如果没有选中值且已有缓存，直接返回缓存结果
+const generateLanguageOptions = (selectedValue = null) => {
+  // 早期返回 - 如果没有选中值且已有缓存，直接返回缓存结果
   if (!selectedValue && cachedLanguageOptionsHTML) {
     return cachedLanguageOptionsHTML;
   }
@@ -112,14 +112,15 @@ function generateLanguageOptions(selectedValue = null) {
   }
 
   return html;
-}
+};
 
 /**
  * 填充语言选择框元素
  * @param {HTMLSelectElement} selectElement - 要填充的select元素
  * @param {string|null} selectedValue - 要选中的语言值
  */
-function populateLanguageSelect(selectElement, selectedValue = null) {
+const populateLanguageSelect = (selectElement, selectedValue = null) => {
+  // 早期返回 - 验证必需参数
   if (!selectElement) return;
 
   selectElement.innerHTML = generateLanguageOptions(selectedValue);
@@ -132,5 +133,5 @@ function populateLanguageSelect(selectElement, selectedValue = null) {
     customOption.selected = true;
     selectElement.insertBefore(customOption, selectElement.firstChild);
   }
-}
+};
 
