@@ -9,8 +9,15 @@ class BaseI18n {
      * @param {boolean} isServiceWorker - 是否在service worker环境中运行
      */
     constructor(componentName, isServiceWorker = false) {
+        // 早期返回模式 - 验证必需参数
+        if (!componentName || typeof componentName !== 'string') {
+            const error = new Error('Component name is required and must be a string');
+            console.error('BaseI18n constructor error:', error.message);
+            throw error;
+        }
+
         this.componentName = componentName;
-        this.isServiceWorker = isServiceWorker;
+        this.isServiceWorker = Boolean(isServiceWorker);
         this.currentLang = 'en';
         this.translations = {};
         this.initialized = false;
@@ -368,12 +375,17 @@ class BaseI18n {
         let text = this.translations[key] || this.getFallbackTranslation(key) || key;
 
         // 处理参数替换，支持多种占位符格式
-        if (params && typeof params === 'object') {
-            Object.keys(params).forEach(param => {
-                const placeholder = `{${param}}`;
-                // 使用全局替换，确保所有占位符都被替换
-                text = text.replace(new RegExp(placeholder, 'g'), params[param]);
-            });
+        if (params && typeof params === 'object' && Object.keys(params).length > 0) {
+            try {
+                Object.keys(params).forEach(param => {
+                    const placeholder = `{${param}}`;
+                    const value = String(params[param]); // 确保参数值为字符串
+                    // 使用全局替换，确保所有占位符都被替换
+                    text = text.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
+                });
+            } catch (error) {
+                // 忽略参数替换错误，返回原始文本
+            }
         }
 
         return text;
@@ -384,6 +396,10 @@ class BaseI18n {
      * @param {Function} callback - 准备就绪后执行的回调函数
      */
     ready(callback) {
+        if (!callback || typeof callback !== 'function') {
+            return;
+        }
+
         if (this.isReady) {
             callback();
         } else {
