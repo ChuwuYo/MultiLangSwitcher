@@ -13,11 +13,7 @@ const resetAcceptLanguage = async () => {
   try {
     // 早期返回模式 - 检查 Chrome API 可用性
     if (!chrome?.runtime?.sendMessage) {
-      const error = new Error('Chrome runtime API is not available');
-      if (typeof sendDebugLog === 'function') {
-        sendDebugLog('Chrome runtime API unavailable in resetAcceptLanguage', 'error');
-      }
-      throw error;
+      throw new Error('Chrome runtime API is not available');
     }
 
     // 发送重置请求到后台脚本
@@ -33,6 +29,7 @@ const resetAcceptLanguage = async () => {
 
     // 早期返回模式 - 验证响应状态
     if (response?.status === 'success') {
+      // 记录成功日志
       if (typeof sendDebugLog === 'function') {
         sendDebugLog('Accept-Language settings reset successfully', 'success');
       }
@@ -41,13 +38,10 @@ const resetAcceptLanguage = async () => {
 
     // 处理非成功响应
     const errorMessage = response?.message || 'Background script returned non-success status without error message';
-    if (typeof sendDebugLog === 'function') {
-      sendDebugLog(`Reset Accept-Language failed: ${errorMessage}`, 'error');
-    }
     throw new Error(errorMessage);
 
   } catch (error) {
-    // 统一错误处理和日志记录
+    // 集中化错误处理和日志记录
     const errorMsg = `Failed to reset Accept-Language: ${error.message}`;
     if (typeof sendDebugLog === 'function') {
       sendDebugLog(errorMsg, 'error');
