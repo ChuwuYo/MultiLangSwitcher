@@ -8,7 +8,8 @@
  * @param {string} message - 日志消息内容
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
-function sendDebugLog(message, logType = 'info') {
+const sendDebugLog = (message, logType = 'info') => {
+  // 早期返回模式 - 验证输入
   if (!message) return;
 
   try {
@@ -16,7 +17,7 @@ function sendDebugLog(message, logType = 'info') {
       chrome.runtime.sendMessage({
         type: 'DEBUG_LOG',
         message: String(message),
-        logType: logType
+        logType
       }).catch(() => {
         // 静默处理消息发送失败，避免控制台噪音
       });
@@ -25,13 +26,13 @@ function sendDebugLog(message, logType = 'info') {
     // Chrome API不可用时的降级处理
     console.warn('Debug log failed:', error);
   }
-}
+};
 
 /**
  * 检测浏览器界面语言
  * @returns {string} 返回 'zh' 或 'en'
  */
-function detectBrowserLanguage() {
+const detectBrowserLanguage = () => {
   try {
     const browserLang = chrome.i18n.getUILanguage().toLowerCase();
     return browserLang.startsWith('zh') ? 'zh' : 'en';
@@ -39,7 +40,7 @@ function detectBrowserLanguage() {
     // API不可用时默认返回英文
     return 'en';
   }
-}
+};
 /**
  * 获取更新相关的本地化翻译
  * @param {string} key - 翻译键
@@ -47,7 +48,7 @@ function detectBrowserLanguage() {
  * @param {string} context - 上下文 ('popup' 或 'background')
  * @returns {string} 本地化的文本
  */
-function getUpdateTranslation(key, params = {}, context = 'popup') {
+const getUpdateTranslation = (key, params = {}, context = 'popup') => {
   try {
     // 尝试从全局i18n实例获取翻译
     let translation = key; // 默认返回键名作为fallback
@@ -85,7 +86,7 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
     console.warn('Failed to get update translation:', error);
     return getFallbackTranslation(key, params);
   }
-}
+};
 
 /**
  * 获取通用的fallback翻译
@@ -93,7 +94,7 @@ function getUpdateTranslation(key, params = {}, context = 'popup') {
  * @param {Object} params - 参数对象
  * @returns {string} fallback翻译文本
  */
-function getFallbackTranslation(key, params = {}) {
+const getFallbackTranslation = (key, params = {}) => {
   // 检测当前语言，优先使用i18n实例的语言设置
   let currentLang = 'en';
   try {
@@ -378,7 +379,7 @@ function getFallbackTranslation(key, params = {}) {
  * @param {Object} params - 参数对象
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
-function sendLocalizedUpdateLog(key, params = {}, logType = 'info') {
+const sendLocalizedUpdateLog = (key, params = {}, logType = 'info') => {
   try {
     const message = getUpdateTranslation(key, params, 'background');
     sendDebugLog(message, logType);
@@ -388,4 +389,4 @@ function sendLocalizedUpdateLog(key, params = {}, logType = 'info') {
     const fallbackMessage = getFallbackTranslation(key, params);
     sendDebugLog(fallbackMessage, logType);
   }
-}
+};
