@@ -47,7 +47,7 @@ class UpdateChecker {
       maxAttempts: 3,
       baseDelay: 2000,        // 2秒基础延迟
       backoffMultiplier: 2,   // 指数退避倍数
-      retryableErrors: ['TIMEOUT', 'NETWORK_ERROR', 'API_ERROR', 'RATE_LIMIT']
+      retryableErrors: ['TIMEOUT', 'NETWORK_ERROR', 'API_ERROR', 'RATE_LIMIT', 'INVALID_RESPONSE', 'SSL_ERROR', 'DNS_ERROR']
     };
   }
 
@@ -466,7 +466,7 @@ class UpdateChecker {
       originalError: originalError.message,
       retryable: retryable,
       fallbackSuggestion: fallbackSuggestion,
-      canRetry: retryable && ['TIMEOUT', 'NETWORK_ERROR', 'API_ERROR', 'RATE_LIMIT', 'INVALID_RESPONSE', 'SSL_ERROR', 'DNS_ERROR'].includes(errorType)
+      canRetry: retryable && this.retryConfig.retryableErrors.includes(errorType)
     };
   }
 
