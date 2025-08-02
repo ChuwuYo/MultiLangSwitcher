@@ -14,7 +14,7 @@ const getLocalizedText = (key, params = {}) => {
   if (typeof getFallbackTranslation === 'function') {
     return getFallbackTranslation(key, params);
   }
-  
+
   // 如果 getFallbackTranslation 不可用，最后的回退
   return key;
 };
@@ -138,35 +138,18 @@ class UpdateChecker {
         lastError = error;
 
         // 如果请求被取消，不要重试
-        if (error.message === 'Request was cancelled' || error.name === 'AbortError') {
+        if (this.isCancelledError(error)) {
           throw error;
         }
 
-        // 检查错误是否可重试
-        const errorInfo = this.handleApiError(error);
-        const isRetryable = this.retryConfig.retryableErrors.includes(errorInfo.type);
-
-        // 如果这是最后一次尝试或错误不可重试，则不重试
-        if (attempt === this.retryConfig.maxAttempts || !isRetryable) {
-          sendLocalizedUpdateLog('update_check_failed_after_attempts', { attempt: attempt, error: errorInfo.type }, 'error');
-          // 在抛出前增强错误信息
-          const enhancedError = new Error(errorInfo.message);
-          enhancedError.type = errorInfo.type;
-          enhancedError.originalError = error.message;
-          enhancedError.retryable = errorInfo.retryable;
-          enhancedError.canRetry = errorInfo.canRetry;
-          enhancedError.fallbackSuggestion = errorInfo.fallbackSuggestion;
-          enhancedError.attempts = attempt;
-          enhancedError.maxAttempts = this.retryConfig.maxAttempts;
-          throw enhancedError;
+        // 处理重试逻辑
+        const shouldRetry = this.shouldRetryError(error, attempt);
+        if (!shouldRetry) {
+          throw this.enhanceErrorForFinalFailure(error, attempt);
         }
 
-        // 使用指数退避计算延迟
-        const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
-        sendLocalizedUpdateLog('update_check_retry_delay', { attempt: attempt, error: errorInfo.type, delay: delay }, 'warning');
-
-        // 重试前等待，但检查取消状态
-        await this.delay(delay, signal);
+        // 执行重试延迟
+        await this.executeRetryDelay(error, attempt, signal);
       }
     }
 
@@ -373,11 +356,6 @@ class UpdateChecker {
    * @returns {Object} 格式化的错误信息
    */
   handleApiError(error) {
-    let errorType = 'UNKNOWN_ERROR';
-    let userMessage = getLocalizedText('unexpected_error_occurred');
-    let retryable = false;
-    let fallbackSuggestion = null;
-
     const errorMessage = error.message.toLowerCase();
     const errorName = error.name?.toLowerCase() || '';
 
@@ -386,119 +364,182 @@ class UpdateChecker {
       errorMessage.includes('networkerror') ||
       errorMessage.includes('network error') ||
       errorName === 'networkerror') {
-      errorType = 'NETWORK_ERROR';
-      userMessage = getLocalizedText('network_connection_failed');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('check_internet_connection');
+      return this.createErrorInfo('NETWORK_ERROR', 'network_connection_failed', true, 'check_internet_connection', error);
+    }
 
-      // 超时错误
-    } else if (errorMessage.includes('timeout') ||
+    // 超时错误
+    if (errorMessage.includes('timeout') ||
       errorMessage.includes('request timeout') ||
       errorName === 'aborterror') {
-      errorType = 'TIMEOUT';
-      userMessage = getLocalizedText('request_timed_out');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('try_stable_connection');
+      return this.createErrorInfo('TIMEOUT', 'request_timed_out', true, 'try_stable_connection', error);
+    }
 
       // 速率限制 (403 状态码或特定消息)
-    } else if (errorMessage.includes('403') ||
+    if (errorMessage.includes('403') ||
       errorMessage.includes('rate limit') ||
       errorMessage.includes('api rate limit exceeded')) {
-      errorType = 'RATE_LIMIT';
-      userMessage = getLocalizedText('github_rate_limit_exceeded');
-      retryable = true; // 等待后可以重试
-      fallbackSuggestion = getLocalizedText('visit_github_manually');
+      return this.createErrorInfo('RATE_LIMIT', 'github_rate_limit_exceeded', true, 'visit_github_manually', error);
+    }
 
-      // 仓库或资源未找到
-    } else if (errorMessage.includes('404') ||
+    // 资源未找到
+    if (errorMessage.includes('404') ||
       errorMessage.includes('not found')) {
-      errorType = 'NOT_FOUND';
-      userMessage = getLocalizedText('repository_not_found');
-      retryable = false;
-      fallbackSuggestion = getLocalizedText('visit_github_repo_url');
+      return this.createErrorInfo('NOT_FOUND', 'repository_not_found', false, 'visit_github_repo_url', error);
+    }
 
-      // 服务器错误 (5xx)
-    } else if (errorMessage.includes('500') ||
+    // 服务器错误
+    if (errorMessage.includes('500') ||
       errorMessage.includes('502') ||
       errorMessage.includes('503') ||
       errorMessage.includes('504') ||
       errorMessage.includes('github api error')) {
-      errorType = 'API_ERROR';
-      userMessage = getLocalizedText('github_api_unavailable');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('github_services_issues');
+      return this.createErrorInfo('API_ERROR', 'github_api_unavailable', true, 'github_services_issues', error);
+    }
 
-      // 无效响应格式
-    } else if (errorMessage.includes('invalid api response') ||
+    // 无效响应格式
+    if (errorMessage.includes('invalid api response') ||
       errorMessage.includes('missing tag_name') ||
       errorMessage.includes('unexpected token') ||
       errorMessage.includes('json')) {
-      errorType = 'INVALID_RESPONSE';
-      userMessage = getLocalizedText('invalid_response_from_api');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('github_api_malformed_data');
-
-      // 版本解析错误
-    } else if (errorMessage.includes('invalid version format') ||
-      errorMessage.includes('version must have exactly 3 parts') ||
-      errorMessage.includes('invalid version part')) {
-      errorType = 'VERSION_ERROR';
-      userMessage = getLocalizedText('unable_to_parse_version');
-      retryable = false;
-      fallbackSuggestion = getLocalizedText('visit_github_for_version');
-
-      // SSL/TLS 错误
-    } else if (errorMessage.includes('ssl') ||
-      errorMessage.includes('tls') ||
-      errorMessage.includes('certificate')) {
-      errorType = 'SSL_ERROR';
-      userMessage = getLocalizedText('ssl_connection_error');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('check_firewall_settings');
-
-      // DNS 错误
-    } else if (errorMessage.includes('dns') ||
-      errorMessage.includes('name resolution')) {
-      errorType = 'DNS_ERROR';
-      userMessage = getLocalizedText('dns_resolution_error');
-      retryable = true;
-      fallbackSuggestion = getLocalizedText('check_dns_settings');
-
-      // CORS 错误 (在扩展环境中不应该发生，但以防万一)
-    } else if (errorMessage.includes('cors') ||
-      errorMessage.includes('cross-origin')) {
-      errorType = 'CORS_ERROR';
-      userMessage = getLocalizedText('cors_request_blocked');
-      retryable = false;
-      fallbackSuggestion = getLocalizedText('reload_extension');
-
-      // 用户取消请求
-    } else if (errorMessage.includes('request was cancelled') ||
-      errorMessage.includes('operation was aborted')) {
-      errorType = 'CANCELLED';
-      userMessage = getLocalizedText('update_check_was_cancelled');
-      retryable = false;
-      fallbackSuggestion = null;
-
-      // 通用未知错误
-    } else {
-      errorType = 'UNKNOWN_ERROR';
-      userMessage = getLocalizedText('unexpected_error_occurred');
-      retryable = false;
-      fallbackSuggestion = getLocalizedText('visit_github_repo_url');
+      return this.createErrorInfo('INVALID_RESPONSE', 'invalid_response_from_api', true, 'github_api_malformed_data', error);
     }
 
+    // 版本解析错误
+    if (errorMessage.includes('invalid version format') ||
+      errorMessage.includes('version must have exactly 3 parts') ||
+      errorMessage.includes('invalid version part')) {
+      return this.createErrorInfo('VERSION_ERROR', 'unable_to_parse_version', false, 'visit_github_for_version', error);
+    }
+
+    // SSL/TLS 错误
+    if (errorMessage.includes('ssl') ||
+      errorMessage.includes('tls') ||
+      errorMessage.includes('certificate')) {
+      return this.createErrorInfo('SSL_ERROR', 'ssl_connection_error', true, 'check_firewall_settings', error);
+    }
+
+    // DNS 错误
+    if (errorMessage.includes('dns') ||
+      errorMessage.includes('name resolution')) {
+      return this.createErrorInfo('DNS_ERROR', 'dns_resolution_error', true, 'check_dns_settings', error);
+    }
+
+    // CORS 错误
+    if (errorMessage.includes('cors') ||
+      errorMessage.includes('cross-origin')) {
+      return this.createErrorInfo('CORS_ERROR', 'cors_request_blocked', false, 'reload_extension', error);
+    }
+
+    // 用户取消请求
+    if (errorMessage.includes('request was cancelled') ||
+      errorMessage.includes('operation was aborted')) {
+      return this.createErrorInfo('CANCELLED', 'update_check_was_cancelled', false, null, error);
+    }
+
+    // 默认情况 - 通用未知错误
+    return this.createErrorInfo('UNKNOWN_ERROR', 'unexpected_error_occurred', false, 'visit_github_repo_url', error);
+  }
+
+  /**
+   * 创建统一格式的错误信息对象
+   * @param {string} errorType - 错误类型
+   * @param {string} messageKey - 消息键
+   * @param {boolean} retryable - 是否可重试
+   * @param {string|null} fallbackKey - 回退建议键
+   * @param {Error} originalError - 原始错误
+   * @returns {Object} 格式化的错误信息
+   */
+  createErrorInfo(errorType, messageKey, retryable, fallbackKey, originalError) {
+    const userMessage = getLocalizedText(messageKey);
+    const fallbackSuggestion = fallbackKey ? getLocalizedText(fallbackKey) : null;
+
     // 记录详细错误信息用于调试
-    sendLocalizedUpdateLog('error_details', { type: errorType, message: error.message, stack: error.stack || 'N/A' }, 'error');
+    sendLocalizedUpdateLog('error_details', {
+      type: errorType,
+      message: originalError.message,
+      stack: originalError.stack || 'N/A'
+    }, 'error');
 
     return {
       type: errorType,
       message: userMessage,
-      originalError: error.message,
+      originalError: originalError.message,
       retryable: retryable,
       fallbackSuggestion: fallbackSuggestion,
       canRetry: retryable && ['TIMEOUT', 'NETWORK_ERROR', 'API_ERROR', 'RATE_LIMIT', 'INVALID_RESPONSE', 'SSL_ERROR', 'DNS_ERROR'].includes(errorType)
     };
+  }
+
+  /**
+   * 检查错误是否为取消错误
+   * @param {Error} error - 错误对象
+   * @returns {boolean} 是否为取消错误
+   */
+  isCancelledError(error) {
+    return error.message === 'Request was cancelled' || error.name === 'AbortError';
+  }
+
+  /**
+   * 判断错误是否应该重试
+   * @param {Error} error - 错误对象
+   * @param {number} attempt - 当前尝试次数
+   * @returns {boolean} 是否应该重试
+   */
+  shouldRetryError(error, attempt) {
+    // 如果已达到最大尝试次数，不重试
+    if (attempt >= this.retryConfig.maxAttempts) {
+      return false;
+    }
+
+    // 检查错误类型是否可重试
+    const errorInfo = this.handleApiError(error);
+    return this.retryConfig.retryableErrors.includes(errorInfo.type);
+  }
+
+  /**
+   * 为最终失败增强错误信息
+   * @param {Error} error - 原始错误
+   * @param {number} attempt - 失败时的尝试次数
+   * @returns {Error} 增强后的错误对象
+   */
+  enhanceErrorForFinalFailure(error, attempt) {
+    const errorInfo = this.handleApiError(error);
+    
+    sendLocalizedUpdateLog('update_check_failed_after_attempts', { 
+      attempt: attempt, 
+      error: errorInfo.type 
+    }, 'error');
+
+    // 创建增强的错误对象
+    const enhancedError = new Error(errorInfo.message);
+    enhancedError.type = errorInfo.type;
+    enhancedError.originalError = error.message;
+    enhancedError.retryable = errorInfo.retryable;
+    enhancedError.canRetry = errorInfo.canRetry;
+    enhancedError.fallbackSuggestion = errorInfo.fallbackSuggestion;
+    enhancedError.attempts = attempt;
+    enhancedError.maxAttempts = this.retryConfig.maxAttempts;
+
+    return enhancedError;
+  }
+
+  /**
+   * 执行重试延迟
+   * @param {Error} error - 错误对象
+   * @param {number} attempt - 当前尝试次数
+   * @param {AbortSignal} signal - 中止信号
+   */
+  async executeRetryDelay(error, attempt, signal) {
+    const errorInfo = this.handleApiError(error);
+    const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
+    
+    sendLocalizedUpdateLog('update_check_retry_delay', { 
+      attempt: attempt, 
+      error: errorInfo.type, 
+      delay: delay 
+    }, 'warning');
+
+    await this.delay(delay, signal);
   }
 
   /**
