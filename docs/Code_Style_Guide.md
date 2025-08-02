@@ -342,59 +342,161 @@ const initDomainManager = async () => { /* ... */ };
 
 ### 1. 统一错误处理模式
 
+采用早期返回模式，避免深层嵌套的 if-else 链：
+
 ```javascript
-const fetchWithRetry = async (url, options = {}, retryCount = 0) => {
-  try {
-    const response = await fetch(url, options);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+// ✅ 推荐：早期返回模式
+const handleApiError = (error) => {
+  const errorMessage = error.message.toLowerCase();
+
+  // 早期返回 - 网络错误
+  if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+    return createErrorInfo('NETWORK_ERROR', 'network_connection_failed', true, 'check_connection');
+  }
+
+  // 早期返回 - 超时错误
+  if (errorMessage.includes('timeout')) {
+    return createErrorInfo('TIMEOUT', 'request_timed_out', true, 'try_again');
+  }
+
+  // 早期返回 - 权限错误
+  if (errorMessage.includes('permission')) {
+    return createErrorInfo('PERMISSION_ERROR', 'permission_denied', false, 'check_permissions');
+  }
+
+  // 默认情况
+  return createErrorInfo('UNKNOWN_ERROR', 'unexpected_error', false, 'contact_support');
+};
+
+// ❌ 避免：深层嵌套
+const handleApiErrorBad = (error) => {
+  if (error.message.includes('network')) {
+    if (error.code === 'NETWORK_ERROR') {
+      if (retryCount < maxRetries) {
+        // 深层嵌套逻辑
+      } else {
+        // 更深的嵌套
+      }
+    } else {
+      // 继续嵌套
     }
-    
-    return await response.json();
-  } catch (error) {
-    // 记录错误日志
-    sendDebugLog(`请求失败: ${error.message}`, 'error');
-    
-    // 重试逻辑
-    if (retryCount < MAX_RETRY_ATTEMPTS) {
-      const delay = BASE_RETRY_DELAY * Math.pow(2, retryCount);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return fetchWithRetry(url, options, retryCount + 1);
-    }
-    
-    // 重新抛出错误供上层处理
-    throw error;
+  } else {
+    // 更多嵌套
   }
 };
 ```
 
-### 2. 错误分类和处理
+### 2. 模块化重试逻辑
+
+将复杂的重试逻辑拆分为专门的辅助方法：
 
 ```javascript
-const handleRuleUpdateError = async (error, language, retryCount) => {
-  // 错误分类
-  let errorType = 'unknown';
-  let canRetry = true;
+// 主要重试方法 - 简洁清晰
+const fetchWithRetry = async (url, options = {}, signal = null) => {
+  let lastError = null;
 
-  if (error.message.includes('quota')) {
-    errorType = 'quota_exceeded';
-    canRetry = false;
-  } else if (error.message.includes('permission')) {
-    errorType = 'permission_denied';
-    canRetry = false;
-  } else if (error.message.includes('network')) {
-    errorType = 'network_error';
+  for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+    try {
+      // 早期返回 - 检查取消状态
+      if (signal?.aborted) {
+        throw new Error('Request was cancelled');
+      }
+
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+
+    } catch (error) {
+      lastError = error;
+
+      // 早期返回 - 如果请求被取消，不要重试
+      if (isCancelledError(error)) {
+        throw error;
+      }
+
+      // 处理重试逻辑
+      const shouldRetry = shouldRetryError(error, attempt);
+      if (!shouldRetry) {
+        throw enhanceErrorForFinalFailure(error, attempt);
+      }
+
+      // 执行重试延迟
+      await executeRetryDelay(error, attempt, signal);
+    }
   }
 
+  throw lastError;
+};
+
+// 辅助方法 - 单一职责
+const isCancelledError = (error) => {
+  return error.message === 'Request was cancelled' || error.name === 'AbortError';
+};
+
+const shouldRetryError = (error, attempt) => {
+  // 早期返回 - 如果已达到最大尝试次数，不重试
+  if (attempt >= MAX_RETRY_ATTEMPTS) {
+    return false;
+  }
+
+  const errorInfo = handleApiError(error);
+  return RETRYABLE_ERRORS.includes(errorInfo.type);
+};
+
+const enhanceErrorForFinalFailure = (error, attempt) => {
+  const errorInfo = handleApiError(error);
+  
+  sendDebugLog(`请求失败，已尝试 ${attempt} 次: ${errorInfo.type}`, 'error');
+
   // 创建增强的错误对象
-  const enhancedError = new Error(`规则更新失败 (${errorType}): ${error.message}`);
-  enhancedError.originalError = error;
-  enhancedError.type = errorType;
-  enhancedError.canRetry = canRetry;
-  enhancedError.retryCount = retryCount;
+  const enhancedError = new Error(errorInfo.message);
+  enhancedError.type = errorInfo.type;
+  enhancedError.originalError = error.message;
+  enhancedError.retryable = errorInfo.retryable;
+  enhancedError.attempts = attempt;
+  enhancedError.fallbackSuggestion = errorInfo.fallbackSuggestion;
 
   return enhancedError;
+};
+
+const executeRetryDelay = async (error, attempt, signal) => {
+  const delay = BASE_RETRY_DELAY * Math.pow(2, attempt - 1);
+  sendDebugLog(`重试延迟 ${delay}ms，第 ${attempt} 次尝试`, 'warning');
+  
+  await new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(resolve, delay);
+    
+    if (signal) {
+      signal.addEventListener('abort', () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Request was cancelled'));
+      }, { once: true });
+    }
+  });
+};
+```
+
+### 3. 错误信息创建和增强
+
+```javascript
+// 统一的错误信息创建方法
+const createErrorInfo = (errorType, messageKey, retryable, fallbackKey) => {
+  const userMessage = getLocalizedText(messageKey);
+  const fallbackSuggestion = fallbackKey ? getLocalizedText(fallbackKey) : null;
+
+  // 记录详细错误信息用于调试
+  sendDebugLog(`错误类型: ${errorType}`, 'error');
+
+  return {
+    type: errorType,
+    message: userMessage,
+    retryable: retryable,
+    fallbackSuggestion: fallbackSuggestion,
+    canRetry: retryable && RETRYABLE_ERRORS.includes(errorType)
+  };
 };
 ```
 
@@ -511,7 +613,7 @@ sendDebugLog(`规则更新失败: ${error.message}`, 'error');
 
 ### ✅ 基本检查
 - [ ] 使用 `const`/`let` 替代 `var`
-- [ ] 函数使用箭头函数语法
+- [ ] 独立函数使用箭头函数语法，类方法使用简写语法
 - [ ] 使用模板字符串替代字符串拼接
 - [ ] 应用早期返回模式减少嵌套
 - [ ] 移除未使用的变量和参数
@@ -562,7 +664,8 @@ sendDebugLog(`规则更新失败: ${error.message}`, 'error');
 ## 更新历史
 
 - **v1.8.52**: 初始版本，基于项目代码风格统一工作总结
-- 后续版本将根据项目发展需要更新此指南
+- **v1.8.57**: 主要函数类型部分注释优化，添加异步方法推荐实现指南
+- **v1.8.58**: 统一并完善错误处理实现指南、基本检查
 
 ---
 
