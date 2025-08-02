@@ -142,14 +142,17 @@ class UpdateChecker {
           throw error;
         }
 
+        // 只调用一次错误处理，避免重复处理
+        const errorInfo = this.handleApiError(error);
+
         // 处理重试逻辑
-        const shouldRetry = this.shouldRetryError(error, attempt);
+        const shouldRetry = this.shouldRetryError(errorInfo, attempt);
         if (!shouldRetry) {
-          throw this.enhanceErrorForFinalFailure(error, attempt);
+          throw this.enhanceErrorForFinalFailure(error, errorInfo, attempt);
         }
 
         // 执行重试延迟
-        await this.executeRetryDelay(error, attempt, signal);
+        await this.executeRetryDelay(errorInfo, attempt, signal);
       }
     }
 
@@ -481,30 +484,28 @@ class UpdateChecker {
 
   /**
    * 判断错误是否应该重试
-   * @param {Error} error - 错误对象
+   * @param {Object} errorInfo - 已处理的错误信息对象
    * @param {number} attempt - 当前尝试次数
    * @returns {boolean} 是否应该重试
    */
-  shouldRetryError(error, attempt) {
+  shouldRetryError(errorInfo, attempt) {
     // 如果已达到最大尝试次数，不重试
     if (attempt >= this.retryConfig.maxAttempts) {
       return false;
     }
 
     // 检查错误类型是否可重试
-    const errorInfo = this.handleApiError(error);
     return this.retryConfig.retryableErrors.includes(errorInfo.type);
   }
 
   /**
    * 为最终失败增强错误信息
    * @param {Error} error - 原始错误
+   * @param {Object} errorInfo - 已处理的错误信息对象
    * @param {number} attempt - 失败时的尝试次数
    * @returns {Error} 增强后的错误对象
    */
-  enhanceErrorForFinalFailure(error, attempt) {
-    const errorInfo = this.handleApiError(error);
-    
+  enhanceErrorForFinalFailure(error, errorInfo, attempt) {
     sendLocalizedUpdateLog('update_check_failed_after_attempts', { 
       attempt: attempt, 
       error: errorInfo.type 
@@ -525,12 +526,11 @@ class UpdateChecker {
 
   /**
    * 执行重试延迟
-   * @param {Error} error - 错误对象
+   * @param {Object} errorInfo - 已处理的错误信息对象
    * @param {number} attempt - 当前尝试次数
    * @param {AbortSignal} signal - 中止信号
    */
-  async executeRetryDelay(error, attempt, signal) {
-    const errorInfo = this.handleApiError(error);
+  async executeRetryDelay(errorInfo, attempt, signal) {
     const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
     
     sendLocalizedUpdateLog('update_check_retry_delay', { 
