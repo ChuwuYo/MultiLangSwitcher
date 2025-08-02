@@ -500,6 +500,59 @@ const createErrorInfo = (errorType, messageKey, retryable, fallbackKey) => {
 };
 ```
 
+### 4. 避免重复处理
+
+**重要原则**：确保同一个错误只被处理一次，避免重复调用错误处理函数。
+
+```javascript
+// ❌ 避免：重复调用错误处理函数
+const handleRetryLogic = (error, attempt) => {
+  const errorInfo1 = handleApiError(error); // 第1次调用
+  const shouldRetry = checkRetryability(error, attempt);
+  
+  if (!shouldRetry) {
+    const errorInfo2 = handleApiError(error); // 第2次调用 - 浪费性能
+    throw enhanceError(errorInfo2, attempt);
+  }
+  
+  const errorInfo3 = handleApiError(error); // 第3次调用 - 浪费性能
+  scheduleRetry(errorInfo3, attempt);
+};
+
+// ✅ 推荐：只处理一次，传递结果
+const handleRetryLogic = (error, attempt) => {
+  // 只调用一次错误处理
+  const errorInfo = handleApiError(error);
+  
+  const shouldRetry = checkRetryability(errorInfo, attempt);
+  if (!shouldRetry) {
+    throw enhanceError(error, errorInfo, attempt);
+  }
+  
+  scheduleRetry(errorInfo, attempt);
+};
+
+// 更新辅助方法签名以接受已处理的错误信息
+const checkRetryability = (errorInfo, attempt) => {
+  if (attempt >= MAX_ATTEMPTS) return false;
+  return RETRYABLE_ERRORS.includes(errorInfo.type);
+};
+
+const enhanceError = (originalError, errorInfo, attempt) => {
+  const enhancedError = new Error(errorInfo.message);
+  enhancedError.type = errorInfo.type;
+  enhancedError.originalError = originalError.message;
+  enhancedError.attempts = attempt;
+  return enhancedError;
+};
+
+const scheduleRetry = (errorInfo, attempt) => {
+  const delay = BASE_DELAY * Math.pow(2, attempt - 1);
+  sendDebugLog(`重试延迟: ${delay}ms, 错误类型: ${errorInfo.type}`, 'warning');
+  return new Promise(resolve => setTimeout(resolve, delay));
+};
+```
+
 ## 性能优化
 
 ### 1. DOM 操作优化
