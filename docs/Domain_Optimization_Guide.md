@@ -50,14 +50,10 @@ domainRulesManager.clearCache(true); // 清理所有缓存
 domainRulesManager.resetCacheStats();
 ```
 
-#### 2. 缓存预热（可选）
+#### 2. 规则预加载（推荐）
 ```javascript
-// 使用默认常用域名预热缓存
-domainRulesManager.preloadCache();
-
-// 使用自定义域名列表预热
-const customDomains = ['google.com', 'github.com'];
-domainRulesManager.preloadCache(customDomains);
+// 在扩展启动时预加载规则文件，避免首次查询延迟
+await domainRulesManager.preloadRules();
 ```
 
 ## 性能改进
@@ -105,12 +101,12 @@ console.log('解析缓存:', stats.parsedDomainCacheSize, '命中率:', stats.pa
 
 ## 最佳实践
 
-### 1. 缓存预热
-在扩展启动时预热常用域名：
+### 1. 规则预加载
+在扩展启动时预加载规则文件：
 ```javascript
 // 在 background.js 中
-chrome.runtime.onStartup.addListener(() => {
-  domainRulesManager.preloadCache();
+chrome.runtime.onStartup.addListener(async () => {
+  await domainRulesManager.preloadRules();
 });
 ```
 
