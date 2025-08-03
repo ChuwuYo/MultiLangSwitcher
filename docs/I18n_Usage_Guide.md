@@ -563,28 +563,26 @@ safeLog('searching_domain', 'Searching domain', domain);
 
 ### 4. 性能考虑
 
-对于高频调用的翻译：
+对于高频调用的翻译，建议使用统一的日志函数：
 
 ```javascript
-// 缓存常用翻译
-class DomainRulesManager {
-    constructor() {
-        this.translationCache = new Map();
-    }
+// ✅ 推荐：使用统一的日志函数（实际项目中的做法）
+const safeLog = (key, fallback, ...args) => {
+    const i18n = this.ensureI18n();
+    const message = i18n ? i18n.t(key) : fallback;
+    console.log(`[DomainRulesManager] ${message}`, ...args);
+};
+
+// 实际使用示例（与 domain-rules-manager.js 中的实现一致）
+async getLanguageForDomain(domain) {
+    const i18n = this.ensureI18n();
+    console.log(`[DomainRulesManager] ${i18n ? i18n.t('searching_domain') : 'Searching domain'}: ${domain}`);
     
-    getCachedTranslation(key, fallback) {
-        if (this.translationCache.has(key)) {
-            return this.translationCache.get(key);
-        }
-        
-        const i18n = this.ensureI18n();
-        const translation = i18n ? i18n.t(key) : fallback;
-        this.translationCache.set(key, translation);
-        
-        return translation;
-    }
+    // 其他逻辑...
 }
 ```
+
+**注意**：域名管理器已经内置了高效的域名查询缓存机制，无需额外的翻译缓存。
 
 ## 相关文档
 
