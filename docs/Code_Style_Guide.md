@@ -626,6 +626,53 @@ const message = '规则更新成功: ' + language; // ❌
 sendDebugLog('更新检查失败', 'error'); // ❌
 ```
 
+#### 国际化消息同步修改规范
+
+当添加新的翻译键或修改现有翻译时，**必须**同步更新以下文件：
+
+**翻译文件同步：**
+```javascript
+// 1. 中文翻译文件 (例如: i18n/domain-manager-zh.js)
+"new_feature_message": "新功能消息",
+
+// 2. 英文翻译文件 (例如: i18n/domain-manager-en.js)  
+"new_feature_message": "New feature message",
+```
+
+**文档同步更新清单：**
+- ✅ **翻译文件**：同时更新 `-zh.js` 和 `-en.js` 文件
+- ✅ **使用指南**：更新 `docs/I18n_Usage_Guide.md` 中的翻译键列表
+- ✅ **优化指南**：如涉及性能功能，更新 `docs/Domain_Optimization_Guide.md`
+- ✅ **项目Wiki**：如涉及架构变更，更新 `docs/Wiki.md`
+- ✅ **更新日志**：在 `docs/Update.md` 中记录变更
+- ✅ **TODO清单**：如有未完成功能，更新 `docs/TODO.md`
+
+**检查清单：**
+```bash
+# 添加新翻译键时的检查步骤
+□ 中英文翻译文件都已更新
+□ 翻译键命名符合项目规范 (小写+下划线)
+□ 参数化翻译使用 {param} 格式
+□ 相关文档已同步更新
+□ 在代码中正确使用新的翻译键
+```
+
+**示例：添加域名匹配优化相关翻译**
+```javascript
+// ✅ 正确的同步修改流程
+// 1. 在 i18n/domain-manager-zh.js 中添加
+"cache_preloaded": "缓存预加载完成",
+
+// 2. 在 i18n/domain-manager-en.js 中添加  
+"cache_preloaded": "Cache preloaded",
+
+// 3. 在代码中使用
+console.log(`${i18n ? i18n.t('cache_preloaded') : 'Cache preloaded'}`);
+
+// 4. 更新 docs/I18n_Usage_Guide.md 中的翻译键列表
+// 5. 在 docs/Update.md 中记录此次变更
+```
+
 ### 2. Chrome Extension API 使用
 
 ```javascript
@@ -719,6 +766,7 @@ sendDebugLog(`规则更新失败: ${error.message}`, 'error');
 - **v1.8.52**: 初始版本，基于项目代码风格统一工作总结
 - **v1.8.57**: 主要函数类型部分注释优化，添加异步方法推荐实现指南
 - **v1.8.58**: 统一并完善错误处理实现指南、基本检查
+- **v1.8.59**: 完善提示
 
 ---
 
