@@ -390,18 +390,20 @@ class DomainRulesManager {
    * @private
    */
   _calculateHitRate(cacheType) {
+    let hits, misses;
     if (cacheType === 'domain') {
-      const total = this.cacheStats.domainHits + this.cacheStats.domainMisses;
-      if (total === 0) return '0% (0/0)';
-      const rate = ((this.cacheStats.domainHits / total) * 100).toFixed(1);
-      return `${rate}% (${this.cacheStats.domainHits}/${total})`;
+      ({ domainHits: hits, domainMisses: misses } = this.cacheStats);
     } else if (cacheType === 'parsed') {
-      const total = this.cacheStats.parsedHits + this.cacheStats.parsedMisses;
-      if (total === 0) return '0% (0/0)';
-      const rate = ((this.cacheStats.parsedHits / total) * 100).toFixed(1);
-      return `${rate}% (${this.cacheStats.parsedHits}/${total})`;
+      ({ parsedHits: hits, parsedMisses: misses } = this.cacheStats);
+    } else {
+      return '未知';
     }
-    return '未知';
+    
+    const total = hits + misses;
+    if (total === 0) return '0% (0/0)';
+    
+    const rate = ((hits / total) * 100).toFixed(1);
+    return `${rate}% (${hits}/${total})`;
   }
 
   /**
