@@ -398,10 +398,10 @@ class DomainRulesManager {
     } else {
       return '未知';
     }
-    
+
     const total = hits + misses;
     if (total === 0) return '0% (0/0)';
-    
+
     const rate = ((hits / total) * 100).toFixed(1);
     return `${rate}% (${hits}/${total})`;
   }
@@ -421,29 +421,20 @@ class DomainRulesManager {
   }
 
   /**
-   * 预热缓存 - 预加载常用域名的解析结果
-   * @param {Array<string>} commonDomains - 常用域名列表
+   * 预加载域名规则文件
+   * 在扩展启动时调用，避免首次查询时的延迟
    */
-  preloadCache(commonDomains = []) {
+  async preloadRules() {
     const i18n = this.ensureI18n();
+    console.log(`[DomainRulesManager] ${i18n ? i18n.t('preloading_rules') : 'Preloading domain rules file'}...`);
 
-    // 默认的常用域名
-    const defaultCommonDomains = [
-      'google.com', 'github.com', 'baidu.com', 'qq.com'
-    ];
-
-    const domainsToPreload = commonDomains.length > 0 ? commonDomains : defaultCommonDomains;
-
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('preloading_cache') : 'Preloading cache for common domains'}:`, domainsToPreload.length);
-
-    domainsToPreload.forEach(domain => {
-      this._parseDomain(domain);
-    });
-
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('cache_preloaded') : 'Cache preloaded'}: ${domainsToPreload.length} 个域名`);
+    try {
+      await this.loadRules();
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('rules_preloaded') : 'Domain rules preloaded successfully'}`);
+    } catch (error) {
+      console.error(`[DomainRulesManager] ${i18n ? i18n.t('rules_preload_failed') : 'Failed to preload domain rules'}:`, error);
+    }
   }
-
-
 
   /**
    * 获取自定义规则

@@ -30,7 +30,8 @@ if (typeof domainManagerZh === 'undefined') {
   "all_cache_cleared": "所有缓存已清除",
   "domain_cache_cleared": "域名查询缓存已清除",
   "cache_stats_reset": "缓存统计已重置",
-  "preloading_cache": "预加载缓存",
-  "cache_preloaded": "缓存预加载完成"
+  "preloading_rules": "预加载域名规则文件",
+  "rules_preloaded": "域名规则预加载成功",
+  "rules_preload_failed": "域名规则预加载失败"
 };
 } // 结束 if (typeof domainManagerZh === 'undefined') 检查
