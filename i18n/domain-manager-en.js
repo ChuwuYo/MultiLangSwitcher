@@ -18,10 +18,19 @@ if (typeof domainManagerEn === 'undefined') {
   "checking_top_level": "Checking top-level domain",
   "available_top_level_rules": "Available top-level domain rules",
   "found_in_top_level": "Found in top-level domain",
+  "found_matching_rule": "Found matching rule",
   "no_matching_rule_found": "No matching rule found for domain",
   "domain_parse_result": "Domain parse result - Full",
   "second_level": "Second-level",
   "top_level": "Top-level",
-  "failed_get_custom_rules": "Failed to get custom rules"
+  "failed_get_custom_rules": "Failed to get custom rules",
+  "preprocessing_rules": "Preprocessing rules for better performance",
+  "rules_preprocessed": "Rules preprocessed",
+  "found_in_cache": "Found in cache",
+  "all_cache_cleared": "All caches cleared",
+  "domain_cache_cleared": "Domain query cache cleared",
+  "cache_stats_reset": "Cache statistics reset",
+  "preloading_cache": "Preloading cache for common domains",
+  "cache_preloaded": "Cache preloaded"
 };
 } // 结束 if (typeof domainManagerEn === 'undefined') 检查
