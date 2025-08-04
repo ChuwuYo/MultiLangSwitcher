@@ -54,7 +54,7 @@
 - shared-actions.js - 重构代码结构，符合项目规范（v1.8.55）；简化错误处理，消除重复日志记录（v1.8.56）
 - shared-i18n-base.js - 添加基础国际化类的必需参数验证，完善错误处理；改进占位符替换实现，使用更安全的split/join方式（v1.8.57）
 - shared-language-options.js - 优化代码，符合项目规范；改进参数验证，完善类型检查（v1.8.57）
-- domain-rules-manager.js - 实现域名匹配算法优化，添加多层缓存机制和规则预处理，增强匹配通用性（v1.8.59）
+- domain-rules-manager.js - 重构域名匹配算法，添加多层缓存机制和规则预处理，增强匹配通用性（v1.8.59）
 - i18n/domain-manager-zh.js、i18n/domain-manager-en.js - 完善域名匹配算法相关翻译键（v1.8.59）
 
 ### 移除内容
