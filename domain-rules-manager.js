@@ -20,9 +20,8 @@ class DomainRulesManager {
 
     // 预处理的规则索引
     this.rulesByLanguage = null; // 按语言分组的规则
-    this.topLevelRules = null; // 顶级域名规则
-    this.secondLevelRules = null; // 二级域名规则
-    this.fullDomainRules = null; // 完整域名规则
+    this.topLevelRules = null; // 顶级域名规则（不包含点）
+    this.domainRules = null; // 域名规则（包含点）
   }
 
   // 确保 i18n 已初始化
@@ -131,7 +130,7 @@ class DomainRulesManager {
     const customRules = await this.getCustomRules();
 
     // 按优先级检查规则：自定义完整域名 > 内置完整域名 > 自定义二级域名 > 内置二级域名 > 自定义顶级域名 > 内置顶级域名
-    const result = this._findMatchingRule(domain, customRules, this.rules);
+    const result = this._findMatchingRule(domain, customRules);
 
     if (result) {
       console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_matching_rule') : 'Found matching rule'}: ${domain} -> ${result.language} (${result.source})`);
@@ -155,91 +154,117 @@ class DomainRulesManager {
   }
 
   /**
-   * 查找匹配的规则
+   * 通用的规则匹配方法
+   * @param {string} target - 要匹配的目标（域名）
+   * @param {Object} customRules - 自定义规则
+   * @param {string} sourceType - 匹配来源类型
+   * @param {string} logKey - 日志翻译键
+   * @returns {Object|null} 匹配结果或null
+   * @private
+   */
+  _matchRule(target, customRules, sourceType, logKey) {
+    const i18n = this.ensureI18n();
+
+    // 检查自定义规则
+    if (customRules[target]) {
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_custom_rules') : 'Found in custom rules'}: ${target}`);
+      return { language: customRules[target], source: `custom-${sourceType}` };
+    }
+
+    // 检查预处理的规则
+    if (this.domainRules[target]) {
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t(logKey) : logKey}: ${target}`);
+      return { language: this.domainRules[target], source: `default-${sourceType}` };
+    }
+
+    // 检查顶级域名规则
+    if (this.topLevelRules[target]) {
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_top_level') : 'Found in top-level domain'}: ${target}`);
+      return { language: this.topLevelRules[target], source: `default-${sourceType}` };
+    }
+
+    return null;
+  }
+
+  /**
+   * 缓存结果并返回
+   * @param {string} domain - 原始域名
+   * @param {Object|null} result - 匹配结果
+   * @returns {Object|null} 匹配结果
+   * @private
+   */
+  _cacheAndReturn(domain, result) {
+    this._addToCache(this.domainCache, domain, result);
+    return result;
+  }
+
+  /**
+   * 查找匹配的规则（优化版本）
    * @param {string} domain - 域名
    * @param {Object} customRules - 自定义规则
-   * @param {Object} defaultRules - 默认规则
    * @returns {Object|null} 匹配结果 {language, source} 或 null
    * @private
    */
-  _findMatchingRule(domain, customRules, defaultRules) {
+  _findMatchingRule(domain, customRules) {
     const i18n = this.ensureI18n();
-
-    // 注意：缓存检查已经在 getLanguageForDomain 中完成，这里不需要重复检查
-
     let result = null;
 
-    // 检查完整域名（自定义规则优先）
-    if (customRules[domain]) {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_custom_rules') : 'Found in custom rules'}: ${domain}`);
-      result = { language: customRules[domain], source: 'custom-full' };
-    } else if (this.fullDomainRules && this.fullDomainRules[domain]) {
-      // 使用预处理的完整域名规则
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_full_domain') : 'Found in full domain'}: ${domain}`);
-      result = { language: this.fullDomainRules[domain], source: 'default-full' };
-    } else if (defaultRules[domain]) {
-      // 兼容性：如果预处理规则不可用，使用原始规则
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_full_domain') : 'Found in full domain'}: ${domain}`);
-      result = { language: defaultRules[domain], source: 'default-full' };
-    }
+    // 1. 检查完整域名匹配
+    result = this._matchRule(domain, customRules, 'full', 'found_in_full_domain');
+    if (result) return this._cacheAndReturn(domain, result);
 
-    // 如果找到完整域名匹配，缓存并返回
-    if (result) {
-      this._addToCache(this.domainCache, domain, result);
-      return result;
-    }
-
-    // 使用缓存的域名解析结果
+    // 解析域名
     const parsed = this._parseDomain(domain);
     if (parsed.parts.length < 2) {
-      return null; // 无效域名
+      return this._cacheAndReturn(domain, null); // 无效域名
     }
 
-    // 检查二级域名
+    // 2. 检查基础域名匹配（去除语言子域名后）
+    if (parsed.baseDomain) {
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_base_domain') : 'Checking base domain'}: ${parsed.baseDomain}`);
+
+      // 基础域名完整匹配
+      result = this._matchRule(parsed.baseDomain, customRules, 'base', 'found_in_base_domain');
+      if (result) return this._cacheAndReturn(domain, result);
+
+      // 基础域名的二级域名匹配
+      const baseParts = parsed.baseDomain.split('.');
+      if (baseParts.length >= 2) {
+        const baseSecondLevel = baseParts.slice(-2).join('.');
+        console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_second_level') : 'Checking second-level domain'}: ${baseSecondLevel}`);
+
+        result = this._matchRule(baseSecondLevel, customRules, 'second', 'found_in_second_level');
+        if (result) return this._cacheAndReturn(domain, result);
+      }
+
+      // 基础域名的顶级域名匹配
+      const baseTopLevel = baseParts[baseParts.length - 1];
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_top_level') : 'Checking top-level domain'}: ${baseTopLevel}`);
+
+      result = this._matchRule(baseTopLevel, customRules, 'top', 'found_in_top_level');
+      if (result) return this._cacheAndReturn(domain, result);
+
+      // 智能推断
+      const languageFromSubdomain = this._inferLanguageFromSubdomain(parsed.parts[0]);
+      if (languageFromSubdomain) {
+        console.log(`[DomainRulesManager] ${i18n ? i18n.t('inferred_from_subdomain') : 'Inferred language from subdomain'}: ${parsed.parts[0]} → ${languageFromSubdomain}`);
+        result = { language: languageFromSubdomain, source: 'inferred-subdomain' };
+        return this._cacheAndReturn(domain, result);
+      }
+    }
+
+    // 3. 检查原域名的二级域名匹配
     if (parsed.secondLevel) {
       console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_second_level') : 'Checking second-level domain'}: ${parsed.secondLevel}`);
-
-      if (customRules[parsed.secondLevel]) {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_second_level') : 'Found in second-level domain'}: ${parsed.secondLevel}`);
-        result = { language: customRules[parsed.secondLevel], source: 'custom-second' };
-      } else if (this.secondLevelRules && this.secondLevelRules[parsed.secondLevel]) {
-        // 性能优化：使用预处理的二级域名规则
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_second_level') : 'Found in second-level domain'}: ${parsed.secondLevel}`);
-        result = { language: this.secondLevelRules[parsed.secondLevel], source: 'default-second' };
-      } else if (defaultRules[parsed.secondLevel]) {
-        // 兼容性：如果预处理规则不可用，使用原始规则
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_second_level') : 'Found in second-level domain'}: ${parsed.secondLevel}`);
-        result = { language: defaultRules[parsed.secondLevel], source: 'default-second' };
-      }
-
-      // 如果找到二级域名匹配，缓存并返回
-      if (result) {
-        this._addToCache(this.domainCache, domain, result);
-        return result;
-      }
+      result = this._matchRule(parsed.secondLevel, customRules, 'second', 'found_in_second_level');
+      if (result) return this._cacheAndReturn(domain, result);
     }
 
-    // 检查顶级域名
+    // 4. 检查原域名的顶级域名匹配
     console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_top_level') : 'Checking top-level domain'}: ${parsed.topLevel}`);
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('available_top_level_rules') : 'Available top-level domain rules'}:`, Object.keys(defaultRules).filter(k => !k.includes('.')).slice(0, 10));
+    result = this._matchRule(parsed.topLevel, customRules, 'top', 'found_in_top_level');
 
-    if (customRules[parsed.topLevel]) {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_top_level') : 'Found in top-level domain'}: ${parsed.topLevel}`);
-      result = { language: customRules[parsed.topLevel], source: 'custom-top' };
-    } else if (this.topLevelRules && this.topLevelRules[parsed.topLevel]) {
-      // 使用预处理的顶级域名规则
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_top_level') : 'Found in top-level domain'}: ${parsed.topLevel}`);
-      result = { language: this.topLevelRules[parsed.topLevel], source: 'default-top' };
-    } else if (defaultRules[parsed.topLevel]) {
-      // 兼容性：如果预处理规则不可用，使用原始规则
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_top_level') : 'Found in top-level domain'}: ${parsed.topLevel}`);
-      result = { language: defaultRules[parsed.topLevel], source: 'default-top' };
-    }
-
-    // 缓存结果（包括null结果，避免重复计算）
-    this._addToCache(this.domainCache, domain, result);
-
-    return result;
+    return this._cacheAndReturn(domain, result);
   }
 
   /**
@@ -267,13 +292,10 @@ class DomainRulesManager {
     const i18n = this.ensureI18n();
     console.log(`[DomainRulesManager] ${i18n ? i18n.t('preprocessing_rules') : 'Preprocessing rules for better performance'}...`);
 
-    // 按语言分组规则
+    // 重置预处理规则
     this.rulesByLanguage = {};
-
-    // 按域名类型分组规则
-    this.topLevelRules = {}; // 顶级域名（不包含点）
-    this.secondLevelRules = {}; // 二级域名（包含一个点）
-    this.fullDomainRules = {}; // 完整域名（包含多个点）
+    this.topLevelRules = {};
+    this.domainRules = {};
 
     Object.entries(this.rules).forEach(([domain, language]) => {
       // 按语言分组
@@ -282,27 +304,21 @@ class DomainRulesManager {
       }
       this.rulesByLanguage[language].push(domain);
 
-      // 按域名类型分组
-      const dotCount = (domain.match(/\./g) || []).length;
-      if (dotCount === 0) {
-        // 顶级域名
-        this.topLevelRules[domain] = language;
-      } else if (dotCount === 1) {
-        // 二级域名
-        this.secondLevelRules[domain] = language;
+      // 按域名是否包含点来分组
+      if (domain.includes('.')) {
+        this.domainRules[domain] = language;
       } else {
-        // 完整域名
-        this.fullDomainRules[domain] = language;
+        this.topLevelRules[domain] = language;
       }
     });
 
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('rules_preprocessed') : 'Rules preprocessed'}: ${Object.keys(this.topLevelRules).length} 顶级域名, ${Object.keys(this.secondLevelRules).length} 二级域名, ${Object.keys(this.fullDomainRules).length} 完整域名`);
+    console.log(`[DomainRulesManager] ${i18n ? i18n.t('rules_preprocessed') : 'Rules preprocessed'}: ${Object.keys(this.topLevelRules).length} TLD rules, ${Object.keys(this.domainRules).length} domain rules`);
   }
 
   /**
    * 解析域名并缓存结果
    * @param {string} domain - 域名
-   * @returns {Object} 解析结果 {parts, secondLevel, topLevel}
+   * @returns {Object} 解析结果 {parts, secondLevel, topLevel, baseDomain}
    * @private
    */
   _parseDomain(domain) {
@@ -319,13 +335,134 @@ class DomainRulesManager {
     const result = {
       parts,
       secondLevel: parts.length >= 2 ? parts.slice(-2).join('.') : null,
-      topLevel: parts[parts.length - 1]
+      topLevel: parts[parts.length - 1],
+      baseDomain: null // 去除语言子域名后的基础域名
     };
+
+    // 如果有3个或更多部分，尝试识别语言子域名
+    if (parts.length >= 3) {
+      const firstPart = parts[0].toLowerCase();
+
+      // 检查第一个部分是否是语言代码
+      if (this._isLanguageSubdomain(firstPart)) {
+        // 去除语言子域名，获取基础域名
+        result.baseDomain = parts.slice(1).join('.');
+      }
+    }
 
     // 缓存结果（LRU策略）
     this._addToCache(this.parsedDomainCache, domain, result);
 
     return result;
+  }
+
+  /**
+   * 获取语言子域名映射表
+   * @returns {Object} 语言子域名到标准语言代码的映射
+   * @private
+   */
+  _getLanguageSubdomainMap() {
+    // 如果已经缓存，直接返回
+    if (this._languageSubdomainMap) {
+      return this._languageSubdomainMap;
+    }
+
+    // 语言子域名到标准语言代码的映射（仅包含实际网站会使用的子域名）
+    this._languageSubdomainMap = {
+      // 中文圈（常见）
+      'zh': 'zh-CN',
+      'zh-cn': 'zh-CN',
+      'zh-hans': 'zh-CN',
+      'zh-tw': 'zh-TW',
+      'zh-hk': 'zh-HK',
+      'zh-hant': 'zh-TW',
+      'cn': 'zh-CN',
+      'tw': 'zh-TW',
+      'hk': 'zh-HK',
+
+      // 英语（常见）
+      'en': 'en-US',
+      'en-us': 'en-US',
+      'en-gb': 'en-GB',
+      'en-au': 'en-AU',
+      'en-ca': 'en-CA',
+      'us': 'en-US',
+      'uk': 'en-GB',
+      'au': 'en-AU',
+
+      // 主要欧洲语言（实际使用）
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'it': 'it',
+      'pt': 'pt-PT',
+      'pt-br': 'pt-BR',
+      'br': 'pt-BR',
+      'ru': 'ru',
+      'nl': 'nl',
+
+      // 亚洲主要语言（实际使用）
+      'ja': 'ja',
+      'jp': 'ja',
+      'ko': 'ko',
+      'kr': 'ko',
+      'th': 'th',
+      'vi': 'vi',
+      'id': 'id',
+      'ms': 'ms',
+
+      // 其他常见的语言代码（仅包含实际网站中使用的）
+      'ar': 'ar', // 阿拉伯语
+      'tr': 'tr', // 土耳其语
+      'pl': 'pl', // 波兰语
+      'sv': 'sv', // 瑞典语
+      'da': 'da', // 丹麦语
+      'no': 'no', // 挪威语
+      'fi': 'fi', // 芬兰语
+      'he': 'he', // 希伯来语
+      'hi': 'hi', // 印地语
+      'cs': 'cs', // 捷克语
+      'hu': 'hu', // 匈牙利语
+      'el': 'el', // 希腊语
+      'bg': 'bg', // 保加利亚语
+      'ro': 'ro', // 罗马尼亚语
+      'hr': 'hr', // 克罗地亚语
+      'sr': 'sr', // 塞尔维亚语
+      'sk': 'sk', // 斯洛伐克语
+      'sl': 'sl', // 斯洛文尼亚语
+      'lt': 'lt', // 立陶宛语
+      'lv': 'lv', // 拉脱维亚语
+      'et': 'et', // 爱沙尼亚语
+      'ca': 'ca', // 加泰罗尼亚语
+      'bn': 'bn', // 孟加拉语
+      'ur': 'ur', // 乌尔都语
+      'fa': 'fa', // 波斯语
+      'uk': 'uk'  // 乌克兰语
+    };
+
+    return this._languageSubdomainMap;
+  }
+
+  /**
+   * 检查子域名是否是语言代码
+   * @param {string} subdomain - 子域名
+   * @returns {boolean} 是否是语言代码
+   * @private
+   */
+  _isLanguageSubdomain(subdomain) {
+    const languageMap = this._getLanguageSubdomainMap();
+    return languageMap.hasOwnProperty(subdomain.toLowerCase());
+  }
+
+  /**
+   * 从语言子域名推断语言代码
+   * @param {string} subdomain - 语言子域名
+   * @returns {string|null} 推断的语言代码或null
+   * @private
+   */
+  _inferLanguageFromSubdomain(subdomain) {
+    const languageMap = this._getLanguageSubdomainMap();
+    return languageMap[subdomain.toLowerCase()] || null;
   }
 
   /**
