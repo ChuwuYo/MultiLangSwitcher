@@ -387,7 +387,6 @@ class DomainRulesManager {
       'en-au': 'en-AU',
       'en-ca': 'en-CA',
       'us': 'en-US',
-      'uk': 'en-GB',
       'au': 'en-AU',
 
       // 主要欧洲语言（实际使用）
@@ -411,7 +410,7 @@ class DomainRulesManager {
       'id': 'id',
       'ms': 'ms',
 
-      // 其他常见的语言代码（仅包含实际网站中使用的）
+      // 其他常见的语言代码
       'ar': 'ar', // 阿拉伯语
       'tr': 'tr', // 土耳其语
       'pl': 'pl', // 波兰语
