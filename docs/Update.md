@@ -15,6 +15,7 @@
 - ✅ 优化错误处理性能，消除重复调用 handleApiError 的问题（v1.8.58）
 - ✅ 重构域名匹配算法，支持缓存与预加载机制，增强匹配通用性（v1.8.59）
 - ✅ 完善域名匹配算法相关翻译键（v1.8.59）
+- ✅ 修改英文用户语言代码默认值,en→en-us（v1.8.60）
 
 ### 2. 代码优化
 
@@ -55,7 +56,8 @@
 - shared-i18n-base.js - 添加基础国际化类的必需参数验证，完善错误处理；改进占位符替换实现，使用更安全的split/join方式（v1.8.57）
 - shared-language-options.js - 优化代码，符合项目规范；改进参数验证，完善类型检查（v1.8.57）
 - domain-rules-manager.js - 重构域名匹配算法，添加多层缓存机制和规则预处理，增强匹配通用性（v1.8.59）
-- i18n/domain-manager-zh.js、i18n/domain-manager-en.js - 完善域名匹配算法相关翻译键（v1.8.59）
+- domain-manager-zh.js、domain-manager-en.js - 完善域名匹配算法相关翻译键（v1.8.59）
+- background.js - 修改英文用户默认值,en→en-us（v1.8.60）
 
 ### 移除内容
 
