@@ -171,6 +171,42 @@ MultiLangSwitcher/
 - 批量处理 `declarativeNetRequest` 规则更新
 - 在内存中缓存域名规则以实现快速查找
 
+#### 域名匹配算法优化
+项目实现了多层缓存机制和语言子域名识别来优化域名匹配性能，特别是在启用"自动切换语言"功能时：
+
+**缓存架构：**
+- **域名查询缓存**：缓存完整的查询结果（包括null结果），避免重复规则查找
+- **域名解析缓存**：缓存 `domain.split('.')` 的结果，避免重复字符串操作
+- **LRU淘汰策略**：最大100条记录，自动清理最久未使用的缓存条目
+
+**规则预处理：**
+- **按类型分组**：将规则分为顶级域名、二级域名、完整域名三类，提高查找效率
+- **启动时预处理**：在加载 `domain-rules.json` 时一次性完成所有预处理
+
+**语言子域名识别：**
+- **智能识别**：支持现代网站的语言子域名模式
+- **优化映射表**：包含常见语言代码，覆盖实际网站使用场景
+- **智能推断**：当规则匹配失败时，根据语言子域名直接推断语言代码
+
+**使用方式：**
+```javascript
+// 基本使用（完全兼容现有代码）
+const language = await domainRulesManager.getLanguageForDomain('example.com');
+
+// 语言子域名识别示例
+'cn.bing.com' → 'zh-CN'
+'zh-hans.react.dev' → 'zh-CN'
+'en.wikipedia.org' → 'en-US'
+'de.unknown-site.xyz' → 'de-DE'
+
+// 可选的管理功能（已实现，待集成到debug页面）
+await domainRulesManager.preloadRules(); // 规则预加载
+domainRulesManager.getCacheStats(); // 查看缓存统计
+domainRulesManager.clearCache(); // 清理缓存
+```
+
+详细信息请参考：[域名优化指南](./Domain_Optimization_Guide.md)
+
 ### UI 性能
 - 对 UI 更新进行防抖处理以防止过度重渲染
 - 批量处理 DOM 操作
