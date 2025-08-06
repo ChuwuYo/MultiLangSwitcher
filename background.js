@@ -113,6 +113,9 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
 
   sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
 
+  // 性能监控：记录开始时间
+  const startTime = performance.now();
+
   try {
     // 获取现有规则
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -134,34 +137,47 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
       return { status: 'unchanged', language };
     }
 
-    // 先清理所有现有规则，再添加新规则
-    await clearAllDynamicRules();
+    // 批量处理：单次操作同时移除旧规则和添加新规则
+    const removeRuleIds = existingRules.map(rule => rule.id);
+    const newRule = {
+      "id": RULE_ID,
+      "priority": 100,
+      "action": {
+        "type": "modifyHeaders",
+        "requestHeaders": [
+          {
+            "header": "Accept-Language",
+            "operation": "set",
+            "value": language
+          }
+        ]
+      },
+      "condition": {
+        "urlFilter": "*",
+        "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
+      }
+    };
 
-    // 添加新规则
+    // 单次批量更新：移除所有现有规则并添加新规则
     await chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: [{
-        "id": RULE_ID,
-        "priority": 100,
-        "action": {
-          "type": "modifyHeaders",
-          "requestHeaders": [
-            {
-              "header": "Accept-Language",
-              "operation": "set",
-              "value": language
-            }
-          ]
-        },
-        "condition": {
-          "urlFilter": "*",
-          "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
-        }
-      }]
+      removeRuleIds: removeRuleIds,
+      addRules: [newRule]
     });
+
+    // 记录批量操作的详细信息
+    if (removeRuleIds.length > 0) {
+      sendBackgroundLog(`${backgroundI18n.t('batch_operation_completed')}: ${backgroundI18n.t('removed')} ${removeRuleIds.length} ${backgroundI18n.t('rules')}, ${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`, 'info');
+    } else {
+      sendBackgroundLog(`${backgroundI18n.t('batch_operation_completed')}: ${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`, 'info');
+    }
+
+    // 性能监控：记录完成时间
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
 
     // 规则更新成功
     lastAppliedLanguage = language;
-    sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''}`, 'success');
+    sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
 
   } catch (error) {

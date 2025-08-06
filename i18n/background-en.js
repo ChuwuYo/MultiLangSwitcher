@@ -71,6 +71,11 @@ if (typeof backgroundEn === 'undefined') {
   "clearing_existing_rules": "Clearing {count} existing rules",
   "rules_cleared_successfully": "Rules cleared successfully",
   "clear_rules_failed": "Failed to clear rules",
+  "batch_operation_completed": "Batch operation completed",
+  "removed": "removed",
+  "added": "added",
+  "rules": "rules",
+  "rule": "rule",
   "auto_switch_toggle_failed": "Auto switch toggle failed",
   "startup_init_failed": "Startup initialization failed",
   
