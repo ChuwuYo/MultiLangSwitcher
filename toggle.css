@@ -43,13 +43,6 @@
   box-shadow: 0 0 0 0.125rem var(--bs-body-bg), 0 0 0 0.25rem rgba(var(--tt-ring-color-rgb), 0.45);
 }
 
-.toggle[data-state="on"] {
-  background-color: var(--bs-primary);
-  /* bg-accent */
-  color: var(--bs-light);
-  /* text-accent-foreground */
-  border-color: var(--bs-primary);
-}
 
 /* 为 popup.html调整按钮 */
 body.popup-body .toggle {
@@ -75,17 +68,7 @@ html[data-bs-theme="dark"] .toggle:hover {
   /* color: var(--bs-emphasis-color); */
 }
 
-html[data-bs-theme="dark"] .toggle[data-state="on"] {
-  background-color: var(--bs-body-bg);
-  color: var(--bs-light);
-  border: 1px solid var(--bs-border-color);
-}
 
-html[data-bs-theme="dark"] .toggle[data-state="on"] img,
-html[data-bs-theme="dark"] .toggle[data-state="off"] img {
-  filter: invert(1) brightness(1.5);
-  /* 在暗色模式下使 SVG 变白 */
-}
 
 html[data-bs-theme="dark"] .invert-on-dark {
   filter: invert(1) brightness(1.5);

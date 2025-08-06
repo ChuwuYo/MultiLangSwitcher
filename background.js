@@ -17,7 +17,7 @@ importScripts('shared/shared-update-checker.js');
 const RULE_ID = 1;
 // 统一并简化语言常量
 const DEFAULT_LANG_ZH = 'zh-CN'; // 为中文用户设置的默认语言
-const DEFAULT_LANG_EN = 'en';      // 为英文用户设置的默认语言，也用作自动切换的回退语言
+const DEFAULT_LANG_EN = 'en-US';   // 为英文用户设置的默认语言，也用作自动切换的回退语言
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
 const sendBackgroundLog = (message, logType = 'info') => {
