@@ -169,6 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 页面加载时同步自动切换状态
   chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('Failed to get auto switch status:', chrome.runtime.lastError.message);
+      return;
+    }
+
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (!autoSwitchToggle) return;
 
@@ -323,6 +328,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // 清除成功后，重新应用默认或存储的规则
           chrome.storage.local.get(['currentLanguage'], (result) => {
+            if (chrome.runtime.lastError) {
+              resultElement.innerHTML = `<p class="error">${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}</p>`;
+              addLogMessage(`${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
+              return;
+            }
+            
             const languageToApply = result.currentLanguage || 'zh-CN';
             // Send message to background.js to request rule update
             chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, (response) => {

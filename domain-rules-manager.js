@@ -578,7 +578,15 @@ class DomainRulesManager {
    */
   async getCustomRules() {
     try {
-      const result = await chrome.storage.local.get(['customDomainRules']);
+      const result = await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['customDomainRules'], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve(result);
+        });
+      });
       return result.customDomainRules || {};
     } catch (error) {
       const i18n = this.ensureI18n();

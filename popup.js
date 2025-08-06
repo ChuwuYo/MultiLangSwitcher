@@ -307,8 +307,14 @@ const getLanguageFromBackground = async () => {
  */
 const getLanguageFromStorage = async () => {
   try {
-    const result = await new Promise(resolve => {
-      chrome.storage.local.get(['currentLanguage'], resolve);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['currentLanguage'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
     });
 
     if (result?.currentLanguage) {
@@ -341,8 +347,14 @@ const getDefaultLanguage = () => {
 const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
-    const result = await new Promise(resolve => {
-      chrome.storage.local.get(['autoSwitchEnabled'], resolve);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
     });
     return !!result.autoSwitchEnabled;
   } catch (error) {

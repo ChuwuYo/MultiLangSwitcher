@@ -240,7 +240,15 @@ const initializeState = async (reason) => {
     await initDomainRulesManager();
 
     // 2. 从存储中获取设置
-    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
+    });
     autoSwitchEnabled = !!result.autoSwitchEnabled;
     sendBackgroundLog(`${backgroundI18n.t('loaded_auto_switch_status')}: ${autoSwitchEnabled}`, 'info');
 
@@ -426,7 +434,15 @@ const handleAutoSwitchEnabled = async (sendResponse) => {
  * @param {Function} sendResponse - 响应函数
  */
 const handleAutoSwitchDisabled = async (sendResponse) => {
-  const result = await chrome.storage.local.get(['currentLanguage']);
+  const result = await new Promise((resolve, reject) => {
+    chrome.storage.local.get(['currentLanguage'], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      resolve(result);
+    });
+  });
   const language = result.currentLanguage || DEFAULT_LANG_EN;
   sendBackgroundLog(backgroundI18n.t('auto_switch_disabled', { language }), 'info');
   await updateHeaderRules(language);
@@ -446,7 +462,15 @@ const handleGetCurrentLangRequest = async (sendResponse) => {
     const currentRule = rules.find(rule => rule.id === RULE_ID);
     const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
-    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
+    });
     if (typeof sendResponse === 'function') {
       sendResponse({
         currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
