@@ -349,17 +349,17 @@ const initDomainManager = async () => { /* ... */ };
 const handleApiError = (error) => {
   const errorMessage = error.message.toLowerCase();
 
-  // 早期返回 - 网络错误
+  // 网络错误
   if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
     return createErrorInfo('NETWORK_ERROR', 'network_connection_failed', true, 'check_connection');
   }
 
-  // 早期返回 - 超时错误
+  // 超时错误
   if (errorMessage.includes('timeout')) {
     return createErrorInfo('TIMEOUT', 'request_timed_out', true, 'try_again');
   }
 
-  // 早期返回 - 权限错误
+  // 权限错误
   if (errorMessage.includes('permission')) {
     return createErrorInfo('PERMISSION_ERROR', 'permission_denied', false, 'check_permissions');
   }
@@ -397,7 +397,7 @@ const fetchWithRetry = async (url, options = {}, signal = null) => {
 
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      // 早期返回 - 检查取消状态
+      // 检查取消状态
       if (signal?.aborted) {
         throw new Error('Request was cancelled');
       }
@@ -412,7 +412,7 @@ const fetchWithRetry = async (url, options = {}, signal = null) => {
     } catch (error) {
       lastError = error;
 
-      // 早期返回 - 如果请求被取消，不要重试
+      // 如果请求被取消，不要重试
       if (isCancelledError(error)) {
         throw error;
       }
@@ -431,13 +431,13 @@ const fetchWithRetry = async (url, options = {}, signal = null) => {
   throw lastError;
 };
 
-// 辅助方法 - 单一职责
+// 辅助方法
 const isCancelledError = (error) => {
   return error.message === 'Request was cancelled' || error.name === 'AbortError';
 };
 
 const shouldRetryError = (error, attempt) => {
-  // 早期返回 - 如果已达到最大尝试次数，不重试
+  // 如果已达到最大尝试次数，不重试
   if (attempt >= MAX_RETRY_ATTEMPTS) {
     return false;
   }
@@ -767,7 +767,7 @@ sendDebugLog(`规则更新失败: ${error.message}`, 'error');
 - **v1.8.57**: 主要函数类型部分注释优化，添加异步方法推荐实现指南
 - **v1.8.58**: 统一并完善错误处理实现指南、基本检查
 - **v1.8.59**: 完善提示
-
+- **v1.8.60**: 修改部分注释 
 ---
 
 *本指南是活文档，会随着项目的发展而持续更新。如有建议或问题，请提交 Issue 或 Pull Request。*
