@@ -6,6 +6,7 @@
 
 - ✅ Chrome Storage API 错误处理完善 - 为所有 `chrome.storage.local.get` 调用添加 `chrome.runtime.lastError` 检查，防止静默失败
 - ✅ 错误处理一致性提升 - 统一存储访问的错误处理模式，遵循代码风格指南的最佳实践
+- ✅ declarativeNetRequest 批量处理优化 - 实现规则更新的批量处理，单次 API 调用同时移除旧规则和添加新规则
 
 ### 2. 代码优化
 
@@ -26,11 +27,13 @@
 - manifest.json - 版本号更新（v1.8.61）
 - Domain_Matching_Guide.md - 合并.60版本修改历史（v1.8.61）
 - popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）
-- background.js - Chrome Storage API 错误处理修复（v1.8.61）
 - debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）
 - domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）
 - TODO.md - 修改待办事项（v1.8.61）
 - Update.md - 版本更新记录（v1.8.61）
+- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）
+- background-zh.js - 添加批量处理相关翻译键（v1.8.61）
+- background-en.js - 添加批量处理相关翻译键（v1.8.61）
 
 ### 移除内容
 
