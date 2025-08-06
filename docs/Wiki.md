@@ -171,41 +171,38 @@ MultiLangSwitcher/
 - 批量处理 `declarativeNetRequest` 规则更新
 - 在内存中缓存域名规则以实现快速查找
 
-#### 域名匹配算法优化
-项目实现了多层缓存机制和语言子域名识别来优化域名匹配性能，特别是在启用"自动切换语言"功能时：
+#### 域名匹配算法
+项目实现了高效的域名匹配算法，支持多种匹配模式和智能语言识别，为"自动切换语言"功能提供核心支持：
 
-**缓存架构：**
-- **域名查询缓存**：缓存完整的查询结果（包括null结果），避免重复规则查找
-- **域名解析缓存**：缓存 `domain.split('.')` 的结果，避免重复字符串操作
-- **LRU淘汰策略**：最大100条记录，自动清理最久未使用的缓存条目
+**算法架构：**
+- **多层匹配策略**：完整域名匹配、语言子域名识别、二级域名匹配、TLD匹配
+- **缓存系统**：域名查询缓存和解析缓存，采用LRU策略管理内存
+- **规则预处理**：启动时按类型分组规则，提高查找效率
 
-**规则预处理：**
-- **按类型分组**：将规则分为顶级域名、二级域名、完整域名三类，提高查找效率
-- **启动时预处理**：在加载 `domain-rules.json` 时一次性完成所有预处理
+**核心功能：**
+- **传统域名匹配**：基于TLD和二级域名的语言识别
+- **现代网站支持**：识别语言子域名模式，如 `cn.bing.com`、`zh-hans.react.dev`
+- **智能推断**：当规则匹配失败时，根据语言子域名推断语言代码
+- **性能优化**：多层缓存机制，显著提升重复查询性能
 
-**语言子域名识别：**
-- **智能识别**：支持现代网站的语言子域名模式
-- **优化映射表**：包含常见语言代码，覆盖实际网站使用场景
-- **智能推断**：当规则匹配失败时，根据语言子域名直接推断语言代码
-
-**使用方式：**
+**使用示例：**
 ```javascript
-// 基本使用（完全兼容现有代码）
+// 基本域名语言识别
 const language = await domainRulesManager.getLanguageForDomain('example.com');
 
-// 语言子域名识别示例
-'cn.bing.com' → 'zh-CN'
-'zh-hans.react.dev' → 'zh-CN'
-'en.wikipedia.org' → 'en-US'
-'de.unknown-site.xyz' → 'de-DE'
+// 支持的匹配模式
+'baidu.com' → 'zh-CN'        // 完整域名匹配
+'cn.bing.com' → 'zh-CN'      // 语言子域名识别
+'google.co.jp' → 'ja'        // 二级域名匹配
+'example.de' → 'de-DE'       // TLD匹配
 
-// 可选的管理功能（已实现，待集成到debug页面）
+// 管理功能
 await domainRulesManager.preloadRules(); // 规则预加载
-domainRulesManager.getCacheStats(); // 查看缓存统计
-domainRulesManager.clearCache(); // 清理缓存
+domainRulesManager.getCacheStats();      // 缓存统计
+domainRulesManager.clearCache();         // 清理缓存
 ```
 
-详细信息请参考：[域名优化指南](./Domain_Optimization_Guide.md)
+详细信息请参考：[域名匹配算法指南](./Domain_Matching_Guide.md)
 
 ### UI 性能
 - 对 UI 更新进行防抖处理以防止过度重渲染
