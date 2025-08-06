@@ -261,8 +261,24 @@ const performHeaderCheck = async (headerCheckContentPre) => {
  * @returns {Promise<string>} 当前语言设置
  */
 const getCurrentLanguage = async () => {
+  // 尝试从background脚本获取当前语言
+  const backgroundLanguage = await getLanguageFromBackground();
+  if (backgroundLanguage) return backgroundLanguage;
+
+  // 回退到本地存储
+  const storageLanguage = await getLanguageFromStorage();
+  if (storageLanguage) return storageLanguage;
+
+  // 使用默认语言作为最后的回退
+  return getDefaultLanguage();
+};
+
+/**
+ * 从background脚本获取语言设置
+ * @returns {Promise<string|null>} 语言代码或null
+ */
+const getLanguageFromBackground = async () => {
   try {
-    // 首先尝试从background脚本获取当前语言
     const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, response => {
         if (chrome.runtime.lastError) {
@@ -278,35 +294,44 @@ const getCurrentLanguage = async () => {
       return response.currentLanguage;
     }
 
-    // 如果没有语言信息，抛出错误进入catch处理
-    throw new Error('No language in response');
-
+    return null;
   } catch (error) {
     sendDebugLog(popupI18n.t('get_background_status_failed', { message: error.message }), 'error');
-
-    try {
-      // 回退到本地存储
-      const result = await new Promise(resolve => {
-        chrome.storage.local.get(['currentLanguage'], resolve);
-      });
-
-      if (result?.currentLanguage) {
-        sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
-        return result.currentLanguage;
-      }
-
-      // 使用默认语言作为最后的回退
-      const languageSelect = document.getElementById('languageSelect');
-      const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
-      sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
-      return defaultLanguage;
-
-    } catch (storageError) {
-      sendDebugLog(popupI18n.t('error_accessing_storage', { message: storageError.message }), 'error');
-      // 最终回退
-      return popupI18n.t('not_set');
-    }
+    return null;
   }
+};
+
+/**
+ * 从本地存储获取语言设置
+ * @returns {Promise<string|null>} 语言代码或null
+ */
+const getLanguageFromStorage = async () => {
+  try {
+    const result = await new Promise(resolve => {
+      chrome.storage.local.get(['currentLanguage'], resolve);
+    });
+
+    if (result?.currentLanguage) {
+      sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
+      return result.currentLanguage;
+    }
+
+    return null;
+  } catch (error) {
+    sendDebugLog(popupI18n.t('error_accessing_storage', { message: error.message }), 'error');
+    return null;
+  }
+};
+
+/**
+ * 获取默认语言设置
+ * @returns {string} 默认语言代码
+ */
+const getDefaultLanguage = () => {
+  const languageSelect = document.getElementById('languageSelect');
+  const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t('not_set');
+  sendDebugLog(`${popupI18n.t('no_stored_language')} ${defaultLanguage}.`, 'warning');
+  return defaultLanguage;
 }
 
 /**
@@ -997,12 +1022,13 @@ document.addEventListener('DOMContentLoaded', async function () {
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
 
+      // 检查必要元素
+      if (!headerCheckContentPre) return;
+
       // 显示检查结果区域并开始检查
       if (headerCheckResultDiv) headerCheckResultDiv.classList.remove('d-none');
-      if (headerCheckContentPre) {
-        headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
-        performHeaderCheck(headerCheckContentPre);
-      }
+      headerCheckContentPre.textContent = popupI18n.t('fetching_headers');
+      performHeaderCheck(headerCheckContentPre);
     },
 
     // 更新检查按钮点击处理
