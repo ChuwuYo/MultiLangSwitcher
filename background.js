@@ -612,6 +612,251 @@ const handleUpdateCheckRequest = async (sendResponse) => {
 };
 
 /**
+ * 处理获取缓存统计请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetCacheStatsRequest = async (sendResponse) => {
+  try {
+    // 确保域名规则管理器已加载
+    await domainRulesManager.loadRules();
+    
+    // 获取缓存统计信息和规则统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    
+    // 合并统计信息
+    const combinedStats = {
+      ...cacheStats,
+      ...rulesStats
+    };
+    
+    sendBackgroundLog(`${backgroundI18n.t('cache_stats_requested')}: ${JSON.stringify(combinedStats)}`, 'info');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `${backgroundI18n.t('get_cache_stats_failed')}: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理域名缓存测试请求
+ * @param {Object} request - 请求对象
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleTestDomainCacheRequest = async (request, sendResponse) => {
+  try {
+    const domain = request.domain;
+    if (!domain) {
+      throw new Error('Domain is required');
+    }
+
+    sendBackgroundLog(`Testing domain cache for: ${domain}`, 'info');
+
+    // 确保域名规则管理器已加载
+    await domainRulesManager.loadRules();
+
+    // 测试域名查询（这会触发缓存机制）
+    const language = await domainRulesManager.getLanguageForDomain(domain);
+    
+    // 获取更新后的缓存统计
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    
+    // 合并统计信息
+    const combinedStats = {
+      ...cacheStats,
+      ...rulesStats
+    };
+
+    // 检查是否从缓存获取（简单的启发式检查）
+    const fromCache = cacheStats.domainCacheSize > 0;
+
+    sendBackgroundLog(`Domain test result: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`, 'info');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        language: language,
+        fromCache: fromCache,
+        cacheStats: combinedStats
+      });
+    }
+
+  } catch (error) {
+    const errorMessage = `Domain cache test failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理预加载规则请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handlePreloadRulesRequest = async (sendResponse) => {
+  try {
+    sendBackgroundLog('Preloading domain rules...', 'info');
+    
+    // 预加载规则
+    await domainRulesManager.preloadRules();
+    
+    // 获取更新后的统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    const combinedStats = { ...cacheStats, ...rulesStats };
+    
+    sendBackgroundLog('Rules preloaded successfully', 'success');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `Rules preload failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理清理域名缓存请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleClearDomainCacheRequest = async (sendResponse) => {
+  try {
+    sendBackgroundLog('Clearing domain cache...', 'info');
+    
+    // 清理域名缓存
+    domainRulesManager.clearCache(false); // false = 只清理域名缓存
+    
+    // 获取更新后的统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    const combinedStats = { ...cacheStats, ...rulesStats };
+    
+    sendBackgroundLog('Domain cache cleared successfully', 'success');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `Clear domain cache failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理清理所有缓存请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleClearAllCacheRequest = async (sendResponse) => {
+  try {
+    sendBackgroundLog('Clearing all cache...', 'info');
+    
+    // 清理所有缓存
+    domainRulesManager.clearCache(true); // true = 清理所有缓存
+    
+    // 获取更新后的统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    const combinedStats = { ...cacheStats, ...rulesStats };
+    
+    sendBackgroundLog('All cache cleared successfully', 'success');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `Clear all cache failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理重置缓存统计请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleResetCacheStatsRequest = async (sendResponse) => {
+  try {
+    sendBackgroundLog('Resetting cache statistics...', 'info');
+    
+    // 重置缓存统计
+    domainRulesManager.resetCacheStats();
+    
+    // 获取更新后的统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    const combinedStats = { ...cacheStats, ...rulesStats };
+    
+    sendBackgroundLog('Cache statistics reset successfully', 'success');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `Reset cache statistics failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
  * 处理更新检查错误
  * @param {Error} error - 错误对象
  * @param {Function} sendResponse - 响应函数
@@ -666,6 +911,24 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
     return true;
   } else if (request.type === 'UPDATE_CHECK') {
     handleUpdateCheckRequest(sendResponse);
+    return true;
+  } else if (request.type === 'GET_CACHE_STATS') {
+    handleGetCacheStatsRequest(sendResponse);
+    return true;
+  } else if (request.type === 'TEST_DOMAIN_CACHE') {
+    handleTestDomainCacheRequest(request, sendResponse);
+    return true;
+  } else if (request.type === 'PRELOAD_RULES') {
+    handlePreloadRulesRequest(sendResponse);
+    return true;
+  } else if (request.type === 'CLEAR_DOMAIN_CACHE') {
+    handleClearDomainCacheRequest(sendResponse);
+    return true;
+  } else if (request.type === 'CLEAR_ALL_CACHE') {
+    handleClearAllCacheRequest(sendResponse);
+    return true;
+  } else if (request.type === 'RESET_CACHE_STATS') {
+    handleResetCacheStatsRequest(sendResponse);
     return true;
   }
 });

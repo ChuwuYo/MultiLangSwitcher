@@ -739,4 +739,451 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   });
 
+  // 缓存管理功能
+  initializeCacheManagement();
+
 }); // DOMContentLoaded 结束
+
+/**
+ * 初始化缓存管理功能
+ */
+function initializeCacheManagement() {
+  // 初始化翻译文本
+  initializeCacheManagementTexts();
+  
+  // 刷新缓存统计按钮
+  const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
+  if (refreshCacheStatsBtn) {
+    refreshCacheStatsBtn.addEventListener('click', refreshCacheStats);
+  }
+
+  // 预加载规则按钮
+  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
+  if (preloadRulesBtn) {
+    preloadRulesBtn.addEventListener('click', preloadDomainRules);
+  }
+
+  // 清理域名缓存按钮
+  const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
+  if (clearDomainCacheBtn) {
+    clearDomainCacheBtn.addEventListener('click', clearDomainCache);
+  }
+
+  // 清理所有缓存按钮
+  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
+  if (clearAllCacheBtn) {
+    clearAllCacheBtn.addEventListener('click', clearAllCache);
+  }
+
+  // 重置缓存统计按钮
+  const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
+  if (resetCacheStatsBtn) {
+    resetCacheStatsBtn.addEventListener('click', resetCacheStats);
+  }
+
+  // 域名测试按钮
+  const testDomainBtn = document.getElementById('testDomainBtn');
+  if (testDomainBtn) {
+    testDomainBtn.addEventListener('click', testDomainCache);
+  }
+
+  // 初始加载缓存统计，并定期检查直到规则加载完成
+  setTimeout(() => {
+    refreshCacheStats();
+    // 如果规则还未加载，定期检查状态
+    checkPreloadStatusPeriodically();
+  }, 100); // 延迟一点确保所有元素都已加载
+}
+
+/**
+ * 定期检查预加载状态，直到规则加载完成
+ */
+function checkPreloadStatusPeriodically() {
+  let checkCount = 0;
+  const maxChecks = 30; // 最多检查30次（15秒）
+  const checkInterval = 500; // 每500ms检查一次
+
+  const intervalId = setInterval(() => {
+    checkCount++;
+    
+    // 如果达到最大检查次数，停止检查
+    if (checkCount >= maxChecks) {
+      clearInterval(intervalId);
+      console.log('[Cache] Stopped checking preload status after maximum attempts');
+      return;
+    }
+    
+    try {
+      // 通过消息传递从后台获取规则状态
+      chrome.runtime.sendMessage({
+        type: 'GET_CACHE_STATS'
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          // 通信失败，继续等待
+          return;
+        }
+        
+        if (response && response.success && response.stats) {
+          const hasRules = response.stats.totalRules > 0;
+          
+          if (hasRules) {
+            // 规则已加载，更新状态并停止检查
+            updatePreloadStatus();
+            clearInterval(intervalId);
+            console.log('[Cache] Rules loaded automatically, preload status updated');
+            return;
+          }
+        }
+      });
+      
+    } catch (error) {
+      // 出错时停止检查
+      clearInterval(intervalId);
+      console.error('[Cache] Error during periodic preload status check:', error);
+    }
+  }, checkInterval);
+}
+
+/**
+ * 测试域名缓存功能
+ */
+async function testDomainCache() {
+  const testDomainInput = document.getElementById('testDomainInput');
+  const resultElement = document.getElementById('cacheOperationResult');
+  const domain = testDomainInput.value.trim();
+
+  if (!domain) {
+    resultElement.innerHTML = `<p class="error">请输入域名</p>`;
+    return;
+  }
+
+  try {
+    resultElement.innerHTML = `<p>正在测试域名: ${domain}...</p>`;
+
+    // 通过消息传递请求后台测试域名
+    const response = await chrome.runtime.sendMessage({
+      type: 'TEST_DOMAIN_CACHE',
+      domain: domain
+    });
+
+    if (response && response.success) {
+      const { language, fromCache, cacheStats } = response;
+      
+      let html = `<p class="success">${debugI18n.t('domain_test_success')}</p>`;
+      
+      if (language) {
+        html += `<p>${debugI18n.t('domain_found')}: <strong>${domain}</strong> → <strong>${language}</strong></p>`;
+        html += `<p>缓存状态: ${fromCache ? '缓存命中' : '新查询'}</p>`;
+      } else {
+        html += `<p class="warning">${debugI18n.t('domain_not_found')}: ${domain}</p>`;
+      }
+
+      // 更新缓存统计显示
+      if (cacheStats) {
+        updateCacheStatsDisplay(cacheStats);
+      }
+
+      resultElement.innerHTML = html;
+      console.log(`[Cache] Domain test: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`);
+      
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('domain_test_failed')}: ${response?.error || 'Unknown error'}</p>`;
+    }
+
+  } catch (error) {
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('domain_test_failed')}: ${error.message}</p>`;
+    console.error('[Cache] Domain test failed:', error);
+  }
+}
+
+/**
+ * 初始化缓存管理界面的翻译文本
+ */
+function initializeCacheManagementTexts() {
+  // 设置标题和描述
+  const cacheManagementTitle = document.getElementById('cacheManagementTitle');
+  if (cacheManagementTitle) {
+    cacheManagementTitle.textContent = debugI18n.t('cache_management_title');
+  }
+  
+  const cacheManagementDesc = document.getElementById('cacheManagementDesc');
+  if (cacheManagementDesc) {
+    cacheManagementDesc.textContent = debugI18n.t('cache_management_desc');
+  }
+  
+  const cacheStatsTitle = document.getElementById('cacheStatsTitle');
+  if (cacheStatsTitle) {
+    cacheStatsTitle.textContent = debugI18n.t('cache_stats_title');
+  }
+  
+  // 设置标签
+  const domainCacheLabel = document.getElementById('domainCacheLabel');
+  if (domainCacheLabel) {
+    domainCacheLabel.textContent = debugI18n.t('domain_cache_label');
+  }
+  
+  const parsedCacheLabel = document.getElementById('parsedCacheLabel');
+  if (parsedCacheLabel) {
+    parsedCacheLabel.textContent = debugI18n.t('parsed_cache_label');
+  }
+  
+  const preloadStatusLabel = document.getElementById('preloadStatusLabel');
+  if (preloadStatusLabel) {
+    preloadStatusLabel.textContent = debugI18n.t('preload_status_label');
+  }
+  
+  // 设置按钮文本
+  const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
+  if (refreshCacheStatsBtn) {
+    refreshCacheStatsBtn.textContent = debugI18n.t('refresh_cache_stats');
+  }
+  
+  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
+  if (preloadRulesBtn) {
+    preloadRulesBtn.textContent = debugI18n.t('preload_rules');
+  }
+  
+  const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
+  if (clearDomainCacheBtn) {
+    clearDomainCacheBtn.textContent = debugI18n.t('clear_domain_cache');
+  }
+  
+  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
+  if (clearAllCacheBtn) {
+    clearAllCacheBtn.textContent = debugI18n.t('clear_all_cache');
+  }
+  
+  const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
+  if (resetCacheStatsBtn) {
+    resetCacheStatsBtn.textContent = debugI18n.t('reset_cache_stats');
+  }
+
+  // 设置域名测试相关文本
+  const testDomainLabel = document.getElementById('testDomainLabel');
+  if (testDomainLabel) {
+    testDomainLabel.textContent = debugI18n.t('test_domain_label');
+  }
+
+  const testDomainBtn = document.getElementById('testDomainBtn');
+  if (testDomainBtn) {
+    testDomainBtn.textContent = debugI18n.t('test_domain_btn');
+  }
+}
+
+/**
+ * 刷新缓存统计显示
+ */
+async function refreshCacheStats() {
+  const resultElement = document.getElementById('cacheOperationResult');
+  
+  try {
+    // 通过消息传递从后台获取真实的缓存统计
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_CACHE_STATS'
+    });
+    
+    if (response && response.success && response.stats) {
+      // 更新显示
+      updateCacheStatsDisplay(response.stats);
+      
+      // 检查预加载状态
+      updatePreloadStatus();
+      
+      resultElement.innerHTML = `<p class="success">${debugI18n.t('cache_stats_refreshed')}</p>`;
+      console.log(`[Cache] ${debugI18n.t('cache_stats_refreshed')}`);
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Invalid response'}</p>`;
+    }
+    
+  } catch (error) {
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${error.message}</p>`;
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+}
+
+/**
+ * 更新缓存统计显示
+ */
+function updateCacheStatsDisplay(stats) {
+  // 更新域名缓存统计
+  const domainCacheSize = document.getElementById('domainCacheSize');
+  const domainCacheHitRate = document.getElementById('domainCacheHitRate');
+  if (domainCacheSize && domainCacheHitRate) {
+    domainCacheSize.textContent = `${stats.domainCacheSize}/${stats.maxCacheSize}`;
+    domainCacheHitRate.textContent = `(${stats.domainCacheHitRate})`;
+  }
+
+  // 更新解析缓存统计
+  const parsedCacheSize = document.getElementById('parsedCacheSize');
+  const parsedCacheHitRate = document.getElementById('parsedCacheHitRate');
+  if (parsedCacheSize && parsedCacheHitRate) {
+    parsedCacheSize.textContent = `${stats.parsedDomainCacheSize}/${stats.maxCacheSize}`;
+    parsedCacheHitRate.textContent = `(${stats.parsedCacheHitRate})`;
+  }
+}
+
+/**
+ * 更新预加载状态显示
+ */
+async function updatePreloadStatus() {
+  const preloadStatus = document.getElementById('preloadStatus');
+  if (!preloadStatus) return;
+
+  try {
+    // 通过消息传递从后台获取规则状态
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_CACHE_STATS'
+    });
+    
+    if (response && response.success && response.stats) {
+      const hasRules = response.stats.totalRules > 0;
+      
+      if (hasRules) {
+        preloadStatus.textContent = debugI18n.t('preload_status_loaded');
+        preloadStatus.className = 'preload-status loaded';
+      } else {
+        preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+        preloadStatus.className = 'preload-status not-loaded';
+      }
+    } else {
+      preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+      preloadStatus.className = 'preload-status not-loaded';
+    }
+  } catch (error) {
+    preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+    preloadStatus.className = 'preload-status not-loaded';
+  }
+}
+
+/**
+ * 预加载域名规则
+ */
+async function preloadDomainRules() {
+  const resultElement = document.getElementById('cacheOperationResult');
+  const preloadStatus = document.getElementById('preloadStatus');
+  
+  try {
+    // 显示加载状态
+    if (preloadStatus) {
+      preloadStatus.textContent = debugI18n.t('preload_status_loading');
+      preloadStatus.className = 'preload-status loading';
+    }
+    
+    // 通过消息传递执行预加载
+    const response = await chrome.runtime.sendMessage({
+      type: 'PRELOAD_RULES'
+    });
+    
+    if (response && response.success) {
+      // 更新缓存统计显示
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      
+      // 更新预加载状态
+      updatePreloadStatus();
+      
+      resultElement.innerHTML = `<p class="success">${debugI18n.t('rules_preloaded_success')}</p>`;
+      console.log(`[Cache] ${debugI18n.t('rules_preloaded_success')}`);
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('rules_preload_failed')}: ${response?.error || 'Unknown error'}</p>`;
+    }
+    
+  } catch (error) {
+    // 恢复状态显示
+    updatePreloadStatus();
+    
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('rules_preload_failed')}: ${error.message}</p>`;
+    console.error(`[Cache] ${debugI18n.t('rules_preload_failed')}: ${error.message}`);
+  }
+}
+
+/**
+ * 清理域名缓存
+ */
+async function clearDomainCache() {
+  const resultElement = document.getElementById('cacheOperationResult');
+  
+  try {
+    // 通过消息传递清理域名缓存
+    const response = await chrome.runtime.sendMessage({
+      type: 'CLEAR_DOMAIN_CACHE'
+    });
+    
+    if (response && response.success) {
+      // 更新缓存统计显示
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      
+      resultElement.innerHTML = `<p class="success">${debugI18n.t('domain_cache_cleared')}</p>`;
+      console.log(`[Cache] ${debugI18n.t('domain_cache_cleared')}`);
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}</p>`;
+    }
+    
+  } catch (error) {
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${error.message}</p>`;
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+}
+
+/**
+ * 清理所有缓存
+ */
+async function clearAllCache() {
+  const resultElement = document.getElementById('cacheOperationResult');
+  
+  try {
+    // 通过消息传递清理所有缓存
+    const response = await chrome.runtime.sendMessage({
+      type: 'CLEAR_ALL_CACHE'
+    });
+    
+    if (response && response.success) {
+      // 更新缓存统计显示
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      
+      resultElement.innerHTML = `<p class="success">${debugI18n.t('all_cache_cleared')}</p>`;
+      console.log(`[Cache] ${debugI18n.t('all_cache_cleared')}`);
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}</p>`;
+    }
+    
+  } catch (error) {
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${error.message}</p>`;
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+}
+
+/**
+ * 重置缓存统计
+ */
+async function resetCacheStats() {
+  const resultElement = document.getElementById('cacheOperationResult');
+  
+  try {
+    // 通过消息传递重置缓存统计
+    const response = await chrome.runtime.sendMessage({
+      type: 'RESET_CACHE_STATS'
+    });
+    
+    if (response && response.success) {
+      // 更新缓存统计显示
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      
+      resultElement.innerHTML = `<p class="success">${debugI18n.t('cache_stats_reset')}</p>`;
+      console.log(`[Cache] ${debugI18n.t('cache_stats_reset')}`);
+    } else {
+      resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}</p>`;
+    }
+    
+  } catch (error) {
+    resultElement.innerHTML = `<p class="error">${debugI18n.t('cache_operation_failed')}: ${error.message}</p>`;
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+}
