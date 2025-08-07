@@ -7,12 +7,16 @@
 - ✅ Chrome Storage API 错误处理完善 - 为所有 `chrome.storage.local.get` 调用添加 `chrome.runtime.lastError` 检查，防止静默失败
 - ✅ 错误处理一致性提升 - 统一存储访问的错误处理模式，遵循代码风格指南的最佳实践
 - ✅ declarativeNetRequest 批量处理优化 - 实现规则更新的批量处理，单次 API 调用同时移除旧规则和添加新规则
-- ✅ 修复i18n的多级加载机制，完善降级处理
+- ✅ 共享工具优化 - 修复i18n的多级加载机制，完善降级处理
+- ✅ 安全问题修复 - innerHTML 的XSS 安全修复
+
 
 ### 2. 代码优化
 
 - ✅ API 调用效率提升 - 语言切换操作从2次 API 调用优化为1次批量调用
 - ✅ 残留清理 - 清理Accept-Language 格式说明多余的无效代码与未使用的分组规则代码
+- ✅ Service Worker 优化 - 重构缓存操作处理相关代码
+- ✅ 重构缓存管理函数 - 提取公共函数，统一响应处理模式
 
 ## 文件变更清单
 
@@ -30,10 +34,10 @@
 - Domain_Matching_Guide.md - 合并.60版本修改历史（v1.8.61）
 - popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）
 - debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）
-- domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码（v1.8.62）
+- domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码，innerHTML 的XSS安全修复，重构缓存管理函数（v1.8.62）
 - TODO.md - 修改待办事项（v1.8.61、v1.8.62）
 - Update.md - 版本更新记录（v1.8.61、v1.8.62）
-- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑（v1.8.62）
+- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）
 - background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62）
 - background-en.js - 添加相关翻译键（v1.8.61、v1.8.62）
 - shared-utils.js - 修复i18n的多级加载机制，完善降级处理（v1.8.62）
