@@ -257,6 +257,229 @@ const applyRules = (rules) => {
 };
 ```
 
+### 3. 通用函数设计原则（主函数+具体函数模式）
+
+当多个函数有相似的处理逻辑时，应该提取出一个通用的主函数，然后用多个具体函数来调用它。这种模式遵循DRY原则，提高代码的可维护性和一致性。
+
+#### ✅ 推荐做法：通用操作处理函数
+
+```javascript
+/**
+ * 通用操作处理函数模板
+ * @param {string} operationType - 操作类型标识
+ * @param {string} successMessageKey - 成功消息的翻译键
+ * @param {Object} options - 可选配置项
+ * @param {Function} options.preProcess - 操作前的预处理函数
+ * @param {Function} options.postProcess - 操作后的后处理函数
+ * @param {string} options.resultElementId - 结果显示元素ID
+ * @param {string} options.logPrefix - 日志前缀
+ */
+const handleGenericOperation = async (operationType, successMessageKey, options = {}) => {
+  const {
+    preProcess = null,
+    postProcess = null,
+    resultElementId = 'operationResult',
+    logPrefix = 'Operation'
+  } = options;
+
+  const resultElement = document.getElementById(resultElementId);
+  
+  try {
+    // 预处理步骤
+    if (preProcess && typeof preProcess === 'function') {
+      await preProcess();
+    }
+
+    // 执行主要操作
+    const response = await chrome.runtime.sendMessage({ type: operationType });
+    
+    // 早期返回模式，避免深层嵌套
+    if (!response || !response.success) {
+      setSafeErrorMessage(resultElement, `${debugI18n.t('operation_failed')}: ${response?.error || 'Unknown error'}`);
+      return;
+    }
+
+    // 后处理步骤
+    if (postProcess && typeof postProcess === 'function') {
+      await postProcess(response);
+    }
+
+    // 显示成功消息
+    const successMessage = debugI18n.t(successMessageKey);
+    setSafeSuccessMessage(resultElement, successMessage);
+    console.log(`[${logPrefix}] ${successMessage}`);
+
+    return response;
+
+  } catch (error) {
+    setSafeErrorMessage(resultElement, `${debugI18n.t('operation_failed')}: ${error.message}`);
+    console.error(`[${logPrefix}] ${debugI18n.t('operation_failed')}: ${error.message}`);
+    throw error;
+  }
+};
+```
+
+#### 应用示例1：缓存管理操作
+
+```javascript
+// 缓存操作的具体实现
+const handleCacheOperation = async (messageType, successMessageKey, additionalCallback = null) => {
+  return handleGenericOperation(messageType, successMessageKey, {
+    postProcess: async (response) => {
+      // 更新缓存统计显示
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      // 执行额外回调
+      if (additionalCallback && typeof additionalCallback === 'function') {
+        additionalCallback();
+      }
+    },
+    resultElementId: 'cacheOperationResult',
+    logPrefix: 'Cache'
+  });
+};
+
+// 具体的缓存管理函数 - 简洁明了
+const refreshCacheStats = async () => {
+  return handleCacheOperation('GET_CACHE_STATS', 'cache_stats_refreshed', () => {
+    updatePreloadStatus();
+  });
+};
+
+const clearDomainCache = async () => {
+  return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
+};
+
+const clearAllCache = async () => {
+  return handleCacheOperation('CLEAR_ALL_CACHE', 'all_cache_cleared');
+};
+
+const resetCacheStats = async () => {
+  return handleCacheOperation('RESET_CACHE_STATS', 'cache_stats_reset');
+};
+```
+
+#### 应用示例2：规则管理操作
+
+```javascript
+// 规则操作的具体实现
+const handleRuleOperation = async (messageType, successMessageKey, ruleData = null) => {
+  return handleGenericOperation(messageType, successMessageKey, {
+    preProcess: async () => {
+      // 验证规则数据
+      if (ruleData && !validateRuleData(ruleData)) {
+        throw new Error('Invalid rule data');
+      }
+    },
+    postProcess: async (response) => {
+      // 更新规则显示
+      if (response.rules) {
+        updateRulesDisplay(response.rules);
+      }
+      // 刷新规则统计
+      refreshRuleStats();
+    },
+    resultElementId: 'ruleOperationResult',
+    logPrefix: 'Rule'
+  });
+};
+
+// 具体的规则管理函数
+const addDomainRule = async (domain, language) => {
+  return handleRuleOperation('ADD_DOMAIN_RULE', 'rule_added_success', { domain, language });
+};
+
+const removeDomainRule = async (domain) => {
+  return handleRuleOperation('REMOVE_DOMAIN_RULE', 'rule_removed_success', { domain });
+};
+
+const updateDomainRule = async (domain, newLanguage) => {
+  return handleRuleOperation('UPDATE_DOMAIN_RULE', 'rule_updated_success', { domain, language: newLanguage });
+};
+```
+
+#### 应用示例3：语言切换操作
+
+```javascript
+// 语言切换操作的具体实现
+const handleLanguageOperation = async (messageType, successMessageKey, languageData = null) => {
+  return handleGenericOperation(messageType, successMessageKey, {
+    preProcess: async () => {
+      // 显示加载状态
+      showLoadingState();
+      // 验证语言代码
+      if (languageData && !validateLanguageCode(languageData.language)) {
+        throw new Error('Invalid language code');
+      }
+    },
+    postProcess: async (response) => {
+      // 更新UI显示
+      updateLanguageDisplay(response.currentLanguage);
+      // 更新规则状态
+      if (response.rulesApplied) {
+        updateRuleStatus(response.rulesApplied);
+      }
+      // 隐藏加载状态
+      hideLoadingState();
+    },
+    resultElementId: 'languageOperationResult',
+    logPrefix: 'Language'
+  });
+};
+
+// 具体的语言切换函数
+const switchToLanguage = async (language) => {
+  return handleLanguageOperation('SWITCH_LANGUAGE', 'language_switched_success', { language });
+};
+
+const resetToDefaultLanguage = async () => {
+  return handleLanguageOperation('RESET_LANGUAGE', 'language_reset_success');
+};
+
+const applyCustomLanguage = async (customLanguageString) => {
+  return handleLanguageOperation('APPLY_CUSTOM_LANGUAGE', 'custom_language_applied', { 
+    language: customLanguageString 
+  });
+};
+```
+
+#### ❌ 避免的做法：重复代码
+
+```javascript
+// 不要为每个操作重复相同的错误处理和响应逻辑
+const clearDomainCacheBad = async () => {
+  const resultElement = document.getElementById('cacheOperationResult');
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'CLEAR_DOMAIN_CACHE' });
+    if (response && response.success) {
+      if (response.stats) {
+        updateCacheStatsDisplay(response.stats);
+      }
+      setSafeSuccessMessage(resultElement, debugI18n.t('domain_cache_cleared'));
+      console.log(`[Cache] ${debugI18n.t('domain_cache_cleared')}`);
+    } else {
+      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
+    }
+  } catch (error) {
+    setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+};
+
+const clearAllCacheBad = async () => {
+  // 重复相同的逻辑... ❌
+};
+```
+
+#### 设计原则总结
+
+1. **DRY原则**: 消除重复代码，提取共同逻辑
+2. **单一职责**: 主函数处理通用逻辑，具体函数处理特定需求
+3. **可扩展性**: 通过配置选项支持不同的操作需求
+4. **一致性**: 所有相似操作使用统一的处理模式
+5. **可维护性**: 修改通用逻辑只需要改一个地方
+
 ## 注释和文档
 
 ### 1. JSDoc 注释规范

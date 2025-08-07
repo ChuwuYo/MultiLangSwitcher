@@ -113,6 +113,9 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
 
   sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
 
+  // 性能监控：记录开始时间
+  const startTime = performance.now();
+
   try {
     // 获取现有规则
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -134,34 +137,48 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
       return { status: 'unchanged', language };
     }
 
-    // 先清理所有现有规则，再添加新规则
-    await clearAllDynamicRules();
+    // 批量处理：单次操作同时移除旧规则和添加新规则
+    const removeRuleIds = existingRules.map(rule => rule.id);
+    const newRule = {
+      "id": RULE_ID,
+      "priority": 100,
+      "action": {
+        "type": "modifyHeaders",
+        "requestHeaders": [
+          {
+            "header": "Accept-Language",
+            "operation": "set",
+            "value": language
+          }
+        ]
+      },
+      "condition": {
+        "urlFilter": "*",
+        "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
+      }
+    };
 
-    // 添加新规则
+    // 单次批量更新：移除所有现有规则并添加新规则
     await chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: [{
-        "id": RULE_ID,
-        "priority": 100,
-        "action": {
-          "type": "modifyHeaders",
-          "requestHeaders": [
-            {
-              "header": "Accept-Language",
-              "operation": "set",
-              "value": language
-            }
-          ]
-        },
-        "condition": {
-          "urlFilter": "*",
-          "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
-        }
-      }]
+      removeRuleIds: removeRuleIds,
+      addRules: [newRule]
     });
+
+    // 记录批量操作的详细信息
+    let logMessage = `${backgroundI18n.t('batch_operation_completed')}: `;
+    if (removeRuleIds.length > 0) {
+      logMessage += `${backgroundI18n.t('removed')} ${removeRuleIds.length} ${backgroundI18n.t('rules')}, `;
+    }
+    logMessage += `${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`;
+    sendBackgroundLog(logMessage, 'info');
+
+    // 性能监控：记录完成时间
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
 
     // 规则更新成功
     lastAppliedLanguage = language;
-    sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''}`, 'success');
+    sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
 
   } catch (error) {
@@ -240,7 +257,15 @@ const initializeState = async (reason) => {
     await initDomainRulesManager();
 
     // 2. 从存储中获取设置
-    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
+    });
     autoSwitchEnabled = !!result.autoSwitchEnabled;
     sendBackgroundLog(`${backgroundI18n.t('loaded_auto_switch_status')}: ${autoSwitchEnabled}`, 'info');
 
@@ -426,7 +451,15 @@ const handleAutoSwitchEnabled = async (sendResponse) => {
  * @param {Function} sendResponse - 响应函数
  */
 const handleAutoSwitchDisabled = async (sendResponse) => {
-  const result = await chrome.storage.local.get(['currentLanguage']);
+  const result = await new Promise((resolve, reject) => {
+    chrome.storage.local.get(['currentLanguage'], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      resolve(result);
+    });
+  });
   const language = result.currentLanguage || DEFAULT_LANG_EN;
   sendBackgroundLog(backgroundI18n.t('auto_switch_disabled', { language }), 'info');
   await updateHeaderRules(language);
@@ -446,7 +479,15 @@ const handleGetCurrentLangRequest = async (sendResponse) => {
     const currentRule = rules.find(rule => rule.id === RULE_ID);
     const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
-    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
+    });
     if (typeof sendResponse === 'function') {
       sendResponse({
         currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
@@ -572,6 +613,198 @@ const handleUpdateCheckRequest = async (sendResponse) => {
 };
 
 /**
+ * 处理获取缓存统计请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetCacheStatsRequest = async (sendResponse) => {
+  try {
+    // 确保域名规则管理器已加载
+    await domainRulesManager.loadRules();
+
+    // 获取缓存统计信息和规则统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+
+    // 合并统计信息
+    const combinedStats = {
+      ...cacheStats,
+      ...rulesStats
+    };
+
+    sendBackgroundLog(`${backgroundI18n.t('cache_stats_requested')}: ${JSON.stringify(combinedStats)}`, 'info');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `${backgroundI18n.t('get_cache_stats_failed')}: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理域名缓存测试请求
+ * @param {Object} request - 请求对象
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleTestDomainCacheRequest = async (request, sendResponse) => {
+  try {
+    const domain = request.domain;
+    if (!domain) {
+      throw new Error('Domain is required');
+    }
+
+    sendBackgroundLog(`Testing domain cache for: ${domain}`, 'info');
+
+    // 确保域名规则管理器已加载
+    await domainRulesManager.loadRules();
+
+    // 在调用 getLanguageForDomain 之前检查缓存状态，以获得准确的"是否命中缓存"状态
+    const fromCache = domainRulesManager.domainCache.has(domain);
+
+    // 测试域名查询（这会触发缓存机制，如果是 miss，则会填充缓存）
+    const language = await domainRulesManager.getLanguageForDomain(domain);
+
+    // 获取更新后的缓存统计
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+
+    // 合并统计信息
+    const combinedStats = {
+      ...cacheStats,
+      ...rulesStats
+    };
+
+    sendBackgroundLog(`Domain test result: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`, 'info');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        language: language,
+        fromCache: fromCache,
+        cacheStats: combinedStats
+      });
+    }
+
+  } catch (error) {
+    const errorMessage = `Domain cache test failed: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 通用缓存操作处理辅助函数
+ * @param {Function} sendResponse - 响应函数
+ * @param {Function} operation - 要执行的操作函数
+ * @param {Object} logMessages - 日志消息对象
+ */
+const handleCacheOperation = async (sendResponse, operation, logMessages) => {
+  try {
+    sendBackgroundLog(logMessages.start, 'info');
+
+    // 执行具体操作
+    await operation();
+
+    // 获取更新后的统计信息
+    const cacheStats = domainRulesManager.getCacheStats();
+    const rulesStats = domainRulesManager.getRulesStats();
+    const combinedStats = { ...cacheStats, ...rulesStats };
+
+    sendBackgroundLog(logMessages.success, 'success');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        stats: combinedStats
+      });
+    }
+  } catch (error) {
+    const errorMessage = `${logMessages.fail}: ${error.message}`;
+    sendBackgroundLog(errorMessage, 'error');
+
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: errorMessage
+      });
+    }
+  }
+};
+
+/**
+ * 处理预加载规则请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handlePreloadRulesRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.preloadRules(),
+  {
+    start: 'Preloading domain rules...',
+    success: 'Rules preloaded successfully',
+    fail: 'Rules preload failed'
+  }
+);
+
+/**
+ * 处理清理域名缓存请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleClearDomainCacheRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.clearCache(false), // false = 只清理域名缓存
+  {
+    start: 'Clearing domain cache...',
+    success: 'Domain cache cleared successfully',
+    fail: 'Clear domain cache failed'
+  }
+);
+
+/**
+ * 处理清理所有缓存请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleClearAllCacheRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.clearCache(true), // true = 清理所有缓存
+  {
+    start: 'Clearing all cache...',
+    success: 'All cache cleared successfully',
+    fail: 'Clear all cache failed'
+  }
+);
+
+/**
+ * 处理重置缓存统计请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleResetCacheStatsRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.resetCacheStats(),
+  {
+    start: 'Resetting cache statistics...',
+    success: 'Cache statistics reset successfully',
+    fail: 'Reset cache statistics failed'
+  }
+);
+
+/**
  * 处理更新检查错误
  * @param {Error} error - 错误对象
  * @param {Function} sendResponse - 响应函数
@@ -626,6 +859,24 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
     return true;
   } else if (request.type === 'UPDATE_CHECK') {
     handleUpdateCheckRequest(sendResponse);
+    return true;
+  } else if (request.type === 'GET_CACHE_STATS') {
+    handleGetCacheStatsRequest(sendResponse);
+    return true;
+  } else if (request.type === 'TEST_DOMAIN_CACHE') {
+    handleTestDomainCacheRequest(request, sendResponse);
+    return true;
+  } else if (request.type === 'PRELOAD_RULES') {
+    handlePreloadRulesRequest(sendResponse);
+    return true;
+  } else if (request.type === 'CLEAR_DOMAIN_CACHE') {
+    handleClearDomainCacheRequest(sendResponse);
+    return true;
+  } else if (request.type === 'CLEAR_ALL_CACHE') {
+    handleClearAllCacheRequest(sendResponse);
+    return true;
+  } else if (request.type === 'RESET_CACHE_STATS') {
+    handleResetCacheStatsRequest(sendResponse);
     return true;
   }
 });

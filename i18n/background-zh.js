@@ -71,6 +71,11 @@ if (typeof backgroundZh === 'undefined') {
   "clearing_existing_rules": "正在清理 {count} 条现有规则",
   "rules_cleared_successfully": "规则清理成功",
   "clear_rules_failed": "清理规则失败",
+  "batch_operation_completed": "批量操作完成",
+  "removed": "移除",
+  "added": "添加",
+  "rules": "条规则",
+  "rule": "条规则",
   "auto_switch_toggle_failed": "自动切换状态切换失败",
   "startup_init_failed": "启动初始化失败",
 
@@ -79,6 +84,10 @@ if (typeof backgroundZh === 'undefined') {
   "update_check_api_request": "正在向 GitHub releases 端点发起 API 请求",
   "update_check_success": "更新检查成功完成",
   "update_check_failed": "更新检查失败: {error}",
+  
+  // Cache stats related keys
+  "cache_stats_requested": "缓存统计已请求",
+  "get_cache_stats_failed": "获取缓存统计失败",
 
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查

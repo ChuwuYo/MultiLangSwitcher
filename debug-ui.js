@@ -1,6 +1,62 @@
 // debug-ui.js - 调试页面UI交互脚本
 
 /**
+ * 安全地创建带有样式类的消息元素
+ * @param {string} message - 消息文本
+ * @param {string} className - CSS类名 (success, error, warning, info)
+ * @returns {HTMLElement} 创建的段落元素
+ */
+const createSafeMessageElement = (message, className = '') => {
+  const p = document.createElement('p');
+  if (className) {
+    p.className = className;
+  }
+  p.textContent = message;
+  return p;
+};
+
+/**
+ * 安全地设置元素内容，支持单个消息或多个消息
+ * @param {HTMLElement} element - 目标元素
+ * @param {string|Array} content - 消息内容或消息数组
+ * @param {string} className - CSS类名
+ */
+const setSafeContent = (element, content, className = '') => {
+  // 清空现有内容
+  element.innerHTML = '';
+
+  if (Array.isArray(content)) {
+    // 处理多个消息
+    content.forEach(item => {
+      const messageElement = createSafeMessageElement(item.message, item.className || className);
+      element.appendChild(messageElement);
+    });
+  } else {
+    // 处理单个消息
+    const messageElement = createSafeMessageElement(content, className);
+    element.appendChild(messageElement);
+  }
+};
+
+/**
+ * 安全地设置错误消息（常用的错误消息模式）
+ * @param {HTMLElement} element - 目标元素
+ * @param {string} message - 错误消息
+ */
+const setSafeErrorMessage = (element, message) => {
+  setSafeContent(element, message, 'error');
+};
+
+/**
+ * 安全地设置成功消息（常用的成功消息模式）
+ * @param {HTMLElement} element - 目标元素
+ * @param {string} message - 成功消息
+ */
+const setSafeSuccessMessage = (element, message) => {
+  setSafeContent(element, message, 'success');
+};
+
+/**
  * 获取外部请求头检查网站的链接HTML
  * @param {string} prefix - 链接前缀文本
  * @returns {string} 包含外部检查链接的HTML
@@ -169,6 +225,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 页面加载时同步自动切换状态
   chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+    if (chrome.runtime.lastError) {
+      console.error('Failed to get auto switch status:', chrome.runtime.lastError.message);
+      return;
+    }
+
     const autoSwitchToggle = document.getElementById('autoSwitchToggle');
     if (!autoSwitchToggle) return;
 
@@ -191,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('testHeaderBtn').addEventListener('click', async () => {
     const language = document.getElementById('testLanguage').value;
     const resultElement = document.getElementById('headerTestResult');
-    resultElement.innerHTML = `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`;
+    setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
     addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
 
     const timestamp = new Date().getTime();
@@ -295,10 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
         addRules: updatedRules
       }, () => {
         if (chrome.runtime.lastError) {
-          resultElement.innerHTML = `<p class="error">${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}</p>`;
+          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}`, 'error');
           addLogMessage(`${debugI18n.t('fix_priority_failed')} ${chrome.runtime.lastError.message}`, 'error');
         } else {
-          resultElement.innerHTML = `<p class="success">${debugI18n.t('priority_updated_success')}</p>`;
+          setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
           addLogMessage(debugI18n.t('priority_updated_log'), 'success');
         }
       });
@@ -318,25 +379,31 @@ document.addEventListener('DOMContentLoaded', () => {
         removeRuleIds: existingRuleIds
       }, () => {
         if (chrome.runtime.lastError) {
-          resultElement.innerHTML = `<p class="error">${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}</p>`;
+          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}`);
           addLogMessage(`${debugI18n.t('clear_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
           chrome.storage.local.get(['currentLanguage'], (result) => {
+            if (chrome.runtime.lastError) {
+              setSafeContent(resultElement, `${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
+              addLogMessage(`${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
+              return;
+            }
+
             const languageToApply = result.currentLanguage || 'zh-CN';
             // Send message to background.js to request rule update
             chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, (response) => {
               if (chrome.runtime.lastError) {
-                resultElement.innerHTML = `<p class="error">${debugI18n.t('reapply_rules_error')} ${chrome.runtime.lastError.message}</p>`;
+                setSafeErrorMessage(resultElement, `${debugI18n.t('reapply_rules_error')} ${chrome.runtime.lastError.message}`);
                 addLogMessage(`${debugI18n.t('request_background_reapply_failed')} ${chrome.runtime.lastError.message}`, 'error');
               } else if (response && response.status === 'success') {
-                resultElement.innerHTML = `<p class="success">${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}</p>`;
+                setSafeSuccessMessage(resultElement, `${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}`);
                 addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
               } else if (response && response.status === 'error') {
-                resultElement.innerHTML = `<p class="error">${debugI18n.t('background_reapply_failed')} ${response.message}</p>`;
+                setSafeErrorMessage(resultElement, `${debugI18n.t('background_reapply_failed')} ${response.message}`);
                 addLogMessage(`${debugI18n.t('background_reapply_failed_log')} ${response.message}`, 'error');
               } else {
-                resultElement.innerHTML = `<p class="warning">${debugI18n.t('background_no_clear_response')}</p>`;
+                setSafeContent(resultElement, debugI18n.t('background_no_clear_response'), 'warning');
                 addLogMessage(debugI18n.t('background_no_clear_response_log'), 'warning');
               }
             });
@@ -414,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     customLangResult.innerHTML = ''; // 清除旧结果
 
     if (!languageString) {
-      customLangResult.innerHTML = `<p class="error">${debugI18n.t('enter_valid_language')}</p>`;
+      setSafeErrorMessage(customLangResult, debugI18n.t('enter_valid_language'));
       addLogMessage(debugI18n.t('try_apply_custom_empty'), 'warning');
       customLangInput.classList.add('is-invalid');
       return;
@@ -425,13 +492,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 检查格式是否可能有问题
     const hasFormatIssues = validateAcceptLanguageFormat(languageString);
 
-    customLangResult.innerHTML = `${debugI18n.t('applying_custom_language')} ${languageString}...`;
+    setSafeContent(customLangResult, `${debugI18n.t('applying_custom_language')} ${languageString}...`);
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
 
     // 发送消息到 background.js 请求更新规则
     chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString }, (response) => {
       if (chrome.runtime.lastError) {
-        customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}</p>`;
+        setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
         addLogMessage(`${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
       } else if (response && response.status === 'success') {
         let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
@@ -451,10 +518,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 可选：更新存储中的语言，如果希望自定义设置持久化
         // chrome.storage.local.set({ currentLanguage: languageString });
       } else if (response && response.status === 'error') {
-        customLangResult.innerHTML = `<p class="error">${debugI18n.t('apply_custom_failed_backend')} ${response.message}</p>`;
+        setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed_backend')} ${response.message}`, 'error');
         addLogMessage(`${debugI18n.t('backend_apply_custom_failed')} ${response.message}`, 'error');
       } else {
-        customLangResult.innerHTML = `<p class="warning">${debugI18n.t('background_no_clear_response')}</p>`;
+        setSafeContent(customLangResult, debugI18n.t('background_no_clear_response'), 'warning');
         addLogMessage(debugI18n.t('backend_no_custom_response'), 'warning');
       }
     });
@@ -469,12 +536,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await resetAcceptLanguage();
-      customLangResult.innerHTML = `<p class="success">${debugI18n.t('reset_accept_language_success')}</p>`;
+      setSafeSuccessMessage(customLangResult, debugI18n.t('reset_accept_language_success'));
       addLogMessage(debugI18n.t('reset_accept_language_success'), 'success');
       if (customLangInput) customLangInput.value = ''; // 清空输入框
     } catch (error) {
       const errorMessage = debugI18n.t('reset_accept_language_failed', { message: error.message });
-      customLangResult.innerHTML = `<p class="error">${errorMessage}</p>`;
+      setSafeContent(customLangResult, errorMessage, 'error');
       addLogMessage(errorMessage, 'error');
     }
   });
@@ -551,14 +618,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (storageError) {
           console.error('Error collecting diagnostic information (storage):', storageError);
           addLogMessage(`${debugI18n.t('collect_diagnostics_storage_error')} ${storageError.message}`, 'error');
-          resultElement.innerHTML = `<p class="error">${debugI18n.t('collect_storage_info_error')} ${storageError.message}</p>`;
+          setSafeErrorMessage(resultElement, `${debugI18n.t('collect_storage_info_error')} ${storageError.message}`);
         }
       });
 
     } catch (error) {
       console.error('Error collecting diagnostic information (manifest/id):', error);
       addLogMessage(`${debugI18n.t('collect_diagnostics_manifest_error')} ${error.message}`, 'error');
-      resultElement.innerHTML = `<p class="error">${debugI18n.t('collect_basic_info_error')} ${error.message}</p>`;
+      setSafeErrorMessage(resultElement, `${debugI18n.t('collect_basic_info_error')} ${error.message}`);
     }
   });
 
@@ -596,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 从 background.js 获取域名映射规则
     chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, (response) => {
       if (chrome.runtime.lastError) {
-        resultElement.innerHTML = `<p class="error">${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}</p>`;
+        setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`);
         addLogMessage(`${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
         return;
       }
@@ -606,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
       addLogMessage(`${debugI18n.t('received_response')} ${JSON.stringify(response)}`, 'info');
 
       if (response && response.error) {
-        resultElement.innerHTML = `<p class="error">${debugI18n.t('get_domain_rules_error')} ${response.error}</p>`;
+        setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_error')} ${response.error}`);
         addLogMessage(`${debugI18n.t('get_domain_rules_error')} ${response.error}`, 'error');
         return;
       }
@@ -698,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultElement.innerHTML = html;
         addLogMessage(`${debugI18n.t('successfully_got_displayed_rules')}${Object.keys(rules).length}${debugI18n.t('domain_mapping_rules')}`, 'success');
       } else {
-        resultElement.innerHTML = `<p class="error">${debugI18n.t('failed_get_domain_rules_empty')}</p>`;
+        setSafeErrorMessage(resultElement, debugI18n.t('failed_get_domain_rules_empty'));
         addLogMessage(`${debugI18n.t('failed_get_domain_rules_response')} ${JSON.stringify(response)}`, 'warning');
       }
     });
@@ -728,4 +795,399 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   });
 
+  // 缓存管理功能
+  initializeCacheManagement();
+
 }); // DOMContentLoaded 结束
+
+/**
+ * 初始化缓存管理功能
+ */
+function initializeCacheManagement() {
+  // 初始化翻译文本
+  initializeCacheManagementTexts();
+
+  // 刷新缓存统计按钮
+  const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
+  if (refreshCacheStatsBtn) {
+    refreshCacheStatsBtn.addEventListener('click', refreshCacheStats);
+  }
+
+  // 预加载规则按钮
+  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
+  if (preloadRulesBtn) {
+    preloadRulesBtn.addEventListener('click', preloadDomainRules);
+  }
+
+  // 清理域名缓存按钮
+  const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
+  if (clearDomainCacheBtn) {
+    clearDomainCacheBtn.addEventListener('click', clearDomainCache);
+  }
+
+  // 清理所有缓存按钮
+  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
+  if (clearAllCacheBtn) {
+    clearAllCacheBtn.addEventListener('click', clearAllCache);
+  }
+
+  // 重置缓存统计按钮
+  const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
+  if (resetCacheStatsBtn) {
+    resetCacheStatsBtn.addEventListener('click', resetCacheStats);
+  }
+
+  // 域名测试按钮
+  const testDomainBtn = document.getElementById('testDomainBtn');
+  if (testDomainBtn) {
+    testDomainBtn.addEventListener('click', testDomainCache);
+  }
+
+  // 初始加载缓存统计，并定期检查直到规则加载完成
+  setTimeout(() => {
+    refreshCacheStats();
+    // 如果规则还未加载，定期检查状态
+    checkPreloadStatusPeriodically();
+  }, 100); // 延迟一点确保所有元素都已加载
+}
+
+/**
+ * 定期检查预加载状态，直到规则加载完成
+ */
+function checkPreloadStatusPeriodically() {
+  let checkCount = 0;
+  const maxChecks = 30; // 最多检查30次（15秒）
+  const checkInterval = 500; // 每500ms检查一次
+
+  const intervalId = setInterval(() => {
+    checkCount++;
+
+    // 如果达到最大检查次数，停止检查
+    if (checkCount >= maxChecks) {
+      clearInterval(intervalId);
+      console.log('[Cache] Stopped checking preload status after maximum attempts');
+      return;
+    }
+
+    try {
+      // 通过消息传递从后台获取规则状态
+      chrome.runtime.sendMessage({
+        type: 'GET_CACHE_STATS'
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          // 通信失败，继续等待
+          return;
+        }
+
+        if (response && response.success && response.stats) {
+          const hasRules = response.stats.totalRules > 0;
+
+          if (hasRules) {
+            // 规则已加载，更新状态并停止检查
+            updatePreloadStatus();
+            clearInterval(intervalId);
+            console.log('[Cache] Rules loaded automatically, preload status updated');
+            return;
+          }
+        }
+      });
+
+    } catch (error) {
+      // 出错时停止检查
+      clearInterval(intervalId);
+      console.error('[Cache] Error during periodic preload status check:', error);
+    }
+  }, checkInterval);
+}
+
+/**
+ * 测试域名缓存功能
+ */
+async function testDomainCache() {
+  const testDomainInput = document.getElementById('testDomainInput');
+  const resultElement = document.getElementById('cacheOperationResult');
+  const domain = testDomainInput.value.trim();
+
+  if (!domain) {
+    setSafeErrorMessage(resultElement, '请输入域名');
+    return;
+  }
+
+  try {
+    setSafeContent(resultElement, `正在测试域名: ${domain}...`);
+
+    // 通过消息传递请求后台测试域名
+    const response = await chrome.runtime.sendMessage({
+      type: 'TEST_DOMAIN_CACHE',
+      domain: domain
+    });
+
+    if (response && response.success) {
+      const { language, fromCache, cacheStats } = response;
+
+      resultElement.innerHTML = ''; // 清空
+
+      const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
+      resultElement.appendChild(successP);
+
+      if (language) {
+        const resultP = document.createElement('p');
+        resultP.textContent = `${debugI18n.t('domain_found')}: `;
+
+        const domainStrong = document.createElement('strong');
+        domainStrong.textContent = domain;
+        resultP.appendChild(domainStrong);
+
+        resultP.append(` → `);
+
+        const langStrong = document.createElement('strong');
+        langStrong.textContent = language;
+        resultP.appendChild(langStrong);
+
+        resultElement.appendChild(resultP);
+
+        const cacheStatusP = document.createElement('p');
+        cacheStatusP.textContent = `缓存状态: ${fromCache ? '缓存命中' : '新查询'}`;
+        resultElement.appendChild(cacheStatusP);
+      } else {
+        const notFoundP = createSafeMessageElement(`${debugI18n.t('domain_not_found')}: ${domain}`, 'warning');
+        resultElement.appendChild(notFoundP);
+      }
+
+      // 更新缓存统计显示
+      if (cacheStats) {
+        updateCacheStatsDisplay(cacheStats);
+      }
+
+      console.log(`[Cache] Domain test: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`);
+
+    } else {
+      setSafeErrorMessage(resultElement, `${debugI18n.t('domain_test_failed')}: ${response?.error || 'Unknown error'}`);
+    }
+
+  } catch (error) {
+    setSafeErrorMessage(resultElement, `${debugI18n.t('domain_test_failed')}: ${error.message}`);
+    console.error('[Cache] Domain test failed:', error);
+  }
+}
+
+/**
+ * 初始化缓存管理界面的翻译文本
+ */
+function initializeCacheManagementTexts() {
+  // 设置标题和描述
+  const cacheManagementTitle = document.getElementById('cacheManagementTitle');
+  if (cacheManagementTitle) {
+    cacheManagementTitle.textContent = debugI18n.t('cache_management_title');
+  }
+
+  const cacheManagementDesc = document.getElementById('cacheManagementDesc');
+  if (cacheManagementDesc) {
+    cacheManagementDesc.textContent = debugI18n.t('cache_management_desc');
+  }
+
+  const cacheStatsTitle = document.getElementById('cacheStatsTitle');
+  if (cacheStatsTitle) {
+    cacheStatsTitle.textContent = debugI18n.t('cache_stats_title');
+  }
+
+  // 设置标签
+  const domainCacheLabel = document.getElementById('domainCacheLabel');
+  if (domainCacheLabel) {
+    domainCacheLabel.textContent = debugI18n.t('domain_cache_label');
+  }
+
+  const parsedCacheLabel = document.getElementById('parsedCacheLabel');
+  if (parsedCacheLabel) {
+    parsedCacheLabel.textContent = debugI18n.t('parsed_cache_label');
+  }
+
+  const preloadStatusLabel = document.getElementById('preloadStatusLabel');
+  if (preloadStatusLabel) {
+    preloadStatusLabel.textContent = debugI18n.t('preload_status_label');
+  }
+
+  // 设置按钮文本
+  const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
+  if (refreshCacheStatsBtn) {
+    refreshCacheStatsBtn.textContent = debugI18n.t('refresh_cache_stats');
+  }
+
+  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
+  if (preloadRulesBtn) {
+    preloadRulesBtn.textContent = debugI18n.t('preload_rules');
+  }
+
+  const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
+  if (clearDomainCacheBtn) {
+    clearDomainCacheBtn.textContent = debugI18n.t('clear_domain_cache');
+  }
+
+  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
+  if (clearAllCacheBtn) {
+    clearAllCacheBtn.textContent = debugI18n.t('clear_all_cache');
+  }
+
+  const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
+  if (resetCacheStatsBtn) {
+    resetCacheStatsBtn.textContent = debugI18n.t('reset_cache_stats');
+  }
+
+  // 设置域名测试相关文本
+  const testDomainLabel = document.getElementById('testDomainLabel');
+  if (testDomainLabel) {
+    testDomainLabel.textContent = debugI18n.t('test_domain_label');
+  }
+
+  const testDomainBtn = document.getElementById('testDomainBtn');
+  if (testDomainBtn) {
+    testDomainBtn.textContent = debugI18n.t('test_domain_btn');
+  }
+}
+
+/**
+ * 通用缓存操作处理函数
+ * @param {string} messageType - 消息类型
+ * @param {string} successMessageKey - 成功消息的翻译键
+ * @param {Function} additionalCallback - 可选的额外回调函数
+ */
+const handleCacheOperation = async (messageType, successMessageKey, additionalCallback = null) => {
+  const resultElement = document.getElementById('cacheOperationResult');
+
+  try {
+    const response = await chrome.runtime.sendMessage({ type: messageType });
+
+    if (!response || !response.success) {
+      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
+      return;
+    }
+
+    // 更新缓存统计显示
+    if (response.stats) {
+      updateCacheStatsDisplay(response.stats);
+    }
+
+    // 执行额外的回调函数（如果提供）
+    if (additionalCallback && typeof additionalCallback === 'function') {
+      additionalCallback();
+    }
+
+    const successMessage = debugI18n.t(successMessageKey);
+    setSafeSuccessMessage(resultElement, successMessage);
+    console.log(`[Cache] ${successMessage}`);
+
+  } catch (error) {
+    setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
+  }
+};
+
+/**
+ * 刷新缓存统计显示
+ */
+const refreshCacheStats = async () => {
+  return handleCacheOperation('GET_CACHE_STATS', 'cache_stats_refreshed', () => {
+    // 检查预加载状态
+    updatePreloadStatus();
+  });
+};
+
+/**
+ * 更新缓存统计显示
+ */
+function updateCacheStatsDisplay(stats) {
+  // 更新域名缓存统计
+  const domainCacheSize = document.getElementById('domainCacheSize');
+  const domainCacheHitRate = document.getElementById('domainCacheHitRate');
+  if (domainCacheSize && domainCacheHitRate) {
+    domainCacheSize.textContent = `${stats.domainCacheSize}/${stats.maxCacheSize}`;
+    domainCacheHitRate.textContent = `(${stats.domainCacheHitRate})`;
+  }
+
+  // 更新解析缓存统计
+  const parsedCacheSize = document.getElementById('parsedCacheSize');
+  const parsedCacheHitRate = document.getElementById('parsedCacheHitRate');
+  if (parsedCacheSize && parsedCacheHitRate) {
+    parsedCacheSize.textContent = `${stats.parsedDomainCacheSize}/${stats.maxCacheSize}`;
+    parsedCacheHitRate.textContent = `(${stats.parsedCacheHitRate})`;
+  }
+}
+
+/**
+ * 更新预加载状态显示
+ */
+async function updatePreloadStatus() {
+  const preloadStatus = document.getElementById('preloadStatus');
+  if (!preloadStatus) return;
+
+  try {
+    // 通过消息传递从后台获取规则状态
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_CACHE_STATS'
+    });
+
+    if (response && response.success && response.stats) {
+      const hasRules = response.stats.totalRules > 0;
+
+      if (hasRules) {
+        preloadStatus.textContent = debugI18n.t('preload_status_loaded');
+        preloadStatus.className = 'preload-status loaded';
+      } else {
+        preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+        preloadStatus.className = 'preload-status not-loaded';
+      }
+    } else {
+      preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+      preloadStatus.className = 'preload-status not-loaded';
+    }
+  } catch (error) {
+    preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
+    preloadStatus.className = 'preload-status not-loaded';
+  }
+}
+
+/**
+ * 预加载域名规则
+ */
+const preloadDomainRules = async () => {
+  const preloadStatus = document.getElementById('preloadStatus');
+
+  // 显示加载状态
+  if (preloadStatus) {
+    preloadStatus.textContent = debugI18n.t('preload_status_loading');
+    preloadStatus.className = 'preload-status loading';
+  }
+
+  // 使用通用函数处理缓存操作，并提供额外的回调来恢复预加载状态
+  try {
+    await handleCacheOperation('PRELOAD_RULES', 'rules_preloaded_success', () => {
+      // 更新预加载状态
+      updatePreloadStatus();
+    });
+  } catch (error) {
+    // 如果操作失败，恢复状态显示
+    updatePreloadStatus();
+    throw error;
+  }
+};
+
+/**
+ * 清理域名缓存
+ */
+const clearDomainCache = async () => {
+  return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
+};
+
+/**
+ * 清理所有缓存
+ */
+const clearAllCache = async () => {
+  return handleCacheOperation('CLEAR_ALL_CACHE', 'all_cache_cleared');
+};
+
+/**
+ * 重置缓存统计
+ */
+const resetCacheStats = async () => {
+  return handleCacheOperation('RESET_CACHE_STATS', 'cache_stats_reset');
+};

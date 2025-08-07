@@ -264,20 +264,7 @@ class DebugI18n extends BaseI18n {
       examplesTitle.textContent = this.t('examples');
     }
     
-    const exampleEnUs = document.querySelector('#exampleEnUs');
-    if (exampleEnUs) {
-      exampleEnUs.innerHTML = `<code>en-US</code>: ${this.t('example_en_us')}`;
-    }
-    
-    const exampleZhCn = document.querySelector('#exampleZhCn');
-    if (exampleZhCn) {
-      exampleZhCn.innerHTML = `<code>zh-CN</code>: ${this.t('example_zh_cn')}`;
-    }
-    
-    const exampleFr = document.querySelector('#exampleFr');
-    if (exampleFr) {
-      exampleFr.innerHTML = `<code>fr</code>: ${this.t('example_fr')}`;
-    }
+
     
     const exampleComplex = document.querySelector('#exampleComplex');
     if (exampleComplex) {

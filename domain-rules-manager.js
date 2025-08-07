@@ -19,7 +19,6 @@ class DomainRulesManager {
     };
 
     // 预处理的规则索引
-    this.rulesByLanguage = null; // 按语言分组的规则
     this.topLevelRules = null; // 顶级域名规则（不包含点）
     this.domainRules = null; // 域名规则（包含点）
   }
@@ -86,8 +85,6 @@ class DomainRulesManager {
   // 获取规则数据
   getRules() {
     if (!this.rules) {
-      const i18n = this.ensureI18n();
-      console.warn(`[DomainRulesManager] ${i18n ? i18n.t('rules_not_loaded_empty_object') : 'Rules not loaded yet, returning empty object'}`);
       return {};
     }
     return this.rules;
@@ -293,17 +290,10 @@ class DomainRulesManager {
     console.log(`[DomainRulesManager] ${i18n ? i18n.t('preprocessing_rules') : 'Preprocessing rules for better performance'}...`);
 
     // 重置预处理规则
-    this.rulesByLanguage = {};
     this.topLevelRules = {};
     this.domainRules = {};
 
     Object.entries(this.rules).forEach(([domain, language]) => {
-      // 按语言分组
-      if (!this.rulesByLanguage[language]) {
-        this.rulesByLanguage[language] = [];
-      }
-      this.rulesByLanguage[language].push(domain);
-
       // 按域名是否包含点来分组
       if (domain.includes('.')) {
         this.domainRules[domain] = language;
@@ -578,7 +568,15 @@ class DomainRulesManager {
    */
   async getCustomRules() {
     try {
-      const result = await chrome.storage.local.get(['customDomainRules']);
+      const result = await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['customDomainRules'], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve(result);
+        });
+      });
       return result.customDomainRules || {};
     } catch (error) {
       const i18n = this.ensureI18n();

@@ -23,6 +23,11 @@
       background-color: #f8f9fa;
     }
 
+    /* 确保所有卡片间距一致 */
+    .col-md-6 .debug-section {
+      margin-bottom: 20px;
+    }
+
     .debug-result {
       margin-top: 10px;
       padding: 10px;
@@ -84,6 +89,83 @@
       position: absolute;
       top: 10px;
       right: 10px;
+    }
+
+    /* 缓存管理样式 */
+    .cache-stats-container {
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 10px;
+      font-size: 0.9em;
+    }
+
+    .cache-stat-item {
+      padding: 5px 0;
+    }
+
+    .cache-size {
+      font-weight: bold;
+      color: #0d6efd;
+    }
+
+    .cache-hit-rate {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+
+    .preload-status {
+      font-weight: bold;
+    }
+
+    .preload-status.loaded {
+      color: #198754;
+    }
+
+    .preload-status.not-loaded {
+      color: #dc3545;
+    }
+
+    .preload-status.loading {
+      color: #fd7e14;
+    }
+
+    /* 暗色主题下的缓存管理样式 */
+    html[data-bs-theme="dark"] .cache-stats-container {
+      background-color: #2c3034;
+      border-color: #495057;
+      color: #f8f9fa;
+    }
+
+    html[data-bs-theme="dark"] .cache-size {
+      color: #86b7fe;
+    }
+
+    html[data-bs-theme="dark"] .cache-hit-rate {
+      color: #adb5bd;
+    }
+
+    /* 缓存操作结果显示框样式 */
+    #cacheOperationResult {
+      margin-top: 10px;
+      padding: 8px 10px; /* 减少上下内边距 */
+      border-radius: 5px;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      min-height: 2.2em; /* 最小高度约一行 */
+      max-height: 4.4em; /* 最大高度约两行 */
+      overflow: hidden; /* 隐藏超出内容，不显示滚动条 */
+      word-break: break-word;
+      white-space: normal; /* 允许正常换行 */
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    /* 暗色主题下的缓存操作结果样式 */
+    html[data-bs-theme="dark"] #cacheOperationResult {
+      background-color: #2c3034;
+      border-color: #495057;
+      color: #f8f9fa;
     }
   </style>
 </head>
@@ -153,15 +235,88 @@
           </ul>
           <p><strong id="examplesTitle"></strong></p>
           <ul id="examplesList">
-            <li id="exampleEnUs"></li>
-            <li id="exampleZhCn"></li>
-            <li id="exampleFr"></li>
             <li id="exampleComplex"></li>
           </ul>
           <p class="small text-muted" id="formatNote"></p>
         </div>
       </div>
       <!-- Accept-Language 格式说明卡片结束 -->
+
+      <!-- 域名匹配缓存管理卡片 -->
+      <div class="col-md-6">
+        <div class="debug-section">
+          <h4 id="cacheManagementTitle"></h4>
+          <p class="text-muted" id="cacheManagementDesc"></p>
+          
+          <!-- 缓存统计显示 -->
+          <div class="mb-3">
+            <h6 id="cacheStatsTitle"></h6>
+            <div id="cacheStatsDisplay" class="cache-stats-container">
+              <div class="row g-2">
+                <div class="col-6">
+                  <div class="cache-stat-item">
+                    <small class="text-muted" id="domainCacheLabel"></small>
+                    <div class="d-flex align-items-center">
+                      <span id="domainCacheSize" class="cache-size">-</span>
+                      <span class="cache-hit-rate ms-2" id="domainCacheHitRate">(-)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="cache-stat-item">
+                    <small class="text-muted" id="parsedCacheLabel"></small>
+                    <div class="d-flex align-items-center">
+                      <span id="parsedCacheSize" class="cache-size">-</span>
+                      <span class="cache-hit-rate ms-2" id="parsedCacheHitRate">(-)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2">
+                <small class="text-muted" id="preloadStatusLabel"></small>
+                <span id="preloadStatus" class="preload-status">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 缓存测试 -->
+          <div class="mb-3">
+            <label for="testDomainInput" class="form-label" id="testDomainLabel"></label>
+            <div class="input-group">
+              <input type="text" class="form-control form-control-sm" id="testDomainInput" placeholder="example.com">
+              <button id="testDomainBtn" class="btn btn-outline-success btn-sm"></button>
+            </div>
+          </div>
+
+          <!-- 缓存管理按钮 -->
+          <div class="mb-3">
+            <div class="d-grid gap-2">
+              <div class="row g-2">
+                <div class="col-6">
+                  <button id="refreshCacheStatsBtn" class="btn btn-info btn-sm w-100"></button>
+                </div>
+                <div class="col-6">
+                  <button id="preloadRulesBtn" class="btn btn-primary btn-sm w-100"></button>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <button id="clearDomainCacheBtn" class="btn btn-warning btn-sm w-100"></button>
+                </div>
+                <div class="col-6">
+                  <button id="clearAllCacheBtn" class="btn btn-danger btn-sm w-100"></button>
+                </div>
+              </div>
+              <button id="resetCacheStatsBtn" class="btn btn-secondary btn-sm w-100"></button>
+            </div>
+          </div>
+
+          <!-- 缓存操作结果显示 -->
+          <div id="cacheOperationResult" class="debug-result"></div>
+        </div>
+      </div>
+      <!-- 域名匹配缓存管理卡片结束 -->
+
     </div>
 
     <div class="debug-section mt-4">

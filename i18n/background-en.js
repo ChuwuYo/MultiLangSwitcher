@@ -71,6 +71,11 @@ if (typeof backgroundEn === 'undefined') {
   "clearing_existing_rules": "Clearing {count} existing rules",
   "rules_cleared_successfully": "Rules cleared successfully",
   "clear_rules_failed": "Failed to clear rules",
+  "batch_operation_completed": "Batch operation completed",
+  "removed": "removed",
+  "added": "added",
+  "rules": "rules",
+  "rule": "rule",
   "auto_switch_toggle_failed": "Auto switch toggle failed",
   "startup_init_failed": "Startup initialization failed",
   
@@ -79,6 +84,10 @@ if (typeof backgroundEn === 'undefined') {
   "update_check_api_request": "Making API request to GitHub releases endpoint",
   "update_check_success": "Update check completed successfully",
   "update_check_failed": "Update check failed: {error}",
+  
+  // Cache stats related keys
+  "cache_stats_requested": "Cache statistics requested",
+  "get_cache_stats_failed": "Failed to get cache statistics",
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查

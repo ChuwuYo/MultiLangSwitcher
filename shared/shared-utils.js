@@ -108,13 +108,24 @@ const getFallbackTranslation = (key, params = {}) => {
     } else if (typeof detectI18n !== 'undefined' && detectI18n.isReady) {
       currentLang = detectI18n.currentLang;
     } else {
-      // 2. 如果没有可用的i18n实例，使用localStorage中保存的用户语言设置
-      if (typeof localStorage !== 'undefined') {
-        const savedLang = localStorage.getItem('app-lang');
-        if (savedLang) {
-          currentLang = savedLang;
-        } else {
-          // 3. 如果没有保存的设置，使用浏览器语言检测
+      // 2. 如果没有可用的i18n实例，尝试使用localStorage中保存的用户语言设置
+      // 注意：在Service Worker环境中localStorage不可用，需要安全检查
+      if (typeof localStorage !== 'undefined' && localStorage) {
+        try {
+          const savedLang = localStorage.getItem('app-lang');
+          if (savedLang) {
+            currentLang = savedLang;
+          } else {
+            // 3. 如果没有保存的设置，使用浏览器语言检测
+            if (typeof detectBrowserLanguage === 'function') {
+              currentLang = detectBrowserLanguage();
+            } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
+              const browserLang = chrome.i18n.getUILanguage().toLowerCase();
+              currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+            }
+          }
+        } catch (error) {
+          // localStorage访问失败时的降级处理
           if (typeof detectBrowserLanguage === 'function') {
             currentLang = detectBrowserLanguage();
           } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
@@ -123,7 +134,7 @@ const getFallbackTranslation = (key, params = {}) => {
           }
         }
       } else {
-        // 4. 在Service Worker环境中，使用浏览器语言检测
+        // 4. 在Service Worker环境中或localStorage不可用时，使用浏览器语言检测
         if (typeof detectBrowserLanguage === 'function') {
           currentLang = detectBrowserLanguage();
         } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
