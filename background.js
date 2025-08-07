@@ -165,11 +165,12 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
     });
 
     // 记录批量操作的详细信息
+    let logMessage = `${backgroundI18n.t('batch_operation_completed')}: `;
     if (removeRuleIds.length > 0) {
-      sendBackgroundLog(`${backgroundI18n.t('batch_operation_completed')}: ${backgroundI18n.t('removed')} ${removeRuleIds.length} ${backgroundI18n.t('rules')}, ${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`, 'info');
-    } else {
-      sendBackgroundLog(`${backgroundI18n.t('batch_operation_completed')}: ${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`, 'info');
+      logMessage += `${backgroundI18n.t('removed')} ${removeRuleIds.length} ${backgroundI18n.t('rules')}, `;
     }
+    logMessage += `${backgroundI18n.t('added')} 1 ${backgroundI18n.t('rule')}`;
+    sendBackgroundLog(logMessage, 'info');
 
     // 性能监控：记录完成时间
     const endTime = performance.now();
@@ -619,19 +620,19 @@ const handleGetCacheStatsRequest = async (sendResponse) => {
   try {
     // 确保域名规则管理器已加载
     await domainRulesManager.loadRules();
-    
+
     // 获取缓存统计信息和规则统计信息
     const cacheStats = domainRulesManager.getCacheStats();
     const rulesStats = domainRulesManager.getRulesStats();
-    
+
     // 合并统计信息
     const combinedStats = {
       ...cacheStats,
       ...rulesStats
     };
-    
+
     sendBackgroundLog(`${backgroundI18n.t('cache_stats_requested')}: ${JSON.stringify(combinedStats)}`, 'info');
-    
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
@@ -641,7 +642,7 @@ const handleGetCacheStatsRequest = async (sendResponse) => {
   } catch (error) {
     const errorMessage = `${backgroundI18n.t('get_cache_stats_failed')}: ${error.message}`;
     sendBackgroundLog(errorMessage, 'error');
-    
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -670,11 +671,11 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
 
     // 测试域名查询（这会触发缓存机制）
     const language = await domainRulesManager.getLanguageForDomain(domain);
-    
+
     // 获取更新后的缓存统计
     const cacheStats = domainRulesManager.getCacheStats();
     const rulesStats = domainRulesManager.getRulesStats();
-    
+
     // 合并统计信息
     const combinedStats = {
       ...cacheStats,
@@ -709,23 +710,25 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
 };
 
 /**
- * 处理预加载规则请求
+ * 通用缓存操作处理辅助函数
  * @param {Function} sendResponse - 响应函数
+ * @param {Function} operation - 要执行的操作函数
+ * @param {Object} logMessages - 日志消息对象
  */
-const handlePreloadRulesRequest = async (sendResponse) => {
+const handleCacheOperation = async (sendResponse, operation, logMessages) => {
   try {
-    sendBackgroundLog('Preloading domain rules...', 'info');
-    
-    // 预加载规则
-    await domainRulesManager.preloadRules();
-    
+    sendBackgroundLog(logMessages.start, 'info');
+
+    // 执行具体操作
+    await operation();
+
     // 获取更新后的统计信息
     const cacheStats = domainRulesManager.getCacheStats();
     const rulesStats = domainRulesManager.getRulesStats();
     const combinedStats = { ...cacheStats, ...rulesStats };
-    
-    sendBackgroundLog('Rules preloaded successfully', 'success');
-    
+
+    sendBackgroundLog(logMessages.success, 'success');
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
@@ -733,9 +736,9 @@ const handlePreloadRulesRequest = async (sendResponse) => {
       });
     }
   } catch (error) {
-    const errorMessage = `Rules preload failed: ${error.message}`;
+    const errorMessage = `${logMessages.fail}: ${error.message}`;
     sendBackgroundLog(errorMessage, 'error');
-    
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -744,117 +747,62 @@ const handlePreloadRulesRequest = async (sendResponse) => {
     }
   }
 };
+
+/**
+ * 处理预加载规则请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handlePreloadRulesRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.preloadRules(),
+  {
+    start: 'Preloading domain rules...',
+    success: 'Rules preloaded successfully',
+    fail: 'Rules preload failed'
+  }
+);
 
 /**
  * 处理清理域名缓存请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleClearDomainCacheRequest = async (sendResponse) => {
-  try {
-    sendBackgroundLog('Clearing domain cache...', 'info');
-    
-    // 清理域名缓存
-    domainRulesManager.clearCache(false); // false = 只清理域名缓存
-    
-    // 获取更新后的统计信息
-    const cacheStats = domainRulesManager.getCacheStats();
-    const rulesStats = domainRulesManager.getRulesStats();
-    const combinedStats = { ...cacheStats, ...rulesStats };
-    
-    sendBackgroundLog('Domain cache cleared successfully', 'success');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        stats: combinedStats
-      });
-    }
-  } catch (error) {
-    const errorMessage = `Clear domain cache failed: ${error.message}`;
-    sendBackgroundLog(errorMessage, 'error');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+const handleClearDomainCacheRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.clearCache(false), // false = 只清理域名缓存
+  {
+    start: 'Clearing domain cache...',
+    success: 'Domain cache cleared successfully',
+    fail: 'Clear domain cache failed'
   }
-};
+);
 
 /**
  * 处理清理所有缓存请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleClearAllCacheRequest = async (sendResponse) => {
-  try {
-    sendBackgroundLog('Clearing all cache...', 'info');
-    
-    // 清理所有缓存
-    domainRulesManager.clearCache(true); // true = 清理所有缓存
-    
-    // 获取更新后的统计信息
-    const cacheStats = domainRulesManager.getCacheStats();
-    const rulesStats = domainRulesManager.getRulesStats();
-    const combinedStats = { ...cacheStats, ...rulesStats };
-    
-    sendBackgroundLog('All cache cleared successfully', 'success');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        stats: combinedStats
-      });
-    }
-  } catch (error) {
-    const errorMessage = `Clear all cache failed: ${error.message}`;
-    sendBackgroundLog(errorMessage, 'error');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+const handleClearAllCacheRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.clearCache(true), // true = 清理所有缓存
+  {
+    start: 'Clearing all cache...',
+    success: 'All cache cleared successfully',
+    fail: 'Clear all cache failed'
   }
-};
+);
 
 /**
  * 处理重置缓存统计请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleResetCacheStatsRequest = async (sendResponse) => {
-  try {
-    sendBackgroundLog('Resetting cache statistics...', 'info');
-    
-    // 重置缓存统计
-    domainRulesManager.resetCacheStats();
-    
-    // 获取更新后的统计信息
-    const cacheStats = domainRulesManager.getCacheStats();
-    const rulesStats = domainRulesManager.getRulesStats();
-    const combinedStats = { ...cacheStats, ...rulesStats };
-    
-    sendBackgroundLog('Cache statistics reset successfully', 'success');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        stats: combinedStats
-      });
-    }
-  } catch (error) {
-    const errorMessage = `Reset cache statistics failed: ${error.message}`;
-    sendBackgroundLog(errorMessage, 'error');
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+const handleResetCacheStatsRequest = (sendResponse) => handleCacheOperation(
+  sendResponse,
+  () => domainRulesManager.resetCacheStats(),
+  {
+    start: 'Resetting cache statistics...',
+    success: 'Cache statistics reset successfully',
+    fail: 'Reset cache statistics failed'
   }
-};
+);
 
 /**
  * 处理更新检查错误
