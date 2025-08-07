@@ -1027,35 +1027,51 @@ function initializeCacheManagementTexts() {
 }
 
 /**
- * 刷新缓存统计显示
+ * 通用缓存操作处理函数
+ * @param {string} messageType - 消息类型
+ * @param {string} successMessageKey - 成功消息的翻译键
+ * @param {Function} additionalCallback - 可选的额外回调函数
  */
-async function refreshCacheStats() {
+const handleCacheOperation = async (messageType, successMessageKey, additionalCallback = null) => {
   const resultElement = document.getElementById('cacheOperationResult');
-
+  
   try {
-    // 通过消息传递从后台获取真实的缓存统计
-    const response = await chrome.runtime.sendMessage({
-      type: 'GET_CACHE_STATS'
-    });
-
-    if (response && response.success && response.stats) {
-      // 更新显示
-      updateCacheStatsDisplay(response.stats);
-
-      // 检查预加载状态
-      updatePreloadStatus();
-
-      setSafeSuccessMessage(resultElement, debugI18n.t('cache_stats_refreshed'));
-      console.log(`[Cache] ${debugI18n.t('cache_stats_refreshed')}`);
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Invalid response'}`);
+    const response = await chrome.runtime.sendMessage({ type: messageType });
+    
+    if (!response || !response.success) {
+      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
+      return;
     }
+
+    // 更新缓存统计显示
+    if (response.stats) {
+      updateCacheStatsDisplay(response.stats);
+    }
+
+    // 执行额外的回调函数（如果提供）
+    if (additionalCallback && typeof additionalCallback === 'function') {
+      additionalCallback();
+    }
+
+    const successMessage = debugI18n.t(successMessageKey);
+    setSafeSuccessMessage(resultElement, successMessage);
+    console.log(`[Cache] ${successMessage}`);
 
   } catch (error) {
     setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
     console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
   }
-}
+};
+
+/**
+ * 刷新缓存统计显示
+ */
+const refreshCacheStats = async () => {
+  return handleCacheOperation('GET_CACHE_STATS', 'cache_stats_refreshed', () => {
+    // 检查预加载状态
+    updatePreloadStatus();
+  });
+};
 
 /**
  * 更新缓存统计显示
@@ -1114,132 +1130,45 @@ async function updatePreloadStatus() {
 /**
  * 预加载域名规则
  */
-async function preloadDomainRules() {
-  const resultElement = document.getElementById('cacheOperationResult');
+const preloadDomainRules = async () => {
   const preloadStatus = document.getElementById('preloadStatus');
+  
+  // 显示加载状态
+  if (preloadStatus) {
+    preloadStatus.textContent = debugI18n.t('preload_status_loading');
+    preloadStatus.className = 'preload-status loading';
+  }
 
+  // 使用通用函数处理缓存操作，并提供额外的回调来恢复预加载状态
   try {
-    // 显示加载状态
-    if (preloadStatus) {
-      preloadStatus.textContent = debugI18n.t('preload_status_loading');
-      preloadStatus.className = 'preload-status loading';
-    }
-
-    // 通过消息传递执行预加载
-    const response = await chrome.runtime.sendMessage({
-      type: 'PRELOAD_RULES'
-    });
-
-    if (response && response.success) {
-      // 更新缓存统计显示
-      if (response.stats) {
-        updateCacheStatsDisplay(response.stats);
-      }
-
+    await handleCacheOperation('PRELOAD_RULES', 'rules_preloaded_success', () => {
       // 更新预加载状态
       updatePreloadStatus();
-
-      setSafeSuccessMessage(resultElement, debugI18n.t('rules_preloaded_success'));
-      console.log(`[Cache] ${debugI18n.t('rules_preloaded_success')}`);
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('rules_preload_failed')}: ${response?.error || 'Unknown error'}`);
-    }
-
+    });
   } catch (error) {
-    // 恢复状态显示
+    // 如果操作失败，恢复状态显示
     updatePreloadStatus();
-
-    setSafeErrorMessage(resultElement, `${debugI18n.t('rules_preload_failed')}: ${error.message}`);
-    console.error(`[Cache] ${debugI18n.t('rules_preload_failed')}: ${error.message}`);
+    throw error;
   }
-}
+};
 
 /**
  * 清理域名缓存
  */
-async function clearDomainCache() {
-  const resultElement = document.getElementById('cacheOperationResult');
-
-  try {
-    // 通过消息传递清理域名缓存
-    const response = await chrome.runtime.sendMessage({
-      type: 'CLEAR_DOMAIN_CACHE'
-    });
-
-    if (response && response.success) {
-      // 更新缓存统计显示
-      if (response.stats) {
-        updateCacheStatsDisplay(response.stats);
-      }
-
-      setSafeSuccessMessage(resultElement, debugI18n.t('domain_cache_cleared'));
-      console.log(`[Cache] ${debugI18n.t('domain_cache_cleared')}`);
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
-    }
-
-  } catch (error) {
-    setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-  }
-}
+const clearDomainCache = async () => {
+  return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
+};
 
 /**
  * 清理所有缓存
  */
-async function clearAllCache() {
-  const resultElement = document.getElementById('cacheOperationResult');
-
-  try {
-    // 通过消息传递清理所有缓存
-    const response = await chrome.runtime.sendMessage({
-      type: 'CLEAR_ALL_CACHE'
-    });
-
-    if (response && response.success) {
-      // 更新缓存统计显示
-      if (response.stats) {
-        updateCacheStatsDisplay(response.stats);
-      }
-
-      setSafeSuccessMessage(resultElement, debugI18n.t('all_cache_cleared'));
-      console.log(`[Cache] ${debugI18n.t('all_cache_cleared')}`);
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
-    }
-
-  } catch (error) {
-    setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-  }
-}
+const clearAllCache = async () => {
+  return handleCacheOperation('CLEAR_ALL_CACHE', 'all_cache_cleared');
+};
 
 /**
  * 重置缓存统计
  */
-async function resetCacheStats() {
-  const resultElement = document.getElementById('cacheOperationResult');
-
-  try {
-    // 通过消息传递重置缓存统计
-    const response = await chrome.runtime.sendMessage({
-      type: 'RESET_CACHE_STATS'
-    });
-
-    if (response && response.success) {
-      // 更新缓存统计显示
-      if (response.stats) {
-        updateCacheStatsDisplay(response.stats);
-      }
-
-      setSafeSuccessMessage(resultElement, debugI18n.t('cache_stats_reset'));
-      console.log(`[Cache] ${debugI18n.t('cache_stats_reset')}`);
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
-    }
-
-  } catch (error) {
-    setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-    console.error(`[Cache] ${debugI18n.t('cache_operation_failed')}: ${error.message}`);
-  }
-}
+const resetCacheStats = async () => {
+  return handleCacheOperation('RESET_CACHE_STATS', 'cache_stats_reset');
+};
