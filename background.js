@@ -669,7 +669,10 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
     // 确保域名规则管理器已加载
     await domainRulesManager.loadRules();
 
-    // 测试域名查询（这会触发缓存机制）
+    // 在调用 getLanguageForDomain 之前检查缓存状态，以获得准确的"是否命中缓存"状态
+    const fromCache = domainRulesManager.domainCache.has(domain);
+
+    // 测试域名查询（这会触发缓存机制，如果是 miss，则会填充缓存）
     const language = await domainRulesManager.getLanguageForDomain(domain);
 
     // 获取更新后的缓存统计
@@ -681,9 +684,6 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
       ...cacheStats,
       ...rulesStats
     };
-
-    // 检查是否从缓存获取（简单的启发式检查）
-    const fromCache = cacheStats.domainCacheSize > 0;
 
     sendBackgroundLog(`Domain test result: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`, 'info');
 
