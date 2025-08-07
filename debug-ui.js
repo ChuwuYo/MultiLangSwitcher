@@ -925,13 +925,33 @@ async function testDomainCache() {
     if (response && response.success) {
       const { language, fromCache, cacheStats } = response;
 
-      let html = `<p class="success">${debugI18n.t('domain_test_success')}</p>`;
+      resultElement.innerHTML = ''; // 清空
+
+      const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
+      resultElement.appendChild(successP);
 
       if (language) {
-        html += `<p>${debugI18n.t('domain_found')}: <strong>${domain}</strong> → <strong>${language}</strong></p>`;
-        html += `<p>缓存状态: ${fromCache ? '缓存命中' : '新查询'}</p>`;
+        const resultP = document.createElement('p');
+        resultP.textContent = `${debugI18n.t('domain_found')}: `;
+
+        const domainStrong = document.createElement('strong');
+        domainStrong.textContent = domain;
+        resultP.appendChild(domainStrong);
+
+        resultP.append(` → `);
+
+        const langStrong = document.createElement('strong');
+        langStrong.textContent = language;
+        resultP.appendChild(langStrong);
+
+        resultElement.appendChild(resultP);
+
+        const cacheStatusP = document.createElement('p');
+        cacheStatusP.textContent = `缓存状态: ${fromCache ? '缓存命中' : '新查询'}`;
+        resultElement.appendChild(cacheStatusP);
       } else {
-        html += `<p class="warning">${debugI18n.t('domain_not_found')}: ${domain}</p>`;
+        const notFoundP = createSafeMessageElement(`${debugI18n.t('domain_not_found')}: ${domain}`, 'warning');
+        resultElement.appendChild(notFoundP);
       }
 
       // 更新缓存统计显示
@@ -939,7 +959,6 @@ async function testDomainCache() {
         updateCacheStatsDisplay(cacheStats);
       }
 
-      resultElement.innerHTML = html;
       console.log(`[Cache] Domain test: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`);
 
     } else {
@@ -1034,10 +1053,10 @@ function initializeCacheManagementTexts() {
  */
 const handleCacheOperation = async (messageType, successMessageKey, additionalCallback = null) => {
   const resultElement = document.getElementById('cacheOperationResult');
-  
+
   try {
     const response = await chrome.runtime.sendMessage({ type: messageType });
-    
+
     if (!response || !response.success) {
       setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
       return;
@@ -1132,7 +1151,7 @@ async function updatePreloadStatus() {
  */
 const preloadDomainRules = async () => {
   const preloadStatus = document.getElementById('preloadStatus');
-  
+
   // 显示加载状态
   if (preloadStatus) {
     preloadStatus.textContent = debugI18n.t('preload_status_loading');
