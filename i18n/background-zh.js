@@ -84,6 +84,10 @@ if (typeof backgroundZh === 'undefined') {
   "update_check_api_request": "正在向 GitHub releases 端点发起 API 请求",
   "update_check_success": "更新检查成功完成",
   "update_check_failed": "更新检查失败: {error}",
+  
+  // Cache stats related keys
+  "cache_stats_requested": "缓存统计已请求",
+  "get_cache_stats_failed": "获取缓存统计失败",
 
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查

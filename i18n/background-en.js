@@ -84,6 +84,10 @@ if (typeof backgroundEn === 'undefined') {
   "update_check_api_request": "Making API request to GitHub releases endpoint",
   "update_check_success": "Update check completed successfully",
   "update_check_failed": "Update check failed: {error}",
+  
+  // Cache stats related keys
+  "cache_stats_requested": "Cache statistics requested",
+  "get_cache_stats_failed": "Failed to get cache statistics",
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查
