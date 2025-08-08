@@ -923,12 +923,32 @@ async function testDomainCache() {
     });
 
     if (response && response.success) {
-      const { language, fromCache, cacheStats } = response;
+      const { language, fromCache, isUsingFallback, cacheStats } = response;
 
       resultElement.innerHTML = ''; // 清空
+      
+      // 强制设置容器样式以确保自适应高度
+      resultElement.style.cssText = `
+        margin-top: 10px;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        min-height: auto;
+        height: auto;
+        max-height: 400px;
+        overflow-y: auto;
+        word-break: break-word;
+        white-space: normal;
+        font-size: 0.9em;
+        line-height: 1.5;
+      `;
 
       const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
       resultElement.appendChild(successP);
+
+      // 添加调试信息
+      console.log(`[Debug] Domain test response:`, { language, fromCache, isUsingFallback, cacheStats });
 
       if (language) {
         const resultP = document.createElement('p');
@@ -949,9 +969,25 @@ async function testDomainCache() {
         const cacheStatusP = document.createElement('p');
         cacheStatusP.textContent = `缓存状态: ${fromCache ? '缓存命中' : '新查询'}`;
         resultElement.appendChild(cacheStatusP);
+
+        // 如果使用了回退语言，显示说明
+        if (isUsingFallback) {
+          const fallbackP = document.createElement('p');
+          fallbackP.className = 'text-muted';
+          fallbackP.style.marginTop = '8px';
+          fallbackP.textContent = '注: 该域名使用当前活动的语言设置';
+          resultElement.appendChild(fallbackP);
+        }
       } else {
         const notFoundP = createSafeMessageElement(`${debugI18n.t('domain_not_found')}: ${domain}`, 'warning');
         resultElement.appendChild(notFoundP);
+        
+        // 即使没有找到，也显示一些有用的信息
+        const infoP = document.createElement('p');
+        infoP.className = 'text-muted';
+        infoP.style.marginTop = '8px';
+        infoP.textContent = '该域名不在规则中，且当前没有活动的语言设置';
+        resultElement.appendChild(infoP);
       }
 
       // 更新缓存统计显示
