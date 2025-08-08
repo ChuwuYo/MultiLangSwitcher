@@ -722,11 +722,7 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
       }
     }
 
-    // 最终检查：确保language不为空
-    if (!language) {
-      language = 'en-US';
-      isUsingFallback = true;
-    }
+
 
     // 获取更新后的缓存统计
     const cacheStats = domainRulesManager.getCacheStats();
