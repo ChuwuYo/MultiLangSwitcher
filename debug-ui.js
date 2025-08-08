@@ -956,8 +956,7 @@ async function testDomainCache() {
         // 如果使用了回退语言，显示说明
         if (isUsingFallback) {
           const fallbackP = document.createElement('p');
-          fallbackP.className = 'text-muted';
-          fallbackP.style.marginTop = '8px';
+          fallbackP.className = 'text-muted mt-2';
           fallbackP.textContent = debugI18n.t('note_using_active_language');
           resultElement.appendChild(fallbackP);
         }
@@ -967,8 +966,7 @@ async function testDomainCache() {
 
         // 即使没有找到，也显示一些有用的信息
         const infoP = document.createElement('p');
-        infoP.className = 'text-muted';
-        infoP.style.marginTop = '8px';
+        infoP.className = 'text-muted mt-2';
         infoP.textContent = debugI18n.t('domain_not_in_rules_no_active');
         resultElement.appendChild(infoP);
       }
