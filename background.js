@@ -706,12 +706,8 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
       // 策略2: 如果还没有找到，检查存储的当前语言设置
       if (!language) {
         try {
-          const result = await new Promise((resolve) => {
-            chrome.storage.local.get(['currentLanguage'], (result) => {
-              resolve(result);
-            });
-          });
-
+          const result = await chrome.storage.local.get(['currentLanguage']);
+          
           if (result.currentLanguage) {
             language = result.currentLanguage;
           }
