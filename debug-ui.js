@@ -909,12 +909,12 @@ async function testDomainCache() {
   const domain = testDomainInput.value.trim();
 
   if (!domain) {
-    setSafeErrorMessage(resultElement, '请输入域名');
+    setSafeErrorMessage(resultElement, debugI18n.t('please_enter_domain'));
     return;
   }
 
   try {
-    setSafeContent(resultElement, `正在测试域名: ${domain}...`);
+    setSafeContent(resultElement, debugI18n.t('testing_domain', { domain }));
 
     // 通过消息传递请求后台测试域名
     const response = await chrome.runtime.sendMessage({
@@ -923,12 +923,15 @@ async function testDomainCache() {
     });
 
     if (response && response.success) {
-      const { language, fromCache, cacheStats } = response;
+      const { language, fromCache, isUsingFallback, cacheStats } = response;
 
       resultElement.innerHTML = ''; // 清空
 
       const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
       resultElement.appendChild(successP);
+
+      // 添加调试信息
+      console.log(`[Debug] Domain test response:`, { language, fromCache, isUsingFallback, cacheStats });
 
       if (language) {
         const resultP = document.createElement('p');
@@ -947,11 +950,25 @@ async function testDomainCache() {
         resultElement.appendChild(resultP);
 
         const cacheStatusP = document.createElement('p');
-        cacheStatusP.textContent = `缓存状态: ${fromCache ? '缓存命中' : '新查询'}`;
+        cacheStatusP.textContent = `${debugI18n.t('cache_status')}: ${fromCache ? debugI18n.t('cache_hit') : debugI18n.t('cache_miss')}`;
         resultElement.appendChild(cacheStatusP);
+
+        // 如果使用了回退语言，显示说明
+        if (isUsingFallback) {
+          const fallbackP = document.createElement('p');
+          fallbackP.className = 'text-muted mt-2';
+          fallbackP.textContent = debugI18n.t('note_using_active_language');
+          resultElement.appendChild(fallbackP);
+        }
       } else {
         const notFoundP = createSafeMessageElement(`${debugI18n.t('domain_not_found')}: ${domain}`, 'warning');
         resultElement.appendChild(notFoundP);
+
+        // 即使没有找到，也显示一些有用的信息
+        const infoP = document.createElement('p');
+        infoP.className = 'text-muted mt-2';
+        infoP.textContent = debugI18n.t('domain_not_in_rules_no_active');
+        resultElement.appendChild(infoP);
       }
 
       // 更新缓存统计显示

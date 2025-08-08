@@ -89,5 +89,15 @@ if (typeof backgroundZh === 'undefined') {
   "cache_stats_requested": "缓存统计已请求",
   "get_cache_stats_failed": "获取缓存统计失败",
 
+  // Domain cache test related keys
+  "testing_domain_cache": "正在测试域名缓存: {domain}",
+  "domain_test_result": "域名测试结果: {domain} → {language} ({cacheStatus}{fallbackStatus})",
+  "domain_cache_test_failed": "域名缓存测试失败: {error}",
+  "cached": "缓存",
+  "new": "新查询",
+  "fallback": ", 回退",
+  "domain_required_error": "域名是必需的"
+
+
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查

@@ -265,6 +265,17 @@ if (typeof debugEn === 'undefined') {
   "network_check_suggestion": "Suggestion: Check network connection or try other test services",
 
   // Accept-Language format validation
-  "accept_language_format_warning": "Your custom Accept-Language format may be incorrect, please verify it yourself."
+  "accept_language_format_warning": "Your custom Accept-Language format may be incorrect, please verify it yourself.",
+
+  // New cache-related translations
+  "cache_status": "Cache Status",
+  "cache_hit": "Cache Hit",
+  "cache_miss": "New Query",
+  "note_using_active_language": "Note: This domain uses the current active language setting",
+  "domain_not_in_rules_no_active": "This domain is not in rules and there is no active language setting",
+
+  // Domain test related translations
+  "please_enter_domain": "Please enter a domain",
+  "testing_domain": "Testing domain: {domain}..."
 };
 } // 结束 if (typeof debugEn === 'undefined') 检查

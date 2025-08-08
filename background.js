@@ -661,19 +661,68 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
   try {
     const domain = request.domain;
     if (!domain) {
-      throw new Error('Domain is required');
+      throw new Error(backgroundI18n.t('domain_required_error'));
     }
 
-    sendBackgroundLog(`Testing domain cache for: ${domain}`, 'info');
+    sendBackgroundLog(backgroundI18n.t('testing_domain_cache', { domain }), 'info');
 
     // 确保域名规则管理器已加载
     await domainRulesManager.loadRules();
 
     // 在调用 getLanguageForDomain 之前检查缓存状态，以获得准确的"是否命中缓存"状态
-    const fromCache = domainRulesManager.domainCache.has(domain);
+    // 检查二级域名的缓存状态
+    const parsedDomain = domain.split('.');
+    const secondLevelDomain = parsedDomain.length >= 2 ? parsedDomain.slice(-2).join('.') : domain;
+    const fromCache = domainRulesManager.domainCache.has(domain) ||
+      domainRulesManager.domainCache.has(secondLevelDomain) ||
+      (domain.startsWith('www.') && domainRulesManager.domainCache.has(domain.substring(4))) ||
+      domainRulesManager.domainCache.has('www.' + domain);
 
     // 测试域名查询（这会触发缓存机制，如果是 miss，则会填充缓存）
-    const language = await domainRulesManager.getLanguageForDomain(domain);
+    let language = await domainRulesManager.getLanguageForDomain(domain);
+    let isUsingFallback = false;
+
+
+
+    // 如果没有找到匹配规则，使用回退策略
+    if (!language) {
+      isUsingFallback = true;
+
+      // 策略1: 检查当前活动的规则
+      try {
+        const rules = await chrome.declarativeNetRequest.getDynamicRules();
+        const currentRule = rules.find(rule => rule.id === RULE_ID);
+        
+        if (currentRule && currentRule.action && currentRule.action.requestHeaders) {
+          const acceptLangHeader = currentRule.action.requestHeaders.find(h => h.header === 'Accept-Language');
+          if (acceptLangHeader && acceptLangHeader.value) {
+            language = acceptLangHeader.value;
+          }
+        }
+      } catch (error) {
+        sendBackgroundLog(`Failed to check active rules: ${error.message}`, 'error');
+      }
+
+      // 策略2: 如果还没有找到，检查存储的当前语言设置
+      if (!language) {
+        try {
+          const result = await chrome.storage.local.get(['currentLanguage']);
+          
+          if (result.currentLanguage) {
+            language = result.currentLanguage;
+          }
+        } catch (error) {
+          sendBackgroundLog(`Failed to check stored language: ${error.message}`, 'error');
+        }
+      }
+
+      // 策略3: 最后的回退，使用默认语言
+      if (!language) {
+        language = DEFAULT_LANG_EN;
+      }
+    }
+
+
 
     // 获取更新后的缓存统计
     const cacheStats = domainRulesManager.getCacheStats();
@@ -685,19 +734,29 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
       ...rulesStats
     };
 
-    sendBackgroundLog(`Domain test result: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`, 'info');
+
+
+    const cacheStatus = fromCache ? backgroundI18n.t('cached') : backgroundI18n.t('new');
+    const fallbackStatus = isUsingFallback ? backgroundI18n.t('fallback') : '';
+    sendBackgroundLog(backgroundI18n.t('domain_test_result', {
+      domain,
+      language: language || 'not found',
+      cacheStatus,
+      fallbackStatus
+    }), 'info');
 
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
         language: language,
         fromCache: fromCache,
+        isUsingFallback: isUsingFallback,
         cacheStats: combinedStats
       });
     }
 
   } catch (error) {
-    const errorMessage = `Domain cache test failed: ${error.message}`;
+    const errorMessage = backgroundI18n.t('domain_cache_test_failed', { error: error.message });
     sendBackgroundLog(errorMessage, 'error');
 
     if (typeof sendResponse === 'function') {
