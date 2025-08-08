@@ -670,7 +670,7 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
     await domainRulesManager.loadRules();
 
     // 在调用 getLanguageForDomain 之前检查缓存状态，以获得准确的"是否命中缓存"状态
-    // 为了更好的用户体验，我们检查二级域名的缓存状态
+    // 检查二级域名的缓存状态
     const parsedDomain = domain.split('.');
     const secondLevelDomain = parsedDomain.length >= 2 ? parsedDomain.slice(-2).join('.') : domain;
     const fromCache = domainRulesManager.domainCache.has(domain) ||

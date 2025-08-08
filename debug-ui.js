@@ -927,23 +927,6 @@ async function testDomainCache() {
 
       resultElement.innerHTML = ''; // 清空
 
-      // 强制设置容器样式以确保自适应高度
-      resultElement.style.cssText = `
-        margin-top: 10px;
-        padding: 15px;
-        border-radius: 5px;
-        background-color: #fff;
-        border: 1px solid #dee2e6;
-        min-height: auto;
-        height: auto;
-        max-height: 400px;
-        overflow-y: auto;
-        word-break: break-word;
-        white-space: normal;
-        font-size: 0.9em;
-        line-height: 1.5;
-      `;
-
       const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
       resultElement.appendChild(successP);
 

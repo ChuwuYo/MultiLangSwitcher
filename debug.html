@@ -30,17 +30,21 @@
 
     .debug-result {
       margin-top: 10px;
-      padding: 10px;
+      padding: 15px;
       border-radius: 5px;
       background-color: #fff;
       border: 1px solid #dee2e6;
       min-height: 60px;
+      height: auto !important;
       max-height: 400px;
       overflow-y: auto;
       word-break: break-word;
       white-space: normal;
       font-size: 0.9em;
-      line-height: 1.4;
+      line-height: 1.5;
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
     }
 
     .success {
@@ -150,15 +154,20 @@
     /* 缓存操作结果显示框样式 */
     #cacheOperationResult {
       margin-top: 10px;
-      padding: 8px 10px; /* 减少上下内边距 */
+      padding: 8px 10px;
+      /* 减少上下内边距 */
       border-radius: 5px;
       background-color: #fff;
       border: 1px solid #dee2e6;
-      min-height: 2.2em; /* 最小高度约一行 */
-      max-height: 4.4em; /* 最大高度约两行 */
-      overflow: hidden; /* 隐藏超出内容，不显示滚动条 */
+      min-height: 2.2em;
+      /* 最小高度约一行 */
+      max-height: 400px;
+      /* 增加最大高度限制 */
+      overflow-y: auto;
+      /* 内容超出时显示滚动条 */
       word-break: break-word;
-      white-space: normal; /* 允许正常换行 */
+      white-space: normal;
+      /* 允许正常换行 */
       font-size: 0.9em;
       line-height: 1.4;
     }
@@ -211,7 +220,8 @@
       <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16" class="invert-on-dark"></button>
+          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"><img src="images/reset.svg" id="resetBtnImg"
+              width="16" height="16" class="invert-on-dark"></button>
           <h4 id="customLangTitle"></h4>
           <p class="text-muted" id="customLangDesc"></p>
           <div class="mb-3">
@@ -249,7 +259,7 @@
         <div class="debug-section">
           <h4 id="cacheManagementTitle"></h4>
           <p class="text-muted" id="cacheManagementDesc"></p>
-          
+
           <!-- 缓存统计显示 -->
           <div class="mb-3">
             <h6 id="cacheStatsTitle"></h6>
