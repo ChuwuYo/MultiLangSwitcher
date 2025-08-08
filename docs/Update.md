@@ -18,6 +18,10 @@
 - ✅ Service Worker 优化 - 重构缓存操作处理相关代码
 - ✅ 重构缓存管理函数 - 提取公共函数，统一响应处理模式
 - ✅ UI冲突调整 - 删除缓存测试卡片多余的js调试样式
+- ✅ Manifest V3 API 现代化 - 将 `chrome.storage.local.get` 从回调方式升级为原生Promise API，简化代码并改善错误处理
+- ✅ 样式与逻辑分离优化 - 移除JavaScript中的内联样式设置，统一使用Bootstrap工具类（`mt-2`）管理间距
+- ✅ 代码重复消除 - 删除域名缓存测试中的冗余最终检查逻辑，提高代码可读性和维护性
+- ✅ CSS最佳实践修复 - 移除`!important`声明，使用标准的`overflow-wrap: break-word`替代已废弃的`word-break: break-word`
 
 ## 文件变更清单
 
@@ -34,20 +38,23 @@
 - manifest.json - 版本号更新（v1.8.61、v1.8.62、v1.8.63）
 - Domain_Matching_Guide.md - 合并.60版本修改历史（v1.8.61）
 - popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）
-- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递（v1.8.63）
+- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递，样式与逻辑分离优化（v1.8.63）
 - domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码，innerHTML 的XSS安全修复，重构缓存管理函数（v1.8.62）
 - TODO.md - 修改待办事项（v1.8.61、v1.8.62、v1.8.63）
 - Update.md - 版本更新记录（v1.8.61、v1.8.62、v1.8.63）
-- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑（v1.8.63）
+- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑，Manifest V3 API现代化，代码重复消除（v1.8.63）
 - background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - background-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - shared-utils.js - 修复i18n的多级加载机制，完善降级处理（v1.8.62）
 - debug-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
-- debug.html - 添加域名匹配缓存管理功能的卡片UI（v1.8.62）；修复缓存管理卡片UI（v1.8.63）
+- debug.html - 添加域名匹配缓存管理功能的卡片UI（v1.8.62）；修复缓存管理卡片UI，CSS最佳实践修复（v1.8.63）
 
 ### 移除内容
 
 - 未使用的分组规则代码（v1.8.62）
 - Accept-Language 格式说明多余的无效代码（v1.8.62）
 - 缓存测试卡片多余的js调试样式（v1.8.63）
+- JavaScript中的内联样式设置（style.marginTop）（v1.8.63）
+- 域名缓存测试中的冗余最终检查逻辑（v1.8.63）
+- CSS中的!important声明和已废弃的word-break属性（v1.8.63）
