@@ -89,5 +89,15 @@ if (typeof backgroundEn === 'undefined') {
   "cache_stats_requested": "Cache statistics requested",
   "get_cache_stats_failed": "Failed to get cache statistics",
 
+  // Domain cache test related keys
+  "testing_domain_cache": "Testing domain cache for: {domain}",
+  "domain_test_result": "Domain test result: {domain} → {language} ({cacheStatus}{fallbackStatus})",
+  "domain_cache_test_failed": "Domain cache test failed: {error}",
+  "cached": "cached",
+  "new": "new",
+  "fallback": ", fallback",
+  "domain_required_error": "Domain is required"
+
+
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查

@@ -267,6 +267,17 @@ if (typeof debugZh === 'undefined') {
     "network_check_suggestion": "建议: 检查网络连接或尝试使用其他测试服务",
 
     // Accept-Language 格式验证
-    "accept_language_format_warning": "您自定义的 Accept-Language 格式可能有误，请您自行检查验证。"
+    "accept_language_format_warning": "您自定义的 Accept-Language 格式可能有误，请您自行检查验证。",
+
+    // 新增的缓存相关翻译
+    "cache_status": "缓存状态",
+    "cache_hit": "缓存命中",
+    "cache_miss": "新查询",
+    "note_using_active_language": "注: 该域名使用当前活动的语言设置",
+    "domain_not_in_rules_no_active": "该域名不在规则中，且当前没有活动的语言设置",
+
+    // 域名测试相关翻译
+    "please_enter_domain": "请输入域名",
+    "testing_domain": "正在测试域名: {domain}..."
   };
 } // 结束 if (typeof debugZh === 'undefined') 检查
