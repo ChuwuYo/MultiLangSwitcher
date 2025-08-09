@@ -77,8 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultElement = document.getElementById('rulesResult');
     resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
-    // 获取动态规则
-    chrome.declarativeNetRequest.getDynamicRules((rules) => {
+    // 通过消息传递获取动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeErrorMessage(resultElement, '获取规则失败');
+        return;
+      }
+      const rules = response.rules;
       let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
       if (rules.length === 0) {
@@ -111,8 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</ul>';
       }
 
-      // 获取最近匹配的规则信息
-      chrome.declarativeNetRequest.getMatchedRules({}, (matchedRules) => {
+      // 通过消息传递获取最近匹配的规则信息
+      chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' }, (response) => {
+        if (chrome.runtime.lastError || !response || !response.success) {
+          html += `<p class="error">获取匹配规则失败</p>`;
+          resultElement.innerHTML = html;
+          return;
+        }
+        const matchedRules = response.matchedRules;
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
@@ -342,7 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
+    // 通过消息传递获取和更新动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeContent(resultElement, '获取规则失败', 'error');
+        return;
+      }
+
+      const existingRules = response.rules;
       const existingRuleIds = existingRules.map(rule => rule.id);
       const updatedRules = existingRules.map(rule => {
         return {
@@ -351,13 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       });
 
-      chrome.declarativeNetRequest.updateDynamicRules({
+      chrome.runtime.sendMessage({
+        type: 'UPDATE_DYNAMIC_RULES',
         removeRuleIds: existingRuleIds,
         addRules: updatedRules
-      }, () => {
-        if (chrome.runtime.lastError) {
-          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}`, 'error');
-          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${chrome.runtime.lastError.message}`, 'error');
+      }, (updateResponse) => {
+        if (chrome.runtime.lastError || !updateResponse || !updateResponse.success) {
+          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
+          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
         } else {
           setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
           addLogMessage(debugI18n.t('priority_updated_log'), 'success');
@@ -372,18 +391,29 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
+    // 通过消息传递获取和清除动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeErrorMessage(resultElement, '获取规则失败');
+        return;
+      }
+
+      const existingRules = response.rules;
       const existingRuleIds = existingRules.map(rule => rule.id);
 
-      chrome.declarativeNetRequest.updateDynamicRules({
+      chrome.runtime.sendMessage({
+        type: 'UPDATE_DYNAMIC_RULES',
         removeRuleIds: existingRuleIds
-      }, () => {
-        if (chrome.runtime.lastError) {
-          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}`);
-          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
+      }, (clearResponse) => {
+        if (chrome.runtime.lastError || !clearResponse || !clearResponse.success) {
+          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${clearResponse?.error || 'Unknown error'}`);
+          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${clearResponse?.error || 'Unknown error'}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
-          chrome.storage.local.get(['currentLanguage'], (result) => {
+          chrome.runtime.sendMessage({
+            type: 'GET_STORAGE_DATA',
+            keys: ['currentLanguage']
+          }, (storageResponse) => {
             if (chrome.runtime.lastError) {
               setSafeContent(resultElement, `${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
               addLogMessage(`${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
