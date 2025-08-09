@@ -25,6 +25,7 @@
 - ✅ CSS最佳实践修复 - 移除`!important`声明，使用标准的`overflow-wrap: break-word`替代已废弃的`word-break: break-word`
 - ✅ 代码风格规范化 - 将国际化文件外的`var`声明替换为`const/let`，传统函数声明替换为箭头函数
 - ✅ 架构合规性重构 - 修复Service Worker独占性违规，移除UI组件中的直接Chrome API调用，实现完整的消息传递代理机制
+- ✅ 代码风格规范化 - 修复debug-ui.js中剩余的传统函数声明，完善Chrome API调用的消息传递机制，规范toggle.js
 
 ## 文件变更清单
 
@@ -52,6 +53,7 @@
 - debug-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug.html - 添加域名匹配缓存管理功能的卡片UI（v1.8.62）；修复缓存管理卡片UI，CSS最佳实践修复（v1.8.63）
+- toggle.js - 代码规范化（v1.8.64）
 
 ### 移除内容
 
