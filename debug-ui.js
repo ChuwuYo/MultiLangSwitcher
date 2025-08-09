@@ -903,7 +903,7 @@ function checkPreloadStatusPeriodically() {
 /**
  * 测试域名缓存功能
  */
-async function testDomainCache() {
+const testDomainCache = async () => {
   const testDomainInput = document.getElementById('testDomainInput');
   const resultElement = document.getElementById('cacheOperationResult');
   const domain = testDomainInput.value.trim();
@@ -1133,7 +1133,7 @@ function updateCacheStatsDisplay(stats) {
 /**
  * 更新预加载状态显示
  */
-async function updatePreloadStatus() {
+const updatePreloadStatus = async () => {
   const preloadStatus = document.getElementById('preloadStatus');
   if (!preloadStatus) return;
 

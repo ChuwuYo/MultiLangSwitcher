@@ -916,7 +916,7 @@ const debouncedUIUpdate = (updateFn, delay = 100) => {
 };
 
 // --- 扩展初始化 ---
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async () => {
   // 等待翻译系统加载完成
   await new Promise(resolve => {
     if (popupI18n.isReady) {
@@ -955,7 +955,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     lastApplyTime: 0,
 
     // 自动切换开关变更处理
-    autoSwitchChange: async function () {
+    autoSwitchChange: async () => {
       const enabled = this.checked;
       const success = await setAutoSwitchStatus(enabled);
       if (success) {
@@ -964,13 +964,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     },
 
     // 语言选择框获得焦点处理
-    languageSelectFocus: function () {
+    languageSelectFocus: () => {
       this.size = 6;
       sendDebugLog(popupI18n.t('language_select_focus'), 'info');
     },
 
     // 应用按钮点击处理
-    applyButtonClick: async function () {
+    applyButtonClick: async () => {
       if (!languageSelect) return;
 
       const selectedLanguage = languageSelect.value;
@@ -1002,8 +1002,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     },
 
-    // 重置按钮点击处理 - 使用现代async/await最佳实践
-    resetButtonClick: async function () {
+    // 重置按钮点击处理
+    resetButtonClick: async () => {
       sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
 
       try {
@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     },
 
     // 快速检查按钮点击处理
-    checkHeaderBtnClick: function () {
+    checkHeaderBtnClick: () => {
       sendDebugLog(popupI18n.t('clicked_quick_check'), 'info');
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
