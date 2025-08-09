@@ -46,7 +46,8 @@
     {
       "resources": [
         "images/*",
-        "domain-rules.json"
+        "domain-rules.json",
+        "fonts/*"
       ],
       "matches": [
         "<all_urls>"
