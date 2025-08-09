@@ -21,11 +21,15 @@ class LanguageToggle {
    * @param {string} lang - 目标语言代码
    */
   switchLanguage = async (lang) => {
-    if (lang === this.currentLang) return;
+    try {
+      if (lang === this.currentLang) return;
 
-    this.currentLang = lang;
-    localStorage.setItem('app-lang', lang);
-    location.reload();
+      this.currentLang = lang;
+      localStorage.setItem('app-lang', lang);
+      location.reload();
+    } catch (error) {
+      console.error('Error switching language:', error);
+    }
   };
 
   /**

@@ -308,7 +308,7 @@ const getLanguageFromBackground = async () => {
 const getLanguageFromStorage = async () => {
   try {
     const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage'], (result) => {
+      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage'] }, (result) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -348,7 +348,7 @@ const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
     const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] }, (result) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -372,7 +372,7 @@ const setAutoSwitchStatus = async (enabled) => {
   try {
     // 保存自动切换状态到本地存储
     await new Promise((resolve, reject) => {
-      chrome.storage.local.set({ autoSwitchEnabled: enabled }, () => {
+      chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: enabled } }, (response) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -409,7 +409,7 @@ const saveLanguageSetting = async (language) => {
 
   // 保存语言设置到本地存储
   await new Promise((resolve, reject) => {
-    chrome.storage.local.set({ currentLanguage: language }, () => {
+    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { currentLanguage: language } }, (response) => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;
@@ -1166,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @param {boolean} autoSwitchEnabled - 自动切换是否启用
    */
   const syncAutoSwitchStatusToStorage = (autoSwitchEnabled) => {
-    chrome.storage.local.set({ autoSwitchEnabled }, () => {
+    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled } }, (response) => {
       if (chrome.runtime.lastError) {
         sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
       } else {
