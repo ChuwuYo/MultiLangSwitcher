@@ -12,6 +12,84 @@ let updateCheckController = null;
 let updateCheckDebounceTimer = null;
 let lastUpdateCheckTime = 0;
 
+// 资源跟踪器 - 统一管理所有资源
+const resourceTracker = {
+  timers: new Set(),
+  controllers: new Set(),
+  eventListeners: new Map(),
+  
+  addTimer(timerId) {
+    this.timers.add(timerId);
+    return timerId;
+  },
+  
+  removeTimer(timerId) {
+    if (timerId) {
+      clearTimeout(timerId);
+      this.timers.delete(timerId);
+    }
+  },
+  
+  addController(controller) {
+    this.controllers.add(controller);
+    return controller;
+  },
+  
+  removeController(controller) {
+    if (controller) {
+      try {
+        controller.abort();
+      } catch (error) {
+        // 忽略已经被abort的控制器错误
+        sendDebugLog(`Controller abort error: ${error.message}`, 'warning');
+      }
+      this.controllers.delete(controller);
+    }
+  },
+  
+  addEventListener(element, event, handler) {
+    if (!this.eventListeners.has(element)) {
+      this.eventListeners.set(element, []);
+    }
+    this.eventListeners.get(element).push({ event, handler });
+    element.addEventListener(event, handler);
+  },
+  
+  cleanup() {
+    // 清理所有定时器
+    this.timers.forEach(timerId => {
+      try {
+        clearTimeout(timerId);
+      } catch (error) {
+        sendDebugLog(`Timer cleanup error: ${error.message}`, 'warning');
+      }
+    });
+    this.timers.clear();
+    
+    // 清理所有控制器
+    this.controllers.forEach(controller => {
+      try {
+        controller.abort();
+      } catch (error) {
+        // 忽略已经被abort的控制器错误
+      }
+    });
+    this.controllers.clear();
+    
+    // 清理所有事件监听器
+    this.eventListeners.forEach((listeners, element) => {
+      listeners.forEach(({ event, handler }) => {
+        try {
+          element.removeEventListener(event, handler);
+        } catch (error) {
+          sendDebugLog(`Event listener cleanup error: ${error.message}`, 'warning');
+        }
+      });
+    });
+    this.eventListeners.clear();
+  }
+};
+
 // DOM元素缓存
 let domCache = {
   // 更新检查相关元素
@@ -110,7 +188,7 @@ const updateHeaderRules = async (language, autoCheck = false) => {
     const checkHeaderBtn = document.getElementById('checkHeaderBtn');
     if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
       sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
-      setTimeout(() => checkHeaderBtn.click(), 500);
+      resourceTracker.addTimer(setTimeout(() => checkHeaderBtn.click(), 500));
     }
   }
 };
@@ -137,11 +215,11 @@ const showError = (message) => {
   });
 
   // 5秒后自动隐藏错误消息
-  setTimeout(() => {
+  resourceTracker.addTimer(setTimeout(() => {
     scheduleDOMUpdate(() => {
       errorAlert.classList.add('d-none');
     });
-  }, 5000);
+  }, 5000));
 };
 
 /**
@@ -180,13 +258,13 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
       currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
 
       // 2秒后移除成功提示
-      setTimeout(() => {
+      resourceTracker.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           if (successSpan.parentNode === statusTextElement) {
             successSpan.remove();
           }
         });
-      }, 2000);
+      }, 2000));
     }
   });
 };
@@ -308,7 +386,7 @@ const getLanguageFromBackground = async () => {
 const getLanguageFromStorage = async () => {
   try {
     const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage'], (result) => {
+      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage'] }, (result) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -348,7 +426,7 @@ const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
     const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] }, (result) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -372,7 +450,7 @@ const setAutoSwitchStatus = async (enabled) => {
   try {
     // 保存自动切换状态到本地存储
     await new Promise((resolve, reject) => {
-      chrome.storage.local.set({ autoSwitchEnabled: enabled }, () => {
+      chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: enabled } }, (response) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
           return;
@@ -385,7 +463,9 @@ const setAutoSwitchStatus = async (enabled) => {
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
     // 通知background脚本状态变更
-    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
+    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled }).catch((notifyError) => {
+      sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
+    });
 
     return true;
   } catch (error) {
@@ -409,7 +489,7 @@ const saveLanguageSetting = async (language) => {
 
   // 保存语言设置到本地存储
   await new Promise((resolve, reject) => {
-    chrome.storage.local.set({ currentLanguage: language }, () => {
+    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { currentLanguage: language } }, (response) => {
       if (chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message));
         return;
@@ -467,7 +547,7 @@ const scheduleDOMUpdate = (updateFn) => {
       requestAnimationFrame(processPendingDOMUpdates);
     } else {
       // 对于不支持requestAnimationFrame的环境的回退方案
-      setTimeout(processPendingDOMUpdates, 16); // ~60fps
+      resourceTracker.addTimer(setTimeout(processPendingDOMUpdates, 16)); // ~60fps
     }
   }
 };
@@ -551,11 +631,11 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
 
   // 对于复杂错误使用更长的自动隐藏时间
   const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
-  setTimeout(() => {
+  resourceTracker.addTimer(setTimeout(() => {
     scheduleDOMUpdate(() => {
       updateErrorAlert.classList.add('d-none');
     });
-  }, hideDelay);
+  }, hideDelay));
 }
 
 /**
@@ -632,11 +712,11 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
       // 6秒后自动隐藏回退通知
-      setTimeout(() => {
+      resourceTracker.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 6000);
+      }, 6000));
 
     } else if (updateInfo.updateAvailable) {
       // 有可用更新
@@ -684,11 +764,11 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('extension_is_up_to_date'), 'info');
 
       // 4秒后自动隐藏成功通知
-      setTimeout(() => {
+      resourceTracker.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 4000);
+      }, 4000));
     }
 
     updateNotification.classList.remove('d-none');
@@ -727,7 +807,7 @@ const updateCheckButtonState = (isChecking) => {
  */
 const cancelUpdateCheck = () => {
   if (updateCheckController) {
-    updateCheckController.abort();
+    resourceTracker.removeController(updateCheckController);
     updateCheckController = null;
     sendDebugLog(popupI18n.t('update_check_cancelled'), 'info');
   }
@@ -744,7 +824,7 @@ const cancelUpdateCheck = () => {
 const debouncedUpdateCheck = () => {
   // 清除现有的防抖定时器
   if (updateCheckDebounceTimer) {
-    clearTimeout(updateCheckDebounceTimer);
+    resourceTracker.removeTimer(updateCheckDebounceTimer);
     updateCheckDebounceTimer = null;
   }
 
@@ -792,7 +872,7 @@ const performUpdateCheck = async () => {
   updateCheckButtonState(true);
 
   // 为此请求创建新的中止控制器
-  updateCheckController = new AbortController();
+  updateCheckController = resourceTracker.addController(new AbortController());
 
   try {
     initializeUpdateChecker();
@@ -908,15 +988,15 @@ const debouncedUIUpdate = (updateFn, delay = 100) => {
     lastUIUpdate = now;
     updateFn();
   } else {
-    setTimeout(() => {
+    resourceTracker.addTimer(setTimeout(() => {
       lastUIUpdate = Date.now();
       updateFn();
-    }, delay);
+    }, delay));
   }
 };
 
 // --- 扩展初始化 ---
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async () => {
   // 等待翻译系统加载完成
   await new Promise(resolve => {
     if (popupI18n.isReady) {
@@ -955,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     lastApplyTime: 0,
 
     // 自动切换开关变更处理
-    autoSwitchChange: async function () {
+    autoSwitchChange: async () => {
       const enabled = this.checked;
       const success = await setAutoSwitchStatus(enabled);
       if (success) {
@@ -964,13 +1044,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     },
 
     // 语言选择框获得焦点处理
-    languageSelectFocus: function () {
+    languageSelectFocus: () => {
       this.size = 6;
       sendDebugLog(popupI18n.t('language_select_focus'), 'info');
     },
 
     // 应用按钮点击处理
-    applyButtonClick: async function () {
+    applyButtonClick: async () => {
       if (!languageSelect) return;
 
       const selectedLanguage = languageSelect.value;
@@ -1002,8 +1082,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     },
 
-    // 重置按钮点击处理 - 使用现代async/await最佳实践
-    resetButtonClick: async function () {
+    // 重置按钮点击处理
+    resetButtonClick: async () => {
       sendDebugLog(popupI18n.t('clicked_reset_button'), 'info');
 
       try {
@@ -1029,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     },
 
     // 快速检查按钮点击处理
-    checkHeaderBtnClick: function () {
+    checkHeaderBtnClick: () => {
       sendDebugLog(popupI18n.t('clicked_quick_check'), 'info');
       const headerCheckResultDiv = document.getElementById('headerCheckResult');
       const headerCheckContentPre = document.getElementById('headerCheckContent');
@@ -1052,23 +1132,23 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // 绑定事件监听器
   if (autoSwitchToggle) {
-    autoSwitchToggle.addEventListener('change', eventHandlers.autoSwitchChange);
+    resourceTracker.addEventListener(autoSwitchToggle, 'change', eventHandlers.autoSwitchChange);
   }
 
   if (languageSelect) {
-    languageSelect.addEventListener('focus', eventHandlers.languageSelectFocus);
+    resourceTracker.addEventListener(languageSelect, 'focus', eventHandlers.languageSelectFocus);
   }
 
   if (applyButton) {
-    applyButton.addEventListener('click', eventHandlers.applyButtonClick);
+    resourceTracker.addEventListener(applyButton, 'click', eventHandlers.applyButtonClick);
   }
 
   if (resetBtn) {
-    resetBtn.addEventListener('click', eventHandlers.resetButtonClick);
+    resourceTracker.addEventListener(resetBtn, 'click', eventHandlers.resetButtonClick);
   }
 
   if (checkHeaderBtn) {
-    checkHeaderBtn.addEventListener('click', eventHandlers.checkHeaderBtnClick);
+    resourceTracker.addEventListener(checkHeaderBtn, 'click', eventHandlers.checkHeaderBtnClick);
   }
 
   // DOM缓存已在主初始化中完成，无需重复初始化
@@ -1098,30 +1178,47 @@ document.addEventListener('DOMContentLoaded', async function () {
   // 添加更新检查按钮事件监听器
   const updateCheckBtn = document.getElementById('updateCheckBtn');
   if (updateCheckBtn) {
-    updateCheckBtn.addEventListener('click', eventHandlers.updateCheckBtnClick);
+    resourceTracker.addEventListener(updateCheckBtn, 'click', eventHandlers.updateCheckBtnClick);
   }
 
-  // 页面卸载时清理事件和请求
-  window.addEventListener('beforeunload', () => {
+  // 全局资源清理函数
+  const cleanupResources = () => {
     // 取消正在进行的更新检查
     cancelUpdateCheck();
 
     // 清除防抖定时器
     if (updateCheckDebounceTimer) {
-      clearTimeout(updateCheckDebounceTimer);
+      resourceTracker.removeTimer(updateCheckDebounceTimer);
       updateCheckDebounceTimer = null;
     }
 
-    // 移除事件监听器
-    if (autoSwitchToggle) autoSwitchToggle.removeEventListener('change', eventHandlers.autoSwitchChange);
-    if (languageSelect) languageSelect.removeEventListener('focus', eventHandlers.languageSelectFocus);
-    if (applyButton) applyButton.removeEventListener('click', eventHandlers.applyButtonClick);
-    if (resetBtn) resetBtn.removeEventListener('click', eventHandlers.resetButtonClick);
-    if (checkHeaderBtn) checkHeaderBtn.removeEventListener('click', eventHandlers.checkHeaderBtnClick);
-    if (updateCheckBtn) updateCheckBtn.removeEventListener('click', eventHandlers.updateCheckBtnClick);
+    // 清除DOM更新相关的定时器
+    if (domUpdateScheduled) {
+      domUpdateScheduled = false;
+      pendingDOMUpdates.length = 0;
+    }
 
-    sendDebugLog('Popup cleanup completed', 'info');
-  }, { once: true });
+    // 使用资源跟踪器清理所有资源
+    resourceTracker.cleanup();
+
+    // 清理更新检查器实例
+    if (updateChecker) {
+      updateChecker.clearCache();
+      updateChecker = null;
+    }
+
+    // 清理全局状态
+    updateCheckInProgress = false;
+    lastUpdateCheckTime = 0;
+
+    sendDebugLog(popupI18n.t('popup_cleanup_completed'), 'info');
+  };
+
+  // 页面卸载时清理事件和请求
+  window.addEventListener('beforeunload', cleanupResources, { once: true });
+
+  // 页面隐藏时也进行清理（处理弹窗关闭的情况）
+  window.addEventListener('pagehide', cleanupResources, { once: true });
 
   // 通过可见性变化处理弹窗关闭
   document.addEventListener('visibilitychange', () => {
@@ -1166,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', async function () {
    * @param {boolean} autoSwitchEnabled - 自动切换是否启用
    */
   const syncAutoSwitchStatusToStorage = (autoSwitchEnabled) => {
-    chrome.storage.local.set({ autoSwitchEnabled }, () => {
+    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled } }, (response) => {
       if (chrome.runtime.lastError) {
         sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
       } else {

@@ -1,4 +1,4 @@
-# v1.8.63（含迭代内容）
+# v1.8.66（含迭代内容）
 
 ## 主要改动
 
@@ -10,6 +10,9 @@
 - ✅ 共享工具优化 - 修复i18n的多级加载机制，完善降级处理
 - ✅ 安全问题修复 - innerHTML 的XSS 安全修复
 - ✅ 完善缓存管理功能 - 域名测试逻辑完善，状态传递修复，国际化支持
+- ✅ Service Worker架构合规性修复 - 确保background.js独占管理所有Chrome Extension API，UI组件只通过消息传递通信
+- ✅ 资源管理系统重构 - 实现统一的资源跟踪器，解决事件监听器清理不完整和定时器/控制器资源泄漏问题，减少内存泄漏风险
+- ✅ 异常传播链修复 - 修复domain-rules-manager.js中的异常传播链断裂问题，防止静默失败，确保错误能够被正确处理和记录
 
 ### 2. 代码优化
 
@@ -22,6 +25,11 @@
 - ✅ 样式与逻辑分离优化 - 移除JavaScript中的内联样式设置，统一使用Bootstrap工具类（`mt-2`）管理间距
 - ✅ 代码重复消除 - 删除域名缓存测试中的冗余最终检查逻辑，提高代码可读性和维护性
 - ✅ CSS最佳实践修复 - 移除`!important`声明，使用标准的`overflow-wrap: break-word`替代已废弃的`word-break: break-word`
+- ✅ 代码风格规范化 - 将国际化文件外的`var`声明替换为`const/let`，传统函数声明替换为箭头函数
+- ✅ 架构合规性重构 - 修复Service Worker独占性违规，移除UI组件中的直接Chrome API调用，实现完整的消息传递代理机制
+- ✅ 代码风格规范化 - 修复debug-ui.js中剩余的传统函数声明，完善Chrome API调用的消息传递机制，规范toggle.js
+- ✅ Promise错误处理完善 - 修复background.js中的空catch块，为所有直接的chrome.runtime.sendMessage调用添加错误处理，完善detect.js中的Promise链错误处理
+- ✅ 统一资源管理架构 - 创建resourceTracker系统统一管理定时器、控制器和事件监听器，实现一键清理机制，提升代码可维护性
 
 ## 文件变更清单
 
@@ -35,20 +43,25 @@
 
 ### 修改文件
 
-- manifest.json - 版本号更新（v1.8.61、v1.8.62、v1.8.63）
+- manifest.json - 版本号更新（v1.8.61、v1.8.62、v1.8.63、v1.8.64）
 - Domain_Matching_Guide.md - 合并.60版本修改历史（v1.8.61）
-- popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）
-- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递，样式与逻辑分离优化（v1.8.63）
-- domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码，innerHTML 的XSS安全修复，重构缓存管理函数（v1.8.62）
+- popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）；代码风格规范化，架构合规性重构（v1.8.64）；Promise错误处理完善（v1.8.65）；资源管理系统重构，实现统一资源跟踪器（v1.8.66）
+- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递，样式与逻辑分离优化（v1.8.63）；代码风格规范化，架构合规性重构（v1.8.64）；Promise错误处理完善（v1.8.65）
+- domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码，innerHTML 的XSS安全修复，重构缓存管理函数（v1.8.62）；异常传播链修复，防止静默失败（v1.8.66）
 - TODO.md - 修改待办事项（v1.8.61、v1.8.62、v1.8.63）
-- Update.md - 版本更新记录（v1.8.61、v1.8.62、v1.8.63）
-- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑，Manifest V3 API现代化，代码重复消除（v1.8.63）
-- background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
-- background-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
+- Update.md - 版本更新记录（v1.8.61、v1.8.62、v1.8.63、v1.8.64）
+- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑，Manifest V3 API现代化，代码重复消除（v1.8.63）；架构合规性重构，添加Chrome API代理处理器（v1.8.64）；Promise错误处理完善（v1.8.65）
+- background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63、v1.8.65）
+- background-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63、v1.8.65）
 - shared-utils.js - 修复i18n的多级加载机制，完善降级处理（v1.8.62）
 - debug-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug.html - 添加域名匹配缓存管理功能的卡片UI（v1.8.62）；修复缓存管理卡片UI，CSS最佳实践修复（v1.8.63）
+- toggle.js - 代码规范化（v1.8.64）
+- detect.js - Promise错误处理完善（v1.8.65）
+- popup-zh.js - 添加相关翻译键（v1.8.65）；添加资源清理相关翻译键（v1.8.66）
+- popup-en.js - 添加相关翻译键（v1.8.65）；添加资源清理相关翻译键（v1.8.66）
+- Code_Style_Guide.md - 添加Promise错误处理最佳实践指南（v1.8.65）
 
 ### 移除内容
 
@@ -58,3 +71,9 @@
 - JavaScript中的内联样式设置（style.marginTop）（v1.8.63）
 - 域名缓存测试中的冗余最终检查逻辑（v1.8.63）
 - CSS中的!important声明和已废弃的word-break属性（v1.8.63）
+- UI组件中的传统函数声明（function关键字）（v1.8.64）
+- UI组件中的直接Chrome API调用（declarativeNetRequest、storage.local、runtime.getManifest）（v1.8.64）
+- 架构违规的Service Worker独占性破坏代码（v1.8.64）
+- 手动事件监听器清理代码 - 替换为统一的resourceTracker.cleanup()机制（v1.8.66）
+- 分散的定时器管理逻辑 - 统一使用resourceTracker管理所有setTimeout调用（v1.8.66）
+- 不安全的控制器abort操作 - 实现带错误处理的安全abort机制（v1.8.66）

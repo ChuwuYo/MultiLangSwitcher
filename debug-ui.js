@@ -77,8 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultElement = document.getElementById('rulesResult');
     resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
-    // 获取动态规则
-    chrome.declarativeNetRequest.getDynamicRules((rules) => {
+    // 通过消息传递获取动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeErrorMessage(resultElement, '获取规则失败');
+        return;
+      }
+      const rules = response.rules;
       let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
       if (rules.length === 0) {
@@ -111,8 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</ul>';
       }
 
-      // 获取最近匹配的规则信息
-      chrome.declarativeNetRequest.getMatchedRules({}, (matchedRules) => {
+      // 通过消息传递获取最近匹配的规则信息
+      chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' }, (response) => {
+        if (chrome.runtime.lastError || !response || !response.success) {
+          html += `<p class="error">获取匹配规则失败</p>`;
+          resultElement.innerHTML = html;
+          return;
+        }
+        const matchedRules = response.matchedRules;
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
@@ -224,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLogs();
 
   // 页面加载时同步自动切换状态
-  chrome.storage.local.get(['autoSwitchEnabled'], (result) => {
+  chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] }, (result) => {
     if (chrome.runtime.lastError) {
       console.error('Failed to get auto switch status:', chrome.runtime.lastError.message);
       return;
@@ -342,7 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
+    // 通过消息传递获取和更新动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeContent(resultElement, '获取规则失败', 'error');
+        return;
+      }
+
+      const existingRules = response.rules;
       const existingRuleIds = existingRules.map(rule => rule.id);
       const updatedRules = existingRules.map(rule => {
         return {
@@ -351,13 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       });
 
-      chrome.declarativeNetRequest.updateDynamicRules({
+      chrome.runtime.sendMessage({
+        type: 'UPDATE_DYNAMIC_RULES',
         removeRuleIds: existingRuleIds,
         addRules: updatedRules
-      }, () => {
-        if (chrome.runtime.lastError) {
-          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${chrome.runtime.lastError.message}`, 'error');
-          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${chrome.runtime.lastError.message}`, 'error');
+      }, (updateResponse) => {
+        if (chrome.runtime.lastError || !updateResponse || !updateResponse.success) {
+          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
+          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
         } else {
           setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
           addLogMessage(debugI18n.t('priority_updated_log'), 'success');
@@ -372,18 +391,29 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
-    chrome.declarativeNetRequest.getDynamicRules((existingRules) => {
+    // 通过消息传递获取和清除动态规则
+    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        setSafeErrorMessage(resultElement, '获取规则失败');
+        return;
+      }
+
+      const existingRules = response.rules;
       const existingRuleIds = existingRules.map(rule => rule.id);
 
-      chrome.declarativeNetRequest.updateDynamicRules({
+      chrome.runtime.sendMessage({
+        type: 'UPDATE_DYNAMIC_RULES',
         removeRuleIds: existingRuleIds
-      }, () => {
-        if (chrome.runtime.lastError) {
-          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${chrome.runtime.lastError.message}`);
-          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
+      }, (clearResponse) => {
+        if (chrome.runtime.lastError || !clearResponse || !clearResponse.success) {
+          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${clearResponse?.error || 'Unknown error'}`);
+          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${clearResponse?.error || 'Unknown error'}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
-          chrome.storage.local.get(['currentLanguage'], (result) => {
+          chrome.runtime.sendMessage({
+            type: 'GET_STORAGE_DATA',
+            keys: ['currentLanguage']
+          }, (storageResponse) => {
             if (chrome.runtime.lastError) {
               setSafeContent(resultElement, `${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
               addLogMessage(`${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
@@ -589,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
+      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage', 'autoSwitchEnabled'] }, (result) => {
         try {
           if (chrome.runtime.lastError) {
             throw new Error(`${debugI18n.t('storage_failed')} ${chrome.runtime.lastError.message}`);
@@ -647,7 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response && response.status === 'success') {
         addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
         // 更新存储中的状态
-        chrome.storage.local.set({ autoSwitchEnabled: isEnabled });
+        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } }).catch((notifyError) => {
+          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+        });
       } else {
         addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
       }
@@ -777,7 +809,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-        chrome.storage.local.set({ autoSwitchEnabled: !!request.autoSwitchEnabled });
+        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } }).catch((notifyError) => {
+          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+        });
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
 
@@ -803,7 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * 初始化缓存管理功能
  */
-function initializeCacheManagement() {
+const initializeCacheManagement = () => {
   // 初始化翻译文本
   initializeCacheManagementTexts();
 
@@ -854,7 +888,7 @@ function initializeCacheManagement() {
 /**
  * 定期检查预加载状态，直到规则加载完成
  */
-function checkPreloadStatusPeriodically() {
+const checkPreloadStatusPeriodically = () => {
   let checkCount = 0;
   const maxChecks = 30; // 最多检查30次（15秒）
   const checkInterval = 500; // 每500ms检查一次
@@ -903,7 +937,7 @@ function checkPreloadStatusPeriodically() {
 /**
  * 测试域名缓存功能
  */
-async function testDomainCache() {
+const testDomainCache = async () => {
   const testDomainInput = document.getElementById('testDomainInput');
   const resultElement = document.getElementById('cacheOperationResult');
   const domain = testDomainInput.value.trim();
@@ -991,7 +1025,7 @@ async function testDomainCache() {
 /**
  * 初始化缓存管理界面的翻译文本
  */
-function initializeCacheManagementTexts() {
+const initializeCacheManagementTexts = () => {
   // 设置标题和描述
   const cacheManagementTitle = document.getElementById('cacheManagementTitle');
   if (cacheManagementTitle) {
@@ -1112,7 +1146,7 @@ const refreshCacheStats = async () => {
 /**
  * 更新缓存统计显示
  */
-function updateCacheStatsDisplay(stats) {
+const updateCacheStatsDisplay = (stats) => {
   // 更新域名缓存统计
   const domainCacheSize = document.getElementById('domainCacheSize');
   const domainCacheHitRate = document.getElementById('domainCacheHitRate');
@@ -1133,7 +1167,7 @@ function updateCacheStatsDisplay(stats) {
 /**
  * 更新预加载状态显示
  */
-async function updatePreloadStatus() {
+const updatePreloadStatus = async () => {
   const preloadStatus = document.getElementById('preloadStatus');
   if (!preloadStatus) return;
 

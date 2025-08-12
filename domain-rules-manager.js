@@ -97,45 +97,55 @@ class DomainRulesManager {
    */
   async getLanguageForDomain(domain) {
     const i18n = this.ensureI18n();
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('searching_domain') : 'Searching domain'}: ${domain}`);
 
-    // 检查域名缓存
-    if (this.domainCache.has(domain)) {
-      this.cacheStats.domainHits++; // 更新缓存命中统计
-      const cachedResult = this.domainCache.get(domain);
-      if (cachedResult) {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> ${cachedResult.language} (${cachedResult.source})`);
-        return cachedResult.language;
-      } else {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> null (no match)`);
+    try {
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('searching_domain') : 'Searching domain'}: ${domain}`);
+
+      // 检查域名缓存
+      if (this.domainCache.has(domain)) {
+        this.cacheStats.domainHits++; // 更新缓存命中统计
+        const cachedResult = this.domainCache.get(domain);
+        if (cachedResult) {
+          console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> ${cachedResult.language} (${cachedResult.source})`);
+          return cachedResult.language;
+        } else {
+          console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> null (no match)`);
+          return null;
+        }
+      }
+
+      this.cacheStats.domainMisses++; // 更新缓存未命中统计
+
+      // 确保规则已加载
+      await this._ensureRulesLoaded();
+      if (!this.rules) {
+        console.warn(`[DomainRulesManager] ${i18n ? i18n.t('loading_rules_failed') : 'Loading rules failed'}`);
         return null;
       }
-    }
 
-    this.cacheStats.domainMisses++; // 更新缓存未命中统计
+      console.log(`[DomainRulesManager] ${i18n ? i18n.t('loaded_rules_count', { count: Object.keys(this.rules).length }) : `Loaded ${Object.keys(this.rules).length} rules`}`);
 
-    // 确保规则已加载
-    await this._ensureRulesLoaded();
-    if (!this.rules) {
-      console.warn(`[DomainRulesManager] ${i18n ? i18n.t('loading_rules_failed') : 'Loading rules failed'}`);
+      // 获取自定义规则
+      const customRules = await this.getCustomRules();
+
+      // 按优先级检查规则：自定义完整域名 > 内置完整域名 > 自定义二级域名 > 内置二级域名 > 自定义顶级域名 > 内置顶级域名
+      const result = this._findMatchingRule(domain, customRules);
+
+      if (result) {
+        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_matching_rule') : 'Found matching rule'}: ${domain} -> ${result.language} (${result.source})`);
+        return result.language;
+      }
+
+      this._logNoMatchFound(domain, i18n);
+      return null;
+
+    } catch (error) {
+      console.error(`[DomainRulesManager] ${i18n ? i18n.t('domain_language_lookup_failed') : 'Domain language lookup failed'} for ${domain}:`, error);
+
+      // 记录错误但不抛出，返回null表示未找到匹配
+      // 继续使用默认语言或其他回退机制
       return null;
     }
-
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('loaded_rules_count', { count: Object.keys(this.rules).length }) : `Loaded ${Object.keys(this.rules).length} rules`}`);
-
-    // 获取自定义规则
-    const customRules = await this.getCustomRules();
-
-    // 按优先级检查规则：自定义完整域名 > 内置完整域名 > 自定义二级域名 > 内置二级域名 > 自定义顶级域名 > 内置顶级域名
-    const result = this._findMatchingRule(domain, customRules);
-
-    if (result) {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_matching_rule') : 'Found matching rule'}: ${domain} -> ${result.language} (${result.source})`);
-      return result.language;
-    }
-
-    this._logNoMatchFound(domain, i18n);
-    return null;
   }
 
   /**

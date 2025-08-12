@@ -239,7 +239,9 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
         message: error.message,
         retryCount: retryCount
       }
-    }).catch(() => { });
+    }).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_error')}: ${notifyError.message}`, 'warning');
+    });
 
     throw finalError;
   }
@@ -341,7 +343,9 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
       autoSwitchEnabled: latestAutoSwitchEnabled,
       currentLanguage: latestCurrentLanguage
     };
-    chrome.runtime.sendMessage(message).catch(() => { });
+    chrome.runtime.sendMessage(message).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
+    });
     sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${latestAutoSwitchEnabled}, ${backgroundI18n.t('language')}=${latestCurrentLanguage}`, 'info');
   }, 100); // Reduced debounce delay to 100ms
 }
@@ -417,7 +421,9 @@ const handleAutoSwitchToggleRequest = async (request, sendResponse) => {
     chrome.runtime.sendMessage({
       type: 'AUTO_SWITCH_STATE_CHANGED',
       enabled: autoSwitchEnabled
-    }).catch(() => { });
+    }).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_state_change')}: ${notifyError.message}`, 'warning');
+    });
 
     if (autoSwitchEnabled) {
       await handleAutoSwitchEnabled(sendResponse);
@@ -937,6 +943,24 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   } else if (request.type === 'RESET_CACHE_STATS') {
     handleResetCacheStatsRequest(sendResponse);
     return true;
+  } else if (request.type === 'GET_DYNAMIC_RULES') {
+    handleGetDynamicRulesRequest(sendResponse);
+    return true;
+  } else if (request.type === 'GET_MATCHED_RULES') {
+    handleGetMatchedRulesRequest(sendResponse);
+    return true;
+  } else if (request.type === 'UPDATE_DYNAMIC_RULES') {
+    handleUpdateDynamicRulesRequest(request, sendResponse);
+    return true;
+  } else if (request.type === 'GET_STORAGE_DATA') {
+    handleGetStorageDataRequest(request, sendResponse);
+    return true;
+  } else if (request.type === 'SET_STORAGE_DATA') {
+    handleSetStorageDataRequest(request, sendResponse);
+    return true;
+  } else if (request.type === 'GET_MANIFEST_INFO') {
+    handleGetManifestInfoRequest(sendResponse);
+    return true;
   }
 });
 
@@ -1003,3 +1027,169 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
     }
   }
 });
+/*
+*
+ * 处理获取动态规则请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetDynamicRulesRequest = async (sendResponse) => {
+  try {
+    const rules = await chrome.declarativeNetRequest.getDynamicRules();
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        rules: rules
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to get dynamic rules: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+/**
+ * 处理获取匹配规则请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetMatchedRulesRequest = async (sendResponse) => {
+  try {
+    const matchedRules = await new Promise((resolve, reject) => {
+      chrome.declarativeNetRequest.getMatchedRules({}, (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result);
+      });
+    });
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        matchedRules: matchedRules
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to get matched rules: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+/**
+ * 处理更新动态规则请求
+ * @param {Object} request - 请求对象
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleUpdateDynamicRulesRequest = async (request, sendResponse) => {
+  try {
+    const { removeRuleIds, addRules } = request;
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: removeRuleIds || [],
+      addRules: addRules || []
+    });
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to update dynamic rules: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+/**
+ * 处理获取存储数据请求
+ * @param {Object} request - 请求对象
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetStorageDataRequest = async (request, sendResponse) => {
+  try {
+    const { keys } = request;
+    const result = await chrome.storage.local.get(keys);
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        data: result
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to get storage data: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+/**
+ * 处理设置存储数据请求
+ * @param {Object} request - 请求对象
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleSetStorageDataRequest = async (request, sendResponse) => {
+  try {
+    const { data } = request;
+    await chrome.storage.local.set(data);
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to set storage data: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};
+
+/**
+ * 处理获取清单信息请求
+ * @param {Function} sendResponse - 响应函数
+ */
+const handleGetManifestInfoRequest = (sendResponse) => {
+  try {
+    const manifest = chrome.runtime.getManifest();
+    const extensionId = chrome.runtime.id;
+    
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: true,
+        manifest: manifest,
+        extensionId: extensionId
+      });
+    }
+  } catch (error) {
+    sendBackgroundLog(`Failed to get manifest info: ${error.message}`, 'error');
+    if (typeof sendResponse === 'function') {
+      sendResponse({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+};

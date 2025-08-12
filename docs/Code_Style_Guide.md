@@ -65,6 +65,73 @@ var message = '当前语言设置为: ' + language; // ❌
 fetch(url).then(response => response.json()).then(data => { // ❌
   // 处理数据
 });
+
+// 不要使用空的 catch 块
+promise.catch(() => { }); // ❌
+
+// 不要忽略 Promise 错误处理
+chrome.runtime.sendMessage(data); // ❌ 缺少错误处理
+```
+
+#### ✅ 正确的Promise错误处理
+
+```javascript
+// 1. 使用 async/await 配合 try-catch
+const sendMessage = async (data) => {
+  try {
+    const response = await chrome.runtime.sendMessage(data);
+    return response;
+  } catch (error) {
+    console.error('消息发送失败:', error);
+    throw error;
+  }
+};
+
+// 2. Promise链式调用必须有catch
+chrome.runtime.sendMessage(data)
+  .then(response => {
+    console.log('消息发送成功:', response);
+  })
+  .catch(error => {
+    console.error('消息发送失败:', error);
+  });
+
+// 3. 对于不需要处理结果的Promise，也要捕获错误
+chrome.runtime.sendMessage(data).catch((error) => {
+  sendBackgroundLog(`通知发送失败: ${error.message}`, 'warning');
+});
+
+// 4. 在Service Worker中的消息发送（常见模式）
+const notifyUI = (message) => {
+  chrome.runtime.sendMessage(message).catch((notifyError) => {
+    sendBackgroundLog(`UI通知失败: ${notifyError.message}`, 'warning');
+  });
+};
+```
+
+#### ❌ 常见的Promise错误处理问题
+
+```javascript
+// 1. 完全忽略错误处理
+chrome.runtime.sendMessage(data); // ❌
+
+// 2. 空的catch块
+promise.catch(() => { }); // ❌
+
+// 3. 只记录错误但不处理
+promise.catch(error => console.log(error)); // ❌ 应该使用console.error
+
+// 4. Promise链中断
+fetch(url)
+  .then(response => response.json()) // ❌ 缺少错误处理
+  .then(data => processData(data))
+  .catch(error => console.error(error)); // 只能捕获最后的错误
+
+// 5. async函数中缺少try-catch
+const fetchData = async () => {
+  const response = await fetch(url); // ❌ 可能抛出异常
+  return response.json(); // ❌ 可能抛出异常
+};
 ```
 
 ### 2. 函数声明规范

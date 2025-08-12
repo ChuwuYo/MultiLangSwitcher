@@ -31,6 +31,8 @@ if (typeof popupEn === 'undefined') {
   "auto_trigger_quick_check": "Auto trigger quick check after rules update.",
   "popup_script_loaded": "Popup script loaded.",
   "auto_switch_status_saved": "Auto switch function status saved:",
+  "failed_notify_background": "Failed to notify background script",
+  "popup_cleanup_completed": "Popup resource cleanup completed",
   "language_select_focus": "Language select box gained focus, expanding dropdown.",
   "get_current_language_from_rules": "Got current language from dynamic rules:",
   "no_language_from_rules": "No language obtained from dynamic rules, trying to load from storage.",
