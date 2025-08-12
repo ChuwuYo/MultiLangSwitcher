@@ -698,7 +698,10 @@ const collectWebRtcIps = async () => {
       
       pc.createOffer()
         .then(offer => pc.setLocalDescription(offer))
-        .catch(err => console.error(detectI18n.t('webrtc_setlocaldescription_failed'), err));
+        .catch(err => {
+          console.error(detectI18n.t('webrtc_setlocaldescription_failed'), err);
+          // 确保Promise链正确结束，避免未捕获的异常
+        });
       
       setTimeout(() => {
         pc.close();

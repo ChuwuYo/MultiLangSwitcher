@@ -677,7 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response && response.status === 'success') {
         addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
         // 更新存储中的状态
-        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } });
+        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } }).catch((notifyError) => {
+          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+        });
       } else {
         addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
       }
@@ -807,7 +809,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } });
+        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } }).catch((notifyError) => {
+          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+        });
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
 

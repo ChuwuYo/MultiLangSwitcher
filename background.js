@@ -239,7 +239,9 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
         message: error.message,
         retryCount: retryCount
       }
-    }).catch(() => { });
+    }).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_error')}: ${notifyError.message}`, 'warning');
+    });
 
     throw finalError;
   }
@@ -341,7 +343,9 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
       autoSwitchEnabled: latestAutoSwitchEnabled,
       currentLanguage: latestCurrentLanguage
     };
-    chrome.runtime.sendMessage(message).catch(() => { });
+    chrome.runtime.sendMessage(message).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
+    });
     sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${latestAutoSwitchEnabled}, ${backgroundI18n.t('language')}=${latestCurrentLanguage}`, 'info');
   }, 100); // Reduced debounce delay to 100ms
 }
@@ -417,7 +421,9 @@ const handleAutoSwitchToggleRequest = async (request, sendResponse) => {
     chrome.runtime.sendMessage({
       type: 'AUTO_SWITCH_STATE_CHANGED',
       enabled: autoSwitchEnabled
-    }).catch(() => { });
+    }).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_state_change')}: ${notifyError.message}`, 'warning');
+    });
 
     if (autoSwitchEnabled) {
       await handleAutoSwitchEnabled(sendResponse);

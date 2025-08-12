@@ -385,7 +385,9 @@ const setAutoSwitchStatus = async (enabled) => {
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
     // 通知background脚本状态变更
-    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
+    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled }).catch((notifyError) => {
+      sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
+    });
 
     return true;
   } catch (error) {
