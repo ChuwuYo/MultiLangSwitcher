@@ -26,6 +26,7 @@
 - ✅ 代码风格规范化 - 将国际化文件外的`var`声明替换为`const/let`，传统函数声明替换为箭头函数
 - ✅ 架构合规性重构 - 修复Service Worker独占性违规，移除UI组件中的直接Chrome API调用，实现完整的消息传递代理机制
 - ✅ 代码风格规范化 - 修复debug-ui.js中剩余的传统函数声明，完善Chrome API调用的消息传递机制，规范toggle.js
+- ✅ Promise错误处理完善 - 修复background.js中的空catch块，为所有直接的chrome.runtime.sendMessage调用添加错误处理，完善detect.js中的Promise链错误处理
 
 ## 文件变更清单
 
@@ -41,19 +42,23 @@
 
 - manifest.json - 版本号更新（v1.8.61、v1.8.62、v1.8.63、v1.8.64）
 - Domain_Matching_Guide.md - 合并.60版本修改历史（v1.8.61）
-- popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）；代码风格规范化，架构合规性重构（v1.8.64）
-- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递，样式与逻辑分离优化（v1.8.63）；代码风格规范化，架构合规性重构（v1.8.64）
+- popup.js - Chrome Storage API 错误处理修复，代码风格优化（v1.8.61）；代码风格规范化，架构合规性重构（v1.8.64）；Promise错误处理完善（v1.8.65）
+- debug-ui.js - Chrome Storage API 错误处理修复（v1.8.61）；添加域名匹配缓存管理功能的传递逻辑（v1.8.62）；重构并修复缓存管理的状态传递，样式与逻辑分离优化（v1.8.63）；代码风格规范化，架构合规性重构（v1.8.64）；Promise错误处理完善（v1.8.65）
 - domain-rules-manager.js - Chrome Storage API 错误处理修复（v1.8.61）；清理未使用的分组规则代码，innerHTML 的XSS安全修复，重构缓存管理函数（v1.8.62）
 - TODO.md - 修改待办事项（v1.8.61、v1.8.62、v1.8.63）
 - Update.md - 版本更新记录（v1.8.61、v1.8.62、v1.8.63、v1.8.64）
-- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑，Manifest V3 API现代化，代码重复消除（v1.8.63）；架构合规性重构，添加Chrome API代理处理器（v1.8.64）
-- background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
-- background-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
+- background.js - Chrome Storage API 错误处理修复，declarativeNetRequest 批量处理优化，性能监控（v1.8.61）；添加域名匹配缓存管理功能的处理逻辑，重构缓存操作处理相关代码（v1.8.62）；重构并修复缓存管理的测试逻辑，Manifest V3 API现代化，代码重复消除（v1.8.63）；架构合规性重构，添加Chrome API代理处理器（v1.8.64）；Promise错误处理完善（v1.8.65）
+- background-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63、v1.8.65）
+- background-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63、v1.8.65）
 - shared-utils.js - 修复i18n的多级加载机制，完善降级处理（v1.8.62）
 - debug-zh.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug-en.js - 添加相关翻译键（v1.8.61、v1.8.62、v1.8.63）
 - debug.html - 添加域名匹配缓存管理功能的卡片UI（v1.8.62）；修复缓存管理卡片UI，CSS最佳实践修复（v1.8.63）
 - toggle.js - 代码规范化（v1.8.64）
+- detect.js - Promise错误处理完善（v1.8.65）
+- popup-zh.js - 添加相关翻译键（v1.8.65）
+- popup-en.js - 添加相关翻译键（v1.8.65）
+- Code_Style_Guide.md - 添加Promise错误处理最佳实践指南（v1.8.65）
 
 ### 移除内容
 
