@@ -97,7 +97,7 @@ class DomainRulesManager {
    */
   async getLanguageForDomain(domain) {
     const i18n = this.ensureI18n();
-    
+
     try {
       console.log(`[DomainRulesManager] ${i18n ? i18n.t('searching_domain') : 'Searching domain'}: ${domain}`);
 
@@ -138,10 +138,10 @@ class DomainRulesManager {
 
       this._logNoMatchFound(domain, i18n);
       return null;
-      
+
     } catch (error) {
       console.error(`[DomainRulesManager] ${i18n ? i18n.t('domain_language_lookup_failed') : 'Domain language lookup failed'} for ${domain}:`, error);
-      
+
       // 记录错误但不抛出，返回null表示未找到匹配
       // 继续使用默认语言或其他回退机制
       return null;
