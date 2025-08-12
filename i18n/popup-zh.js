@@ -31,6 +31,7 @@ if (typeof popupZh === 'undefined') {
   "popup_script_loaded": "Popup 脚本已加载.",
   "auto_switch_status_saved": "自动切换功能状态已保存:",
   "failed_notify_background": "通知后台脚本失败",
+  "popup_cleanup_completed": "弹窗资源清理完成",
   "language_select_focus": "语言选择框获得焦点，展开下拉框.",
   "get_current_language_from_rules": "从动态规则中获取到当前语言:",
   "no_language_from_rules": "未从动态规则中获取到语言，尝试从存储加载.",
