@@ -4,6 +4,111 @@
 
 ---
 
+## 🔄 代码重复问题修复计划
+
+基于代码分析，发现以下代码重复问题需要重构：
+
+### 🔴 **高重复度 - 立即需要重构**
+
+#### 1. **翻译获取逻辑重复** - shared-utils.js:51-89
+**问题分析**: 
+- **shared-utils.js** 中有 `getFallbackTranslation()` 和 `getUpdateTranslation()`
+- **shared-i18n-base.js** 中也有类似的 `getFallbackTranslation()` 方法  
+- **shared-update-checker.js** 中有 `getLocalizedText()` 函数
+- 多个文件都在重复实现语言检测和翻译回退逻辑
+
+**具体重复点**:
+- 语言检测逻辑: 检查i18n实例 → localStorage → 浏览器语言 → 默认语言
+- 翻译对象访问: backgroundZh/En, popupZh/En, debugZh/En等
+- 参数替换逻辑: `{param}` 占位符替换
+- 错误处理和回退机制
+
+**修复建议**: **统一翻译获取接口，抽象为单一的翻译服务**
+
+### 🟡 **中重复度 - 建议重构**
+
+#### 2. **错误处理模式重复**
+**问题分析**:
+以下错误处理模式在多个文件中重复出现：
+```javascript
+try {
+  // 某些操作
+} catch (error) {
+  console.error('错误信息:', error);
+  sendDebugLog('错误信息', 'error');
+  return 默认值;
+}
+```
+
+**重复文件**:
+- **popup.js** - 10+处相同的错误处理模式
+- **domain-rules-manager.js** - 4处类似的错误处理
+- **shared-utils.js** - 翻译获取的错误处理
+- **shared-update-checker.js** - 更新检查的错误处理
+- **toggle.js** - 页面初始化的错误处理
+
+**修复建议**: **创建通用的错误处理工具函数**
+
+#### 3. **Chrome API调用模式重复**
+**问题分析**:
+Chrome Storage API调用模式在多个文件中重复：
+```javascript
+const result = await new Promise((resolve, reject) => {
+  chrome.storage.local.get([key], (result) => {
+    if (chrome.runtime.lastError) {
+      reject(new Error(chrome.runtime.lastError.message));
+      return;
+    }
+    resolve(result);
+  });
+});
+```
+
+**重复文件**:
+- **popup.js** - 多处Storage API调用
+- **background.js** - 类似的Storage API调用
+- **domain-rules-manager.js** - getCustomRules方法
+- **debug-ui.js** - 存储访问逻辑
+
+**修复建议**: **抽象Chrome API调用为Promise化的工具函数**
+
+### 🟢 **低重复度 - 可选重构**
+
+#### 4. **日志记录模式重复**
+**问题分析**:
+类似的日志记录模式在多个文件中出现：
+```javascript
+sendDebugLog(`${i18n.t('message_key')} ${variable}`, 'logType');
+```
+
+**修复建议**: **标准化日志记录接口，支持模板化消息**
+
+---
+
+## 🎯 代码重构优先级
+
+### **立即重构** (本周内)
+1. **翻译获取逻辑统一** - 影响范围最广，重复度最高
+2. **错误处理标准化** - 提升代码质量和维护性
+
+### **计划重构** (下周内)
+3. **Chrome API调用抽象** - 减少样板代码，提升可靠性
+4. **日志记录标准化** - 改善调试体验
+
+### **重构策略**
+- 创建统一的翻译服务接口
+- 建立标准化的错误处理工具
+- 抽象Chrome API调用为Promise化工具
+- 保持向后兼容性，渐进式重构
+
+### **预期收益**
+- 🔧 **维护性提升**: 减少重复代码，统一修改点
+- 🐛 **错误率降低**: 标准化处理减少边界情况遗漏  
+- 📦 **包体积优化**: 消除重复代码，减少最终包大小
+- 🚀 **开发效率**: 复用组件，加快新功能开发
+
+---
+
 ## 🔧 资源管理修复计划
 
 基于代码分析，以下组件需要实施类似popup.js的资源管理修复：
