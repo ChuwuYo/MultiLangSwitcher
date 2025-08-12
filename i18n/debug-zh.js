@@ -228,6 +228,7 @@ if (typeof debugZh === 'undefined') {
     "update_auto_switch_failed": "更新自动切换状态失败：",
     "auto_switch_enabled": "自动切换功能已启用",
     "auto_switch_disabled": "自动切换功能已禁用",
+    "failed_update_storage": "更新存储失败",
     "unknown_response_auto_switch": "更新自动切换状态时收到未知响应",
 
     // 域名映射规则相关
