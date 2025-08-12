@@ -261,10 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 测试请求头
   document.getElementById('testHeaderBtn').addEventListener('click', async () => {
-          const language = document.getElementById('testLanguage').value;
-      const resultElement = document.getElementById('headerTestResult');
-      setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
-      addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
+    const language = document.getElementById('testLanguage').value;
+    const resultElement = document.getElementById('headerTestResult');
+    setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
+    addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
 
     const timestamp = new Date().getTime();
     const testUrls = [
