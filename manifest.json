@@ -28,7 +28,8 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "tabs",
-    "webRequest"
+    "webRequest",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
