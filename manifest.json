@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MultiLangSwitcher",
-  "version": "1.8.66",
+  "version": "1.8.67",
   "minimum_chrome_version": "88.0",
   "description": "__MSG_extension_description__",
   "default_locale": "zh",
@@ -28,7 +28,8 @@
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
     "tabs",
-    "webRequest"
+    "webRequest",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"

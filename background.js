@@ -39,6 +39,47 @@ let pendingUIUpdate = null;     // 待处理的UI更新
 let latestAutoSwitchEnabled = false; // 用于存储最新的 autoSwitchEnabled 状态
 let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage 状态
 
+// 右键菜单初始化标志
+let contextMenusCreated = false;
+
+const createContextMenusOnce = async () => {
+  if (contextMenusCreated) return; // 避免重复创建
+  try {
+    await chrome.contextMenus.removeAll();
+    await chrome.contextMenus.create({
+      id: 'open-detect-page',
+      title: backgroundI18n.t('context_menu_detect_page'),
+      contexts: ['action']
+    });
+    await chrome.contextMenus.create({
+      id: 'open-debug-page',
+      title: backgroundI18n.t('context_menu_debug_page'),
+      contexts: ['action']
+    });
+    contextMenusCreated = true;
+    sendBackgroundLog('Context menus created', 'info');
+  } catch (e) {
+    sendBackgroundLog('Create contextMenus failed: ' + e.message, 'error');
+  }
+};
+
+// 安装与启动时尝试创建（幂等）
+chrome.runtime.onInstalled.addListener(() => {
+  createContextMenusOnce();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  createContextMenusOnce();
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'open-detect-page') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('detect.html') });
+  } else if (info.menuItemId === 'open-debug-page') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('debug.html') });
+  }
+});
+
 /**
  * 根据域名获取对应的语言
  * @param {string} domain - 域名
