@@ -99,7 +99,11 @@ if (typeof backgroundEn === 'undefined') {
   "cached": "cached",
   "new": "new",
   "fallback": ", fallback",
-  "domain_required_error": "Domain is required"
+  "domain_required_error": "Domain is required",
+
+  // Context menu items
+  "context_menu_detect_page": "Detect Page",
+  "context_menu_debug_page": "Debug Page"
 
 
 };
