@@ -39,6 +39,47 @@ let pendingUIUpdate = null;     // 待处理的UI更新
 let latestAutoSwitchEnabled = false; // 用于存储最新的 autoSwitchEnabled 状态
 let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage 状态
 
+// 右键菜单初始化标志
+let contextMenusCreated = false;
+
+function createContextMenusOnce() {
+  if (contextMenusCreated) return;
+  try {
+    chrome.contextMenus.removeAll(() => {
+      const err = chrome.runtime.lastError; // 读取但不终止
+      chrome.contextMenus.create({
+        id: 'open-detect-page',
+        title: '检测页面',
+        contexts: ['action']
+      });
+      chrome.contextMenus.create({
+        id: 'open-debug-page',
+        title: '调试页面',
+        contexts: ['action']
+      });
+      contextMenusCreated = true;
+    });
+  } catch (e) {
+    sendBackgroundLog('Create contextMenus failed: ' + e.message, 'error');
+  }
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  createContextMenusOnce();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  createContextMenusOnce();
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'open-detect-page') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('detect.html') });
+  } else if (info.menuItemId === 'open-debug-page') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('debug.html') });
+  }
+});
+
 /**
  * 根据域名获取对应的语言
  * @param {string} domain - 域名
