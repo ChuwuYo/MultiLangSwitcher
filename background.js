@@ -46,7 +46,6 @@ function createContextMenusOnce() {
   if (contextMenusCreated) return;
   try {
     chrome.contextMenus.removeAll(() => {
-      const err = chrome.runtime.lastError; // 读取但不终止
       chrome.contextMenus.create({
         id: 'open-detect-page',
         title: '检测页面',
