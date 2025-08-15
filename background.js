@@ -42,27 +42,28 @@ let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage �
 // 右键菜单初始化标志
 let contextMenusCreated = false;
 
-function createContextMenusOnce() {
-  if (contextMenusCreated) return;
+const createContextMenusOnce = async () => {
+  if (contextMenusCreated) return; // 避免重复创建
   try {
-    chrome.contextMenus.removeAll(() => {
-      chrome.contextMenus.create({
-        id: 'open-detect-page',
-        title: '检测页面',
-        contexts: ['action']
-      });
-      chrome.contextMenus.create({
-        id: 'open-debug-page',
-        title: '调试页面',
-        contexts: ['action']
-      });
-      contextMenusCreated = true;
+    await chrome.contextMenus.removeAll();
+    await chrome.contextMenus.create({
+      id: 'open-detect-page',
+      title: backgroundI18n.t('context_menu_detect_page'),
+      contexts: ['action']
     });
+    await chrome.contextMenus.create({
+      id: 'open-debug-page',
+      title: backgroundI18n.t('context_menu_debug_page'),
+      contexts: ['action']
+    });
+    contextMenusCreated = true;
+    sendBackgroundLog('Context menus created', 'info');
   } catch (e) {
     sendBackgroundLog('Create contextMenus failed: ' + e.message, 'error');
   }
-}
+};
 
+// 安装与启动时尝试创建（幂等）
 chrome.runtime.onInstalled.addListener(() => {
   createContextMenusOnce();
 });
