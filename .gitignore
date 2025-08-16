@@ -5,6 +5,7 @@
 *.swp
 .amazonq
 .kiro
+.kilocode
 *~
 
 # OS-specific files
