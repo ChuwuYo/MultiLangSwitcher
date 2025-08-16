@@ -1,4 +1,4 @@
-# v1.8.67（含迭代内容）
+# v1.8.68（含迭代内容）
 
 ## 主要改动
 
@@ -10,7 +10,7 @@
 
 - ✅ 清理无效代码 - 去除无效变量 err
 - ✅ 重构 createContextMenusOnce 使用 async/await（Promise API），符合代码规范
-- ✅ 右键菜单项 i18n 化（context_menu_detect_page / context_menu_debug_page）
+- ✅ 右键菜单项统一使用英文，去除 i18n 化（简化实现）
 
 ## 文件变更清单
 
@@ -27,7 +27,8 @@
 - manifest.json - 版本号更新（v1.8.67）；添加 contextMenus 权限（v1.8.67）
 - TODO.md - 修改待办事项（v1.8.67）
 - Update.md - 版本更新记录（v1.8.67）
-- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await）；菜单项 i18n 化（v1.8.67）
+- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await），右键菜单统一使用英文，去除 i18n 化（v1.8.68）
+- shared/shared-i18n-base.js - 优化翻译加载机制，避免重复加载脚本文件，完善翻译回退（v1.8.68）
 - i18n/background-*.js - 添加 context_menu_detect_page / context_menu_debug_page 翻译键（v1.8.67）
 - I18n_Usage_Guide.md - 内容更新（v1.8.67）
 - .gitignore - git忽略文件更新（v1.8.67）
