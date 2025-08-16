@@ -2,21 +2,63 @@
 
 ## 概述
 
-MultiLangSwitcher 采用模块化的国际化系统，基于 `BaseI18n` 基础类构建。系统支持中英文双语，具备自动语言检测、智能回退机制和高性能缓存优化。
+MultiLangSwitcher 采用一种 **混合国际化策略**，结合了标准的 Chrome 扩展 i18n API 和一个自定义的模块化 i18n 系统。这种设计旨在兼顾 `manifest.json` 的静态国际化需求和应用内部动态内容的复杂翻译场景。
 
-### 设计原则
-- **模块化架构**：每个组件独立的国际化实例
-- **环境适配**：自动适配 Service Worker 和浏览器环境
-- **性能优先**：预加载机制和缓存优化
-- **稳定可靠**：完善的错误处理和回退机制
+- **标准 Chrome i18n (`_locales`)**: 主要用于 `manifest.json` 中的静态文本，如扩展描述。
+- **自定义 i18n 系统 (`BaseI18n`)**: 基于 `BaseI18n` 基础类构建，用于所有 JavaScript 驱动的 UI 文本和动态消息。系统支持中英文双语，具备自动语言检测、智能回退机制和高性能缓存优化。
 
+## 混合国际化策略
+
+为了平衡不同场景下的需求，系统采用了两种国际化方案。
+
+### 1. 标准 Chrome i18n API (`_locales`)
+
+此方案用于处理 `manifest.json` 文件中的静态文本，这是 Chrome 扩展的标准实践。
+
+- **文件结构**:
+  ```
+  _locales/
+  ├── en/
+  │   └── messages.json
+  └── zh/
+      └── messages.json
+  ```
+
+- **使用示例 (`manifest.json`)**:
+  ```json
+  {
+    "name": "MultiLangSwitcher",
+    "description": "__MSG_extension_description__",
+    "default_locale": "zh"
+  }
+  ```
+
+- **翻译文件 (`_locales/en/messages.json`)**:
+  ```json
+  {
+    "extension_description": {
+      "message": "Quickly switch the Accept-Language request header..."
+    }
+  }
+  ```
+  `__MSG_extension_description__` 会被浏览器根据用户的语言设置自动替换为 `messages.json` 中对应的值。
+
+### 2. 自定义 `BaseI18n` 系统
+
+这是项目中的主要 i18n 系统，专为 JavaScript 中的动态内容设计。它提供了更灵活的控制和更丰富的功能。
+
+- **核心**: `shared/shared-i18n-base.js`
+- **特点**: 模块化、环境自适应、高性能、支持参数和回退。
+- **应用场景**: 弹窗 (Popup)、调试页面、后台脚本日志等所有需要通过 JavaScript 操作的文本内容。
+
+**本指南的后续部分将重点介绍自定义 `BaseI18n` 系统的使用方法。**
 
 ## 文件结构
 
 ```
 shared/
 ├── shared-i18n-base.js          # 基础国际化类（重构优化）
-├── shared-utils.js               # 包含语言检测等工具函数
+├── shared-utils.js               # 包含语言检测\fallback系统等工具函数
 └── ...
 
 i18n/
@@ -404,6 +446,7 @@ if (typeof popupEn === 'undefined') {
 3. **Service Worker限制**: 在Service Worker中只能使用 `importScripts`，不能使用动态script标签
 4. **DOM准备**: 确保在DOM加载完成后再使用需要操作DOM的翻译功能
 5. **防重复声明**: 翻译文件现在支持安全的多次加载，不会出现重复声明错误
+6. **右键菜单文本**: 当前版本中，通过 `background.js` 创建的右键菜单项（如 "Detection Page"）的标题是硬编码的英文字符串，未纳入国际化系统。
 
 ### 🔧 **故障排除**
 

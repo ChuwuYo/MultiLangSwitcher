@@ -103,6 +103,17 @@ class BaseI18n {
      */
     loadTranslationsSync() {
         try {
+            // 检查是否已经加载过翻译
+            const expectedVar = this.getExpectedTranslationVariable();
+            const globalScope = this.getGlobalScope();
+            
+            if (globalScope[expectedVar]) {
+                // 如果翻译已经存在，直接使用
+                this.translations = globalScope[expectedVar];
+                this.markAsReady();
+                return;
+            }
+            
             this.loadCurrentLanguageSync();
             this.markAsReady();
         } catch (error) {
@@ -115,13 +126,39 @@ class BaseI18n {
      * 同步加载当前语言的翻译文件
      */
     loadCurrentLanguageSync() {
-        importScripts(`i18n/${this.componentName}-${this.currentLang}.js`);
-
         const translationVarName = this.getTranslationVariableName();
         const globalScope = this.getGlobalScope();
         const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
-
-        this.translations = globalScope[`${translationVarName}${langSuffix}`];
+        const expectedVar = `${translationVarName}${langSuffix}`;
+        
+        // 检查翻译是否已经加载
+        if (globalScope[expectedVar]) {
+            this.translations = globalScope[expectedVar];
+            return;
+        }
+        
+        // 只在翻译未加载时才尝试加载脚本
+        try {
+            importScripts(`i18n/${this.componentName}-${this.currentLang}.js`);
+            this.translations = globalScope[expectedVar];
+        } catch (error) {
+            // 如果加载失败，尝试使用已经存在的翻译
+            const fallbackVars = [`${translationVarName}En`, `${translationVarName}Zh`];
+            let found = false;
+            
+            for (const varName of fallbackVars) {
+                if (globalScope[varName]) {
+                    this.translations = globalScope[varName];
+                    found = true;
+                    console.warn(`Using fallback translation ${varName} for ${this.componentName}`);
+                    break;
+                }
+            }
+            
+            if (!found) {
+                throw error; // 重新抛出原始错误
+            }
+        }
     }
 
     /**

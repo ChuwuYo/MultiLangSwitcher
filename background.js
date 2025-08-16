@@ -48,12 +48,12 @@ const createContextMenusOnce = async () => {
     await chrome.contextMenus.removeAll();
     await chrome.contextMenus.create({
       id: 'open-detect-page',
-      title: backgroundI18n.t('context_menu_detect_page'),
+      title: 'Detection Page',
       contexts: ['action']
     });
     await chrome.contextMenus.create({
       id: 'open-debug-page',
-      title: backgroundI18n.t('context_menu_debug_page'),
+      title: 'Debug Page',
       contexts: ['action']
     });
     contextMenusCreated = true;
@@ -1013,7 +1013,7 @@ chrome.tabs.onUpdated.addListener(async (_, changeInfo, tab) => {
   }
 
   // 确保自动切换已启用，标签页加载完成，并且有有效的URL (http or https)
-  if (autoSwitchEnabled && changeInfo.status === 'complete' && tab && tab.url && (tab.url.startsWith('http:') || tab.url.startsWith('https://'))) {
+  if (autoSwitchEnabled && changeInfo.status === 'complete' && tab?.url?.startsWith('http')) {
     sendBackgroundLog(`${backgroundI18n.t('tab_updated')}: ${tab.url}, ${backgroundI18n.t('status')}: ${changeInfo.status}`, 'info');
     try {
       const url = new URL(tab.url);
