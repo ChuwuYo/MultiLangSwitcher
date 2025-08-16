@@ -99,12 +99,7 @@ if (typeof backgroundEn === 'undefined') {
   "cached": "cached",
   "new": "new",
   "fallback": ", fallback",
-  "domain_required_error": "Domain is required",
-
-  // Context menu items
-  "context_menu_detect_page": "Detect Page",
-  "context_menu_debug_page": "Debug Page"
-
+  "domain_required_error": "Domain is required"
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查

@@ -48,12 +48,12 @@ const createContextMenusOnce = async () => {
     await chrome.contextMenus.removeAll();
     await chrome.contextMenus.create({
       id: 'open-detect-page',
-      title: backgroundI18n.t('context_menu_detect_page'),
+      title: 'Detection Page',
       contexts: ['action']
     });
     await chrome.contextMenus.create({
       id: 'open-debug-page',
-      title: backgroundI18n.t('context_menu_debug_page'),
+      title: 'Debug Page',
       contexts: ['action']
     });
     contextMenusCreated = true;

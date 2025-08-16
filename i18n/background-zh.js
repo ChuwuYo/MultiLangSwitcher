@@ -99,12 +99,7 @@ if (typeof backgroundZh === 'undefined') {
   "cached": "缓存",
   "new": "新查询",
   "fallback": ", 回退",
-  "domain_required_error": "域名是必需的",
-
-  // Context menu items
-  "context_menu_detect_page": "检测页面",
-  "context_menu_debug_page": "调试页面"
-
-
+  "domain_required_error": "域名是必需的"
+  
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查
