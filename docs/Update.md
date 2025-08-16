@@ -27,8 +27,10 @@
 - manifest.json - 版本号更新（v1.8.67）；添加 contextMenus 权限（v1.8.67）
 - TODO.md - 修改待办事项（v1.8.67）
 - Update.md - 版本更新记录（v1.8.67）
-- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await）；菜单项 i18n 化
-- i18n/background-*.js - 添加 context_menu_detect_page / context_menu_debug_page 翻译键
+- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await）；菜单项 i18n 化（v1.8.67）
+- i18n/background-*.js - 添加 context_menu_detect_page / context_menu_debug_page 翻译键（v1.8.67）
+- I18n_Usage_Guide.md - 内容更新（v1.8.67）
+- .gitignore - git忽略文件更新（v1.8.67）
 
 ### 移除内容
 
