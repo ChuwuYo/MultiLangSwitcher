@@ -49,6 +49,55 @@ background.js (中央服务工作者)
 - 必须实现消息传递机制
 - 必须处理标签页监控和自动切换
 
+### Service Worker 初始化与状态管理
+
+为了应对 Service Worker 在 Manifest V3 中随时可能休眠和重启的特性，项目采用了一套健壮的初始化与状态管理机制，确保扩展在任何时候都能正确运行。
+
+**核心原则：**
+- **统一初始化入口**：所有与状态恢复相关的逻辑（如扩展安装、浏览器启动、Service Worker 意外重启）都由一个统一的 `initialize` 函数处理，确保行为一致性。
+- **懒加载与事件驱动**：初始化并非在脚本加载时立即执行，而是在首次需要访问状态或处理关键事件（如 `onMessage`, `onUpdated`）时通过一个守卫函数 `ensureInitialized` 触发。这避免了不必要的前期工作，并保证了在执行任何操作前，状态一定是就绪的。
+- **幂等性**：初始化过程是幂等的，即使被多次调用，也只会有效执行一次，防止了重复操作和状态冲突。
+
+**实现模式：**
+```javascript
+// background.js
+
+// 全局的初始化Promise，用于防止重复执行
+let initializationPromise = null;
+// 状态标志，表示初始化是否已完成
+let isInitialized = false;
+
+// 守卫函数：在执行任何需要状态的操作前调用
+const ensureInitialized = async () => {
+ if (!isInitialized) {
+   await initialize('lazy'); // 如果未初始化，则触发
+ }
+};
+
+// 统一的初始化函数
+const initialize = (reason) => {
+ if (initializationPromise) {
+   return initializationPromise; // 如果正在进行中，则返回现有Promise
+ }
+ 
+ initializationPromise = (async () => {
+   // ...执行所有初始化逻辑...
+   isInitialized = true; // 标记为完成
+ })();
+ 
+ return initializationPromise;
+};
+
+// 在事件监听器中应用守卫
+chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+ (async () => {
+   await ensureInitialized(); // ✅ 确保状态就绪
+   // ...处理消息...
+ })();
+ return true;
+});
+```
+
 ### 组件架构
 
 ```
