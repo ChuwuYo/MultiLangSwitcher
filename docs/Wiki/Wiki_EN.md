@@ -217,7 +217,7 @@ For a detailed code style guide, please refer to: [Code Style Guide](./Code_Styl
 ### Background Script Optimization
 - Minimize background script execution time and memory usage.
 - Use efficient domain matching algorithms (avoid regex where possible).
-- Batch process `declarativeNetRequest` rule updates.
+- Batch and precisely process `declarativeNetRequest` rule updates, targeting only specific rule IDs to avoid affecting other rules.
 - Cache domain rules in memory for fast lookups.
 
 #### Domain Matching Algorithm
