@@ -36,7 +36,7 @@ const sendBackgroundLog = (message, logType = 'info') => {
  * @returns {Promise}
  */
 const ensureInitialized = async () => {
-  // 如果isInitialized为true，但initializationPromise仍在进行中，则等待它完成
+  // 如果初始化正在进行但尚未完成，则等待它完成
   if (initializationPromise && !isInitialized) {
     await initializationPromise;
   }
