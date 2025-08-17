@@ -182,8 +182,7 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
     }
 
     // 批量处理：仅当存在时才移除具有 RULE_ID 的旧规则，然后添加新规则
-    const oldRuleExists = existingRules.some(rule => rule.id === RULE_ID);
-    const removeRuleIds = oldRuleExists ? [RULE_ID] : [];
+    const removeRuleIds = existingRules.some(rule => rule.id === RULE_ID) ? [RULE_ID] : [];
     const newRule = {
       "id": RULE_ID,
       "priority": 100,
