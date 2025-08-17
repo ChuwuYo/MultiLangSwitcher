@@ -1,4 +1,4 @@
-# v1.8.68（含迭代内容）
+# v1.8.69（含迭代内容）
 
 ## 主要改动
 
@@ -7,7 +7,7 @@
 - ✅ 菜单功能完善 - 添加浏览器拓展右键菜单
 - ✅ 重构 Service Worker 初始化逻辑：
   - **统一初始化入口**：创建了单一的 `initialize` 函数，用于处理扩展安装、浏览器启动和 Service Worker 意外重启时的状态恢复，确保了逻辑的一致性。
-  - **实现懒加载守卫**：引入 `ensureInitialized` 机制，在处理 `onMessage`、`onUpdated` 等事件前检查并确保初始化已完成，有效防止了因 Service Worker 休眠后重启导致的状态丢失问题。
+  - **实现懒加载守卫**：引入 `ensureInitialized` 机制，在处理 `onMessage`、`onUpdated` 等事件前检查并确保初始化已完成，防止因 Service Worker 休眠后重启导致的状态丢失问题。
 
 ### 2. 代码优化
 
