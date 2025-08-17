@@ -181,8 +181,9 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
       return { status: 'unchanged', language };
     }
 
-    // 批量处理：单次操作同时移除旧规则和添加新规则
-    const removeRuleIds = existingRules.map(rule => rule.id);
+    // 批量处理：仅当存在时才移除具有 RULE_ID 的旧规则，然后添加新规则
+    const oldRuleExists = existingRules.some(rule => rule.id === RULE_ID);
+    const removeRuleIds = oldRuleExists ? [RULE_ID] : [];
     const newRule = {
       "id": RULE_ID,
       "priority": 100,
@@ -202,7 +203,7 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
       }
     };
 
-    // 单次批量更新：移除所有现有规则并添加新规则
+    // 单次批量更新：移除旧规则（如果存在）并添加新规则
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: removeRuleIds,
       addRules: [newRule]
