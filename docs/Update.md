@@ -1,4 +1,4 @@
-# v1.8.69（含迭代内容）
+# v1.8.70（含迭代内容）
 
 ## 主要改动
 
@@ -19,6 +19,7 @@
 ### 3. Bug 修复
 
 - ✅ 修复 `tabs.onUpdated` 过滤条件 Bug，该 Bug 会导致 http 页面不触发自动切换
+- ✅ 修复动态规则清理范围过宽问题，现在只移除与 `RULE_ID` 相关的规则，避免误删其他动态规则。
 
 ## 文件变更清单
 
@@ -33,15 +34,16 @@
 
 ### 修改文件
 
-- manifest.json - 版本号更新（v1.8.67、v1.8.68、v1.8.69）；添加 contextMenus 权限（v1.8.67）
+- manifest.json - 版本号更新（v1.8.67、v1.8.68、v1.8.69、v1.8.70）；添加 contextMenus 权限（v1.8.67）
 - TODO.md - 修改待办事项（v1.8.67）
-- Update.md - 版本更新记录（v1.8.67、v1.8.68、v1.8.69）
-- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await），右键菜单统一使用英文，去除 i18n 化（v1.8.68）；修复 `tabs.onUpdated` 的 URL 过滤条件 Bug（v1.8.68）；简化URL检查条件（v1.8.68）；重构了初始化和事件处理逻辑（v1.8.69）
+- Update.md - 版本更新记录（v1.8.67、v1.8.68、v1.8.69、v1.8.70）
+- background.js - 添加右键菜单初始化标志（v1.8.67）；重构 contextMenus 创建逻辑（async/await），右键菜单统一使用英文，去除 i18n 化（v1.8.68）；修复 `tabs.onUpdated` 的 URL 过滤条件 Bug（v1.8.68）；简化URL检查条件（v1.8.68）；重构了初始化和事件处理逻辑（v1.8.69）；修复动态规则清理范围过宽问题（v1.8.70）
 - shared-i18n-base.js - 优化翻译加载机制，避免重复加载脚本文件，完善翻译回退（v1.8.68）
 - I18n_Usage_Guide.md - 内容更新（v1.8.67、v1.8.68）
 - .gitignore - git忽略文件更新（v1.8.67）
-- Problems.md - 问题列表更新（v1.8.68、v1.8.69）
-- Wiki.md - Wiki更新（v1.8.69）
+- Problems.md - 问题列表更新（v1.8.68、v1.8.69、v1.8.70）
+- Wiki.md - Wiki更新（v1.8.69、v1.8.70）
+- Wiki_EN.md - 英文Wiki更新（v1.8.70）
 
 ### 移除内容
 
