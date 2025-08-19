@@ -99,7 +99,12 @@ if (typeof backgroundEn === 'undefined') {
   "cached": "cached",
   "new": "new",
   "fallback": ", fallback",
-  "domain_required_error": "Domain is required"
+  "domain_required_error": "Domain is required",
+
+  // Concurrency control related keys
+  "merging_duplicate_request": "Merging duplicate language switch request: {language}",
+  "auto_switch_skip_duplicate": "Auto-switch skipping duplicate language: {language}",
+  "concurrency_state_reset": "Concurrency control state has been reset"
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查
