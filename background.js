@@ -57,6 +57,19 @@ let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage �
 let isInitialized = false;           // 初始化完成标志
 let initializationPromise = null;    // 初始化Promise，防止重复执行
 
+// 并发控制变量
+let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行执行
+let pendingLanguageRequests = new Map(); // 防抖：合并相同语言的重复请求
+
+/**
+ * 清理并发控制状态（用于测试或重置）
+ */
+const resetConcurrencyState = () => {
+  updateRulesQueue = Promise.resolve();
+  pendingLanguageRequests.clear();
+  sendBackgroundLog(backgroundI18n.t('concurrency_state_reset'), 'info');
+};
+
 // 右键菜单初始化标志
 let contextMenusCreated = false;
 
@@ -122,6 +135,7 @@ const BASE_RETRY_DELAY = 500; // 毫秒
 
 /**
  * 清理所有动态规则
+ */
 const clearAllDynamicRules = async () => {
   try {
     const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -140,7 +154,7 @@ const clearAllDynamicRules = async () => {
 }
 
 /**
- * 更新请求头规则，支持错误重试和规则缓存
+ * 带并发控制的规则更新包装器
  * @param {string} language - 要设置的语言代码
  * @param {number} retryCount - 当前重试次数
  * @param {boolean} isAutoSwitch - 是否由自动切换触发
@@ -148,10 +162,52 @@ const clearAllDynamicRules = async () => {
  */
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
+  
+  // 防抖机制：检查是否有相同语言的待处理请求
+  const requestKey = `${language}_${isAutoSwitch}`;
+  if (pendingLanguageRequests.has(requestKey)) {
+    sendBackgroundLog(backgroundI18n.t('merging_duplicate_request', { language }), 'info');
+    return await pendingLanguageRequests.get(requestKey);
+  }
 
-  // 检查是否需要更新（但对自动切换更宽松）
-  if (!isAutoSwitch && language === lastAppliedLanguage && rulesCache) {
-    sendBackgroundLog(backgroundI18n.t('language_already_set', { language }), 'info');
+  // 创建新的请求Promise并加入队列
+  const requestPromise = updateRulesQueue.then(() => 
+    updateHeaderRulesInternal(language, retryCount, isAutoSwitch)
+  );
+  
+  // 将请求加入防抖映射
+  pendingLanguageRequests.set(requestKey, requestPromise);
+  
+  // 更新队列
+  updateRulesQueue = requestPromise.catch(() => {
+    // 即使失败也要继续队列，避免阻塞后续请求
+  });
+
+  try {
+    const result = await requestPromise;
+    return result;
+  } finally {
+    // 清理防抖映射
+    pendingLanguageRequests.delete(requestKey);
+  }
+};
+
+/**
+ * 内部规则更新实现，支持错误重试和规则缓存
+ * @param {string} language - 要设置的语言代码
+ * @param {number} retryCount - 当前重试次数
+ * @param {boolean} isAutoSwitch - 是否由自动切换触发
+ * @returns {Promise<Object>} 更新结果
+ */
+const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch = false) => {
+  language = language ? language.trim() : DEFAULT_LANG_EN;
+
+  // 优化的缓存检查：对所有调用（包括自动切换）都进行短路检查
+  if (language === lastAppliedLanguage && rulesCache) {
+    const logMessage = isAutoSwitch 
+      ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
+      : backgroundI18n.t('language_already_set', { language });
+    sendBackgroundLog(logMessage, 'info');
     return { status: 'cached', language };
   }
 
@@ -220,8 +276,9 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
 
-    // 规则更新成功
+    // 规则更新成功，同步更新状态
     lastAppliedLanguage = language;
+    rulesCache = await chrome.declarativeNetRequest.getDynamicRules(); // 更新缓存
     sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
 
@@ -265,7 +322,7 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 
     // 等待后重试
     await new Promise(resolve => setTimeout(resolve, delay));
-    return await updateHeaderRules(language, nextRetryCount);
+    return await updateHeaderRulesInternal(language, nextRetryCount, false);
   } else {
     // 超过重试次数或不可重试的错误
     const finalError = new Error(`${backgroundI18n.t('update_rules_failed_with_type', { type: errorType })}: ${error.message}`);
