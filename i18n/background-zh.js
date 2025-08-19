@@ -99,7 +99,12 @@ if (typeof backgroundZh === 'undefined') {
   "cached": "缓存",
   "new": "新查询",
   "fallback": ", 回退",
-  "domain_required_error": "域名是必需的"
+  "domain_required_error": "域名是必需的",
+
+  // 并发控制相关翻译键
+  "merging_duplicate_request": "合并重复的语言切换请求: {language}",
+  "auto_switch_skip_duplicate": "自动切换跳过重复语言: {language}",
+  "concurrency_state_reset": "并发控制状态已重置"
   
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查
