@@ -104,7 +104,8 @@ if (typeof backgroundEn === 'undefined') {
   // Concurrency control related keys
   "merging_duplicate_request": "Merging duplicate language switch request: {language}",
   "auto_switch_skip_duplicate": "Auto-switch skipping duplicate language: {language}",
-  "concurrency_state_reset": "Concurrency control state has been reset"
+  "concurrency_state_reset": "Concurrency control state has been reset",
+  "cache_empty_but_language_same": "Cache empty but language same: {language}, continuing processing"
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查

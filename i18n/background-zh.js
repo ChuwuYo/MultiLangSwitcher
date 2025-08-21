@@ -104,7 +104,8 @@ if (typeof backgroundZh === 'undefined') {
   // 并发控制相关翻译键
   "merging_duplicate_request": "合并重复的语言切换请求: {language}",
   "auto_switch_skip_duplicate": "自动切换跳过重复语言: {language}",
-  "concurrency_state_reset": "并发控制状态已重置"
+  "concurrency_state_reset": "并发控制状态已重置",
+  "cache_empty_but_language_same": "缓存为空但语言相同: {language}，继续处理"
   
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查
