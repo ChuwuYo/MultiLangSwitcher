@@ -564,15 +564,7 @@ class UpdateChecker {
         };
 
         // 保存到本地存储
-        await new Promise((resolve, reject) => {
-          chrome.storage.local.set({ [this.cacheKey]: cacheData }, () => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else {
-              resolve();
-            }
-          });
-        });
+        await chrome.storage.local.set({ [this.cacheKey]: cacheData });
 
         sendLocalizedUpdateLog('update_info_cached_persistently', {}, 'info');
       } catch (error) {
@@ -593,15 +585,7 @@ class UpdateChecker {
 
     try {
       // 从本地存储获取缓存数据
-      const result = await new Promise((resolve, reject) => {
-        chrome.storage.local.get([this.cacheKey], (result) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(result);
-          }
-        });
-      });
+      const result = await chrome.storage.local.get([this.cacheKey]);
 
       const cacheData = result[this.cacheKey];
       if (!cacheData) {
@@ -648,15 +632,7 @@ class UpdateChecker {
 
     try {
       // 从本地存储移除缓存
-      await new Promise((resolve, reject) => {
-        chrome.storage.local.remove([this.cacheKey], () => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve();
-          }
-        });
-      });
+      await chrome.storage.local.remove([this.cacheKey]);
 
       sendLocalizedUpdateLog('persistent_cache_cleared', {}, 'info');
     } catch (error) {

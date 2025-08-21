@@ -679,7 +679,7 @@ const showUpdateNotification = (updateInfo) => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 6000));
+      }, 5000));
 
     } else if (updateInfo.updateAvailable) {
       // 有可用更新
@@ -998,8 +998,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     lastApplyTime: 0,
 
     // 自动切换开关变更处理
-    autoSwitchChange: async () => {
-      const enabled = this.checked;
+    autoSwitchChange: async (event) => {
+      const enabled = event.target.checked;
       const success = await setAutoSwitchStatus(enabled);
       if (success) {
         updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
@@ -1007,8 +1007,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     },
 
     // 语言选择框获得焦点处理
-    languageSelectFocus: () => {
-      this.size = 6;
+    languageSelectFocus: (event) => {
+      event.target.size = 6;
       sendDebugLog(popupI18n.t('language_select_focus'), 'info');
     },
 

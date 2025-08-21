@@ -203,12 +203,27 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
   // 优化的缓存检查：对所有调用（包括自动切换）都进行短路检查
-  if (language === lastAppliedLanguage && rulesCache) {
-    const logMessage = isAutoSwitch 
-      ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
-      : backgroundI18n.t('language_already_set', { language });
-    sendBackgroundLog(logMessage, 'info');
-    return { status: 'cached', language };
+  if (language === lastAppliedLanguage && rulesCache && rulesCache.length > 0) {
+    // 验证缓存中确实存在对应的规则
+    const existingRule = rulesCache.find(rule =>
+      rule.id === RULE_ID &&
+      rule.action.requestHeaders &&
+      rule.action.requestHeaders.some(header =>
+        header.header === 'Accept-Language' &&
+        header.value === language
+      )
+    );
+    
+    if (existingRule) {
+      const logMessage = isAutoSwitch
+        ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
+        : backgroundI18n.t('language_already_set', { language });
+      sendBackgroundLog(logMessage, 'info');
+      return { status: 'cached', language };
+    } else {
+      // 语言相同但缓存中没有对应规则，记录警告并继续处理
+      sendBackgroundLog(backgroundI18n.t('cache_empty_but_language_same', { language }), 'warning');
+    }
   }
 
   sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
@@ -361,15 +376,7 @@ const performInitialization = async (reason) => {
     sendBackgroundLog(backgroundI18n.t('domain_rules_loaded'), 'info');
 
     // 2. 从存储中获取设置
-    const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
+    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
     autoSwitchEnabled = result.autoSwitchEnabled !== false; // 默认为 true
     sendBackgroundLog(`${backgroundI18n.t('loaded_auto_switch_status')}: ${autoSwitchEnabled}`, 'info');
 
@@ -573,15 +580,7 @@ const handleGetCurrentLangRequest = async (sendResponse) => {
     const currentRule = rules.find(rule => rule.id === RULE_ID);
     const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
-    const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
+    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
     if (typeof sendResponse === 'function') {
       sendResponse({
         currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
@@ -1107,16 +1106,8 @@ const handleGetDynamicRulesRequest = async (sendResponse) => {
  */
 const handleGetMatchedRulesRequest = async (sendResponse) => {
   try {
-    const matchedRules = await new Promise((resolve, reject) => {
-      chrome.declarativeNetRequest.getMatchedRules({}, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
-    
+    const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
