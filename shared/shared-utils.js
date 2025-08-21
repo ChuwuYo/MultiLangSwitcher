@@ -9,7 +9,7 @@
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
 const sendDebugLog = (message, logType = 'info') => {
-  // 早期返回模式 - 验证输入
+  // 验证输入
   if (!message) return;
 
   try {

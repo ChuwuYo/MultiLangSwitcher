@@ -11,7 +11,7 @@
  */
 const resetAcceptLanguage = async () => {
   try {
-    // 早期返回模式 - 检查 Chrome API 可用性
+    // 检查 Chrome API 可用性
     if (!chrome?.runtime?.sendMessage) {
       throw new Error('Chrome runtime API is not available');
     }
@@ -27,7 +27,7 @@ const resetAcceptLanguage = async () => {
       });
     });
 
-    // 早期返回模式 - 验证响应状态
+    // 验证响应状态
     if (response?.status === 'success') {
       // 记录成功日志
       if (typeof sendDebugLog === 'function') {
