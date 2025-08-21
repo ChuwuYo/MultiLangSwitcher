@@ -361,15 +361,7 @@ const performInitialization = async (reason) => {
     sendBackgroundLog(backgroundI18n.t('domain_rules_loaded'), 'info');
 
     // 2. 从存储中获取设置
-    const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
+    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
     autoSwitchEnabled = result.autoSwitchEnabled !== false; // 默认为 true
     sendBackgroundLog(`${backgroundI18n.t('loaded_auto_switch_status')}: ${autoSwitchEnabled}`, 'info');
 
@@ -450,9 +442,13 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
       autoSwitchEnabled: latestAutoSwitchEnabled,
       currentLanguage: latestCurrentLanguage
     };
-    chrome.runtime.sendMessage(message).catch((notifyError) => {
-      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
-    });
+    (async () => {
+      try {
+        await chrome.runtime.sendMessage(message);
+      } catch (notifyError) {
+        sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
+      }
+    })();
     sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${latestAutoSwitchEnabled}, ${backgroundI18n.t('language')}=${latestCurrentLanguage}`, 'info');
   }, 100); // Reduced debounce delay to 100ms
 }
@@ -573,15 +569,7 @@ const handleGetCurrentLangRequest = async (sendResponse) => {
     const currentRule = rules.find(rule => rule.id === RULE_ID);
     const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
-    const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled'], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
+    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
     if (typeof sendResponse === 'function') {
       sendResponse({
         currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
@@ -1107,16 +1095,8 @@ const handleGetDynamicRulesRequest = async (sendResponse) => {
  */
 const handleGetMatchedRulesRequest = async (sendResponse) => {
   try {
-    const matchedRules = await new Promise((resolve, reject) => {
-      chrome.declarativeNetRequest.getMatchedRules({}, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
-    
+    const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
