@@ -156,18 +156,10 @@ const updateHeaderRules = async (language, autoCheck = false) => {
   const cleanLanguage = language.trim();
   sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${cleanLanguage}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
-  // 使用Promise包装Chrome API调用
-  const response = await new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({
-      type: 'UPDATE_RULES',
-      language: cleanLanguage
-    }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      resolve(response);
-    });
+  // 使用直接的Promise调用
+  const response = await chrome.runtime.sendMessage({
+    type: 'UPDATE_RULES',
+    language: cleanLanguage
   });
 
   // 处理响应结果
@@ -357,15 +349,7 @@ const getCurrentLanguage = async () => {
  */
 const getLanguageFromBackground = async () => {
   try {
-    const response = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' }, response => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(response);
-      });
-    });
+    const response = await chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' });
 
     if (response?.currentLanguage) {
       sendDebugLog(popupI18n.t('get_current_language_from_background', { language: response.currentLanguage }), 'info');
@@ -385,19 +369,11 @@ const getLanguageFromBackground = async () => {
  */
 const getLanguageFromStorage = async () => {
   try {
-    const result = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage'] }, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
+    const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage'] });
 
-    if (result?.currentLanguage) {
-      sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.currentLanguage}.`, 'info');
-      return result.currentLanguage;
+    if (result?.data?.currentLanguage) {
+      sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.data.currentLanguage}.`, 'info');
+      return result.data.currentLanguage;
     }
 
     return null;
@@ -425,16 +401,8 @@ const getDefaultLanguage = () => {
 const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
-    const result = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] }, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(result);
-      });
-    });
-    return !!result.autoSwitchEnabled;
+    const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] });
+    return !!result.data?.autoSwitchEnabled;
   } catch (error) {
     sendDebugLog(popupI18n.t('error_getting_auto_switch_status', { message: error.message }), 'error');
     return false; // 默认返回false
@@ -449,23 +417,19 @@ const getAutoSwitchStatus = async () => {
 const setAutoSwitchStatus = async (enabled) => {
   try {
     // 保存自动切换状态到本地存储
-    await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: enabled } }, (response) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve();
-      });
-    });
+    await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: enabled } });
 
     // 记录状态变更日志
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
     // 通知background脚本状态变更
-    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled }).catch((notifyError) => {
-      sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
-    });
+    (async () => {
+      try {
+        await chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
+      } catch (notifyError) {
+        sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
+      }
+    })();
 
     return true;
   } catch (error) {
@@ -479,7 +443,7 @@ const setAutoSwitchStatus = async (enabled) => {
 /**
  * 保存当前语言设置
  * @param {string} language - 语言代码
- * @returns {Promise<void>} 
+ * @returns {Promise<void>}
  */
 const saveLanguageSetting = async (language) => {
   // 验证输入
@@ -488,15 +452,7 @@ const saveLanguageSetting = async (language) => {
   }
 
   // 保存语言设置到本地存储
-  await new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { currentLanguage: language } }, (response) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      resolve();
-    });
-  });
+  await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { currentLanguage: language } });
 
   sendDebugLog(`${popupI18n.t('language_settings_saved')} ${language}.`, 'info');
 };
@@ -1262,14 +1218,13 @@ document.addEventListener('DOMContentLoaded', async () => {
    * 同步自动切换状态到本地存储
    * @param {boolean} autoSwitchEnabled - 自动切换是否启用
    */
-  const syncAutoSwitchStatusToStorage = (autoSwitchEnabled) => {
-    chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled } }, (response) => {
-      if (chrome.runtime.lastError) {
-        sendDebugLog(popupI18n.t('update_storage_status_failed', { message: chrome.runtime.lastError.message }), 'error');
-      } else {
-        sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
-      }
-    });
+  const syncAutoSwitchStatusToStorage = async (autoSwitchEnabled) => {
+    try {
+      await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled } });
+      sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
+    } catch (error) {
+      sendDebugLog(popupI18n.t('update_storage_status_failed', { message: error.message }), 'error');
+    }
   };
 
   /**
