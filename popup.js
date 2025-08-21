@@ -423,6 +423,13 @@ const setAutoSwitchStatus = async (enabled) => {
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
     // 通知background脚本状态变更
+    // 注意：此处使用 IIFE (立即调用函数表达式) 写法虽然可以实现"即发即弃"的异步调用，
+    // 但略显冗余。可以直接调用 chrome.runtime.sendMessage 并链式附加 .catch() 来处理错误，
+    // 这样代码会更简洁清晰：
+    // chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled })
+    //   .catch(notifyError => {
+    //     sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
+    //   });
     (async () => {
       try {
         await chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
