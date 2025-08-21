@@ -203,12 +203,19 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
   // 优化的缓存检查：对所有调用（包括自动切换）都进行短路检查
-  if (language === lastAppliedLanguage && rulesCache) {
-    const logMessage = isAutoSwitch 
-      ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
-      : backgroundI18n.t('language_already_set', { language });
-    sendBackgroundLog(logMessage, 'info');
-    return { status: 'cached', language };
+  // 优先检查语言是否相同，只有语言相同时才检查缓存状态
+  if (language === lastAppliedLanguage) {
+    // 如果语言相同，进一步检查缓存状态
+    if (rulesCache) {
+      const logMessage = isAutoSwitch
+        ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
+        : backgroundI18n.t('language_already_set', { language });
+      sendBackgroundLog(logMessage, 'info');
+      return { status: 'cached', language };
+    } else {
+      // 语言相同但缓存为空，记录警告但仍继续处理
+      sendBackgroundLog(backgroundI18n.t('cache_empty_but_language_same', { language }), 'warning');
+    }
   }
 
   sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
