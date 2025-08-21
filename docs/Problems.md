@@ -1,12 +1,6 @@
 中优先级问题与建议
 
-1. 自动切换时的无效更新与性能浪费
-
-- 现状：
-  - 自动切换路径即使当前语言与目标相同，也会调用 updateHeaderRules 再走一遍 getDynamicRules 检查，最后返回“unchanged”。这在频繁 tab 更新时浪费一次 API 调用。
-- 建议：若 lastAppliedLanguage === targetLanguage 则直接早退（自动切换也可安全短路）。如担心外部修改，可以增加“低频校验”。
-
-2. DNR 资源类型与匹配范围
+1. DNR 资源类型与匹配范围
 
 - 现状：
   - 规则 `condition.urlFilter: "*"`，`resourceTypes` 包含大量类型。
@@ -16,28 +10,28 @@
   - 收窄 `resourceTypes` 至会携带 Accept-Language 的类型：`main_frame`, `sub_frame`, `xmlhttprequest`（基本可覆盖 fetch/XHR），如需谨慎可保留 script/`image` 等是否冗余评估。
   - 如果能接受仅针对 http/https，可通过 `regexFilter` 或规则集合减少歧义（可选）。
 
-3. SW 日志与 i18n 加载顺序
+2. SW 日志与 i18n 加载顺序
 
 - 现状：
   - DomainRulesManager 依赖全局 domainManagerI18n，注释称 shared-i18n-base.js 已在 background.js 通过 importScripts 加载（未在审查片段中直接看到）。
 - 风险：若加载顺序变更或未来重构为 ESM，可能造成 i18n 未就绪。
 - 建议：在 background.js 顶部保证导入顺序：shared-i18n-base.js -> i18n/*-i18n.js -> 其他模块；或在 DomainRulesManager 内对 i18n 缺失做好降级处理（已有，但建议保证顺序）。
 
-4. 域名规则加载的健壮性
+3. 域名规则加载的健壮性
 
 - 现状：
   - domain-rules.json 使用 fetch(getURL(..))，无超时/重试；失败时返回空规则。
 - 建议：
   - 为规则文件加载增加超时与有限重试；失败时可设置“只使用 TLD 兜底”或“直接走 fallback 语言，不自动切换”策略，避免误判。
 
-5. 自定义规则变更的缓存失效
+4. 自定义规则变更的缓存失效
 
 - 现状：
   - 存在自定义规则加载逻辑与缓存（domainCache、parsedDomainCache），但未见"自定义规则更新后自动清理/失效缓存"的路径。
 - 建议：
   - 在写入/修改自定义规则后调用 clearCache(true) 或精细化失效，避免旧缓存导致匹配不生效。
 
-6. 更新检查与网络权限
+5. 更新检查与网络权限
 
 - 现状：
   - UpdateChecker 针对 GitHub Releases 有完善的超时/重试/降级；但对 host_permissions 声明不明（MV3 中 extension pages 跨域 fetch 通常允许，但建议最小权限）。
@@ -46,27 +40,27 @@
 
 低优先级/可读性与维护性
 
-7. 消息处理 return true 一致性
+6. 消息处理 return true 一致性
 
 - 现状：
 
   - onMessage 的分支大多 `return true` 以保持异步响应。请确保新增消息类型也保持一致，避免响应丢失。
 
-8. 命名与常量集中
-  
+7. 命名与常量集中
+
 
 - 建议：
-  
+
   - 将 RULE_ID、默认语言（DEFAULT_LANG_EN, DEFAULT_LANG_ZH）、重试常量、缓存大小等集中到 `shared/constants.js`，便于统一修改。
 
-9. 统一日志接口
-  
+8. 统一日志接口
+
 
 - 建议：
-  
+
   - sendBackgroundLog 很好用；建议统一所有 console.log/warn/error 入口（尤其 Service Worker 侧），便于开关调试等级与搜集问题。
 
-10. 文档与注释
+9. 文档与注释
   
 
 - 建议：
@@ -93,7 +87,7 @@ MV3 合规检查（重点项）
 - LRU 实现正确（基于 Map 插入顺序；重复键先删后设；满容量淘汰首个）。
 - maxCacheSize=100 保守，合理。可考虑曝光为设置或根据内存占用自适应。
 - 命中率统计简洁；考虑在日志中周期性输出以便调优。
-- 中枢路径上尽量减少 getDynamicRules 调用频率（见问题 3）。
+- 中枢路径上尽量减少 getDynamicRules 调用频率（见问题 2）。
 
 i18n 与回退
 
