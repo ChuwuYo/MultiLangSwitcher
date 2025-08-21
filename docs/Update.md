@@ -60,6 +60,7 @@
 - popup.js - 优化 Chrome API 调用方式，直接使用 async/await（v1.8.72）
 - debug-ui.js - 优化代码结构，将回调函数改为 async/await 方式，调整了部分变量和函数的命名，移除冗余的代码（v1.8.72）
 - shared-utils.js - 完善fallback翻译键（v1.8.72）
+- Code_Style_Guide.md - 代码风格指南更新（v1.8.72）
 
 ### 移除内容
 
