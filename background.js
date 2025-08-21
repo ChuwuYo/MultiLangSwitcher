@@ -457,13 +457,9 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
       autoSwitchEnabled: latestAutoSwitchEnabled,
       currentLanguage: latestCurrentLanguage
     };
-    (async () => {
-      try {
-        await chrome.runtime.sendMessage(message);
-      } catch (notifyError) {
-        sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
-      }
-    })();
+    chrome.runtime.sendMessage(message).catch((notifyError) => {
+      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
+    });
     sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${latestAutoSwitchEnabled}, ${backgroundI18n.t('language')}=${latestCurrentLanguage}`, 'info');
   }, 100); // Reduced debounce delay to 100ms
 }
