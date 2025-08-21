@@ -679,7 +679,7 @@ const showUpdateNotification = (updateInfo) => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 6000));
+      }, 5000));
 
     } else if (updateInfo.updateAvailable) {
       // 有可用更新
