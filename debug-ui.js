@@ -78,52 +78,54 @@ document.addEventListener('DOMContentLoaded', () => {
     resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
     // 通过消息传递获取动态规则
-    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
-      if (chrome.runtime.lastError || !response || !response.success) {
-        setSafeErrorMessage(resultElement, '获取规则失败');
-        return;
-      }
-      const rules = response.rules;
-      let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
+        if (!response || !response.success) {
+          setSafeErrorMessage(resultElement, '获取规则失败');
+          return;
+        }
+        const rules = response.rules;
+        let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
-      if (rules.length === 0) {
-        html += `<p class="error">${debugI18n.t('no_dynamic_rules')}</p>`;
-      } else {
-        html += '<ul>';
-        rules.forEach(rule => {
-          let priorityClass = rule.priority < 100 ? 'error' : 'success';
-          html += `<li>${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} <span class="${priorityClass}">${rule.priority}</span></li>`;
-          html += `<li>${debugI18n.t('action')} ${rule.action.type}</li>`;
-          if (rule.action.requestHeaders) {
-            html += `<li>${debugI18n.t('modify_headers')}`;
-            html += '<ul>';
-            rule.action.requestHeaders.forEach(header => {
-              html += `<li>${header.header}: ${header.value} (${debugI18n.t('operation')} ${header.operation})</li>`;
-            });
-            html += '</ul></li>';
-          }
-          if (rule.condition) {
-            html += `<li>${debugI18n.t('conditions')}`;
-            html += '<ul>';
-            if (rule.condition.urlFilter) html += `<li>${debugI18n.t('url_filter')} <code>${rule.condition.urlFilter}</code></li>`;
-            if (rule.condition.resourceTypes && rule.condition.resourceTypes.length > 0) {
-              html += `<li>${debugI18n.t('resource_types')} ${rule.condition.resourceTypes.join(', ')}</li>`;
+        if (rules.length === 0) {
+          html += `<p class="error">${debugI18n.t('no_dynamic_rules')}</p>`;
+        } else {
+          html += '<ul>';
+          rules.forEach(rule => {
+            let priorityClass = rule.priority < 100 ? 'error' : 'success';
+            html += `<li>${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} <span class="${priorityClass}">${rule.priority}</span></li>`;
+            html += `<li>${debugI18n.t('action')} ${rule.action.type}</li>`;
+            if (rule.action.requestHeaders) {
+              html += `<li>${debugI18n.t('modify_headers')}`;
+              html += '<ul>';
+              rule.action.requestHeaders.forEach(header => {
+                html += `<li>${header.header}: ${header.value} (${debugI18n.t('operation')} ${header.operation})</li>`;
+              });
+              html += '</ul></li>';
             }
-            html += '</ul></li>';
-          }
-          html += '<hr>'; // 分隔不同规则
-        });
-        html += '</ul>';
-      }
+            if (rule.condition) {
+              html += `<li>${debugI18n.t('conditions')}`;
+              html += '<ul>';
+              if (rule.condition.urlFilter) html += `<li>${debugI18n.t('url_filter')} <code>${rule.condition.urlFilter}</code></li>`;
+              if (rule.condition.resourceTypes && rule.condition.resourceTypes.length > 0) {
+                html += `<li>${debugI18n.t('resource_types')} ${rule.condition.resourceTypes.join(', ')}</li>`;
+              }
+              html += '</ul></li>';
+            }
+            html += '<hr>'; // 分隔不同规则
+          });
+          html += '</ul>';
+        }
 
-      // 通过消息传递获取最近匹配的规则信息
-      chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' }, (response) => {
-        if (chrome.runtime.lastError || !response || !response.success) {
+        // 通过消息传递获取最近匹配的规则信息
+        const matchedResponse = await chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' });
+        if (!matchedResponse || !matchedResponse.success) {
           html += `<p class="error">获取匹配规则失败</p>`;
           resultElement.innerHTML = html;
           return;
         }
-        const matchedRules = response.matchedRules;
+        const matchedRules = matchedResponse.matchedRules;
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
@@ -153,8 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
           html += `<p>${debugI18n.t('no_recent_matches')}</p>`;
         }
         resultElement.innerHTML = html;
-      });
-    });
+      } catch (error) {
+        setSafeErrorMessage(resultElement, `获取规则失败: ${error.message}`);
+      }
+    })();
   });
 
   // 日志功能
@@ -235,28 +239,29 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLogs();
 
   // 页面加载时同步自动切换状态
-  chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] }, (result) => {
-    if (chrome.runtime.lastError) {
-      console.error('Failed to get auto switch status:', chrome.runtime.lastError.message);
-      return;
+  (async () => {
+    try {
+      const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] });
+
+      const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+      if (!autoSwitchToggle) return;
+
+      autoSwitchToggle.checked = !!result.data?.autoSwitchEnabled;
+
+      // 等待i18n系统初始化完成后再输出日志
+      const checkI18nAndLog = () => {
+        if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
+          addLogMessage(`${result.data?.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
+        } else {
+          setTimeout(checkI18nAndLog, 100);
+        }
+      };
+
+      checkI18nAndLog();
+    } catch (error) {
+      console.error('Failed to get auto switch status:', error.message);
     }
-
-    const autoSwitchToggle = document.getElementById('autoSwitchToggle');
-    if (!autoSwitchToggle) return;
-
-    autoSwitchToggle.checked = !!result.autoSwitchEnabled;
-
-    // 等待i18n系统初始化完成后再输出日志
-    const checkI18nAndLog = () => {
-      if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
-        addLogMessage(`${result.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
-      } else {
-        setTimeout(checkI18nAndLog, 100);
-      }
-    };
-
-    checkI18nAndLog();
-  });
+  })();
 
 
   // 测试请求头
@@ -354,35 +359,41 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
     // 通过消息传递获取和更新动态规则
-    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
-      if (chrome.runtime.lastError || !response || !response.success) {
-        setSafeContent(resultElement, '获取规则失败', 'error');
-        return;
-      }
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
+        if (!response || !response.success) {
+          setSafeContent(resultElement, '获取规则失败', 'error');
+          return;
+        }
 
-      const existingRules = response.rules;
-      const existingRuleIds = existingRules.map(rule => rule.id);
-      const updatedRules = existingRules.map(rule => {
-        return {
-          ...rule,
-          priority: 100 // 设置更高优先级
-        };
-      });
+        const existingRules = response.rules;
+        const existingRuleIds = existingRules.map(rule => rule.id);
+        const updatedRules = existingRules.map(rule => {
+          return {
+            ...rule,
+            priority: 100 // 设置更高优先级
+          };
+        });
 
-      chrome.runtime.sendMessage({
-        type: 'UPDATE_DYNAMIC_RULES',
-        removeRuleIds: existingRuleIds,
-        addRules: updatedRules
-      }, (updateResponse) => {
-        if (chrome.runtime.lastError || !updateResponse || !updateResponse.success) {
+        const updateResponse = await chrome.runtime.sendMessage({
+          type: 'UPDATE_DYNAMIC_RULES',
+          removeRuleIds: existingRuleIds,
+          addRules: updatedRules
+        });
+
+        if (!updateResponse || !updateResponse.success) {
           setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
           addLogMessage(`${debugI18n.t('fix_priority_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
         } else {
           setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
           addLogMessage(debugI18n.t('priority_updated_log'), 'success');
         }
-      });
-    });
+      } catch (error) {
+        setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${error.message}`, 'error');
+        addLogMessage(`${debugI18n.t('fix_priority_failed')} ${error.message}`, 'error');
+      }
+    })();
   });
 
   // 清除并重新应用规则
@@ -392,55 +403,52 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
     // 通过消息传递获取和清除动态规则
-    chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' }, (response) => {
-      if (chrome.runtime.lastError || !response || !response.success) {
-        setSafeErrorMessage(resultElement, '获取规则失败');
-        return;
-      }
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
+        if (!response || !response.success) {
+          setSafeErrorMessage(resultElement, '获取规则失败');
+          return;
+        }
 
-      const existingRules = response.rules;
-      const existingRuleIds = existingRules.map(rule => rule.id);
+        const existingRules = response.rules;
+        const existingRuleIds = existingRules.map(rule => rule.id);
 
-      chrome.runtime.sendMessage({
-        type: 'UPDATE_DYNAMIC_RULES',
-        removeRuleIds: existingRuleIds
-      }, (clearResponse) => {
-        if (chrome.runtime.lastError || !clearResponse || !clearResponse.success) {
+        const clearResponse = await chrome.runtime.sendMessage({
+          type: 'UPDATE_DYNAMIC_RULES',
+          removeRuleIds: existingRuleIds
+        });
+
+        if (!clearResponse || !clearResponse.success) {
           setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${clearResponse?.error || 'Unknown error'}`);
           addLogMessage(`${debugI18n.t('clear_rules_failed')} ${clearResponse?.error || 'Unknown error'}`, 'error');
         } else {
           // 清除成功后，重新应用默认或存储的规则
-          chrome.runtime.sendMessage({
+          const storageResponse = await chrome.runtime.sendMessage({
             type: 'GET_STORAGE_DATA',
             keys: ['currentLanguage']
-          }, (storageResponse) => {
-            if (chrome.runtime.lastError) {
-              setSafeContent(resultElement, `${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
-              addLogMessage(`${debugI18n.t('get_stored_language_failed')} ${chrome.runtime.lastError.message}`, 'error');
-              return;
-            }
-
-            const languageToApply = result.currentLanguage || 'zh-CN';
-            // Send message to background.js to request rule update
-            chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply }, (response) => {
-              if (chrome.runtime.lastError) {
-                setSafeErrorMessage(resultElement, `${debugI18n.t('reapply_rules_error')} ${chrome.runtime.lastError.message}`);
-                addLogMessage(`${debugI18n.t('request_background_reapply_failed')} ${chrome.runtime.lastError.message}`, 'error');
-              } else if (response && response.status === 'success') {
-                setSafeSuccessMessage(resultElement, `${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}`);
-                addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
-              } else if (response && response.status === 'error') {
-                setSafeErrorMessage(resultElement, `${debugI18n.t('background_reapply_failed')} ${response.message}`);
-                addLogMessage(`${debugI18n.t('background_reapply_failed_log')} ${response.message}`, 'error');
-              } else {
-                setSafeContent(resultElement, debugI18n.t('background_no_clear_response'), 'warning');
-                addLogMessage(debugI18n.t('background_no_clear_response_log'), 'warning');
-              }
-            });
           });
+
+          const languageToApply = storageResponse.data?.currentLanguage || 'zh-CN';
+          // Send message to background.js to request rule update
+          const updateResponse = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply });
+
+          if (updateResponse && updateResponse.status === 'success') {
+            setSafeSuccessMessage(resultElement, `${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}`);
+            addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
+          } else if (updateResponse && updateResponse.status === 'error') {
+            setSafeErrorMessage(resultElement, `${debugI18n.t('background_reapply_failed')} ${updateResponse.message}`);
+            addLogMessage(`${debugI18n.t('background_reapply_failed_log')} ${updateResponse.message}`, 'error');
+          } else {
+            setSafeContent(resultElement, debugI18n.t('background_no_clear_response'), 'warning');
+            addLogMessage(debugI18n.t('background_no_clear_response_log'), 'warning');
+          }
         }
-      });
-    });
+      } catch (error) {
+        setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${error.message}`);
+        addLogMessage(`${debugI18n.t('clear_rules_failed')} ${error.message}`, 'error');
+      }
+    })();
   });
 
   /**
@@ -526,35 +534,39 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
 
     // 发送消息到 background.js 请求更新规则
-    chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString }, (response) => {
-      if (chrome.runtime.lastError) {
-        setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
-        addLogMessage(`${debugI18n.t('apply_custom_failed')} ${chrome.runtime.lastError.message}`, 'error');
-      } else if (response && response.status === 'success') {
-        let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString });
 
-        // 如果格式可能有问题，添加警告信息
-        if (hasFormatIssues) {
-          successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
+        if (response && response.status === 'success') {
+          let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
+
+          // 如果格式可能有问题，添加警告信息
+          if (hasFormatIssues) {
+            successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
+          }
+
+          customLangResult.innerHTML = successHtml;
+          addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
+
+          if (hasFormatIssues) {
+            addLogMessage(debugI18n.t('accept_language_format_warning'), 'warning');
+          }
+
+          // 可选：更新存储中的语言，如果希望自定义设置持久化
+          // await chrome.storage.local.set({ currentLanguage: languageString });
+        } else if (response && response.status === 'error') {
+          setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed_backend')} ${response.message}`, 'error');
+          addLogMessage(`${debugI18n.t('backend_apply_custom_failed')} ${response.message}`, 'error');
+        } else {
+          setSafeContent(customLangResult, debugI18n.t('background_no_clear_response'), 'warning');
+          addLogMessage(debugI18n.t('backend_no_custom_response'), 'warning');
         }
-
-        customLangResult.innerHTML = successHtml;
-        addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
-
-        if (hasFormatIssues) {
-          addLogMessage(debugI18n.t('accept_language_format_warning'), 'warning');
-        }
-
-        // 可选：更新存储中的语言，如果希望自定义设置持久化
-        // chrome.storage.local.set({ currentLanguage: languageString });
-      } else if (response && response.status === 'error') {
-        setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed_backend')} ${response.message}`, 'error');
-        addLogMessage(`${debugI18n.t('backend_apply_custom_failed')} ${response.message}`, 'error');
-      } else {
-        setSafeContent(customLangResult, debugI18n.t('background_no_clear_response'), 'warning');
-        addLogMessage(debugI18n.t('backend_no_custom_response'), 'warning');
+      } catch (error) {
+        setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed')} ${error.message}`, 'error');
+        addLogMessage(`${debugI18n.t('apply_custom_failed')} ${error.message}`, 'error');
       }
-    });
+    })();
   });
 
   // 重置自定义语言设置
@@ -619,15 +631,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
-      chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage', 'autoSwitchEnabled'] }, (result) => {
+      (async () => {
         try {
-          if (chrome.runtime.lastError) {
-            throw new Error(`${debugI18n.t('storage_failed')} ${chrome.runtime.lastError.message}`);
-          }
+          const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage', 'autoSwitchEnabled'] });
+
           html += `<h5>${debugI18n.t('stored_language_settings')}</h5>`;
-          if (result.currentLanguage) {
-            html += `<p>${debugI18n.t('current_language')} ${result.currentLanguage}</p>`;
-            addLogMessage(`${debugI18n.t('diagnostics_stored_language')} ${result.currentLanguage}.`, 'info');
+          if (result.data?.currentLanguage) {
+            html += `<p>${debugI18n.t('current_language')} ${result.data.currentLanguage}</p>`;
+            addLogMessage(`${debugI18n.t('diagnostics_stored_language')} ${result.data.currentLanguage}.`, 'info');
           } else {
             html += `<p class="warning">${debugI18n.t('no_stored_language_found')}</p>`;
             addLogMessage(debugI18n.t('diagnostics_no_stored_language'), 'warning');
@@ -635,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // 添加自动切换状态信息
           html += `<h5>${debugI18n.t('auto_switch_function')}</h5>`;
-          const autoSwitchStatus = result.autoSwitchEnabled ?
+          const autoSwitchStatus = result.data?.autoSwitchEnabled ?
             `<span class="success">${debugI18n.t('enabled')}</span>` :
             `<span class="error">${debugI18n.t('disabled')}</span>`;
           html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
@@ -644,13 +655,13 @@ document.addEventListener('DOMContentLoaded', () => {
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
           // 同步更新自动切换开关状态
-          document.getElementById('autoSwitchToggle').checked = !!result.autoSwitchEnabled;
+          document.getElementById('autoSwitchToggle').checked = !!result.data?.autoSwitchEnabled;
         } catch (storageError) {
           console.error('Error collecting diagnostic information (storage):', storageError);
           addLogMessage(`${debugI18n.t('collect_diagnostics_storage_error')} ${storageError.message}`, 'error');
           setSafeErrorMessage(resultElement, `${debugI18n.t('collect_storage_info_error')} ${storageError.message}`);
         }
-      });
+      })();
 
     } catch (error) {
       console.error('Error collecting diagnostic information (manifest/id):', error);
@@ -665,25 +676,24 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(`${debugI18n.t('try_enable_disable_auto')}${isEnabled ? debugI18n.t('enable') : debugI18n.t('disable')}${debugI18n.t('auto_switch_function_ellipsis')}`, 'info');
 
     // 发送消息到 background.js 更新自动切换状态
-    chrome.runtime.sendMessage({
-      type: 'AUTO_SWITCH_TOGGLED',
-      enabled: isEnabled
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${chrome.runtime.lastError.message}`, 'error');
-        return;
-      }
-
-      if (response && response.status === 'success') {
-        addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
-        // 更新存储中的状态
-        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } }).catch((notifyError) => {
-          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'AUTO_SWITCH_TOGGLED',
+          enabled: isEnabled
         });
-      } else {
-        addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
+
+        if (response && response.status === 'success') {
+          addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
+          // 更新存储中的状态
+          await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } });
+        } else {
+          addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
+        }
+      } catch (error) {
+        addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${error.message}`, 'error');
       }
-    });
+    })();
   });
 
   // 显示域名映射规则
@@ -693,114 +703,115 @@ document.addEventListener('DOMContentLoaded', () => {
     addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
 
     // 从 background.js 获取域名映射规则
-    chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' }, (response) => {
-      if (chrome.runtime.lastError) {
-        setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`);
-        addLogMessage(`${debugI18n.t('get_domain_rules_failed')} ${chrome.runtime.lastError.message}`, 'error');
-        return;
+    (async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' });
+
+        // 响应检查
+        console.log(debugI18n.t('received_domain_response'), response);
+        addLogMessage(`${debugI18n.t('received_response')} ${JSON.stringify(response)}`, 'info');
+
+        if (response && response.error) {
+          setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_error')} ${response.error}`);
+          addLogMessage(`${debugI18n.t('get_domain_rules_error')} ${response.error}`, 'error');
+          return;
+        }
+
+        if (response && response.domainRules) {
+          const rules = response.domainRules;
+          let html = `<h5>${debugI18n.t('domain_language_mapping')}</h5>`;
+
+          // 按类别组织规则
+          const categories = {
+            [debugI18n.t('second_level_domain')]: {},
+            [debugI18n.t('asia')]: {},
+            [debugI18n.t('north_america')]: {},
+            [debugI18n.t('south_america')]: {},
+            [debugI18n.t('europe')]: {},
+            [debugI18n.t('oceania')]: {},
+            [debugI18n.t('middle_east')]: {},
+            [debugI18n.t('other')]: {}
+          };
+
+          // 对规则进行分类（基于domain-rules.json中实际存在的域名）
+          console.log(debugI18n.t('start_classify_domain_rules'), Object.keys(rules).length);
+          Object.keys(rules).forEach(domain => {
+            const language = rules[domain];
+
+            if (domain.includes('.')) {
+              categories[debugI18n.t('second_level_domain')][domain] = language;
+            } else if ([
+              'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg',
+              'th', 'vn', 'ph', 'kz', 'uz', 'mn'
+            ].includes(domain)) {
+              categories[debugI18n.t('asia')][domain] = language;
+            } else if ([
+              'us', 'ca', 'mx', 'gt', 'cr', 'pa', 'cu', 'ht', 'jm', 'gov'
+            ].includes(domain)) {
+              categories[debugI18n.t('north_america')][domain] = language;
+            } else if ([
+              'ar', 'br', 'cl', 'co', 'ec', 'pe', 'bo', 'py', 'uy', 've'
+            ].includes(domain)) {
+              categories[debugI18n.t('south_america')][domain] = language;
+            } else if ([
+              'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi',
+              'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt',
+              'se', 'uk', 'tr', 'cy', 'by', 'bg', 'hr', 'rs', 'si',
+              'ee', 'lv', 'lt', 'md', 'mk', 'al', 'ba', 'me', 'xk'
+            ].includes(domain)) {
+              categories[debugI18n.t('europe')][domain] = language;
+            } else if ([
+              'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps',
+              'qa', 'sa', 'sy', 'ae', 'ye'
+            ].includes(domain)) {
+              categories[debugI18n.t('middle_east')][domain] = language;
+            } else if ([
+              'au', 'nz', 'fj'
+            ].includes(domain)) {
+              categories[debugI18n.t('oceania')][domain] = language;
+            } else {
+              // 将最后两个else if合并为一个
+              categories[debugI18n.t('other')][domain] = language;
+            }
+          });
+
+          // 生成HTML（只显示有规则的分类）
+          Object.keys(categories).forEach(category => {
+            const categoryRules = categories[category];
+            const ruleCount = Object.keys(categoryRules).length;
+
+            if (ruleCount > 0) {
+              html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}${debugI18n.t('rules_count')}):</div>`;
+              html += '<div class="matched-rule-detail">';
+
+              // 将规则按字母顺序排序
+              const sortedDomains = Object.keys(categoryRules).sort();
+
+              // 创建表格显示，设置固定列宽
+              html += '<table class="table table-sm table-striped" style="table-layout: fixed;">';
+              html += `<thead><tr><th style="width: 50%;">${debugI18n.t('domain')}</th><th style="width: 50%;">${debugI18n.t('language')}</th></tr></thead>`;
+              html += '<tbody>';
+
+              sortedDomains.forEach(domain => {
+                html += `<tr><td>${domain}</td><td>${categoryRules[domain]}</td></tr>`;
+              });
+
+              html += '</tbody></table>';
+              html += '</div>';
+            }
+          });
+
+          resultElement.innerHTML = html;
+          addLogMessage(`${debugI18n.t('successfully_got_displayed_rules')}${Object.keys(rules).length}${debugI18n.t('domain_mapping_rules')}`, 'success');
+        } else {
+          setSafeErrorMessage(resultElement, debugI18n.t('failed_get_domain_rules_empty'));
+          addLogMessage(`${debugI18n.t('failed_get_domain_rules_response')} ${JSON.stringify(response)}`, 'warning');
+        }
+      } catch (error) {
+        setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_failed')} ${error.message}`);
+        addLogMessage(`${debugI18n.t('get_domain_rules_failed')} ${error.message}`, 'error');
       }
-
-      // 响应检查
-      console.log(debugI18n.t('received_domain_response'), response);
-      addLogMessage(`${debugI18n.t('received_response')} ${JSON.stringify(response)}`, 'info');
-
-      if (response && response.error) {
-        setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_error')} ${response.error}`);
-        addLogMessage(`${debugI18n.t('get_domain_rules_error')} ${response.error}`, 'error');
-        return;
-      }
-
-      if (response && response.domainRules) {
-        const rules = response.domainRules;
-        let html = `<h5>${debugI18n.t('domain_language_mapping')}</h5>`;
-
-        // 按类别组织规则
-        const categories = {
-          [debugI18n.t('second_level_domain')]: {},
-          [debugI18n.t('asia')]: {},
-          [debugI18n.t('north_america')]: {},
-          [debugI18n.t('south_america')]: {},
-          [debugI18n.t('europe')]: {},
-          [debugI18n.t('oceania')]: {},
-          [debugI18n.t('middle_east')]: {},
-          [debugI18n.t('other')]: {}
-        };
-
-        // 对规则进行分类（基于domain-rules.json中实际存在的域名）
-        console.log(debugI18n.t('start_classify_domain_rules'), Object.keys(rules).length);
-        Object.keys(rules).forEach(domain => {
-          const language = rules[domain];
-
-          if (domain.includes('.')) {
-            categories[debugI18n.t('second_level_domain')][domain] = language;
-          } else if ([
-            'cn', 'tw', 'hk', 'jp', 'kr', 'in', 'id', 'my', 'sg',
-            'th', 'vn', 'ph', 'kz', 'uz', 'mn'
-          ].includes(domain)) {
-            categories[debugI18n.t('asia')][domain] = language;
-          } else if ([
-            'us', 'ca', 'mx', 'gt', 'cr', 'pa', 'cu', 'ht', 'jm', 'gov'
-          ].includes(domain)) {
-            categories[debugI18n.t('north_america')][domain] = language;
-          } else if ([
-            'ar', 'br', 'cl', 'co', 'ec', 'pe', 'bo', 'py', 'uy', 've'
-          ].includes(domain)) {
-            categories[debugI18n.t('south_america')][domain] = language;
-          } else if ([
-            'at', 'be', 'ch', 'cz', 'de', 'dk', 'es', 'eu', 'fi',
-            'fr', 'gr', 'hu', 'ie', 'it', 'nl', 'no', 'pl', 'pt',
-            'se', 'uk', 'tr', 'cy', 'by', 'bg', 'hr', 'rs', 'si',
-            'ee', 'lv', 'lt', 'md', 'mk', 'al', 'ba', 'me', 'xk'
-          ].includes(domain)) {
-            categories[debugI18n.t('europe')][domain] = language;
-          } else if ([
-            'bh', 'ir', 'iq', 'il', 'jo', 'kw', 'lb', 'om', 'ps',
-            'qa', 'sa', 'sy', 'ae', 'ye'
-          ].includes(domain)) {
-            categories[debugI18n.t('middle_east')][domain] = language;
-          } else if ([
-            'au', 'nz', 'fj'
-          ].includes(domain)) {
-            categories[debugI18n.t('oceania')][domain] = language;
-          } else {
-            // 将最后两个else if合并为一个
-            categories[debugI18n.t('other')][domain] = language;
-          }
-        });
-
-        // 生成HTML（只显示有规则的分类）
-        Object.keys(categories).forEach(category => {
-          const categoryRules = categories[category];
-          const ruleCount = Object.keys(categoryRules).length;
-
-          if (ruleCount > 0) {
-            html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}${debugI18n.t('rules_count')}):</div>`;
-            html += '<div class="matched-rule-detail">';
-
-            // 将规则按字母顺序排序
-            const sortedDomains = Object.keys(categoryRules).sort();
-
-            // 创建表格显示，设置固定列宽
-            html += '<table class="table table-sm table-striped" style="table-layout: fixed;">';
-            html += `<thead><tr><th style="width: 50%;">${debugI18n.t('domain')}</th><th style="width: 50%;">${debugI18n.t('language')}</th></tr></thead>`;
-            html += '<tbody>';
-
-            sortedDomains.forEach(domain => {
-              html += `<tr><td>${domain}</td><td>${categoryRules[domain]}</td></tr>`;
-            });
-
-            html += '</tbody></table>';
-            html += '</div>';
-          }
-        });
-
-        resultElement.innerHTML = html;
-        addLogMessage(`${debugI18n.t('successfully_got_displayed_rules')}${Object.keys(rules).length}${debugI18n.t('domain_mapping_rules')}`, 'success');
-      } else {
-        setSafeErrorMessage(resultElement, debugI18n.t('failed_get_domain_rules_empty'));
-        addLogMessage(`${debugI18n.t('failed_get_domain_rules_response')} ${JSON.stringify(response)}`, 'warning');
-      }
-    });
+    })();
   });
 
   // 监听来自 background.js 的消息
@@ -809,9 +820,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-        chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } }).catch((notifyError) => {
-          addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
-        });
+        (async () => {
+          try {
+            await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } });
+          } catch (notifyError) {
+            addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
+          }
+        })();
       }
       addLogMessage(`${debugI18n.t('received_auto_switch_update')} ${request.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled')}, ${debugI18n.t('current_language_colon')} ${request.currentLanguage}`, 'info');
 
@@ -905,26 +920,28 @@ const checkPreloadStatusPeriodically = () => {
 
     try {
       // 通过消息传递从后台获取规则状态
-      chrome.runtime.sendMessage({
-        type: 'GET_CACHE_STATS'
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          // 通信失败，继续等待
-          return;
-        }
+      (async () => {
+        try {
+          const response = await chrome.runtime.sendMessage({
+            type: 'GET_CACHE_STATS'
+          });
 
-        if (response && response.success && response.stats) {
-          const hasRules = response.stats.totalRules > 0;
+          if (response && response.success && response.stats) {
+            const hasRules = response.stats.totalRules > 0;
 
-          if (hasRules) {
-            // 规则已加载，更新状态并停止检查
-            updatePreloadStatus();
-            clearInterval(intervalId);
-            console.log('[Cache] Rules loaded automatically, preload status updated');
-            return;
+            if (hasRules) {
+              // 规则已加载，更新状态并停止检查
+              updatePreloadStatus();
+              clearInterval(intervalId);
+              console.log('[Cache] Rules loaded automatically, preload status updated');
+              return;
+            }
           }
+        } catch (error) {
+          // 通信失败，继续等待
+          console.log('[Cache] Communication failed, continuing to wait:', error.message);
         }
-      });
+      })();
 
     } catch (error) {
       // 出错时停止检查

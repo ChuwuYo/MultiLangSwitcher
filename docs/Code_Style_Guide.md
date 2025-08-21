@@ -966,10 +966,21 @@ console.log(`${i18n ? i18n.t('cache_preloaded') : 'Cache preloaded'}`);
 ### 2. Chrome Extension API 使用
 
 ```javascript
-// 使用 Promise 包装 Chrome API
-const getChromeStorageData = (keys) => {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(keys, resolve);
+// ✅ 推荐：直接使用 Promise 风格（Manifest V3 支持）
+const getChromeStorageData = async (keys) => {
+  return await chrome.storage.local.get(keys);
+};
+
+// ❌ 避免：基于回调的 Promise 包装（除非必要）
+const getChromeStorageDataOld = (keys) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(keys, (result) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve(result);
+      }
+    });
   });
 };
 
