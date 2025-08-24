@@ -269,7 +269,7 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
       },
       "condition": {
         "urlFilter": "*",
-        "resourceTypes": ["main_frame", "sub_frame", "stylesheet", "script", "image", "font", "object", "xmlhttprequest", "ping", "csp_report", "media", "websocket", "other"]
+        "resourceTypes": ["main_frame", "sub_frame", "xmlhttprequest", "script"]
       }
     };
 
