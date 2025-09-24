@@ -1,6 +1,88 @@
 // debug-ui.js - 调试页面UI交互脚本
 
 /**
+ * 资源跟踪器 - 管理事件监听器、定时器等资源
+ */
+const resourceTracker = {
+  eventListeners: [],
+  timers: [],
+  intervals: [],
+  messageListeners: [],
+
+  /**
+   * 添加事件监听器并跟踪
+   * @param {Element} element - 目标元素
+   * @param {string} event - 事件类型
+   * @param {Function} handler - 事件处理函数
+   * @param {Object} options - 事件选项
+   */
+  addEventListener: function(element, event, handler, options = null) {
+    element.addEventListener(event, handler, options);
+    this.eventListeners.push({ element, event, handler, options });
+  },
+
+  /**
+   * 添加定时器并跟踪
+   * @param {Function} callback - 回调函数
+   * @param {number} delay - 延迟时间
+   * @param {...any} args - 传递给回调的参数
+   * @returns {number} 定时器ID
+   */
+  setTimeout: function(callback, delay, ...args) {
+    const id = setTimeout(callback, delay, ...args);
+    this.timers.push(id);
+    return id;
+  },
+
+  /**
+   * 添加间隔定时器并跟踪
+   * @param {Function} callback - 回调函数
+   * @param {number} interval - 间隔时间
+   * @param {...any} args - 传递给回调的参数
+   * @returns {number} 间隔定时器ID
+   */
+  setInterval: function(callback, interval, ...args) {
+    const id = setInterval(callback, interval, ...args);
+    this.intervals.push(id);
+    return id;
+  },
+
+  /**
+   * 添加消息监听器并跟踪
+   * @param {Function} listener - 消息监听器函数
+   */
+  addMessageListener: function(listener) {
+    chrome.runtime.onMessage.addListener(listener);
+    this.messageListeners.push(listener);
+  },
+
+  /**
+   * 清理所有跟踪的资源
+   */
+  cleanup: function() {
+    // 移除所有事件监听器
+    this.eventListeners.forEach(({ element, event, handler, options }) => {
+      element.removeEventListener(event, handler, options);
+    });
+    this.eventListeners = [];
+
+    // 清除所有定时器
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers = [];
+
+    // 清除所有间隔定时器
+    this.intervals.forEach(id => clearInterval(id));
+    this.intervals = [];
+
+    // 移除所有消息监听器
+    this.messageListeners.forEach(listener => {
+      chrome.runtime.onMessage.removeListener(listener);
+    });
+    this.messageListeners = [];
+  }
+};
+
+/**
  * 安全地创建带有样式类的消息元素
  * @param {string} message - 消息文本
  * @param {string} className - CSS类名 (success, error, warning, info)
@@ -65,7 +147,7 @@ const getExternalCheckLinks = (prefix = debugI18n.t('please_visit')) => {
   return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${debugI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${debugI18n.t('to_view')}</p>`;
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+resourceTracker.addEventListener(document, 'DOMContentLoaded', () => {
   // 初始化语言选项
   const testLanguageSelect = document.getElementById('testLanguage');
   if (testLanguageSelect) {
@@ -73,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 显示当前规则和匹配的规则详情
-  document.getElementById('showRulesBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('showRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('rulesResult');
     resultElement.innerHTML = debugI18n.t('getting_rule_info');
 
@@ -213,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // 监听来自扩展其他部分的日志消息
-  chrome.runtime.onMessage.addListener((request) => {
+  resourceTracker.addMessageListener((request) => {
     if (request.type !== 'DEBUG_LOG') return;
 
     // 过滤掉后台脚本的日志消息
@@ -223,14 +305,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 清除日志按钮功能
-  clearLogsBtn.addEventListener('click', () => {
+  resourceTracker.addEventListener(clearLogsBtn, 'click', () => {
     allLogMessages = []; // 清空存储的日志
     renderLogs(); // 渲染空日志列表
   });
 
   // 监听过滤器变化
   document.querySelectorAll('.form-check-input[id^="filter"]').forEach(checkbox => {
-    checkbox.addEventListener('change', renderLogs);
+    resourceTracker.addEventListener(checkbox, 'change', renderLogs);
   });
 
   // 使用通用 fallback 翻译系统，避免依赖异步加载的 debugI18n
@@ -253,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
           addLogMessage(`${result.data?.autoSwitchEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled')}`, 'info');
         } else {
-          setTimeout(checkI18nAndLog, 100);
+          resourceTracker.setTimeout(checkI18nAndLog, 100);
         }
       };
 
@@ -265,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // 测试请求头
-  document.getElementById('testHeaderBtn').addEventListener('click', async () => {
+  resourceTracker.addEventListener(document.getElementById('testHeaderBtn'), 'click', async () => {
     const language = document.getElementById('testLanguage').value;
     const resultElement = document.getElementById('headerTestResult');
     setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
@@ -353,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 修复规则优先级
-  document.getElementById('fixPriorityBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('fixPriorityBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
     resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
@@ -397,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 清除并重新应用规则
-  document.getElementById('clearAllRulesBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('clearAllRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
     resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
@@ -511,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 应用自定义语言设置
-  document.getElementById('applyCustomLangBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('applyCustomLangBtn'), 'click', () => {
     const customLangInput = document.getElementById('customLanguageInput');
     const customLangResult = document.getElementById('customLangResult');
     const languageString = customLangInput.value.trim();
@@ -589,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 显示诊断信息
-  document.getElementById('showDiagnosticsBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('showDiagnosticsBtn'), 'click', () => {
     const resultElement = document.getElementById('diagnosticsResult');
     resultElement.innerHTML = debugI18n.t('collecting_diagnostics');
     addLogMessage(debugI18n.t('try_show_diagnostics'), 'info');
@@ -671,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 自动切换功能控制
-  document.getElementById('autoSwitchToggle').addEventListener('change', function () {
+  resourceTracker.addEventListener(document.getElementById('autoSwitchToggle'), 'change', function () {
     const isEnabled = this.checked;
     addLogMessage(`${debugI18n.t('try_enable_disable_auto')}${isEnabled ? debugI18n.t('enable') : debugI18n.t('disable')}${debugI18n.t('auto_switch_function_ellipsis')}`, 'info');
 
@@ -697,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 显示域名映射规则
-  document.getElementById('showDomainRulesBtn').addEventListener('click', () => {
+  resourceTracker.addEventListener(document.getElementById('showDomainRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('domainRulesResult');
     resultElement.innerHTML = debugI18n.t('getting_domain_rules');
     addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
@@ -815,7 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 监听来自 background.js 的消息
-  chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  resourceTracker.addMessageListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
@@ -847,6 +929,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 缓存管理功能
   initializeCacheManagement();
 
+  // 页面卸载时清理所有资源
+  resourceTracker.addEventListener(window, 'beforeunload', () => {
+    resourceTracker.cleanup();
+  });
+
 }); // DOMContentLoaded 结束
 
 /**
@@ -859,41 +946,41 @@ const initializeCacheManagement = () => {
   // 刷新缓存统计按钮
   const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
   if (refreshCacheStatsBtn) {
-    refreshCacheStatsBtn.addEventListener('click', refreshCacheStats);
+    resourceTracker.addEventListener(refreshCacheStatsBtn, 'click', refreshCacheStats);
   }
 
   // 预加载规则按钮
   const preloadRulesBtn = document.getElementById('preloadRulesBtn');
   if (preloadRulesBtn) {
-    preloadRulesBtn.addEventListener('click', preloadDomainRules);
+    resourceTracker.addEventListener(preloadRulesBtn, 'click', preloadDomainRules);
   }
 
   // 清理域名缓存按钮
   const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
   if (clearDomainCacheBtn) {
-    clearDomainCacheBtn.addEventListener('click', clearDomainCache);
+    resourceTracker.addEventListener(clearDomainCacheBtn, 'click', clearDomainCache);
   }
 
   // 清理所有缓存按钮
   const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
   if (clearAllCacheBtn) {
-    clearAllCacheBtn.addEventListener('click', clearAllCache);
+    resourceTracker.addEventListener(clearAllCacheBtn, 'click', clearAllCache);
   }
 
   // 重置缓存统计按钮
   const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
   if (resetCacheStatsBtn) {
-    resetCacheStatsBtn.addEventListener('click', resetCacheStats);
+    resourceTracker.addEventListener(resetCacheStatsBtn, 'click', resetCacheStats);
   }
 
   // 域名测试按钮
   const testDomainBtn = document.getElementById('testDomainBtn');
   if (testDomainBtn) {
-    testDomainBtn.addEventListener('click', testDomainCache);
+    resourceTracker.addEventListener(testDomainBtn, 'click', testDomainCache);
   }
 
   // 初始加载缓存统计，并定期检查直到规则加载完成
-  setTimeout(() => {
+  resourceTracker.setTimeout(() => {
     refreshCacheStats();
     // 如果规则还未加载，定期检查状态
     checkPreloadStatusPeriodically();
@@ -908,7 +995,7 @@ const checkPreloadStatusPeriodically = () => {
   const maxChecks = 30; // 最多检查30次（15秒）
   const checkInterval = 500; // 每500ms检查一次
 
-  const intervalId = setInterval(() => {
+  const intervalId = resourceTracker.setInterval(() => {
     checkCount++;
 
     // 如果达到最大检查次数，停止检查
