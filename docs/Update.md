@@ -31,7 +31,8 @@
 - Update.md - 版本更新记录（v1.8.84）
 - Wiki.md - 添加资源管理架构章节（v1.8.84）
 - Wiki_EN.md - 添加资源管理架构章节（v1.8.84）
-- Resource_Management_Guide.md - 更新Service Worker环境资源管理策略、background.js实现示例和资源泄漏检测机制（v1.8.84）
+- Resource_Management_Guide.md - 修正文档与实际代码实现的一致性，更新Service Worker环境资源管理策略和background.js实现示例（v1.8.84）
+- Project_Structure.md - 项目结构更新（v1.8.84）
 
 ### 移除内容
 

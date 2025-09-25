@@ -108,7 +108,7 @@ const intervalId = resourceTracker.setInterval(() => {
 }, 5000);
 ```
 
-### 3. 消息监听器管理
+### 3. 消息监听器管理（仅页面环境）
 
 #### ✅ 推荐做法
 ```javascript
@@ -126,10 +126,10 @@ const resourceTracker = {
   }
 };
 
-// 使用示例
+// 使用示例（仅在页面环境中使用，如debug-ui.js）
 const messageHandler = (request, sender, sendResponse) => {
-  if (request.type === 'UPDATE_LANGUAGE') {
-    handleLanguageUpdate(request.language);
+  if (request.type === 'DEBUG_LOG') {
+    console.log('Debug message:', request.message);
   }
 };
 
@@ -228,29 +228,24 @@ const safeAddEventListener = (element, event, handler, options = null) => {
 };
 ```
 
-### 3. 性能监控
+### 3. 资源使用统计
 ```javascript
-// 资源使用统计
+// 获取当前资源使用统计
 const getResourceStats = () => {
-  return {
-    eventListeners: resourceTracker.eventListeners.length,
-    timers: resourceTracker.timers.length,
-    intervals: resourceTracker.intervals.length,
-    messageListeners: resourceTracker.messageListeners.length
+  const stats = {
+    eventListeners: resourceTracker.eventListeners?.length || 0,
+    timers: resourceTracker.timers?.length || 0,
+    intervals: resourceTracker.intervals?.length || 0,
+    messageListeners: resourceTracker.messageListeners?.length || 0,
+    abortControllers: resourceTracker.abortControllers?.length || 0
   };
+
+  console.log('Current resource usage:', stats);
+  return stats;
 };
 
-// 定期检查资源使用情况
-resourceTracker.setInterval(() => {
-  const stats = getResourceStats();
-  console.log('Resource usage:', stats);
-
-  // 警告资源使用过多
-  const totalResources = Object.values(stats).reduce((sum, count) => sum + count, 0);
-  if (totalResources > 50) {
-    console.warn('High resource usage detected:', totalResources);
-  }
-}, 30000); // 每30秒检查一次
+// 手动检查资源使用情况（开发调试用）
+getResourceStats();
 ```
 
 ## 实际应用示例
@@ -269,14 +264,14 @@ const resourceTracker = {
     this.eventListeners.push({ element, event, handler, options });
   },
 
-  setTimeout: function(callback, delay) {
-    const id = setTimeout(callback, delay);
+  setTimeout: function(callback, delay, ...args) {
+    const id = setTimeout(callback, delay, ...args);
     this.timers.push(id);
     return id;
   },
 
-  setInterval: function(callback, delay) {
-    const id = setInterval(callback, delay);
+  setInterval: function(callback, interval, ...args) {
+    const id = setInterval(callback, interval, ...args);
     this.intervals.push(id);
     return id;
   },
@@ -287,19 +282,21 @@ const resourceTracker = {
   },
 
   cleanup: function() {
-    // 清理事件监听器
+    // 移除所有事件监听器
     this.eventListeners.forEach(({ element, event, handler, options }) => {
       element.removeEventListener(event, handler, options);
     });
     this.eventListeners = [];
 
-    // 清理定时器
+    // 清除所有定时器
     this.timers.forEach(id => clearTimeout(id));
     this.timers = [];
+
+    // 清除所有间隔定时器
     this.intervals.forEach(id => clearInterval(id));
     this.intervals = [];
 
-    // 清理消息监听器
+    // 移除所有消息监听器
     this.messageListeners.forEach(listener => {
       chrome.runtime.onMessage.removeListener(listener);
     });
@@ -361,11 +358,12 @@ chrome.runtime.onSuspend.addListener(() => {
 
 ### 3. 环境差异对比
 
-| 资源类型 | 页面环境 (debug-ui.js) | Service Worker环境 (background.js) |
-|---------|----------------------|----------------------------------|
-| 事件监听器 | ✅ 需要管理DOM事件监听器 | ❌ 不需要管理Chrome API监听器 |
+| 资源类型 | 页面环境 (debug-ui.js, popup.js, toggle.js, detect.js) | Service Worker环境 (background.js) |
+|---------|---------------------------------------------------|----------------------------------|
+| 事件监听器 | ✅ 需要管理DOM事件监听器 | ❌ 不需要管理（Chrome API监听器由系统管理） |
 | 定时器 | ✅ 需要管理 | ✅ 需要管理 |
-| 消息监听器 | ✅ 需要管理 | ❌ 不需要管理 |
+| 消息监听器 | ✅ 需要管理 | ❌ 不需要管理（Chrome API监听器由系统管理） |
+| AbortController | ✅ 需要管理（仅detect.js） | ❌ 不需要管理 |
 | 清理时机 | `beforeunload` | `onSuspend` |
 | 复杂度 | 高（多种资源类型） | 低（仅定时器） |
 
@@ -402,9 +400,10 @@ chrome.runtime.onSuspend.addListener(() => {
 ## 代码审查检查清单
 
 ### ✅ 资源管理检查
-- [ ] 所有事件监听器都通过 `resourceTracker.addEventListener` 添加
+- [ ] 所有事件监听器都通过 `resourceTracker.addEventListener` 添加（页面环境）
 - [ ] 所有定时器都通过 `resourceTracker.setTimeout/setInterval` 创建
-- [ ] 所有消息监听器都通过 `resourceTracker.addMessageListener` 添加
+- [ ] 所有消息监听器都通过 `resourceTracker.addMessageListener` 添加（页面环境）
+- [ ] AbortController 都通过 `resourceTracker.createAbortController` 创建（detect.js）
 - [ ] 页面卸载时调用了 `resourceTracker.cleanup()`
 - [ ] 没有直接使用原生 API 创建资源
 
@@ -422,49 +421,63 @@ chrome.runtime.onSuspend.addListener(() => {
 
 ### 1. 内存泄漏检测
 ```javascript
-// 在浏览器开发者工具中检测内存泄漏
+// 手动检查资源泄漏（开发调试用）
 const detectMemoryLeaks = () => {
+  console.log('=== 资源泄漏检测 ===');
+
+  // 检查资源跟踪器中的资源数量
   const stats = getResourceStats();
-  console.log('Current resource usage:', stats);
+
+  // 警告资源使用过多
+  const totalResources = Object.values(stats).reduce((sum, count) => sum + count, 0);
+  if (totalResources > 100) {
+    console.warn('⚠️ 检测到大量资源，可能存在泄漏:', totalResources);
+  } else {
+    console.log('✅ 资源使用正常:', totalResources);
+  }
 
   // 强制垃圾回收（仅在开发环境）
-  if (window.gc) {
+  if (window && window.gc) {
     window.gc();
+    console.log('🧹 已执行垃圾回收');
   }
+
+  return stats;
 };
 
-// 定期检测
-resourceTracker.setInterval(detectMemoryLeaks, 60000);
+// 手动调用检测
+// detectMemoryLeaks();
 ```
 
 ### 2. 资源使用监控
 ```javascript
-// 监控资源使用趋势
-let resourceHistory = [];
-
+// 简单的资源使用监控（开发调试用）
 const monitorResourceUsage = () => {
-  const stats = getResourceStats();
-  resourceHistory.push({
-    timestamp: Date.now(),
-    ...stats
-  });
+  console.log('=== 资源使用监控 ===');
 
-  // 只保留最近10次记录
-  if (resourceHistory.length > 10) {
-    resourceHistory = resourceHistory.slice(-10);
+  const stats = getResourceStats();
+
+  // 检查是否有资源持续增长的迹象
+  const totalResources = Object.values(stats).reduce((sum, count) => sum + count, 0);
+
+  if (totalResources > 50) {
+    console.warn('⚠️ 资源使用较高，建议检查是否有泄漏:', stats);
+  } else {
+    console.log('✅ 资源使用正常:', stats);
   }
 
-  console.log('Resource trend:', resourceHistory);
+  return stats;
 };
 
-resourceTracker.setInterval(monitorResourceUsage, 30000);
+// 手动调用监控
+// monitorResourceUsage();
 ```
 
 ## 更新历史
 
 - **v1.8.75**：初始版本，基于 debug-ui.js 资源管理修复经验编写
-- **v1.8.79**：完善资源类型覆盖，添加性能监控和调试方法
-- **v1.8.84**：添加Service Worker环境资源管理策略，更新background.js简化实现示例
+- **v1.8.79**：完善资源类型覆盖，添加基本的资源统计功能
+- **v1.8.84**：添加Service Worker环境资源管理策略，更新background.js简化实现示例，修正文档与实际代码实现的一致性
 
 ---
 
