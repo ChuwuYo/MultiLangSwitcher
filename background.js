@@ -13,6 +13,68 @@ importScripts('domain-rules-manager.js');
 // 5. 导入更新检查器
 importScripts('shared/shared-update-checker.js');
 
+// --- 资源管理器  ---
+const resourceTracker = {
+  eventListeners: [],
+  timers: [],
+  intervals: [],
+  messageListeners: [],
+
+  // 事件监听器管理
+  addEventListener: function(target, event, handler, options = null) {
+    target.addListener(handler);
+    this.eventListeners.push({ target, event, handler, options });
+  },
+
+  removeEventListener: function(target, event, handler, options = null) {
+    target.removeListener(handler);
+    this.eventListeners = this.eventListeners.filter(
+      listener => !(listener.target === target &&
+                   listener.event === event &&
+                   listener.handler === handler &&
+                   listener.options === options)
+    );
+  },
+
+  // 定时器管理
+  setTimeout: function(callback, delay) {
+    const id = setTimeout(callback, delay);
+    this.timers.push(id);
+    return id;
+  },
+
+  setInterval: function(callback, delay) {
+    const id = setInterval(callback, delay);
+    this.intervals.push(id);
+    return id;
+  },
+
+  clearTimeout: function(id) {
+    clearTimeout(id);
+    this.timers = this.timers.filter(timerId => timerId !== id);
+  },
+
+  clearInterval: function(id) {
+    clearInterval(id);
+    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
+  },
+
+  // 统一清理方法
+  cleanup: function() {
+    // 清理事件监听器
+    this.eventListeners.forEach(({ target, event, handler, options }) => {
+      target.removeListener(handler);
+    });
+    this.eventListeners = [];
+
+    // 清理定时器
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers = [];
+    this.intervals.forEach(id => clearInterval(id));
+    this.intervals = [];
+  }
+};
+
 // 常量定义
 const RULE_ID = 1;
 // 统一并简化语言常量
@@ -336,7 +398,7 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
     sendBackgroundLog(`${backgroundI18n.t('retry_after', { delay, count: nextRetryCount })}`, 'warning');
 
     // 等待后重试
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise(resolve => resourceTracker.setTimeout(resolve, delay));
     return await updateHeaderRulesInternal(language, nextRetryCount, false);
   } else {
     // 超过重试次数或不可重试的错误
@@ -450,8 +512,10 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
   latestAutoSwitchEnabled = autoSwitchEnabled;
   latestCurrentLanguage = currentLanguage;
 
-  clearTimeout(pendingUIUpdate);
-  pendingUIUpdate = setTimeout(() => {
+  if (pendingUIUpdate) {
+    clearTimeout(pendingUIUpdate);
+  }
+  pendingUIUpdate = resourceTracker.setTimeout(() => {
     const message = {
       type: 'AUTO_SWITCH_UI_UPDATE',
       autoSwitchEnabled: latestAutoSwitchEnabled,
@@ -1215,7 +1279,7 @@ const handleGetManifestInfoRequest = (sendResponse) => {
   try {
     const manifest = chrome.runtime.getManifest();
     const extensionId = chrome.runtime.id;
-    
+
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: true,
@@ -1233,3 +1297,9 @@ const handleGetManifestInfoRequest = (sendResponse) => {
     }
   }
 };
+
+// 扩展卸载时的清理
+chrome.runtime.onSuspend.addListener(() => {
+  sendBackgroundLog('Extension suspending, cleaning up resources...', 'info');
+  resourceTracker.cleanup();
+});

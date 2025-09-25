@@ -200,7 +200,7 @@ function md5(string) {
 /* eslint-enable */
 // --- End MD5 Hashing Function ---
 
-// --- 资源管理器 - 零影响实现 ---
+// --- 资源管理器  ---
 const resourceTracker = {
   eventListeners: [],
   timers: [],
