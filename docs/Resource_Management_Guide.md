@@ -255,9 +255,9 @@ resourceTracker.setInterval(() => {
 
 ## 实际应用示例
 
-### 1. debug-ui.js 资源管理实现
+### 1. debug-ui.js 资源管理实现（页面环境）
 ```javascript
-// 实际项目中的完整实现
+// 实际项目中的完整实现 - 适用于页面环境
 const resourceTracker = {
   eventListeners: [],
   timers: [],
@@ -313,23 +313,61 @@ resourceTracker.addEventListener(window, 'beforeunload', () => {
 });
 ```
 
-### 2. popup.js 现有实现参考
+### 2. background.js 资源管理实现（Service Worker环境）
 ```javascript
-// popup.js 中的资源管理实现（已验证有效）
+// 实际项目中的简化实现 - 适用于Service Worker环境
 const resourceTracker = {
-  eventListeners: [],
   timers: [],
   intervals: [],
-  messageListeners: [],
 
-  addEventListener: function(element, event, handler, options = null) {
-    element.addEventListener(event, handler, options);
-    this.eventListeners.push({ element, event, handler, options });
+  // 定时器管理
+  setTimeout: function(callback, delay) {
+    const id = setTimeout(callback, delay);
+    this.timers.push(id);
+    return id;
   },
 
-  // ... 其他方法与 debug-ui.js 保持一致
+  setInterval: function(callback, delay) {
+    const id = setInterval(callback, delay);
+    this.intervals.push(id);
+    return id;
+  },
+
+  clearTimeout: function(id) {
+    clearTimeout(id);
+    this.timers = this.timers.filter(timerId => timerId !== id);
+  },
+
+  clearInterval: function(id) {
+    clearInterval(id);
+    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
+  },
+
+  // 统一清理方法
+  cleanup: function() {
+    // 清理定时器
+    this.timers.forEach(id => clearTimeout(id));
+    this.timers = [];
+    this.intervals.forEach(id => clearInterval(id));
+    this.intervals = [];
+  }
 };
+
+// Service Worker 暂停时清理资源
+chrome.runtime.onSuspend.addListener(() => {
+  resourceTracker.cleanup();
+});
 ```
+
+### 3. 环境差异对比
+
+| 资源类型 | 页面环境 (debug-ui.js) | Service Worker环境 (background.js) |
+|---------|----------------------|----------------------------------|
+| 事件监听器 | ✅ 需要管理DOM事件监听器 | ❌ 不需要管理Chrome API监听器 |
+| 定时器 | ✅ 需要管理 | ✅ 需要管理 |
+| 消息监听器 | ✅ 需要管理 | ❌ 不需要管理 |
+| 清理时机 | `beforeunload` | `onSuspend` |
+| 复杂度 | 高（多种资源类型） | 低（仅定时器） |
 
 ## 常见问题和解决方案
 
@@ -426,6 +464,7 @@ resourceTracker.setInterval(monitorResourceUsage, 30000);
 
 - **v1.8.75**：初始版本，基于 debug-ui.js 资源管理修复经验编写
 - **v1.8.79**：完善资源类型覆盖，添加性能监控和调试方法
+- **v1.8.84**：添加Service Worker环境资源管理策略，更新background.js简化实现示例
 
 ---
 
