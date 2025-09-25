@@ -1,4 +1,5 @@
 // 域名规则管理器
+
 class DomainRulesManager {
   constructor() {
     this.rules = null;
@@ -235,14 +236,6 @@ class DomainRulesManager {
       result = this._matchRule(baseTopLevel, customRules, 'top', 'found_in_top_level');
       if (result) return this._cacheAndReturn(domain, result);
 
-      // 智能推断 - 使用第一个部分作为可能的语言代码
-      const firstPart = parsed.parts[0].toLowerCase();
-      const commonLanguageCodes = ['en', 'zh', 'es', 'fr', 'de', 'ja', 'ko', 'ru', 'pt', 'it', 'ar', 'hi', 'th', 'vi'];
-      if (commonLanguageCodes.includes(firstPart)) {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('inferred_from_subdomain') : 'Inferred language from subdomain'}: ${firstPart} → ${firstPart}`);
-        result = { language: firstPart, source: 'inferred-subdomain' };
-        return this._cacheAndReturn(domain, result);
-      }
     }
 
     // 3. 检查原域名的二级域名匹配
@@ -291,17 +284,6 @@ class DomainRulesManager {
      baseDomain: null // 去除语言子域名后的基础域名
    };
 
-   // 如果有3个或更多部分，尝试识别语言子域名
-   if (parts.length >= 3) {
-     const firstPart = parts[0].toLowerCase();
-
-     // 简化的语言子域名检查 - 常见的语言代码
-     const commonLanguageCodes = ['en', 'zh', 'es', 'fr', 'de', 'ja', 'ko', 'ru', 'pt', 'it', 'ar', 'hi', 'th', 'vi'];
-     if (commonLanguageCodes.includes(firstPart)) {
-       // 去除语言子域名，获取基础域名
-       result.baseDomain = parts.slice(1).join('.');
-     }
-   }
 
    return result;
  }
@@ -316,7 +298,7 @@ class DomainRulesManager {
     const i18n = this.ensureI18n();
 
     this.domainCache.clear();
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('cache_cleared') : 'Cache cleared'}`);
+    console.log(`[DomainRulesManager] ${i18n ? i18n.t('domain_cache_cleared') : 'Domain cache cleared'}`);
   }
 
   /**

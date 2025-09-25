@@ -17,7 +17,6 @@ if (typeof domainManagerEn === 'undefined') {
   "found_in_second_level": "Found in second-level domain",
   "checking_base_domain": "Checking base domain",
   "found_in_base_domain": "Found in base domain",
-  "inferred_from_subdomain": "Inferred language from subdomain",
   "checking_top_level": "Checking top-level domain",
   "available_top_level_rules": "Available top-level domain rules",
   "found_in_top_level": "Found in top-level domain",

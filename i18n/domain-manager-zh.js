@@ -17,7 +17,6 @@ if (typeof domainManagerZh === 'undefined') {
   "found_in_second_level": "在二级域名中找到",
   "checking_base_domain": "检查基础域名",
   "found_in_base_domain": "在基础域名中找到",
-  "inferred_from_subdomain": "从子域名推断语言",
   "checking_top_level": "检查顶级域名",
   "available_top_level_rules": "可用顶级域名规则",
   "found_in_top_level": "在顶级域名中找到",
