@@ -1028,7 +1028,7 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
     } else if (request.type === 'TEST_DOMAIN_CACHE') {
       handleTestDomainCacheRequest(request, sendResponse);
     } else if (request.type === 'CLEAR_DOMAIN_CACHE') {
-      handleClearDomainCacheRequest(sendResponse);
+      handleClearCacheRequest(sendResponse);
     } else if (request.type === 'RESET_CACHE_STATS') {
       handleResetCacheStatsRequest(sendResponse);
     } else if (request.type === 'GET_DYNAMIC_RULES') {

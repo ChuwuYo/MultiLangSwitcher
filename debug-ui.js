@@ -1189,12 +1189,6 @@ const clearDomainCache = async () => {
   return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
 };
 
-/**
- * 清理所有缓存
- */
-const clearAllCache = async () => {
-  return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
-};
 
 /**
  * 重置缓存统计

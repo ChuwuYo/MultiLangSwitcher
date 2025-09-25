@@ -235,11 +235,12 @@ class DomainRulesManager {
       result = this._matchRule(baseTopLevel, customRules, 'top', 'found_in_top_level');
       if (result) return this._cacheAndReturn(domain, result);
 
-      // 智能推断
-      const languageFromSubdomain = this._inferLanguageFromSubdomain(parsed.parts[0]);
-      if (languageFromSubdomain) {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('inferred_from_subdomain') : 'Inferred language from subdomain'}: ${parsed.parts[0]} → ${languageFromSubdomain}`);
-        result = { language: languageFromSubdomain, source: 'inferred-subdomain' };
+      // 智能推断 - 使用第一个部分作为可能的语言代码
+      const firstPart = parsed.parts[0].toLowerCase();
+      const commonLanguageCodes = ['en', 'zh', 'es', 'fr', 'de', 'ja', 'ko', 'ru', 'pt', 'it', 'ar', 'hi', 'th', 'vi'];
+      if (commonLanguageCodes.includes(firstPart)) {
+        console.log(`[DomainRulesManager] ${i18n ? i18n.t('inferred_from_subdomain') : 'Inferred language from subdomain'}: ${firstPart} → ${firstPart}`);
+        result = { language: firstPart, source: 'inferred-subdomain' };
         return this._cacheAndReturn(domain, result);
       }
     }
@@ -294,8 +295,9 @@ class DomainRulesManager {
    if (parts.length >= 3) {
      const firstPart = parts[0].toLowerCase();
 
-     // 检查第一个部分是否是语言代码
-     if (this._isLanguageSubdomain(firstPart)) {
+     // 简化的语言子域名检查 - 常见的语言代码
+     const commonLanguageCodes = ['en', 'zh', 'es', 'fr', 'de', 'ja', 'ko', 'ru', 'pt', 'it', 'ar', 'hi', 'th', 'vi'];
+     if (commonLanguageCodes.includes(firstPart)) {
        // 去除语言子域名，获取基础域名
        result.baseDomain = parts.slice(1).join('.');
      }
