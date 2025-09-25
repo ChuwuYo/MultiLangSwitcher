@@ -532,21 +532,20 @@ const fetchWithTimeout = async (url, timeoutMs) => {
       signal: controller.signal
     });
 
-    resourceTracker.clearTimeout(timeoutId);
-
     if (!response.ok) {
       throw new Error(`${detectI18n.t('http_error_status')} ${response.status} ${detectI18n.t('from')} ${url}`);
     }
 
     return await response.json();
   } catch (error) {
-    resourceTracker.clearTimeout(timeoutId);
-
     if (error.name === 'AbortError') {
       throw new Error(detectI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
     }
-
     throw error;
+  } finally {
+    resourceTracker.clearTimeout(timeoutId);
+    // 从跟踪器中移除控制器以防止内存泄漏
+    resourceTracker.abortControllers = resourceTracker.abortControllers.filter(ctrl => ctrl !== controller);
   }
 }
 
