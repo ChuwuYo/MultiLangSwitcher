@@ -246,7 +246,6 @@ const language = await domainRulesManager.getLanguageForDomain('example.com');
 'example.de' → 'de-DE'       // TLD匹配
 
 // 管理功能
-await domainRulesManager.preloadRules(); // 规则预加载
 domainRulesManager.getCacheStats();      // 缓存统计
 domainRulesManager.clearCache();         // 清理缓存
 ```

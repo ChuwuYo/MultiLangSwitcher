@@ -60,7 +60,6 @@ if (typeof popupEn === 'undefined') {
   "error_accessing_storage": "Error accessing storage: {message}",
   "popup_hidden_cancelled_update": "Popup hidden, cancelled ongoing update check",
   "dom_cache_initialized": "DOM cache initialized for all elements",
-  "update_checker_cache_preloaded": "Update checker cache preloaded successfully",
   "update_checker_initialized": "Update checker initialized with version {version}",
   "update_checker_cache_optimized": "Update checker cache optimized",
   "extension_is_up_to_date": "Extension is up to date",

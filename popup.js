@@ -1116,17 +1116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // DOM缓存已在主初始化中完成，无需重复初始化
 
-  // 初始化更新检查器并预加载缓存以提高性能
+  // 初始化更新检查器
   initializeUpdateChecker();
   if (updateChecker) {
-    // 在后台预加载缓存以加快后续请求
-    updateChecker.preloadCache().then(preloaded => {
-      if (preloaded) {
-        sendDebugLog(popupI18n.t('update_checker_cache_preloaded'), 'info');
-      }
-    }).catch(error => {
-      sendDebugLog(`Cache preload failed: ${error.message}`, 'warning');
-    });
 
     // 通过清理过期条目来优化缓存
     updateChecker.optimizeCache().then(optimized => {

@@ -246,7 +246,6 @@ const language = await domainRulesManager.getLanguageForDomain('example.com');
 'example.de' → 'de-DE'       // TLD match
 
 // Management functions
-await domainRulesManager.preloadRules(); // Preload rules
 domainRulesManager.getCacheStats();      // Cache statistics
 domainRulesManager.clearCache();         // Clear cache
 ```

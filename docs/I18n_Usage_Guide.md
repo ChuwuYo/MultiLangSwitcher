@@ -257,10 +257,6 @@ console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in 
 **域名管理器支持的翻译键：**
 - `searching_domain` - 查找域名
 - `found_in_cache` - 在缓存中找到
-- `preprocessing_rules` - 预处理规则以提高性能
-- `rules_preprocessed` - 规则预处理完成
-- `cache_preloaded` - 缓存预加载完成
-- `all_cache_cleared` - 所有缓存已清除
 - 更多翻译键请参考 `i18n/domain-manager-zh.js` 和 `i18n/domain-manager-en.js`
 
 ### 高级用法
@@ -563,7 +559,6 @@ function checkI18nAvailability() {
 // ✅ 推荐：使用下划线分隔的小写命名
 "searching_domain": "查找域名",
 "found_in_cache": "在缓存中找到",
-"rules_preprocessed": "规则预处理完成",
 
 // ❌ 避免：驼峰命名或其他格式
 "searchingDomain": "查找域名",        // 不推荐

@@ -715,28 +715,6 @@ class UpdateChecker {
     }
   }
 
-  /**
-   * 预加载缓存数据以加快后续请求
-   */
-  async preloadCache() {
-    if (!this.persistentCacheEnabled) {
-      return false;
-    }
-
-    try {
-      const cacheData = await this.loadPersistentCache();
-      if (cacheData && cacheData.expiry && Date.now() < cacheData.expiry) {
-        this.cache = cacheData.data;
-        this.cacheExpiry = cacheData.expiry;
-        // 内部缓存操作，不输出到用户日志
-        return true;
-      }
-      return false;
-    } catch (error) {
-      sendLocalizedUpdateLog('cache_preload_failed', { error: error.message }, 'warning');
-      return false;
-    }
-  }
 
   /**
    * 当 GitHub API 完全不可用时提供优雅的回退方案

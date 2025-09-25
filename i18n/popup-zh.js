@@ -60,7 +60,6 @@ if (typeof popupZh === 'undefined') {
   "error_accessing_storage": "访问存储时出错: {message}",
   "popup_hidden_cancelled_update": "弹窗已隐藏，取消正在进行的更新检查",
   "dom_cache_initialized": "DOM缓存已初始化完成",
-  "update_checker_cache_preloaded": "更新检查器缓存预加载成功",
   "update_checker_initialized": "更新检查器已初始化，版本: {version}",
   "update_checker_cache_optimized": "更新检查器缓存已优化",
   "extension_is_up_to_date": "扩展已是最新版本",

@@ -941,47 +941,21 @@ const handleCacheOperation = async (sendResponse, operation, logMessages) => {
   }
 };
 
-/**
- * 处理预加载规则请求
- * @param {Function} sendResponse - 响应函数
- */
-const handlePreloadRulesRequest = (sendResponse) => handleCacheOperation(
-  sendResponse,
-  () => domainRulesManager.preloadRules(),
-  {
-    start: 'Preloading domain rules...',
-    success: 'Rules preloaded successfully',
-    fail: 'Rules preload failed'
-  }
-);
 
 /**
- * 处理清理域名缓存请求
+ * 处理清理缓存请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleClearDomainCacheRequest = (sendResponse) => handleCacheOperation(
-  sendResponse,
-  () => domainRulesManager.clearCache(false), // false = 只清理域名缓存
-  {
-    start: 'Clearing domain cache...',
-    success: 'Domain cache cleared successfully',
-    fail: 'Clear domain cache failed'
-  }
+const handleClearCacheRequest = (sendResponse) => handleCacheOperation(
+ sendResponse,
+ () => domainRulesManager.clearCache(),
+ {
+   start: 'Clearing cache...',
+   success: 'Cache cleared successfully',
+   fail: 'Clear cache failed'
+ }
 );
 
-/**
- * 处理清理所有缓存请求
- * @param {Function} sendResponse - 响应函数
- */
-const handleClearAllCacheRequest = (sendResponse) => handleCacheOperation(
-  sendResponse,
-  () => domainRulesManager.clearCache(true), // true = 清理所有缓存
-  {
-    start: 'Clearing all cache...',
-    success: 'All cache cleared successfully',
-    fail: 'Clear all cache failed'
-  }
-);
 
 /**
  * 处理重置缓存统计请求
@@ -1053,12 +1027,8 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       handleGetCacheStatsRequest(sendResponse);
     } else if (request.type === 'TEST_DOMAIN_CACHE') {
       handleTestDomainCacheRequest(request, sendResponse);
-    } else if (request.type === 'PRELOAD_RULES') {
-      handlePreloadRulesRequest(sendResponse);
     } else if (request.type === 'CLEAR_DOMAIN_CACHE') {
       handleClearDomainCacheRequest(sendResponse);
-    } else if (request.type === 'CLEAR_ALL_CACHE') {
-      handleClearAllCacheRequest(sendResponse);
     } else if (request.type === 'RESET_CACHE_STATS') {
       handleResetCacheStatsRequest(sendResponse);
     } else if (request.type === 'GET_DYNAMIC_RULES') {
