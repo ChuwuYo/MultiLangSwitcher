@@ -14,7 +14,7 @@ MultiLangSwitcher/
 │   ├── Project_Structure.md         - 项目结构文档（完整的文件结构说明）
 │   ├── I18n_Usage_Guide.md          - 国际化使用指南（国际化系统的使用方法）
 │   ├── Domain_Matching_Guide.md     - 域名匹配算法指南（性能优化实现）
-│   ├── Problems.md                  - 问题列表（LLM整理的现存问题）
+│   ├── Resource_Management_Guide.md - 资源管理指南（资源管理优化实现）
 │   ├── Update.md                    - 版本更新记录（项目变更历史）
 │   └── TODO.md                      - 待完成功能和改进项目
 ├── shared/                          - 共享资源目录
