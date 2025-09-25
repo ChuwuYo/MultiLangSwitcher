@@ -60,7 +60,6 @@ console.log(language); // 输出: 'zh-CN' 或 null
 // 获取缓存统计
 const stats = domainRulesManager.getCacheStats();
 console.log('域名缓存命中率:', stats.domainCacheHitRate);
-console.log('解析缓存命中率:', stats.parsedCacheHitRate);
 
 // 清理缓存
 domainRulesManager.clearCache(); // 只清理域名查询缓存
@@ -72,8 +71,7 @@ domainRulesManager.resetCacheStats();
 
 #### 2. 规则预加载（推荐）
 ```javascript
-// 在扩展启动时预加载规则文件，避免首次查询延迟
-await domainRulesManager.preloadRules();
+// 缓存系统会在首次使用时自动加载规则文件
 ```
 
 #### 3. 语言子域名识别示例
@@ -144,7 +142,7 @@ chrome.storage.local.set({
 // 定期检查缓存效果
 setInterval(() => {
   const stats = domainRulesManager.getCacheStats();
-  console.log(`缓存效果 - 域名: ${stats.domainCacheHitRate}, 解析: ${stats.parsedCacheHitRate}`);
+  console.log(`缓存效果 - 域名: ${stats.domainCacheHitRate}`);
 }, 60000); // 每分钟检查一次
 ```
 
@@ -153,7 +151,6 @@ setInterval(() => {
 // 获取基础缓存统计
 const stats = domainRulesManager.getCacheStats();
 console.log('域名缓存:', stats.domainCacheSize, '命中率:', stats.domainCacheHitRate);
-console.log('解析缓存:', stats.parsedDomainCacheSize, '命中率:', stats.parsedCacheHitRate);
 ```
 
 ## 最佳实践
@@ -163,7 +160,7 @@ console.log('解析缓存:', stats.parsedDomainCacheSize, '命中率:', stats.pa
 ```javascript
 // 在 background.js 中
 chrome.runtime.onStartup.addListener(async () => {
-  await domainRulesManager.preloadRules();
+  // 缓存系统会在需要时自动加载规则文件
 });
 ```
 
@@ -289,7 +286,6 @@ await domainRulesManager.loadRules();
 #### 3. 性能问题
 **症状**：域名查询响应缓慢
 **解决方案**：
-- 启用规则预加载：`await domainRulesManager.preloadRules()`
 - 检查缓存命中率：`domainRulesManager.getCacheStats()`
 - 优化自定义规则数量
 

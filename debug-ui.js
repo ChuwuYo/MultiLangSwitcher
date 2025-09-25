@@ -949,11 +949,6 @@ const initializeCacheManagement = () => {
     resourceTracker.addEventListener(refreshCacheStatsBtn, 'click', refreshCacheStats);
   }
 
-  // 预加载规则按钮
-  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
-  if (preloadRulesBtn) {
-    resourceTracker.addEventListener(preloadRulesBtn, 'click', preloadDomainRules);
-  }
 
   // 清理域名缓存按钮
   const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
@@ -961,11 +956,6 @@ const initializeCacheManagement = () => {
     resourceTracker.addEventListener(clearDomainCacheBtn, 'click', clearDomainCache);
   }
 
-  // 清理所有缓存按钮
-  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
-  if (clearAllCacheBtn) {
-    resourceTracker.addEventListener(clearAllCacheBtn, 'click', clearAllCache);
-  }
 
   // 重置缓存统计按钮
   const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
@@ -979,64 +969,12 @@ const initializeCacheManagement = () => {
     resourceTracker.addEventListener(testDomainBtn, 'click', testDomainCache);
   }
 
-  // 初始加载缓存统计，并定期检查直到规则加载完成
+  // 初始加载缓存统计
   resourceTracker.setTimeout(() => {
     refreshCacheStats();
-    // 如果规则还未加载，定期检查状态
-    checkPreloadStatusPeriodically();
   }, 100); // 延迟一点确保所有元素都已加载
 }
 
-/**
- * 定期检查预加载状态，直到规则加载完成
- */
-const checkPreloadStatusPeriodically = () => {
-  let checkCount = 0;
-  const maxChecks = 30; // 最多检查30次（15秒）
-  const checkInterval = 500; // 每500ms检查一次
-
-  const intervalId = resourceTracker.setInterval(() => {
-    checkCount++;
-
-    // 如果达到最大检查次数，停止检查
-    if (checkCount >= maxChecks) {
-      clearInterval(intervalId);
-      console.log('[Cache] Stopped checking preload status after maximum attempts');
-      return;
-    }
-
-    try {
-      // 通过消息传递从后台获取规则状态
-      (async () => {
-        try {
-          const response = await chrome.runtime.sendMessage({
-            type: 'GET_CACHE_STATS'
-          });
-
-          if (response && response.success && response.stats) {
-            const hasRules = response.stats.totalRules > 0;
-
-            if (hasRules) {
-              // 规则已加载，更新状态并停止检查
-              updatePreloadStatus();
-              clearInterval(intervalId);
-              console.log('[Cache] Rules loaded automatically, preload status updated');
-              return;
-            }
-          }
-        } catch (error) {
-          // 通信失败，继续等待
-          console.log('[Cache] Communication failed, continuing to wait:', error.message);
-        }
-      })();
-
-    } catch (error) {
-      // 出错时停止检查
-      clearInterval(intervalId);
-      console.error('[Cache] Error during periodic preload status check:', error);
-    }
-  }, checkInterval);
-}
 
 /**
  * 测试域名缓存功能
@@ -1152,15 +1090,7 @@ const initializeCacheManagementTexts = () => {
     domainCacheLabel.textContent = debugI18n.t('domain_cache_label');
   }
 
-  const parsedCacheLabel = document.getElementById('parsedCacheLabel');
-  if (parsedCacheLabel) {
-    parsedCacheLabel.textContent = debugI18n.t('parsed_cache_label');
-  }
 
-  const preloadStatusLabel = document.getElementById('preloadStatusLabel');
-  if (preloadStatusLabel) {
-    preloadStatusLabel.textContent = debugI18n.t('preload_status_label');
-  }
 
   // 设置按钮文本
   const refreshCacheStatsBtn = document.getElementById('refreshCacheStatsBtn');
@@ -1168,20 +1098,12 @@ const initializeCacheManagementTexts = () => {
     refreshCacheStatsBtn.textContent = debugI18n.t('refresh_cache_stats');
   }
 
-  const preloadRulesBtn = document.getElementById('preloadRulesBtn');
-  if (preloadRulesBtn) {
-    preloadRulesBtn.textContent = debugI18n.t('preload_rules');
-  }
 
   const clearDomainCacheBtn = document.getElementById('clearDomainCacheBtn');
   if (clearDomainCacheBtn) {
     clearDomainCacheBtn.textContent = debugI18n.t('clear_domain_cache');
   }
 
-  const clearAllCacheBtn = document.getElementById('clearAllCacheBtn');
-  if (clearAllCacheBtn) {
-    clearAllCacheBtn.textContent = debugI18n.t('clear_all_cache');
-  }
 
   const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
   if (resetCacheStatsBtn) {
@@ -1241,10 +1163,7 @@ const handleCacheOperation = async (messageType, successMessageKey, additionalCa
  * 刷新缓存统计显示
  */
 const refreshCacheStats = async () => {
-  return handleCacheOperation('GET_CACHE_STATS', 'cache_stats_refreshed', () => {
-    // 检查预加载状态
-    updatePreloadStatus();
-  });
+  return handleCacheOperation('GET_CACHE_STATS', 'cache_stats_refreshed');
 };
 
 /**
@@ -1255,76 +1174,13 @@ const updateCacheStatsDisplay = (stats) => {
   const domainCacheSize = document.getElementById('domainCacheSize');
   const domainCacheHitRate = document.getElementById('domainCacheHitRate');
   if (domainCacheSize && domainCacheHitRate) {
-    domainCacheSize.textContent = `${stats.domainCacheSize}/${stats.maxCacheSize}`;
-    domainCacheHitRate.textContent = `(${stats.domainCacheHitRate})`;
+    domainCacheSize.textContent = `${stats.domainCacheSize}`;
+    domainCacheHitRate.textContent = `(${stats.cacheHitRate})`;
   }
 
-  // 更新解析缓存统计
-  const parsedCacheSize = document.getElementById('parsedCacheSize');
-  const parsedCacheHitRate = document.getElementById('parsedCacheHitRate');
-  if (parsedCacheSize && parsedCacheHitRate) {
-    parsedCacheSize.textContent = `${stats.parsedDomainCacheSize}/${stats.maxCacheSize}`;
-    parsedCacheHitRate.textContent = `(${stats.parsedCacheHitRate})`;
-  }
 }
 
-/**
- * 更新预加载状态显示
- */
-const updatePreloadStatus = async () => {
-  const preloadStatus = document.getElementById('preloadStatus');
-  if (!preloadStatus) return;
 
-  try {
-    // 通过消息传递从后台获取规则状态
-    const response = await chrome.runtime.sendMessage({
-      type: 'GET_CACHE_STATS'
-    });
-
-    if (response && response.success && response.stats) {
-      const hasRules = response.stats.totalRules > 0;
-
-      if (hasRules) {
-        preloadStatus.textContent = debugI18n.t('preload_status_loaded');
-        preloadStatus.className = 'preload-status loaded';
-      } else {
-        preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
-        preloadStatus.className = 'preload-status not-loaded';
-      }
-    } else {
-      preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
-      preloadStatus.className = 'preload-status not-loaded';
-    }
-  } catch (error) {
-    preloadStatus.textContent = debugI18n.t('preload_status_not_loaded');
-    preloadStatus.className = 'preload-status not-loaded';
-  }
-}
-
-/**
- * 预加载域名规则
- */
-const preloadDomainRules = async () => {
-  const preloadStatus = document.getElementById('preloadStatus');
-
-  // 显示加载状态
-  if (preloadStatus) {
-    preloadStatus.textContent = debugI18n.t('preload_status_loading');
-    preloadStatus.className = 'preload-status loading';
-  }
-
-  // 使用通用函数处理缓存操作，并提供额外的回调来恢复预加载状态
-  try {
-    await handleCacheOperation('PRELOAD_RULES', 'rules_preloaded_success', () => {
-      // 更新预加载状态
-      updatePreloadStatus();
-    });
-  } catch (error) {
-    // 如果操作失败，恢复状态显示
-    updatePreloadStatus();
-    throw error;
-  }
-};
 
 /**
  * 清理域名缓存
@@ -1333,12 +1189,6 @@ const clearDomainCache = async () => {
   return handleCacheOperation('CLEAR_DOMAIN_CACHE', 'domain_cache_cleared');
 };
 
-/**
- * 清理所有缓存
- */
-const clearAllCache = async () => {
-  return handleCacheOperation('CLEAR_ALL_CACHE', 'all_cache_cleared');
-};
 
 /**
  * 重置缓存统计

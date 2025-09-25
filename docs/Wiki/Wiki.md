@@ -246,7 +246,6 @@ const language = await domainRulesManager.getLanguageForDomain('example.com');
 'example.de' → 'de-DE'       // TLD匹配
 
 // 管理功能
-await domainRulesManager.preloadRules(); // 规则预加载
 domainRulesManager.getCacheStats();      // 缓存统计
 domainRulesManager.clearCache();         // 清理缓存
 ```
@@ -258,12 +257,40 @@ domainRulesManager.clearCache();         // 清理缓存
 - 批量处理 DOM 操作
 - 使用事件委托减少事件监听器数量
 
+## 资源管理架构
+
+### 统一资源管理策略
+
+项目采用统一的资源管理架构，确保浏览器扩展的内存安全性和性能稳定性。资源管理主要涉及事件监听器、定时器、消息监听器等浏览器资源的正确创建、跟踪和清理。
+
+#### 核心设计原则
+- **环境适配**：根据不同运行环境（页面环境 vs Service Worker环境）采用不同的资源管理策略
+- **统一接口**：所有资源操作通过 `resourceTracker` 对象进行统一管理
+- **自动清理**：在适当的生命周期节点自动清理资源，防止内存泄漏
+- **性能优化**：资源管理本身占用最小的内存开销
+
+#### 环境差异策略
+
+| 环境类型 | 适用文件 | 管理资源 | 清理时机 | 复杂度 |
+|---------|---------|---------|---------|--------|
+| 页面环境 | `debug-ui.js`, `popup.js`, `toggle.js` | 事件监听器、定时器、消息监听器 | `beforeunload` | 高 |
+| Service Worker环境 | `background.js` | 定时器 | `onSuspend` | 低 |
+
+#### 资源管理最佳实践
+- **页面环境**：管理所有类型的资源，包括DOM事件监听器和Chrome API消息监听器
+- **Service Worker环境**：仅管理定时器等临时资源，Chrome API事件监听器由系统自动管理
+- **统一清理**：在页面卸载或Service Worker暂停时统一清理所有跟踪的资源
+- **错误安全**：资源操作包含适当的错误处理，避免清理失败影响功能
+
+详细信息请参考：[资源管理最佳实践指南](./Resource_Management_Guide.md)
+
 ## 相关文档
 
 ### 核心文档
 - [代码风格指南](./Code_Style_Guide.md) - 详细的代码规范和最佳实践
 - [项目结构文档](./Project_Structure.md) - 完整的项目文件结构说明
 - [国际化使用指南](./I18n_Usage_Guide.md) - 国际化系统的使用方法
+- [资源管理最佳实践指南](./Resource_Management_Guide.md) - 资源管理架构和最佳实践
 
 ### 开发文档
 - [更新日志](./Update.md) - 版本更新记录

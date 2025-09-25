@@ -120,21 +120,6 @@
       color: #6c757d;
     }
 
-    .preload-status {
-      font-weight: bold;
-    }
-
-    .preload-status.loaded {
-      color: #198754;
-    }
-
-    .preload-status.not-loaded {
-      color: #dc3545;
-    }
-
-    .preload-status.loading {
-      color: #fd7e14;
-    }
 
     /* 暗色主题下的缓存管理样式 */
     html[data-bs-theme="dark"] .cache-stats-container {
@@ -274,19 +259,6 @@
                     </div>
                   </div>
                 </div>
-                <div class="col-6">
-                  <div class="cache-stat-item">
-                    <small class="text-muted" id="parsedCacheLabel"></small>
-                    <div class="d-flex align-items-center">
-                      <span id="parsedCacheSize" class="cache-size">-</span>
-                      <span class="cache-hit-rate ms-2" id="parsedCacheHitRate">(-)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-2">
-                <small class="text-muted" id="preloadStatusLabel"></small>
-                <span id="preloadStatus" class="preload-status">-</span>
               </div>
             </div>
           </div>
@@ -304,19 +276,13 @@
           <div class="mb-3">
             <div class="d-grid gap-2">
               <div class="row g-2">
-                <div class="col-6">
+                <div class="col-12">
                   <button id="refreshCacheStatsBtn" class="btn btn-info btn-sm w-100"></button>
-                </div>
-                <div class="col-6">
-                  <button id="preloadRulesBtn" class="btn btn-primary btn-sm w-100"></button>
                 </div>
               </div>
               <div class="row g-2">
-                <div class="col-6">
+                <div class="col-12">
                   <button id="clearDomainCacheBtn" class="btn btn-warning btn-sm w-100"></button>
-                </div>
-                <div class="col-6">
-                  <button id="clearAllCacheBtn" class="btn btn-danger btn-sm w-100"></button>
                 </div>
               </div>
               <button id="resetCacheStatsBtn" class="btn btn-secondary btn-sm w-100"></button>

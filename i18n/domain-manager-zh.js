@@ -17,7 +17,6 @@ if (typeof domainManagerZh === 'undefined') {
   "found_in_second_level": "在二级域名中找到",
   "checking_base_domain": "检查基础域名",
   "found_in_base_domain": "在基础域名中找到",
-  "inferred_from_subdomain": "从子域名推断语言",
   "checking_top_level": "检查顶级域名",
   "available_top_level_rules": "可用顶级域名规则",
   "found_in_top_level": "在顶级域名中找到",
@@ -27,14 +26,8 @@ if (typeof domainManagerZh === 'undefined') {
   "second_level": "二级",
   "top_level": "顶级",
   "failed_get_custom_rules": "获取自定义规则失败",
-  "preprocessing_rules": "预处理规则以提高性能",
-  "rules_preprocessed": "规则预处理完成",
   "found_in_cache": "在缓存中找到",
-  "all_cache_cleared": "所有缓存已清除",
   "domain_cache_cleared": "域名查询缓存已清除",
-  "cache_stats_reset": "缓存统计已重置",
-  "preloading_rules": "预加载域名规则文件",
-  "rules_preloaded": "域名规则预加载成功",
-  "rules_preload_failed": "域名规则预加载失败"
+  "cache_stats_reset": "缓存统计已重置"
 };
 } // 结束 if (typeof domainManagerZh === 'undefined') 检查

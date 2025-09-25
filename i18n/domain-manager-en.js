@@ -17,7 +17,6 @@ if (typeof domainManagerEn === 'undefined') {
   "found_in_second_level": "Found in second-level domain",
   "checking_base_domain": "Checking base domain",
   "found_in_base_domain": "Found in base domain",
-  "inferred_from_subdomain": "Inferred language from subdomain",
   "checking_top_level": "Checking top-level domain",
   "available_top_level_rules": "Available top-level domain rules",
   "found_in_top_level": "Found in top-level domain",
@@ -27,14 +26,8 @@ if (typeof domainManagerEn === 'undefined') {
   "second_level": "Second-level",
   "top_level": "Top-level",
   "failed_get_custom_rules": "Failed to get custom rules",
-  "preprocessing_rules": "Preprocessing rules for better performance",
-  "rules_preprocessed": "Rules preprocessed",
   "found_in_cache": "Found in cache",
-  "all_cache_cleared": "All caches cleared",
   "domain_cache_cleared": "Domain query cache cleared",
-  "cache_stats_reset": "Cache statistics reset",
-  "preloading_rules": "Preloading domain rules file",
-  "rules_preloaded": "Domain rules preloaded successfully",
-  "rules_preload_failed": "Failed to preload domain rules"
+  "cache_stats_reset": "Cache statistics reset"
 };
 } // 结束 if (typeof domainManagerEn === 'undefined') 检查

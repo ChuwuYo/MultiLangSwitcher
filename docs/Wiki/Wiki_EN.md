@@ -246,7 +246,6 @@ const language = await domainRulesManager.getLanguageForDomain('example.com');
 'example.de' → 'de-DE'       // TLD match
 
 // Management functions
-await domainRulesManager.preloadRules(); // Preload rules
 domainRulesManager.getCacheStats();      // Cache statistics
 domainRulesManager.clearCache();         // Clear cache
 ```
@@ -258,12 +257,40 @@ For more details, please refer to: [Domain Matching Guide](./Domain_Matching_Gui
 - Batch DOM operations.
 - Use event delegation to reduce the number of event listeners.
 
+## Resource Management Architecture
+
+### Unified Resource Management Strategy
+
+The project adopts a unified resource management architecture to ensure memory safety and performance stability of the browser extension. Resource management mainly involves the correct creation, tracking, and cleanup of browser resources such as event listeners, timers, and message listeners.
+
+#### Core Design Principles
+- **Environment Adaptation**: Adopt different resource management strategies based on different runtime environments (page environment vs Service Worker environment)
+- **Unified Interface**: All resource operations are managed through a unified `resourceTracker` object
+- **Automatic Cleanup**: Automatically clean up resources at appropriate lifecycle nodes to prevent memory leaks
+- **Performance Optimization**: Resource management itself occupies minimal memory overhead
+
+#### Environment-Specific Strategies
+
+| Environment Type | Applicable Files | Managed Resources | Cleanup Timing | Complexity |
+|-----------------|-----------------|-------------------|----------------|------------|
+| Page Environment | `debug-ui.js`, `popup.js`, `toggle.js` | Event listeners, timers, message listeners | `beforeunload` | High |
+| Service Worker Environment | `background.js` | Timers | `onSuspend` | Low |
+
+#### Resource Management Best Practices
+- **Page Environment**: Manage all types of resources, including DOM event listeners and Chrome API message listeners
+- **Service Worker Environment**: Only manage temporary resources like timers; Chrome API event listeners are automatically managed by the system
+- **Unified Cleanup**: Clean up all tracked resources when the page unloads or Service Worker suspends
+- **Error Safety**: Resource operations include appropriate error handling to avoid cleanup failures affecting functionality
+
+For detailed information, please refer to: [Resource Management Best Practices Guide](./Resource_Management_Guide.md)
+
 ## Related Documents
 
 ### Core Documents
 - [Code Style Guide](./Code_Style_Guide.md) - Detailed code specifications and best practices.
 - [Project Structure Document](./Project_Structure.md) - Complete project file structure explanation.
 - [I18n Usage Guide](./I18n_Usage_Guide.md) - How to use the internationalization system.
+- [Resource Management Best Practices Guide](./Resource_Management_Guide.md) - Resource management architecture and best practices.
 
 ### Development Documents
 - [Update Log](./Update.md) - Version update records.
