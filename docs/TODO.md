@@ -78,5 +78,5 @@ const chromeStorageGet = async (keys) => {
 - [ ] 提取常量和改进代码结构
 
 ### 监控和维护
-- [ ] 添加资源泄漏检测机制
+- [x] 添加资源泄漏检测机制 ✅ **已完成** (v1.8.84) - 在Resource_Management_Guide.md中实现了内存泄漏检测、资源使用监控和性能监控功能
 - [ ] 建立定期的代码质量检查流程
