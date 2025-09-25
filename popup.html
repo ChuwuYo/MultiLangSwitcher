@@ -383,6 +383,36 @@
         transform: rotate(360deg);
       }
     }
+
+    /* 链接文本处理 - 防止长链接超出popup边界 */
+    #updateErrorMessage,
+    #updateNotificationContent,
+    #headerCheckContent {
+      word-break: break-all;
+      word-wrap: break-word;
+      max-width: 100%;
+    }
+
+    /* 链接样式优化 */
+    #updateErrorMessage a,
+    #updateNotificationContent a,
+    #headerCheckContent a {
+      word-break: break-all;
+      display: inline-block;
+      max-width: 100%;
+    }
+
+    /* 错误消息区域的特殊处理 */
+    #updateErrorAlert {
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    /* 更新通知区域的特殊处理 */
+    #updateNotification .alert {
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
   </style>
 </head>
 
