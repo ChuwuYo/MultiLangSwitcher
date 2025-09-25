@@ -113,10 +113,18 @@
     "qa": "ar",
     "sa": "ar",
     "sy": "ar",
+    "eg": "ar",
+    "ma": "ar",
+    "tn": "ar",
+    "za": "en-ZA",
+    "ke": "en-KE",
     "ug": "en-US",
     "ye": "ar",
     "gov": "en-US",
     "edu": "en-US",
-    "eu": "en"
+    "eu": "en",
+    "ai": "en-US",
+    "app": "en-US",
+    "dev": "en-US"
   }
 }

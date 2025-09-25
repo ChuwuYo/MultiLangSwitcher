@@ -33,6 +33,8 @@
 - Wiki_EN.md - 添加资源管理架构章节（v1.8.84）
 - Resource_Management_Guide.md - 修正文档与实际代码实现的一致性，更新Service Worker环境资源管理策略和background.js实现示例（v1.8.84）
 - Project_Structure.md - 项目结构更新（v1.8.84）
+- domain-rules.json - 添加新规则（v1.8.85）
+- bootstrap.min.css - 更新至v5.3.8
 
 ### 移除内容
 
