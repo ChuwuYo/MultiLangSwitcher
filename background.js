@@ -14,27 +14,10 @@ importScripts('domain-rules-manager.js');
 importScripts('shared/shared-update-checker.js');
 
 // --- 资源管理器  ---
+// 仅管理定时器，避免误导性的事件监听器管理
 const resourceTracker = {
-  eventListeners: [],
   timers: [],
   intervals: [],
-  messageListeners: [],
-
-  // 事件监听器管理
-  addEventListener: function(target, event, handler, options = null) {
-    target.addListener(handler);
-    this.eventListeners.push({ target, event, handler, options });
-  },
-
-  removeEventListener: function(target, event, handler, options = null) {
-    target.removeListener(handler);
-    this.eventListeners = this.eventListeners.filter(
-      listener => !(listener.target === target &&
-                   listener.event === event &&
-                   listener.handler === handler &&
-                   listener.options === options)
-    );
-  },
 
   // 定时器管理
   setTimeout: function(callback, delay) {
@@ -61,12 +44,6 @@ const resourceTracker = {
 
   // 统一清理方法
   cleanup: function() {
-    // 清理事件监听器
-    this.eventListeners.forEach(({ target, event, handler, options }) => {
-      target.removeListener(handler);
-    });
-    this.eventListeners = [];
-
     // 清理定时器
     this.timers.forEach(id => clearTimeout(id));
     this.timers = [];
