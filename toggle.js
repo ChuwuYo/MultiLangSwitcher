@@ -1,66 +1,5 @@
 // toggle.js - 通用切换按钮功能
 
-// --- 资源管理器  ---
-const resourceTracker = {
-  eventListeners: [],
-  timers: [],
-  intervals: [],
-  messageListeners: [],
-
-  // 事件监听器管理
-  addEventListener: function(element, event, handler, options = null) {
-    element.addEventListener(event, handler, options);
-    this.eventListeners.push({ element, event, handler, options });
-  },
-
-  removeEventListener: function(element, event, handler, options = null) {
-    element.removeEventListener(event, handler, options);
-    this.eventListeners = this.eventListeners.filter(
-      listener => !(listener.element === element &&
-                   listener.event === event &&
-                   listener.handler === handler &&
-                   listener.options === options)
-    );
-  },
-
-  // 定时器管理
-  setTimeout: function(callback, delay) {
-    const id = setTimeout(callback, delay);
-    this.timers.push(id);
-    return id;
-  },
-
-  setInterval: function(callback, delay) {
-    const id = setInterval(callback, delay);
-    this.intervals.push(id);
-    return id;
-  },
-
-  clearTimeout: function(id) {
-    clearTimeout(id);
-    this.timers = this.timers.filter(timerId => timerId !== id);
-  },
-
-  clearInterval: function(id) {
-    clearInterval(id);
-    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
-  },
-
-  // 统一清理方法
-  cleanup: function() {
-    // 清理事件监听器
-    this.eventListeners.forEach(({ element, event, handler, options }) => {
-      element.removeEventListener(event, handler, options);
-    });
-    this.eventListeners = [];
-
-    // 清理定时器
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.intervals.forEach(id => clearInterval(id));
-    this.intervals = [];
-  }
-};
 
 // 语言切换功能
 class LanguageToggle {
@@ -110,7 +49,7 @@ class LanguageToggle {
 
     document.body.appendChild(langBtn);
 
-    resourceTracker.addEventListener(langBtn, 'click', () => {
+    ResourceManager.addEventListener(langBtn, 'click', () => {
       this.switchLanguage(this.currentLang === 'zh' ? 'en' : 'zh');
     });
   }
@@ -174,7 +113,7 @@ class ThemeManager {
   setupEventListeners() {
     // 主题切换按钮监听器
     if (this.themeToggleBtn) {
-      resourceTracker.addEventListener(this.themeToggleBtn, 'click', () => {
+      ResourceManager.addEventListener(this.themeToggleBtn, 'click', () => {
         const currentTheme = document.documentElement.getAttribute('data-bs-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         this.applyTheme(newTheme);
@@ -182,7 +121,7 @@ class ThemeManager {
     }
 
     // 监听操作系统主题变化
-    resourceTracker.addEventListener(this.prefersDarkScheme, 'change', (e) => {
+    ResourceManager.addEventListener(this.prefersDarkScheme, 'change', (e) => {
       // 仅当用户未设置偏好时才更改
       if (!localStorage.getItem('theme')) {
         this.applyTheme(e.matches ? 'dark' : 'light');
@@ -209,9 +148,13 @@ const initializePage = async () => {
 };
 
 // 监听页面加载，初始化按钮和主题状态
-resourceTracker.addEventListener(document, 'DOMContentLoaded', initializePage);
+ResourceManager.addEventListener(document, 'DOMContentLoaded', initializePage);
 
-// 页面卸载时的清理
-resourceTracker.addEventListener(window, 'beforeunload', () => {
-  resourceTracker.cleanup();
-});
+// 页面卸载时的清理（可选，主要依赖浏览器自动清理）
+const cleanupResources = () => {
+  // 清理 ResourceManager 中跟踪的资源
+  ResourceManager.cleanup();
+};
+
+// 注册清理事件（可选）
+ResourceManager.addEventListener(window, 'beforeunload', cleanupResources);

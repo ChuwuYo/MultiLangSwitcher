@@ -200,156 +200,6 @@ function md5(string) {
 /* eslint-enable */
 // --- End MD5 Hashing Function ---
 
-// --- 资源管理器  ---
-const resourceTracker = {
-  eventListeners: [],
-  timers: [],
-  intervals: [],
-  messageListeners: [],
-  webrtcConnections: [],
-  abortControllers: [],
-  canvasElements: [],
-  audioContexts: [],
-
-  // 事件监听器管理
-  addEventListener: function(element, event, handler, options = null) {
-    element.addEventListener(event, handler, options);
-    this.eventListeners.push({ element, event, handler, options });
-  },
-
-  removeEventListener: function(element, event, handler, options = null) {
-    element.removeEventListener(event, handler, options);
-    this.eventListeners = this.eventListeners.filter(
-      listener => !(listener.element === element &&
-                   listener.event === event &&
-                   listener.handler === handler &&
-                   listener.options === options)
-    );
-  },
-
-  // 定时器管理
-  setTimeout: function(callback, delay) {
-    const id = setTimeout(callback, delay);
-    this.timers.push(id);
-    return id;
-  },
-
-  setInterval: function(callback, delay) {
-    const id = setInterval(callback, delay);
-    this.intervals.push(id);
-    return id;
-  },
-
-  clearTimeout: function(id) {
-    clearTimeout(id);
-    this.timers = this.timers.filter(timerId => timerId !== id);
-  },
-
-  clearInterval: function(id) {
-    clearInterval(id);
-    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
-  },
-
-  // WebRTC连接管理
-  createRTCPeerConnection: function(config = {}) {
-    const pc = new RTCPeerConnection(config);
-    this.webrtcConnections.push(pc);
-    return pc;
-  },
-
-  closeRTCPeerConnection: function(pc) {
-    if (pc && typeof pc.close === 'function') {
-      pc.close();
-    }
-    this.webrtcConnections = this.webrtcConnections.filter(conn => conn !== pc);
-  },
-
-  // AbortController管理
-  createAbortController: function() {
-    const controller = new AbortController();
-    this.abortControllers.push(controller);
-    return controller;
-  },
-
-  abortController: function(controller) {
-    if (controller && typeof controller.abort === 'function') {
-      controller.abort();
-    }
-    this.abortControllers = this.abortControllers.filter(ctrl => ctrl !== controller);
-  },
-
-  // Canvas元素管理
-  createCanvasElement: function() {
-    const canvas = document.createElement('canvas');
-    this.canvasElements.push(canvas);
-    return canvas;
-  },
-
-  removeCanvasElement: function(canvas) {
-    this.canvasElements = this.canvasElements.filter(el => el !== canvas);
-  },
-
-  // AudioContext管理
-  createAudioContext: function(channels, length, sampleRate) {
-    const context = new OfflineAudioContext(channels, length, sampleRate);
-    this.audioContexts.push(context);
-    return context;
-  },
-
-  closeAudioContext: function(context) {
-    if (context && typeof context.close === 'function') {
-      context.close();
-    }
-    this.audioContexts = this.audioContexts.filter(ctx => ctx !== context);
-  },
-
-  // 统一清理方法
-  cleanup: function() {
-    // 清理事件监听器
-    this.eventListeners.forEach(({ element, event, handler, options }) => {
-      element.removeEventListener(event, handler, options);
-    });
-    this.eventListeners = [];
-
-    // 清理定时器
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.intervals.forEach(id => clearInterval(id));
-    this.intervals = [];
-
-    // 清理WebRTC连接
-    this.webrtcConnections.forEach(pc => {
-      if (typeof pc.close === 'function') {
-        pc.close();
-      }
-    });
-    this.webrtcConnections = [];
-
-    // 清理AbortController
-    this.abortControllers.forEach(controller => {
-      if (typeof controller.abort === 'function') {
-        controller.abort();
-      }
-    });
-    this.abortControllers = [];
-
-    // 清理Canvas元素
-    this.canvasElements = [];
-
-    // 清理AudioContext
-    this.audioContexts.forEach(context => {
-      if (typeof context.close === 'function') {
-        context.close();
-      }
-    });
-    this.audioContexts = [];
-  }
-};
-
-// 注册页面卸载时的清理
-resourceTracker.addEventListener(window, 'beforeunload', () => {
-  resourceTracker.cleanup();
-});
 
 // --- 浏览器兼容性检查 ---
 /**
@@ -433,7 +283,7 @@ const checkApiSupport = () => {
     { name: 'WebRTC (RTCPeerConnection)', supported: !!window.RTCPeerConnection },
     { name: 'WebGL', supported: (function () {
       try {
-        const canvas = resourceTracker.createCanvasElement();
+        const canvas = ResourceManager.createCanvasElement();
         return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
       } catch (e) {
         return false;
@@ -522,8 +372,8 @@ const fetchFromAnySource = (urls, timeoutMs) => {
  * @returns {Promise<Object>} - 解析为响应数据
  */
 const fetchWithTimeout = async (url, timeoutMs) => {
-  const controller = resourceTracker.createAbortController();
-  const timeoutId = resourceTracker.setTimeout(() => controller.abort(), timeoutMs);
+  const controller = ResourceManager.createAbortController();
+  const timeoutId = ResourceManager.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -543,9 +393,9 @@ const fetchWithTimeout = async (url, timeoutMs) => {
     }
     throw error;
   } finally {
-    resourceTracker.clearTimeout(timeoutId);
-    // 从跟踪器中移除控制器以防止内存泄漏
-    resourceTracker.abortControllers = resourceTracker.abortControllers.filter(ctrl => ctrl !== controller);
+    ResourceManager.clearTimeout(timeoutId);
+    // 控制器使用完毕后，从资源管理器中移除以避免内存泄漏
+    ResourceManager.abortController(controller);
   }
 }
 
@@ -636,7 +486,7 @@ const detectCanvasFingerprint = () => {
   if (!canvasInfoElement) return;
 
   try {
-    const canvas = resourceTracker.createCanvasElement();
+    const canvas = ResourceManager.createCanvasElement();
     const ctx = canvas.getContext('2d');
     const txt = 'BrowserLeaks,com <canvas> 1.0';
     ctx.textBaseline = "top";
@@ -672,7 +522,7 @@ const detectWebglFingerprint = () => {
   if (!webglInfoElement) return;
 
   try {
-    const canvas = resourceTracker.createCanvasElement();
+    const canvas = ResourceManager.createCanvasElement();
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) {
       webglInfoElement.innerHTML = `<p class="text-warning">${detectI18n.t('webgl_not_supported')}</p>`;
@@ -728,7 +578,8 @@ const detectAudioFingerprint = async () => {
       return;
     }
 
-    const context = resourceTracker.createAudioContext(1, 44100, 44100);
+    // 使用OfflineAudioContext进行音频指纹检测
+    const context = ResourceManager.createOfflineAudioContext(1, 44100, 44100);
     const oscillator = context.createOscillator();
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(10000, context.currentTime);
@@ -832,7 +683,7 @@ const collectWebRtcIps = async () => {
     const ips = [];
 
     try {
-      const pc = resourceTracker.createRTCPeerConnection({ iceServers: [] });
+      const pc = ResourceManager.createRTCPeerConnection({ iceServers: [] });
       pc.createDataChannel('');
 
       pc.onicecandidate = (e) => {
@@ -853,8 +704,8 @@ const collectWebRtcIps = async () => {
           // 确保Promise链正确结束，避免未捕获的异常
         });
 
-      resourceTracker.setTimeout(() => {
-        resourceTracker.closeRTCPeerConnection(pc);
+      ResourceManager.setTimeout(() => {
+        ResourceManager.closeRTCPeerConnection(pc);
         resolve(ips);
       }, 1000);
     } catch (error) {
@@ -943,9 +794,9 @@ const runAllDetections = () => {
 }
 
 // 页面加载完成后获取请求头和执行其他检测
-resourceTracker.addEventListener(window, 'DOMContentLoaded', function() {
+ResourceManager.addEventListener(window, 'DOMContentLoaded', function() {
   // 延迟执行，确保扩展规则已应用
-  resourceTracker.setTimeout(runAllDetections, 1000);
+  ResourceManager.setTimeout(runAllDetections, 1000);
 
   // 添加刷新按钮
   addRefreshButton();

@@ -192,7 +192,6 @@ const getFallbackTranslation = (key, params = {}) => {
   // 完整的 fallback 翻译
   const fallbackTranslations = {
     en: {
-      // Update checker related keys
       'check_for_updates': 'Check for updates',
       'checking_updates': 'Checking for updates...',
       'update_available': 'Update available: v{version}',
@@ -289,7 +288,6 @@ const getFallbackTranslation = (key, params = {}) => {
       'debug_log_started': 'Debug log started'
     },
     zh: {
-      // Update checker related keys
       'check_for_updates': '检查更新',
       'checking_updates': '正在检查更新...',
       'update_available': '发现新版本: v{version}',

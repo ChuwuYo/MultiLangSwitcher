@@ -2,24 +2,24 @@
 
 ## 概述
 
-本指南定义了 MultiLangSwitcher 项目中资源管理的最佳实践，确保浏览器扩展的内存安全性和性能稳定性。资源管理主要涉及事件监听器、定时器、消息监听器等浏览器资源的正确创建、跟踪和清理。
+本指南定义了 MultiLangSwitcher 项目中资源管理的最佳实践，确保浏览器扩展的内存安全性和性能稳定性。资源管理主要涉及事件监听器、定时器、消息监听器等浏览器资源的正确创建和使用。
 
 ## 核心原则
 
-### 1. 统一资源跟踪
-- **集中管理**：所有资源创建和清理通过统一的 `resourceTracker` 对象进行
-- **自动跟踪**：资源创建时自动添加到跟踪列表，无需手动管理
-- **统一清理**：页面卸载时统一清理所有跟踪的资源
+### 1. 统一资源管理
+- **集中管理**：所有资源创建通过统一的 `ResourceManager` 对象进行
+- **智能清理**：区分需要手动清理和自动清理的资源类型
+- **平衡设计**：在自动清理和必要的手动控制之间取得平衡
 
 ### 2. 内存泄漏预防
-- **及时清理**：在页面卸载时立即清理所有资源
-- **避免遗漏**：确保所有创建的资源都被正确跟踪
-- **定期检查**：定期审查代码确保没有未跟踪的资源
+- **自动清理为主**：浏览器自动清理页面关闭时的DOM事件监听器
+- **手动清理为辅**：仅对确实需要手动清理的资源进行跟踪和清理
+- **环境差异化**：针对不同环境采用不同的清理策略
 
 ### 3. 性能优化
-- **轻量实现**：资源跟踪器本身占用最小的内存
-- **高效清理**：批量清理操作减少性能开销
+- **精确跟踪**：仅跟踪需要手动清理的资源，减少开销
 - **零影响**：资源管理不影响现有功能逻辑
+- **环境适配**：根据运行环境优化资源管理策略
 
 ## 资源类型和实现
 
@@ -27,30 +27,13 @@
 
 #### ✅ 推荐做法
 ```javascript
-// 使用 resourceTracker 统一管理事件监听器
-const resourceTracker = {
-  eventListeners: [],
+// 使用 ResourceManager 统一管理事件监听器
+ResourceManager.addEventListener(document.getElementById('button'), 'click', handleClick);
 
-  addEventListener: function(element, event, handler, options = null) {
-    element.addEventListener(event, handler, options);
-    this.eventListeners.push({ element, event, handler, options });
-  },
-
-  removeEventListener: function(element, event, handler, options = null) {
-    element.removeEventListener(event, handler, options);
-    this.eventListeners = this.eventListeners.filter(
-      listener => !(listener.element === element &&
-                   listener.event === event &&
-                   listener.handler === handler &&
-                   listener.options === options)
-    );
-  }
-};
-
-// 使用示例
-resourceTracker.addEventListener(document.getElementById('button'), 'click', handleClick);
-resourceTracker.addEventListener(window, 'beforeunload', () => {
-  resourceTracker.cleanup();
+// 浏览器会自动清理DOM事件监听器，无需手动清理
+ResourceManager.addEventListener(window, 'beforeunload', () => {
+  // 仅清理确实需要手动清理的资源
+  ResourceManager.cleanup();
 });
 ```
 
@@ -136,71 +119,57 @@ const messageHandler = (request, sender, sendResponse) => {
 resourceTracker.addMessageListener(messageHandler);
 ```
 
-## 统一清理机制
+## 资源管理机制
 
-### 1. 页面卸载时清理
+### 1. 页面环境资源管理
 ```javascript
-const resourceTracker = {
-  // ... 资源跟踪方法
+// 页面环境使用 ResourceManager 统一管理资源
+// 浏览器自动处理页面关闭时的DOM事件监听器清理
 
-  cleanup: function() {
-    // 清理事件监听器
-    this.eventListeners.forEach(({ element, event, handler, options }) => {
-      element.removeEventListener(event, handler, options);
-    });
-    this.eventListeners = [];
+// 事件监听器管理（浏览器自动清理）
+ResourceManager.addEventListener(document.getElementById('button'), 'click', handleClick);
 
-    // 清理定时器
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.intervals.forEach(id => clearInterval(id));
-    this.intervals = [];
+// 定时器管理（需要手动清理）
+const timeoutId = ResourceManager.setTimeout(() => {
+  console.log('执行延时任务');
+}, 1000);
 
-    // 清理消息监听器
-    this.messageListeners.forEach(listener => {
-      chrome.runtime.onMessage.removeListener(listener);
-    });
-    this.messageListeners = [];
+// 消息监听器管理（某些情况下需要手动清理）
+const messageListener = ResourceManager.addMessageListener((request) => {
+  if (request.type === 'DEBUG_LOG') {
+    console.log('Debug message:', request.message);
   }
-};
+});
 
-// 注册页面卸载事件
-resourceTracker.addEventListener(window, 'beforeunload', () => {
-  resourceTracker.cleanup();
+// 页面卸载时清理需要手动清理的资源
+ResourceManager.addEventListener(window, 'beforeunload', () => {
+  ResourceManager.cleanup(); // 仅清理定时器、控制器等需要手动清理的资源
+  if (messageListener) {
+    ResourceManager.removeMessageListener(messageListener); // 可选：手动清理消息监听器
+  }
 });
 ```
 
-### 2. 组件销毁时清理
+### 2. 组件资源管理
 ```javascript
 // 对于需要动态创建和销毁的组件
 class DebugUIComponent {
   constructor() {
-    this.resourceTracker = {
-      eventListeners: [],
-      timers: [],
-      intervals: [],
-      messageListeners: [],
-
-      addEventListener: function(element, event, handler, options = null) {
-        element.addEventListener(event, handler, options);
-        this.eventListeners.push({ element, event, handler, options });
-      },
-
-      cleanup: function() {
-        // 清理逻辑同上
-        this.eventListeners.forEach(({ element, event, handler, options }) => {
-          element.removeEventListener(event, handler, options);
-        });
-        this.eventListeners = [];
-        // ... 其他清理逻辑
-      }
-    };
-
+    this.timers = [];
     this.initialize();
   }
 
+  initialize() {
+    // 使用 ResourceManager 管理资源
+    this.timers.push(ResourceManager.setTimeout(() => {
+      console.log('组件初始化完成');
+    }, 100));
+  }
+
   destroy() {
-    this.resourceTracker.cleanup();
+    // 清理定时器
+    this.timers.forEach(id => ResourceManager.clearTimeout(id));
+    this.timers = [];
   }
 }
 ```
@@ -313,109 +282,90 @@ resourceTracker.addEventListener(window, 'beforeunload', () => {
 ### 2. background.js 资源管理实现（Service Worker环境）
 ```javascript
 // 实际项目中的简化实现 - 适用于Service Worker环境
-const resourceTracker = {
-  timers: [],
-  intervals: [],
+// 使用 ResourceManager 统一管理资源，Service Worker 暂停时由系统自动处理
 
-  // 定时器管理
-  setTimeout: function(callback, delay) {
-    const id = setTimeout(callback, delay);
-    this.timers.push(id);
-    return id;
-  },
+// 定时器管理
+ResourceManager.setTimeout(() => {
+  console.log('执行延时任务');
+}, 1000);
 
-  setInterval: function(callback, delay) {
-    const id = setInterval(callback, delay);
-    this.intervals.push(id);
-    return id;
-  },
+ResourceManager.setInterval(() => {
+  console.log('执行定期任务');
+}, 5000);
 
-  clearTimeout: function(id) {
-    clearTimeout(id);
-    this.timers = this.timers.filter(timerId => timerId !== id);
-  },
-
-  clearInterval: function(id) {
-    clearInterval(id);
-    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
-  },
-
-  // 统一清理方法
-  cleanup: function() {
-    // 清理定时器
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.intervals.forEach(id => clearInterval(id));
-    this.intervals = [];
-  }
-};
-
-// Service Worker 暂停时清理资源
-chrome.runtime.onSuspend.addListener(() => {
-  resourceTracker.cleanup();
-});
+// Service Worker 暂停时由 Chrome 运行时系统自动处理资源清理
+// 无需手动清理，系统会自动管理
 ```
 
 ### 3. 环境差异对比
 
 | 资源类型 | 页面环境 (debug-ui.js, popup.js, toggle.js, detect.js) | Service Worker环境 (background.js) |
 |---------|---------------------------------------------------|----------------------------------|
-| 事件监听器 | ✅ 需要管理DOM事件监听器 | ❌ 不需要管理（Chrome API监听器由系统管理） |
-| 定时器 | ✅ 需要管理 | ✅ 需要管理 |
-| 消息监听器 | ✅ 需要管理 | ❌ 不需要管理（Chrome API监听器由系统管理） |
-| AbortController | ✅ 需要管理（仅detect.js） | ❌ 不需要管理 |
-| 清理时机 | `beforeunload` | `onSuspend` |
-| 复杂度 | 高（多种资源类型） | 低（仅定时器） |
+| 事件监听器 | ✅ 浏览器自动清理（推荐） | ❌ 不需要管理（Chrome API监听器由系统管理） |
+| 定时器 | ✅ 需要手动清理 | ✅ 需要手动清理 |
+| 消息监听器 | ⚠️ 可选手动清理 | ❌ 不需要管理（Chrome API监听器由系统管理） |
+| AbortController | ✅ 需要手动清理（仅detect.js） | ❌ 不需要管理 |
+| RTCPeerConnection | ✅ 需要手动清理 | ❌ 不需要管理 |
+| 清理机制 | 浏览器自动处理DOM资源 + 手动清理特定资源 | Chrome运行时系统自动处理 + 手动清理定时器 |
+| 复杂度 | 中等（自动+手动混合） | 低（仅手动清理定时器） |
 
 ## 常见问题和解决方案
 
-### 1. 资源清理时机
-**问题**：页面卸载时资源没有完全清理
+### 1. 资源清理策略选择
+**问题**：不确定哪些资源需要手动清理，哪些可以依赖自动清理
 **解决方案**：
-- 确保在 `beforeunload` 事件中调用 `cleanup()`
-- 检查所有资源是否都被正确跟踪
-- 使用浏览器的开发者工具检查内存泄漏
+- **自动清理**：DOM事件监听器、普通JavaScript对象
+- **手动清理**：定时器、AbortController、RTCPeerConnection、WebRTC连接
+- **可选手动清理**：消息监听器（通常不需要，但复杂场景下可能需要）
+- 使用 ResourceManager.getStats() 检查当前资源使用情况
 
 ### 2. 事件监听器参数不匹配
 **问题**：移除事件监听器时参数不匹配导致无法移除
 **解决方案**：
 - 确保移除时使用的参数与添加时完全一致
 - 考虑使用函数引用而不是匿名函数
-- 在添加时保存完整的参数对象
+- 在添加时保存完整的参数对象用于后续移除
+- 对于DOM事件监听器，通常不需要手动移除（浏览器自动处理）
 
-### 3. 异步资源清理
-**问题**：异步操作中的资源没有正确清理
+### 3. 异步资源管理
+**问题**：异步操作中的资源没有正确管理
 **解决方案**：
-- 在异步函数开始时添加资源跟踪
-- 在异步函数结束时（包括错误情况）清理资源
-- 使用 try-finally 结构确保清理
+- 在异步函数开始时通过ResourceManager创建需要手动清理的资源
+- 依赖浏览器的自动清理机制处理DOM相关资源
+- 使用 try-finally 结构确保异步操作的正确执行
+- 页面关闭时调用 ResourceManager.cleanup() 清理剩余资源
 
 ### 4. 动态组件资源管理
 **问题**：动态创建和销毁的组件资源管理复杂
 **解决方案**：
-- 为每个组件创建独立的 resourceTracker 实例
-- 在组件销毁时调用 cleanup 方法
-- 避免在组件间共享资源跟踪器
+- 使用ResourceManager统一管理需要手动清理的资源
+- 依赖浏览器的自动清理机制处理DOM事件监听器
+- 避免在组件间共享资源管理器实例
+- 组件销毁时调用 ResourceManager.cleanup() 清理定时器等资源
 
 ## 代码审查检查清单
 
 ### ✅ 资源管理检查
-- [ ] 所有事件监听器都通过 `resourceTracker.addEventListener` 添加（页面环境）
-- [ ] 所有定时器都通过 `resourceTracker.setTimeout/setInterval` 创建
-- [ ] 所有消息监听器都通过 `resourceTracker.addMessageListener` 添加（页面环境）
-- [ ] AbortController 都通过 `resourceTracker.createAbortController` 创建（detect.js）
-- [ ] 页面卸载时调用了 `resourceTracker.cleanup()`
-- [ ] 没有直接使用原生 API 创建资源
+- [ ] 所有需要手动清理的定时器都通过 `ResourceManager.setTimeout/setInterval` 创建
+- [ ] AbortController 都通过 `ResourceManager.createAbortController` 创建（detect.js）
+- [ ] RTCPeerConnection 都通过 `ResourceManager.createRTCPeerConnection` 创建
+- [ ] 页面卸载时调用了 `ResourceManager.cleanup()` 清理需要手动清理的资源
+- [ ] 没有直接使用原生 API 创建需要手动清理的资源
+
+### ✅ 自动清理资源检查
+- [ ] DOM事件监听器使用 `ResourceManager.addEventListener`（但不需要手动清理）
+- [ ] 消息监听器使用 `ResourceManager.addMessageListener`（通常不需要手动清理）
+- [ ] 避免对自动清理的资源进行不必要的跟踪
 
 ### ✅ 错误处理检查
 - [ ] 资源操作都有适当的错误处理
-- [ ] 异步资源操作有清理机制
-- [ ] 资源清理失败有日志记录
+- [ ] 异步资源操作有适当的错误处理机制
+- [ ] 资源操作失败有适当的日志记录
 
 ### ✅ 性能检查
-- [ ] 资源跟踪器本身没有造成性能问题
+- [ ] 资源管理器仅跟踪需要手动清理的资源，避免过度跟踪
 - [ ] 大量资源创建时有性能监控
-- [ ] 资源清理操作不会阻塞UI
+- [ ] 平衡自动清理和手动清理，避免不必要的性能开销
 
 ## 工具和调试
 
@@ -478,6 +428,8 @@ const monitorResourceUsage = () => {
 - **v1.8.75**：初始版本，基于 debug-ui.js 资源管理修复经验编写
 - **v1.8.79**：完善资源类型覆盖，添加基本的资源统计功能
 - **v1.8.84**：添加Service Worker环境资源管理策略，更新background.js简化实现示例，修正文档与实际代码实现的一致性
+- **v1.8.90**：简化资源管理策略，移除手动cleanup方法，依赖浏览器自动资源管理机制，减少过度工程化
+- **v1.8.95**：重新设计资源管理策略，实现自动清理和手动清理的平衡，区分不同资源类型的清理需求
 
 ---
 
