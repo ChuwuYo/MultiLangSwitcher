@@ -578,7 +578,7 @@ const detectAudioFingerprint = async () => {
     }
 
     // 使用OfflineAudioContext进行音频指纹检测
-    const context = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100);
+    const context = ResourceManager.createOfflineAudioContext(1, 44100, 44100);
     const oscillator = context.createOscillator();
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(10000, context.currentTime);

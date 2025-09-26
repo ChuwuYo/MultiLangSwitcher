@@ -694,7 +694,7 @@ const updateCheckButtonState = (isChecking) => {
  */
 const cancelUpdateCheck = () => {
   if (updateCheckController) {
-    ResourceManager.removeController(updateCheckController);
+    ResourceManager.abortController(updateCheckController);
     updateCheckController = null;
     sendDebugLog(popupI18n.t('update_check_cancelled'), 'info');
   }
@@ -1067,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 清除防抖定时器
     if (updateCheckDebounceTimer) {
-      ResourceManager.removeTimer(updateCheckDebounceTimer);
+      ResourceManager.clearTimeout(updateCheckDebounceTimer);
       updateCheckDebounceTimer = null;
     }
 
@@ -1076,9 +1076,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       domUpdateScheduled = false;
       pendingDOMUpdates.length = 0;
     }
-
-    // 使用资源跟踪器清理所有资源
-    ResourceManager.cleanup();
 
     // 清理更新检查器实例
     if (updateChecker) {
@@ -1089,6 +1086,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 清理全局状态
     updateCheckInProgress = false;
     lastUpdateCheckTime = 0;
+
+    // 清理 ResourceManager 中跟踪的资源
+    ResourceManager.cleanup();
 
     sendDebugLog(popupI18n.t('popup_cleanup_completed'), 'info');
   };

@@ -1213,5 +1213,10 @@ const handleGetManifestInfoRequest = (sendResponse) => {
 // 扩展卸载时的清理
 chrome.runtime.onSuspend.addListener(() => {
   sendBackgroundLog('Extension suspending, cleaning up resources...', 'info');
+
+  // 清理需要手动清理的资源
   ResourceManager.cleanup();
+
+  // 清理其他可能的资源
+  // 注意：chrome.runtime.onMessage 监听器由系统自动管理，无需手动清理
 });

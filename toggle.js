@@ -150,7 +150,11 @@ const initializePage = async () => {
 // 监听页面加载，初始化按钮和主题状态
 ResourceManager.addEventListener(document, 'DOMContentLoaded', initializePage);
 
-// 页面卸载时的清理
-ResourceManager.addEventListener(window, 'beforeunload', () => {
+// 页面卸载时的清理（可选，主要依赖浏览器自动清理）
+const cleanupResources = () => {
+  // 清理 ResourceManager 中跟踪的资源
   ResourceManager.cleanup();
-});
+};
+
+// 注册清理事件（可选）
+ResourceManager.addEventListener(window, 'beforeunload', cleanupResources);

@@ -816,7 +816,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   });
 
   // 监听来自 background.js 的消息
-  ResourceManager.addMessageListener(function (request, sender, sendResponse) {
+  const messageListener = ResourceManager.addMessageListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {
@@ -845,13 +845,25 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     return true;
   });
 
+  // 页面卸载时的清理
+  const cleanupResources = () => {
+    // 清理 ResourceManager 中跟踪的资源
+    ResourceManager.cleanup();
+
+    // 移除消息监听器（如果需要的话）
+    if (messageListener) {
+      ResourceManager.removeMessageListener(messageListener);
+    }
+
+    addLogMessage(debugI18n.t('debug_ui_cleanup_completed'), 'info');
+  };
+
+  // 注册清理事件
+  ResourceManager.addEventListener(window, 'beforeunload', cleanupResources);
+
   // 缓存管理功能
   initializeCacheManagement();
 
-  // 页面卸载时清理所有资源
-  ResourceManager.addEventListener(window, 'beforeunload', () => {
-    ResourceManager.cleanup();
-  });
 
 }); // DOMContentLoaded 结束
 
