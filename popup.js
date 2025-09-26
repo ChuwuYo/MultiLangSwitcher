@@ -12,83 +12,7 @@ let updateCheckController = null;
 let updateCheckDebounceTimer = null;
 let lastUpdateCheckTime = 0;
 
-// 资源跟踪器 - 统一管理所有资源
-const resourceTracker = {
-  timers: new Set(),
-  controllers: new Set(),
-  eventListeners: new Map(),
-  
-  addTimer(timerId) {
-    this.timers.add(timerId);
-    return timerId;
-  },
-  
-  removeTimer(timerId) {
-    if (timerId) {
-      clearTimeout(timerId);
-      this.timers.delete(timerId);
-    }
-  },
-  
-  addController(controller) {
-    this.controllers.add(controller);
-    return controller;
-  },
-  
-  removeController(controller) {
-    if (controller) {
-      try {
-        controller.abort();
-      } catch (error) {
-        // 忽略已经被abort的控制器错误
-        sendDebugLog(`Controller abort error: ${error.message}`, 'warning');
-      }
-      this.controllers.delete(controller);
-    }
-  },
-  
-  addEventListener(element, event, handler) {
-    if (!this.eventListeners.has(element)) {
-      this.eventListeners.set(element, []);
-    }
-    this.eventListeners.get(element).push({ event, handler });
-    element.addEventListener(event, handler);
-  },
-  
-  cleanup() {
-    // 清理所有定时器
-    this.timers.forEach(timerId => {
-      try {
-        clearTimeout(timerId);
-      } catch (error) {
-        sendDebugLog(`Timer cleanup error: ${error.message}`, 'warning');
-      }
-    });
-    this.timers.clear();
-    
-    // 清理所有控制器
-    this.controllers.forEach(controller => {
-      try {
-        controller.abort();
-      } catch (error) {
-        // 忽略已经被abort的控制器错误
-      }
-    });
-    this.controllers.clear();
-    
-    // 清理所有事件监听器
-    this.eventListeners.forEach((listeners, element) => {
-      listeners.forEach(({ event, handler }) => {
-        try {
-          element.removeEventListener(event, handler);
-        } catch (error) {
-          sendDebugLog(`Event listener cleanup error: ${error.message}`, 'warning');
-        }
-      });
-    });
-    this.eventListeners.clear();
-  }
-};
+// 使用统一的资源管理器
 
 // DOM元素缓存
 let domCache = {
@@ -180,7 +104,7 @@ const updateHeaderRules = async (language, autoCheck = false) => {
     const checkHeaderBtn = document.getElementById('checkHeaderBtn');
     if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
       sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
-      resourceTracker.addTimer(setTimeout(() => checkHeaderBtn.click(), 500));
+      ResourceManager.addTimer(setTimeout(() => checkHeaderBtn.click(), 500));
     }
   }
 };
@@ -207,7 +131,7 @@ const showError = (message) => {
   });
 
   // 5秒后自动隐藏错误消息
-  resourceTracker.addTimer(setTimeout(() => {
+  ResourceManager.addTimer(setTimeout(() => {
     scheduleDOMUpdate(() => {
       errorAlert.classList.add('d-none');
     });
@@ -250,7 +174,7 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
       currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
 
       // 2秒后移除成功提示
-      resourceTracker.addTimer(setTimeout(() => {
+      ResourceManager.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           if (successSpan.parentNode === statusTextElement) {
             successSpan.remove();
@@ -510,7 +434,7 @@ const scheduleDOMUpdate = (updateFn) => {
       requestAnimationFrame(processPendingDOMUpdates);
     } else {
       // 对于不支持requestAnimationFrame的环境的回退方案
-      resourceTracker.addTimer(setTimeout(processPendingDOMUpdates, 16)); // ~60fps
+      ResourceManager.addTimer(setTimeout(processPendingDOMUpdates, 16)); // ~60fps
     }
   }
 };
@@ -594,7 +518,7 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
 
   // 对于复杂错误使用更长的自动隐藏时间
   const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
-  resourceTracker.addTimer(setTimeout(() => {
+  ResourceManager.addTimer(setTimeout(() => {
     scheduleDOMUpdate(() => {
       updateErrorAlert.classList.add('d-none');
     });
@@ -675,7 +599,7 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
       // 6秒后自动隐藏回退通知
-      resourceTracker.addTimer(setTimeout(() => {
+      ResourceManager.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
@@ -727,7 +651,7 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('extension_is_up_to_date'), 'info');
 
       // 4秒后自动隐藏成功通知
-      resourceTracker.addTimer(setTimeout(() => {
+      ResourceManager.addTimer(setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
@@ -770,7 +694,7 @@ const updateCheckButtonState = (isChecking) => {
  */
 const cancelUpdateCheck = () => {
   if (updateCheckController) {
-    resourceTracker.removeController(updateCheckController);
+    ResourceManager.removeController(updateCheckController);
     updateCheckController = null;
     sendDebugLog(popupI18n.t('update_check_cancelled'), 'info');
   }
@@ -787,7 +711,7 @@ const cancelUpdateCheck = () => {
 const debouncedUpdateCheck = () => {
   // 清除现有的防抖定时器
   if (updateCheckDebounceTimer) {
-    resourceTracker.removeTimer(updateCheckDebounceTimer);
+    ResourceManager.removeTimer(updateCheckDebounceTimer);
     updateCheckDebounceTimer = null;
   }
 
@@ -835,7 +759,7 @@ const performUpdateCheck = async () => {
   updateCheckButtonState(true);
 
   // 为此请求创建新的中止控制器
-  updateCheckController = resourceTracker.addController(new AbortController());
+  updateCheckController = ResourceManager.addController(new AbortController());
 
   try {
     initializeUpdateChecker();
@@ -951,7 +875,7 @@ const debouncedUIUpdate = (updateFn, delay = 100) => {
     lastUIUpdate = now;
     updateFn();
   } else {
-    resourceTracker.addTimer(setTimeout(() => {
+    ResourceManager.addTimer(setTimeout(() => {
       lastUIUpdate = Date.now();
       updateFn();
     }, delay));
@@ -1095,23 +1019,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 绑定事件监听器
   if (autoSwitchToggle) {
-    resourceTracker.addEventListener(autoSwitchToggle, 'change', eventHandlers.autoSwitchChange);
+    ResourceManager.addEventListener(autoSwitchToggle, 'change', eventHandlers.autoSwitchChange);
   }
 
   if (languageSelect) {
-    resourceTracker.addEventListener(languageSelect, 'focus', eventHandlers.languageSelectFocus);
+    ResourceManager.addEventListener(languageSelect, 'focus', eventHandlers.languageSelectFocus);
   }
 
   if (applyButton) {
-    resourceTracker.addEventListener(applyButton, 'click', eventHandlers.applyButtonClick);
+    ResourceManager.addEventListener(applyButton, 'click', eventHandlers.applyButtonClick);
   }
 
   if (resetBtn) {
-    resourceTracker.addEventListener(resetBtn, 'click', eventHandlers.resetButtonClick);
+    ResourceManager.addEventListener(resetBtn, 'click', eventHandlers.resetButtonClick);
   }
 
   if (checkHeaderBtn) {
-    resourceTracker.addEventListener(checkHeaderBtn, 'click', eventHandlers.checkHeaderBtnClick);
+    ResourceManager.addEventListener(checkHeaderBtn, 'click', eventHandlers.checkHeaderBtnClick);
   }
 
   // DOM缓存已在主初始化中完成，无需重复初始化
@@ -1133,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 添加更新检查按钮事件监听器
   const updateCheckBtn = document.getElementById('updateCheckBtn');
   if (updateCheckBtn) {
-    resourceTracker.addEventListener(updateCheckBtn, 'click', eventHandlers.updateCheckBtnClick);
+    ResourceManager.addEventListener(updateCheckBtn, 'click', eventHandlers.updateCheckBtnClick);
   }
 
   // 全局资源清理函数
@@ -1143,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 清除防抖定时器
     if (updateCheckDebounceTimer) {
-      resourceTracker.removeTimer(updateCheckDebounceTimer);
+      ResourceManager.removeTimer(updateCheckDebounceTimer);
       updateCheckDebounceTimer = null;
     }
 
@@ -1154,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 使用资源跟踪器清理所有资源
-    resourceTracker.cleanup();
+    ResourceManager.cleanup();
 
     // 清理更新检查器实例
     if (updateChecker) {

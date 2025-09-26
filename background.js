@@ -14,43 +14,8 @@ importScripts('domain-rules-manager.js');
 importScripts('shared/shared-update-checker.js');
 
 // --- 资源管理器  ---
-// 仅管理定时器，避免误导性的事件监听器管理
-const resourceTracker = {
-  timers: [],
-  intervals: [],
-
-  // 定时器管理
-  setTimeout: function(callback, delay) {
-    const id = setTimeout(callback, delay);
-    this.timers.push(id);
-    return id;
-  },
-
-  setInterval: function(callback, delay) {
-    const id = setInterval(callback, delay);
-    this.intervals.push(id);
-    return id;
-  },
-
-  clearTimeout: function(id) {
-    clearTimeout(id);
-    this.timers = this.timers.filter(timerId => timerId !== id);
-  },
-
-  clearInterval: function(id) {
-    clearInterval(id);
-    this.intervals = this.intervals.filter(intervalId => intervalId !== id);
-  },
-
-  // 统一清理方法
-  cleanup: function() {
-    // 清理定时器
-    this.timers.forEach(id => clearTimeout(id));
-    this.timers = [];
-    this.intervals.forEach(id => clearInterval(id));
-    this.intervals = [];
-  }
-};
+// 使用共享的资源管理器
+importScripts('shared/shared-resource-manager.js');
 
 // 常量定义
 const RULE_ID = 1;
@@ -375,7 +340,7 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
     sendBackgroundLog(`${backgroundI18n.t('retry_after', { delay, count: nextRetryCount })}`, 'warning');
 
     // 等待后重试
-    await new Promise(resolve => resourceTracker.setTimeout(resolve, delay));
+    await new Promise(resolve => ResourceManager.setTimeout(resolve, delay));
     return await updateHeaderRulesInternal(language, nextRetryCount, false);
   } else {
     // 超过重试次数或不可重试的错误
@@ -492,7 +457,7 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
   if (pendingUIUpdate) {
     clearTimeout(pendingUIUpdate);
   }
-  pendingUIUpdate = resourceTracker.setTimeout(() => {
+  pendingUIUpdate = ResourceManager.setTimeout(() => {
     const message = {
       type: 'AUTO_SWITCH_UI_UPDATE',
       autoSwitchEnabled: latestAutoSwitchEnabled,
@@ -1248,5 +1213,5 @@ const handleGetManifestInfoRequest = (sendResponse) => {
 // 扩展卸载时的清理
 chrome.runtime.onSuspend.addListener(() => {
   sendBackgroundLog('Extension suspending, cleaning up resources...', 'info');
-  resourceTracker.cleanup();
+  ResourceManager.cleanup();
 });
