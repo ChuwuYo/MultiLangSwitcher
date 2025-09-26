@@ -2,14 +2,13 @@
 // 适用于浏览器扩展的各种页面类型
 
 const ResourceManager = {
-  // 资源跟踪 - 跟踪需要手动清理的资源
-  _trackedResources: {
-    timers: new Set(),
-    controllers: new Set(),
-    messageListeners: new Set(),
-    peerConnections: new Set(),
-    eventListeners: new Set()
-  },
+  // 资源跟踪 - 仅跟踪需要手动清理的资源
+   _trackedResources: {
+     timers: new Set(),
+     controllers: new Set(),
+     messageListeners: new Set(),
+     peerConnections: new Set()
+   },
 
   // 定时器管理 - 跟踪需要手动清理的定时器
   setTimeout: (callback, delay, ...args) => {
@@ -102,31 +101,13 @@ const ResourceManager = {
     }
   },
 
-  // 事件监听器管理 - 跟踪需要手动清理的监听器
+  // 事件监听器管理 - 依赖浏览器自动清理，仅提供统一接口
   addEventListener: (element, event, handler, options = null) => {
     if (element && typeof element.addEventListener === 'function') {
       element.addEventListener(event, handler, options);
-      const listenerInfo = { element, event, handler, options };
-      ResourceManager._trackedResources.eventListeners.add(listenerInfo);
-      return listenerInfo;
     }
+    // 不再跟踪，因为浏览器会自动清理
     return null;
-  },
-
-  removeEventListener: (element, event, handler, options = null) => {
-    if (element && typeof element.removeEventListener === 'function') {
-      element.removeEventListener(event, handler, options);
-      // 遍历 Set 查找并移除匹配的监听器
-      for (const listenerInfo of ResourceManager._trackedResources.eventListeners) {
-        if (listenerInfo.element === element &&
-            listenerInfo.event === event &&
-            listenerInfo.handler === handler &&
-            listenerInfo.options === options) {
-          ResourceManager._trackedResources.eventListeners.delete(listenerInfo);
-          break;
-        }
-      }
-    }
   },
 
   // 消息监听器管理 - 某些情况下需要手动移除
@@ -206,14 +187,6 @@ const ResourceManager = {
     });
     resources.messageListeners.clear();
 
-    // 清理事件监听器
-    resources.eventListeners.forEach(listenerInfo => {
-      if (listenerInfo.element && typeof listenerInfo.element.removeEventListener === 'function') {
-        listenerInfo.element.removeEventListener(listenerInfo.event, listenerInfo.handler, listenerInfo.options);
-      }
-    });
-    resources.eventListeners.clear();
-
     // 仅在调试模式下输出日志
     if (typeof DEBUG_MODE !== 'undefined' && DEBUG_MODE) {
       console.log('ResourceManager: Manual cleanup completed');
@@ -227,8 +200,7 @@ const ResourceManager = {
       timers: resources.timers.size,
       controllers: resources.controllers.size,
       peerConnections: resources.peerConnections.size,
-      messageListeners: resources.messageListeners.size,
-      eventListeners: resources.eventListeners.size
+      messageListeners: resources.messageListeners.size
     };
   }
 };

@@ -850,11 +850,6 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 清理 ResourceManager 中跟踪的资源
     ResourceManager.cleanup();
 
-    // 移除消息监听器（如果需要的话）
-    if (messageListener) {
-      ResourceManager.removeMessageListener(messageListener);
-    }
-
     addLogMessage(debugI18n.t('debug_ui_cleanup_completed'), 'info');
   };
 

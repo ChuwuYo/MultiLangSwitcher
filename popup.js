@@ -104,7 +104,7 @@ const updateHeaderRules = async (language, autoCheck = false) => {
     const checkHeaderBtn = document.getElementById('checkHeaderBtn');
     if (checkHeaderBtn && document.getElementById('headerCheckResult')) {
       sendDebugLog(popupI18n.t('auto_trigger_quick_check'), 'info');
-      ResourceManager.addTimer(setTimeout(() => checkHeaderBtn.click(), 500));
+      ResourceManager.setTimeout(() => checkHeaderBtn.click(), 500);
     }
   }
 };
@@ -131,11 +131,11 @@ const showError = (message) => {
   });
 
   // 5秒后自动隐藏错误消息
-  ResourceManager.addTimer(setTimeout(() => {
+  ResourceManager.setTimeout(() => {
     scheduleDOMUpdate(() => {
       errorAlert.classList.add('d-none');
     });
-  }, 5000));
+  }, 5000);
 };
 
 /**
@@ -174,13 +174,13 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
       currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
 
       // 2秒后移除成功提示
-      ResourceManager.addTimer(setTimeout(() => {
+      ResourceManager.setTimeout(() => {
         scheduleDOMUpdate(() => {
           if (successSpan.parentNode === statusTextElement) {
             successSpan.remove();
           }
         });
-      }, 2000));
+      }, 2000);
     }
   });
 };
@@ -434,7 +434,7 @@ const scheduleDOMUpdate = (updateFn) => {
       requestAnimationFrame(processPendingDOMUpdates);
     } else {
       // 对于不支持requestAnimationFrame的环境的回退方案
-      ResourceManager.addTimer(setTimeout(processPendingDOMUpdates, 16)); // ~60fps
+      ResourceManager.setTimeout(processPendingDOMUpdates, 16); // ~60fps
     }
   }
 };
@@ -518,11 +518,11 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
 
   // 对于复杂错误使用更长的自动隐藏时间
   const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
-  ResourceManager.addTimer(setTimeout(() => {
+  ResourceManager.setTimeout(() => {
     scheduleDOMUpdate(() => {
       updateErrorAlert.classList.add('d-none');
     });
-  }, hideDelay));
+  }, hideDelay);
 }
 
 /**
@@ -599,11 +599,11 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
       // 6秒后自动隐藏回退通知
-      ResourceManager.addTimer(setTimeout(() => {
+      ResourceManager.setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 5000));
+      }, 5000);
 
     } else if (updateInfo.updateAvailable) {
       // 有可用更新
@@ -651,11 +651,11 @@ const showUpdateNotification = (updateInfo) => {
       sendDebugLog(popupI18n.t('extension_is_up_to_date'), 'info');
 
       // 4秒后自动隐藏成功通知
-      ResourceManager.addTimer(setTimeout(() => {
+      ResourceManager.setTimeout(() => {
         scheduleDOMUpdate(() => {
           updateNotification.classList.add('d-none');
         });
-      }, 4000));
+      }, 4000);
     }
 
     updateNotification.classList.remove('d-none');
@@ -711,7 +711,7 @@ const cancelUpdateCheck = () => {
 const debouncedUpdateCheck = () => {
   // 清除现有的防抖定时器
   if (updateCheckDebounceTimer) {
-    ResourceManager.removeTimer(updateCheckDebounceTimer);
+    ResourceManager.clearTimeout(updateCheckDebounceTimer);
     updateCheckDebounceTimer = null;
   }
 
@@ -859,7 +859,13 @@ const performUpdateCheck = async () => {
   } finally {
     // 清理更新检查状态
     updateCheckInProgress = false;
-    updateCheckController = null;
+
+    // 从 ResourceManager 跟踪列表中移除 controller，避免内存泄漏
+    if (updateCheckController) {
+      ResourceManager._trackedResources.controllers.delete(updateCheckController);
+      updateCheckController = null;
+    }
+
     updateCheckButtonState(false);
   }
 }
@@ -875,10 +881,10 @@ const debouncedUIUpdate = (updateFn, delay = 100) => {
     lastUIUpdate = now;
     updateFn();
   } else {
-    ResourceManager.addTimer(setTimeout(() => {
+    ResourceManager.setTimeout(() => {
       lastUIUpdate = Date.now();
       updateFn();
-    }, delay));
+    }, delay);
   }
 };
 

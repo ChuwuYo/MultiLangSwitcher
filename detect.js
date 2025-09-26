@@ -394,7 +394,8 @@ const fetchWithTimeout = async (url, timeoutMs) => {
     throw error;
   } finally {
     ResourceManager.clearTimeout(timeoutId);
-    // 浏览器会自动清理控制器资源，无需手动跟踪
+    // 控制器使用完毕后，从资源管理器中移除以避免内存泄漏
+    ResourceManager.abortController(controller);
   }
 }
 
