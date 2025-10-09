@@ -1,83 +1,105 @@
-## ⚠️ 需要注意的问题与建议
+## 🔧 TODO
 
-### 1. 错误处理标准化
-- 虽然各模块的错误处理都是必要的特定处理，但可以考虑创建一些通用的错误处理辅助函数
-- 主要用于减少样板代码，提高代码一致性
+### 🔴 **高优先级 - 过度设计的问题**
 
----
+#### 1. **并发控制的双重机制**
+**位置**: `background.js:160-197`
+**问题描述**:
+- `updateHeaderRules` 函数同时实现了**防抖映射**(`pendingLanguageRequests`)和**队列管理**(`updateRulesQueue`)两种并发控制机制
+- 对于浏览器扩展的语言切换功能，这种双重防护是过度设计
+- 选择其中一种机制就足以应对实际需求
 
-## 🔧 实际需要修复的问题
-
-### 🔴 **高优先级 - 资源泄漏问题**
-
-### 🟡 **中优先级 - 代码质量改进**
-
-#### 1. 错误处理辅助函数
-虽然各模块的错误处理都是必要的，但可以创建一些辅助函数来减少样板代码：
+**具体问题**:
 ```javascript
-// 建议创建的辅助函数
-const handleAsyncError = (error, context) => {
-  console.error(`Error in ${context}:`, error);
-  sendDebugLog(`Error in ${context}: ${error.message}`, 'error');
-  return null; // 或默认值
+// 双重并发控制：防抖 + 队列
+const requestKey = `${language}_${isAutoSwitch}`;
+if (pendingLanguageRequests.has(requestKey)) {
+  return await pendingLanguageRequests.get(requestKey); // 防抖检查
+}
+
+const requestPromise = updateRulesQueue.then(() =>
+  updateHeaderRulesInternal(language, retryCount, isAutoSwitch) // 队列管理
+);
+```
+
+#### 2. **初始化守卫的三层检查**
+**位置**: `background.js:38-53`
+**问题描述**:
+- `ensureInitialized` 函数包含三层初始化检查：Promise存在性 → 初始化状态 → Promise等待
+- 对于扩展的初始化场景，这种多层防护过度谨慎
+
+**具体问题**:
+```javascript
+const ensureInitialized = async () => {
+  // 第一层：检查Promise是否存在且初始化未完成
+  if (initializationPromise && !isInitialized) {
+    await initializationPromise;
+  }
+  // 第二层：检查是否已初始化
+  if (!isInitialized) {
+    await initialize('lazy');
+  }
 };
 ```
 
-#### 2. Chrome API调用辅助函数
-为减少Chrome API调用的样板代码：
+#### 3. **错误分类的过度细化**
+**位置**: `shared/shared-update-checker.js:361-444`
+**问题描述**:
+- 为简单的GitHub更新检查定义了11种不同的错误类型
+- 包括：网络错误、超时、速率限制、404、500系列、无效响应、版本错误、SSL、DNS、CORS、取消等
+- 对于更新检查功能，这种细粒度分类确实过度
+
+**具体问题**:
 ```javascript
-// 建议创建的辅助函数
-const chromeStorageGet = async (keys) => {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(keys, (result) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      resolve(result);
-    });
-  });
-};
+// 11种不同的错误类型处理
+if (errorMessage.includes('failed to fetch') || /* ... */) {
+  return this.createErrorInfo('NETWORK_ERROR', '...', true, '...', error);
+}
+// ... 更多错误类型判断
 ```
 
-### 🟢 **低优先级 - 代码优化**
+### 🟡 **中优先级 - 可优化的设计**
 
-#### 1. 常量提取
-- 将一些魔法数字和字符串提取为常量
-- 提高代码可维护性
+#### 4. **国际化系统的环境检测复杂度**
+**位置**: `shared-utils.js:97-182`
+**问题描述**:
+- 多达8个翻译源的检查链，对于小型扩展可能过于复杂
+- 可以考虑使用Chrome标准的`chrome.i18n` API简化
 
-#### 2. 函数参数验证
-- 为公共函数添加输入验证
-- 提高代码健壮性
+#### 5. **资源管理的环境差异化策略**
+**位置**: `shared-resource-manager.js`
+**问题描述**:
+- 虽然设计合理，但在某些场景下可能过度谨慎
+- 浏览器自动清理机制通常已足够处理大部分情况
 
-#### 3. 代码结构优化
-- 考虑将一些通用逻辑提取到shared模块
-- 优化模块间的依赖关系
+### 🟢 **合理的复杂度（应保留的设计）**
 
----
+以下机制**看似复杂但实际合理**，不应简化：
 
-## 🎯 代码重构策略
-
-### **保持现有架构**
-- 翻译系统架构稳定，不建议大规模重构
-- 各模块间的职责划分清晰，保持现状
-- 重点关注代码质量和可维护性改进
-
-### **渐进式改进**
-- 优先解决资源泄漏等实际问题 ✅ **已完成**
-- 逐步引入辅助函数，减少样板代码
-- 保持向后兼容性
+1. **域名匹配的多层策略** - 支持现代网站的语言子域名是实际需求
+2. **缓存系统** - 性能优化的必要措施
+3. **翻译回退机制** - 确保用户体验的容错设计
+4. **指数退避重试** - 处理GitHub API的必要手段
 
 ---
 
-## 📝 实施计划
+## 📝 精准实施路线图
 
-### 资源管理标准化 ✅ **已完成**
-- [x] 为所有相关文件实施resourceTracker系统 ✅ **已完成**
-- [x] 创建资源管理最佳实践文档 ✅ **已完成**
-- [x] 验证资源管理实现的一致性 ✅ **已完成**
+### 第一阶段：识别问题
+- [x] 识别真正的过度工程化问题（并发控制、错误分类等）
+- [x] 理解合理的复杂度（域名匹配、缓存等）
 
-### 代码质量改进
-- [ ] 创建通用错误处理辅助函数
-- [ ] 创建Chrome API调用辅助函数
-- [ ] 提取常量和改进代码结构
+### 第二阶段：精准简化
+- [ ] 简化 `background.js` 的双重并发控制机制
+- [ ] 合并 `shared-update-checker.js` 的错误类型（11种→3-4种）
+- [ ] 精简初始化守卫的三层检查逻辑
+
+### 第三阶段：代码质量改进
+- [ ] 创建通用辅助函数减少样板代码
+- [ ] 提取常量和配置管理
+- [ ] 完善技术文档说明架构决策
+
+### 第四阶段：持续改进
+- [ ] 根据实际使用情况微调复杂度
+- [ ] 收集性能数据验证优化效果
+- [ ] 平衡功能需求和代码简洁性
