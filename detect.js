@@ -258,7 +258,7 @@ const getBrowserInfo = () => {
   return {
     name: browserName,
     version: browserVersion,
-    fullVersion: fullVersion || browserVersion,
+    fullVersion: fullVersion,
     os: os,
     userAgent: ua
   };
