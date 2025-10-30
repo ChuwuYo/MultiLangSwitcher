@@ -6,9 +6,10 @@
 class DomainManagerI18n extends BaseI18n {
   constructor() {
     super('domain-manager', true); // 标记为Service Worker环境
-    this.init();
   }
 }
 
-// 创建全局实例
+// 创建实例，但不立即初始化
 const domainManagerI18n = new DomainManagerI18n();
+// 调用init()并将其返回的Promise暴露出去，以便其他脚本可以等待它完成
+const domainManagerI18nReady = domainManagerI18n.init();

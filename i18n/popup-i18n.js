@@ -8,25 +8,21 @@
 class PopupI18n extends BaseI18n {
   constructor() {
     super('popup', false); // 标记为浏览器环境
-    this.init();
   }
 
   /**
-   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   * 初始化并应用翻译到DOM。
    */
-  async loadTranslations() {
-    await super.loadTranslations();
-    
-    // 确保DOM完全加载后再应用翻译
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
-    } else {
-      // DOM已经加载完成，直接应用翻译
-      this.applyTranslations();
-    }
+  async applyTranslationsToDOM() {
+    await this.init();
+    this._applyTranslations();
   }
 
-  applyTranslations() {
+  /**
+   * 将翻译应用到DOM元素。
+   * @private
+   */
+  _applyTranslations() {
     // 设置页面标题
     document.title = this.t('extension_name');
 
@@ -117,15 +113,12 @@ class PopupI18n extends BaseI18n {
       updateCheckText.textContent = this.t('check_for_updates');
     }
   }
-
-  switchLanguage(lang) {
-    if (lang !== this.currentLang) {
-      this.currentLang = lang;
-      localStorage.setItem('app-lang', lang);
-      location.reload();
-    }
-  }
 }
 
 // 创建全局实例
 const popupI18n = new PopupI18n();
+
+// DOM加载完成后，初始化并应用翻译
+document.addEventListener('DOMContentLoaded', () => {
+  popupI18n.applyTranslationsToDOM();
+});

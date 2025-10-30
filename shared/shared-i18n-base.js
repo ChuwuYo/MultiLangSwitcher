@@ -1,467 +1,213 @@
 /**
  * 基础国际化类
- * 提供通用的翻译功能和语言检测
+ * 提供通用的翻译功能和语言检测，统一了浏览器和Service Worker环境的加载逻辑。
  */
 class BaseI18n {
     /**
      * 构造函数
-     * @param {string} componentName - 组件名称，用于加载对应的翻译文件
-     * @param {boolean} isServiceWorker - 是否在service worker环境中运行
+     * @param {string} componentName - 组件名称，用于加载对应的翻译文件。
+     * @param {boolean} [isServiceWorker=false] - 是否在Service Worker环境中运行。
      */
     constructor(componentName, isServiceWorker = false) {
-        // 早期返回模式 - 验证必需参数
         if (!componentName || typeof componentName !== 'string') {
-            const error = new Error('Component name is required and must be a string');
+            const error = new Error('Component name is required and must be a string.');
             console.error('BaseI18n constructor error:', error.message);
             throw error;
         }
 
         this.componentName = componentName;
-        this.isServiceWorker = Boolean(isServiceWorker);
+        this.isServiceWorker = isServiceWorker;
         this.currentLang = 'en';
         this.translations = {};
-        this.initialized = false;
         this.isReady = false;
-        this.readyCallbacks = [];
+        this._initPromise = null;
     }
 
     /**
-     * 初始化翻译系统
+     * 初始化翻译系统，返回一个在准备就绪时解析的Promise。
+     * @returns {Promise<void>}
      */
     init() {
-        this.detectLanguage();
-        if (this.isServiceWorker) {
-            // Service Worker环境中同步加载翻译
-            this.loadTranslationsSync();
-        } else {
-            // 浏览器环境中异步加载翻译
-            this.loadTranslations();
+        if (this._initPromise) {
+            return this._initPromise;
         }
-        this.initialized = true;
+
+        this._initPromise = (async () => {
+            this._detectLanguage();
+            try {
+                await this._loadLanguageFile(this.currentLang);
+            } catch (error) {
+                console.error(`Failed to load '${this.currentLang}' translation for ${this.componentName}. Falling back to 'en'.`, error);
+                if (this.currentLang !== 'en') {
+                    try {
+                        await this._loadLanguageFile('en');
+                        this.currentLang = 'en'; // 更新当前语言为回退语言
+                    } catch (fallbackError) {
+                        console.error(`Failed to load fallback 'en' translation for ${this.componentName}.`, fallbackError);
+                        this.translations = {}; // 最终回退为空对象
+                    }
+                } else {
+                    this.translations = {};
+                }
+            } finally {
+                this.isReady = true;
+            }
+        })();
+
+        return this._initPromise;
     }
 
     /**
-     * 检测浏览器语言
+     * 检测并设置当前语言。
+     * @private
      */
-    detectLanguage() {
-        try {
-            // 优先使用保存的语言设置（仅在浏览器环境中）
-            const savedLang = this.getSavedLanguage();
+    _detectLanguage() {
+        // 优先从localStorage获取（仅浏览器环境）
+        if (!this.isServiceWorker && typeof localStorage !== 'undefined') {
+            const savedLang = localStorage.getItem('app-lang');
             if (savedLang) {
                 this.currentLang = savedLang;
                 return;
             }
-
-            // 使用共享的语言检测函数
-            if (typeof detectBrowserLanguage === 'function') {
-                const detectedLang = detectBrowserLanguage();
-                this.currentLang = detectedLang.startsWith('zh') ? 'zh' : 'en';
-                return;
-            }
-
-            // 回退到系统语言检测
-            this.currentLang = this.detectSystemLanguage();
-        } catch (error) {
-            // 发生错误时默认使用英文
-            this.currentLang = 'en';
         }
+
+        // 其次使用Chrome扩展API或浏览器API
+        const langSource = (typeof chrome?.i18n?.getUILanguage === 'function' && chrome.i18n.getUILanguage()) ||
+                         (typeof navigator?.language === 'string' && navigator.language) ||
+                         'en';
+
+        this.currentLang = langSource.toLowerCase().startsWith('zh') ? 'zh' : 'en';
     }
 
     /**
-     * 获取保存的语言设置
-     * @returns {string|null} 保存的语言代码或null
+     * 统一的语言文件加载器。
+     * @param {string} lang - 要加载的语言代码 ('en', 'zh')。
+     * @returns {Promise<void>}
+     * @private
      */
-    getSavedLanguage() {
-        if (this.isServiceWorker || typeof localStorage === 'undefined') {
-            return null;
-        }
-        return localStorage.getItem('app-lang');
-    }
-
-    /**
-     * 检测系统语言
-     * @returns {string} 语言代码
-     */
-    detectSystemLanguage() {
-        // Chrome扩展API
-        if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-            const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-            return browserLang.startsWith('zh') ? 'zh' : 'en';
-        }
-
-        // 浏览器navigator API
-        if (typeof navigator !== 'undefined' && navigator.language) {
-            return navigator.language.startsWith('zh') ? 'zh' : 'en';
-        }
-
-        // 默认英文
-        return 'en';
-    }
-
-    /**
-     * 同步加载翻译文件（仅用于Service Worker环境）
-     */
-    loadTranslationsSync() {
-        try {
-            // 检查是否已经加载过翻译
-            const expectedVar = this.getExpectedTranslationVariable();
-            const globalScope = this.getGlobalScope();
-            
-            if (globalScope[expectedVar]) {
-                // 如果翻译已经存在，直接使用
-                this.translations = globalScope[expectedVar];
-                this.markAsReady();
-                return;
-            }
-            
-            this.loadCurrentLanguageSync();
-            this.markAsReady();
-        } catch (error) {
-            console.error(`${this.componentName} translation file loading failed:`, error);
-            this.loadFallbackTranslationsSync();
-        }
-    }
-
-    /**
-     * 同步加载当前语言的翻译文件
-     */
-    loadCurrentLanguageSync() {
-        const translationVarName = this.getTranslationVariableName();
-        const globalScope = this.getGlobalScope();
-        const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
+    async _loadLanguageFile(lang) {
+        const translationVarName = this.componentName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+        const langSuffix = lang === 'zh' ? 'Zh' : 'En';
         const expectedVar = `${translationVarName}${langSuffix}`;
-        
-        // 检查翻译是否已经加载
+        const globalScope = globalThis;
+
+        // 如果翻译已存在于全局作用域，则直接使用
         if (globalScope[expectedVar]) {
             this.translations = globalScope[expectedVar];
             return;
         }
-        
-        // 只在翻译未加载时才尝试加载脚本
-        try {
-            importScripts(`i18n/${this.componentName}-${this.currentLang}.js`);
-            this.translations = globalScope[expectedVar];
-        } catch (error) {
-            // 如果加载失败，尝试使用已经存在的翻译
-            const fallbackVars = [`${translationVarName}En`, `${translationVarName}Zh`];
-            let found = false;
-            
-            for (const varName of fallbackVars) {
-                if (globalScope[varName]) {
-                    this.translations = globalScope[varName];
-                    found = true;
-                    console.warn(`Using fallback translation ${varName} for ${this.componentName}`);
-                    break;
-                }
-            }
-            
-            if (!found) {
-                throw error; // 重新抛出原始错误
-            }
-        }
-    }
 
-    /**
-     * 获取全局作用域对象
-     * @returns {Object} 全局作用域对象
-     */
-    getGlobalScope() {
-        return globalThis;
-    }
-
-    /**
-     * 标记翻译系统为就绪状态并执行回调
-     */
-    markAsReady() {
-        this.isReady = true;
-        this.executeReadyCallbacks();
-    }
-
-    /**
-     * 执行所有等待的回调函数
-     */
-    executeReadyCallbacks() {
-        this.readyCallbacks.forEach(callback => callback());
-        this.readyCallbacks = [];
-    }
-
-    /**
-     * 同步加载回退翻译文件（仅用于Service Worker环境）
-     */
-    loadFallbackTranslationsSync() {
-        try {
-            this.loadEnglishTranslationsSync();
-            this.markAsReady();
-        } catch (fallbackError) {
-            console.error('Fallback translation file loading also failed:', fallbackError);
-            this.translations = {};
-            this.markAsReady();
-        }
-    }
-
-    /**
-     * 同步加载英文翻译文件
-     */
-    loadEnglishTranslationsSync() {
-        if (this.currentLang === 'en') {
-            this.translations = {};
-            return;
-        }
-
-        importScripts(`i18n/${this.componentName}-en.js`);
-        const translationVarName = this.getTranslationVariableName();
-        const globalScope = this.getGlobalScope();
-        this.translations = globalScope[`${translationVarName}En`];
-    }
-
-    /**
-     * 加载翻译文件
-     * 子类可以重写此方法以实现特定的加载逻辑
-     */
-    async loadTranslations() {
-        try {
-            await this.loadTranslationsByEnvironment();
-            this.markAsReady();
-        } catch (error) {
-            console.error(`${this.componentName} translation file loading failed:`, error);
-            await this.loadFallbackTranslations();
-            this.markAsReady();
-        }
-    }
-
-    /**
-     * 根据环境加载翻译文件
-     */
-    async loadTranslationsByEnvironment() {
+        // 根据环境加载脚本
+        const scriptPath = `i18n/${this.componentName}-${lang}.js`;
         if (this.isServiceWorker) {
-            await this.loadTranslationsForServiceWorker();
+            importScripts(scriptPath);
         } else {
-            await this.loadTranslationsForBrowser();
+            await this._loadScriptForBrowser(scriptPath);
+        }
+
+        // 从全局作用域获取翻译
+        if (globalScope[expectedVar]) {
+            this.translations = globalScope[expectedVar];
+        } else {
+            throw new Error(`Translation variable '${expectedVar}' not found after loading script.`);
         }
     }
 
     /**
-     * 在Service Worker环境中加载翻译文件
-     */
-    async loadTranslationsForServiceWorker() {
-        importScripts(`i18n/${this.componentName}-${this.currentLang}.js`);
-        this.setTranslationsFromGlobalScope();
-    }
-
-    /**
-     * 从全局作用域设置翻译对象
-     */
-    setTranslationsFromGlobalScope() {
-        const translationVarName = this.getTranslationVariableName();
-        const globalScope = this.getGlobalScope();
-        const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
-
-        this.translations = globalScope[`${translationVarName}${langSuffix}`];
-    }
-
-    /**
-     * 在浏览器环境中加载翻译文件
-     */
-    async loadTranslationsForBrowser() {
-        const expectedVar = this.getExpectedTranslationVariable();
-
-        // 检查是否已经预加载了翻译文件
-        if (typeof window[expectedVar] !== 'undefined') {
-            this.translations = window[expectedVar];
-            return;
-        }
-
-        // 动态加载翻译文件
-        await this.loadScriptDynamically();
-        this.translations = window[expectedVar];
-    }
-
-    /**
-     * 获取期望的翻译变量名
-     * @returns {string} 翻译变量名
-     */
-    getExpectedTranslationVariable() {
-        const translationVarName = this.getTranslationVariableName();
-        const langSuffix = this.currentLang === 'zh' ? 'Zh' : 'En';
-        return `${translationVarName}${langSuffix}`;
-    }
-
-    /**
-     * 动态加载脚本文件
+     * 在浏览器环境中通过动态添加<script>标签加载脚本。
+     * @param {string} src - 脚本路径。
      * @returns {Promise<void>}
+     * @private
      */
-    async loadScriptDynamically() {
-        const script = document.createElement('script');
-        script.src = `i18n/${this.componentName}-${this.currentLang}.js`;
-        document.head.appendChild(script);
-
+    _loadScriptForBrowser(src) {
         return new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            // 添加超时处理
-            setTimeout(() => reject(new Error('Translation loading timeout')), 3000);
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            
+            const timeoutId = setTimeout(() => {
+                script.remove(); // 清理超时的脚本标签
+                reject(new Error(`Script loading timed out: ${src}`));
+            }, 5000); // 5秒超时
+
+            script.onload = () => {
+                clearTimeout(timeoutId);
+                resolve();
+            };
+            
+            script.onerror = () => {
+                clearTimeout(timeoutId);
+                reject(new Error(`Failed to load script: ${src}`));
+            };
+
+            document.head.appendChild(script);
         });
     }
 
     /**
-     * 加载回退翻译文件（英文）
-     */
-    async loadFallbackTranslations() {
-        try {
-            await this.loadEnglishTranslations();
-        } catch (fallbackError) {
-            console.error('Fallback translation file loading also failed:', fallbackError);
-            this.translations = {};
-        }
-    }
-
-    /**
-     * 加载英文翻译文件
-     */
-    async loadEnglishTranslations() {
-        if (this.currentLang === 'en') {
-            this.translations = {};
-            return;
-        }
-
-        await this.loadEnglishTranslationsByEnvironment();
-        this.setEnglishTranslationsFromGlobalScope();
-    }
-
-    /**
-     * 根据环境加载英文翻译文件
-     */
-    async loadEnglishTranslationsByEnvironment() {
-        if (this.isServiceWorker) {
-            importScripts(`i18n/${this.componentName}-en.js`);
-            return;
-        }
-
-        const fallbackScript = document.createElement('script');
-        fallbackScript.src = `i18n/${this.componentName}-en.js`;
-        document.head.appendChild(fallbackScript);
-
-        await new Promise(resolve => {
-            fallbackScript.onload = resolve;
-        });
-    }
-
-    /**
-     * 从全局作用域设置英文翻译对象
-     */
-    setEnglishTranslationsFromGlobalScope() {
-        const translationVarName = this.getTranslationVariableName();
-        const globalScope = this.getGlobalScope();
-        this.translations = globalScope[`${translationVarName}En`];
-    }
-
-    /**
-     * 获取翻译变量名称
-     * @returns {string} 翻译变量的基础名称
-     */
-    getTranslationVariableName() {
-        // 将组件名称转换为驼峰命名
-        return this.componentName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    }
-
-    /**
-     * 获取回退翻译
-     * @param {string} key - 翻译键
-     * @returns {string|null} 回退翻译文本或null
-     */
-    getFallbackTranslation(key) {
-        // 如果当前是英文或已有翻译，不需要回退
-        if (this.currentLang === 'en' || this.translations[key]) {
-            return null;
-        }
-
-        try {
-            const enTranslations = this.getEnglishTranslationsFromGlobal();
-            return enTranslations && enTranslations[key] ? enTranslations[key] : null;
-        } catch (error) {
-            // 忽略错误，继续使用键名作为最后回退
-            return null;
-        }
-    }
-
-    /**
-     * 从全局作用域获取英文翻译对象
-     * @returns {Object|null} 英文翻译对象或null
-     */
-    getEnglishTranslationsFromGlobal() {
-        const translationVarName = this.getTranslationVariableName();
-        const globalScope = this.getGlobalScope();
-        const enTranslations = globalScope[`${translationVarName}En`];
-
-        return typeof enTranslations !== 'undefined' ? enTranslations : null;
-    }
-
-    /**
-     * 翻译文本
-     * @param {string} key - 翻译键
-     * @param {Object} params - 参数对象，用于替换占位符
-     * @returns {string} 翻译后的文本
+     * 获取翻译文本。
+     * @param {string} key - 翻译键。
+     * @param {Object} [params={}] - 用于替换占位符的参数。
+     * @returns {string} 翻译后的文本。
      */
     t(key, params = {}) {
-        // 如果翻译对象还没有初始化，直接返回键名
-        if (!this.translations || typeof this.translations !== 'object') {
-            return key;
+        if (!this.isReady || !this.translations) {
+            // 在翻译未就绪时，返回key或尝试用参数格式化key
+            return this._formatString(key, params);
         }
 
-        // 获取翻译文本，优先使用当前语言，然后回退到英文，最后使用键名
-        let text = this.translations[key] || this.getFallbackTranslation(key) || key;
-
-        // 处理参数替换，支持多种占位符格式
-        if (params && typeof params === 'object' && Object.keys(params).length > 0) {
-            try {
-                Object.keys(params).forEach(param => {
-                    const placeholder = `{${param}}`;
-                    const value = String(params[param]); // 确保参数值为字符串
-                    // 使用 split/join 方式更安全，避免正则表达式相关问题
-                    text = text.split(placeholder).join(value);
-                });
-            } catch (error) {
-                // 记录替换错误但继续处理其他参数
-                console.error(`Failed to replace placeholder for param "${param}" in key "${key}":`, error);
-            }
+        const text = this.translations[key] || key;
+        return this._formatString(text, params);
+    }
+    
+    /**
+     * 格式化字符串，替换占位符。
+     * @param {string} str - 包含占位符的字符串。
+     * @param {Object} params - 参数对象。
+     * @returns {string} 格式化后的字符串。
+     * @private
+     */
+    _formatString(str, params) {
+        if (!params || typeof params !== 'object' || Object.keys(params).length === 0) {
+            return str;
         }
-
-        return text;
+        
+        let result = str;
+        for (const [param, value] of Object.entries(params)) {
+            // 使用全局替换，以处理同一个占位符多次出现的情况
+            result = result.split(`{${param}}`).join(String(value));
+        }
+        return result;
     }
 
     /**
-     * 等待翻译系统准备就绪
-     * @param {Function} callback - 准备就绪后执行的回调函数
+     * 允许外部代码等待翻译系统准备就绪。
+     * @param {Function} [callback] - (可选) 准备就绪后执行的回调函数。
+     * @returns {Promise<void>}
      */
     ready(callback) {
-        if (!callback || typeof callback !== 'function') {
+        const promise = this._initPromise || this.init();
+        if (typeof callback === 'function') {
+            promise.then(callback);
+        }
+        return promise;
+    }
+
+    /**
+     * 切换语言并重新加载页面（仅限浏览器环境）。
+     * @param {string} lang - 目标语言代码。
+     */
+    switchLanguage(lang) {
+        if (lang === this.currentLang || this.isServiceWorker) {
             return;
         }
 
-        if (this.isReady) {
-            callback();
-        } else {
-            this.readyCallbacks.push(callback);
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('app-lang', lang);
         }
-    }
-
-    /**
-     * 切换语言
-     * @param {string} lang - 目标语言代码
-     */
-    switchLanguage(lang) {
-        if (lang !== this.currentLang) {
-            this.currentLang = lang;
-
-            // 只在浏览器环境中使用localStorage和location.reload
-            if (!this.isServiceWorker) {
-                if (typeof localStorage !== 'undefined') {
-                    localStorage.setItem('app-lang', lang);
-                }
-                if (typeof location !== 'undefined') {
-                    location.reload();
-                }
-            }
+        if (typeof location !== 'undefined') {
+            location.reload();
         }
     }
 }

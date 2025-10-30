@@ -8,25 +8,21 @@
 class DetectI18n extends BaseI18n {
   constructor() {
     super('detect', false); // 标记为浏览器环境
-    this.init();
   }
 
   /**
-   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   * 初始化并应用翻译到DOM。
    */
-  async loadTranslations() {
-    await super.loadTranslations();
-    
-    // 确保DOM完全加载后再应用翻译
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
-    } else {
-      // DOM已经加载完成，直接应用翻译
-      this.applyTranslations();
-    }
+  async applyTranslationsToDOM() {
+    await this.init();
+    this._applyTranslations();
   }
 
-  applyTranslations() {
+  /**
+   * 将翻译应用到DOM元素。
+   * @private
+   */
+  _applyTranslations() {
     // 设置页面标题和基本信息
     document.title = this.t('title');
     
@@ -158,14 +154,11 @@ class DetectI18n extends BaseI18n {
       headerInfo.textContent = this.t('loading');
     }
   }
-
-  switchLanguage(lang) {
-    if (lang !== this.currentLang) {
-      this.currentLang = lang;
-      localStorage.setItem('app-lang', lang);
-      location.reload();
-    }
-  }
 }
 
 const detectI18n = new DetectI18n();
+
+// DOM加载完成后，初始化并应用翻译
+document.addEventListener('DOMContentLoaded', () => {
+  detectI18n.applyTranslationsToDOM();
+});

@@ -8,9 +8,16 @@ importScripts('shared/shared-i18n-base.js');
 // 3. 导入具体的国际化类
 importScripts('i18n/background-i18n.js');
 importScripts('i18n/domain-manager-i18n.js');
-// 4. 导入域名规则管理器
+
+// 4. 将所有i18n模块的初始化Promise聚合到一个地方
+const i18nReady = Promise.all([
+  backgroundI18nReady,
+  domainManagerI18nReady
+]);
+
+// 5. 导入域名规则管理器
 importScripts('domain-rules-manager.js');
-// 5. 导入更新检查器
+// 6. 导入更新检查器
 importScripts('shared/shared-update-checker.js');
 
 // --- 资源管理器  ---
@@ -25,10 +32,8 @@ const DEFAULT_LANG_EN = 'en-US';   // 为英文用户设置的默认语言，也
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
 const sendBackgroundLog = (message, logType = 'info') => {
-  // 安全获取翻译，如果翻译系统未准备好则使用英文回退
-  const backgroundLabel = (backgroundI18n && backgroundI18n.isReady)
-    ? backgroundI18n.t('background')
-    : 'Background';
+  // 假设i18n已经准备好，因为调用此函数前会确保初始化完成
+  const backgroundLabel = backgroundI18n.t('background') || 'Background';
 
   // 确保同样的消息被用于控制台日志和调试日志
   console.log(`[${backgroundLabel} ${logType.toUpperCase()}] ${message}`);
@@ -354,8 +359,11 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
  * @param {string} reason - 初始化的原因 (e.g., 'install', 'update', 'startup')
  */
 const performInitialization = async (reason) => {
-  sendBackgroundLog(backgroundI18n.t('initializing_state', { reason }), 'info');
   try {
+    // 0. 等待所有i18n模块准备就绪
+    await i18nReady;
+    sendBackgroundLog(backgroundI18n.t('initializing_state', { reason }), 'info');
+
     // 1. 初始化域名规则管理器 (现在直接加载)
     await domainRulesManager.loadRules();
     sendBackgroundLog(backgroundI18n.t('domain_rules_loaded'), 'info');
