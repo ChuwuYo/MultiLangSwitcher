@@ -109,29 +109,17 @@ if (typeof popupEn === 'undefined') {
   "view_release": "View Release",
   "download_update": "Download Update",
   "update_check_failed": "Failed to check for updates",
-  "network_error": "Network error occurred",
-  "rate_limit_exceeded": "Rate limit exceeded, try again later",
-  "invalid_response": "Invalid response from server",
   "update_check_success": "Update check completed successfully",
   "update_notification_title": "Extension Update Available",
-  
-  // Enhanced error handling keys
-  "update_timeout_error": "Update check timed out",
-  "api_unavailable_error": "GitHub API is temporarily unavailable",
-  "repository_not_found_error": "Repository or release information not found",
-  "version_parse_error": "Unable to parse version information",
-  "ssl_error": "SSL/TLS connection error occurred",
-  "dns_error": "Unable to resolve GitHub API address",
-  "cors_error": "Cross-origin request blocked",
   "retry_update_check": "Try again",
-  
-  // Fallback suggestion messages
-  "rate_limit_fallback": "GitHub API rate limit exceeded. Wait a few minutes before trying again.",
-  "api_error_fallback": "GitHub services may be experiencing issues. Try again in a few minutes.",
-  "manual_check_fallback": "Visit https://github.com/ChuwuYo/MultiLangSwitcher to check for updates manually.",
-  "ssl_error_fallback": "Check your firewall or antivirus settings, or try again later.",
-  "connection_error_fallback": "Check your internet connection and DNS settings.",
-  "extension_reload_fallback": "Try reloading the extension or checking for updates manually.",
+
+  // --- Simplified Error Messages ---
+  "update_check_network_issue": "Network Issue",
+  "update_check_network_issue_fallback": "Please check your internet connection and try again.",
+  "update_check_service_issue": "Service Issue",
+  "update_check_service_issue_fallback": "The update service may be temporarily unavailable. Please try again later.",
+  "update_check_unexpected_error": "An unexpected error occurred.",
+  "manual_check_fallback": "Visit the project homepage to check for updates manually.",
   
   // Fallback mode messages
   "update_check_fallback_title": "Unable to Check for Updates",

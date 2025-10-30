@@ -471,10 +471,7 @@ const processPendingDOMUpdates = () => {
  * 初始化更新检查器实例
  */
 const initializeUpdateChecker = () => {
-  // 检查是否已初始化
-  if (updateChecker) return;
-
-  // 动态获取manifest.json中的版本号
+  // 强制重新初始化以获取最新的版本号
   const currentVersion = chrome.runtime.getManifest().version;
   updateChecker = new UpdateChecker('ChuwuYo', 'MultiLangSwitcher', currentVersion);
   sendDebugLog(popupI18n.t('update_checker_initialized', { version: currentVersion }), 'info');
@@ -742,6 +739,9 @@ const performUpdateCheck = async () => {
     return;
   }
 
+  // 每次检查时都重新初始化，以确保使用最新的版本号
+  initializeUpdateChecker();
+
   // 取消任何已有的请求
   cancelUpdateCheck();
 
@@ -762,11 +762,10 @@ const performUpdateCheck = async () => {
   updateCheckController = ResourceManager.addController(new AbortController());
 
   try {
-    initializeUpdateChecker();
     sendDebugLog(popupI18n.t('starting_update_check'), 'info');
 
     // 为更新检查器添加中止信号支持，具有优雅的回退机制
-    const updateInfo = await updateChecker.checkForUpdatesWithFallback(updateCheckController.signal, true);
+    const updateInfo = await updateChecker.checkForUpdates();
 
     // 检查请求是否被取消
     if (updateCheckController?.signal.aborted) {
@@ -786,75 +785,27 @@ const performUpdateCheck = async () => {
 
     sendDebugLog(popupI18n.t('update_check_failed_with_message', { message: error.message }), 'error');
 
-    let errorMessage = popupI18n.t('update_check_failed');
-    let showRetryOption = false;
-    let fallbackMessage = null;
+    // 错误处理
+    let errorMessage;
+    let fallbackMessage;
+    const showRetryOption = true; // 对大多数可恢复错误显示重试选项
 
-    // 将错误类型映射到本地化消息，增强错误处理
-    if (error.type) {
-      switch (error.type) {
-        case 'TIMEOUT':
-          errorMessage = popupI18n.t('update_timeout_error');
-          showRetryOption = true;
-          break;
-        case 'NETWORK_ERROR':
-          errorMessage = popupI18n.t('network_error');
-          showRetryOption = true;
-          break;
-        case 'RATE_LIMIT':
-          errorMessage = popupI18n.t('rate_limit_exceeded');
-          showRetryOption = false; // 不显示重试选项，避免加剧速率限制
-          fallbackMessage = popupI18n.t('rate_limit_fallback');
-          break;
-        case 'INVALID_RESPONSE':
-          errorMessage = popupI18n.t('invalid_response');
-          showRetryOption = true;
-          break;
-        case 'API_ERROR':
-          errorMessage = popupI18n.t('api_unavailable_error');
-          showRetryOption = true;
-          fallbackMessage = popupI18n.t('api_error_fallback');
-          break;
-        case 'NOT_FOUND':
-          errorMessage = popupI18n.t('repository_not_found_error');
-          showRetryOption = false;
-          fallbackMessage = popupI18n.t('manual_check_fallback');
-          break;
-        case 'VERSION_ERROR':
-          errorMessage = popupI18n.t('version_parse_error');
-          showRetryOption = false;
-          fallbackMessage = popupI18n.t('manual_check_fallback');
-          break;
-        case 'SSL_ERROR':
-          errorMessage = popupI18n.t('ssl_error');
-          showRetryOption = true;
-          fallbackMessage = popupI18n.t('ssl_error_fallback');
-          break;
-        case 'DNS_ERROR':
-          errorMessage = popupI18n.t('dns_error');
-          showRetryOption = true;
-          fallbackMessage = popupI18n.t('connection_error_fallback');
-          break;
-        case 'CORS_ERROR':
-          errorMessage = popupI18n.t('cors_error');
-          showRetryOption = false;
-          fallbackMessage = popupI18n.t('extension_reload_fallback');
-          break;
-        case 'CANCELLED':
-          // 对于取消的请求不显示错误
-          return;
-        default:
-          errorMessage = error.message || popupI18n.t('update_check_failed');
-          showRetryOption = error.canRetry || false;
-          fallbackMessage = popupI18n.t('manual_check_fallback');
-      }
-    } else {
-      // 对于没有类型信息的错误的回退处理
-      errorMessage = error.message || popupI18n.t('update_check_failed');
-      fallbackMessage = popupI18n.t('manual_check_fallback');
+    switch (error.type) {
+      case 'NETWORK_ISSUE':
+        errorMessage = popupI18n.t('update_check_network_issue');
+        fallbackMessage = popupI18n.t('update_check_network_issue_fallback');
+        break;
+      case 'SERVICE_ISSUE':
+        errorMessage = popupI18n.t('update_check_service_issue');
+        fallbackMessage = popupI18n.t('update_check_service_issue_fallback');
+        break;
+      default: // UNEXPECTED_ERROR
+        errorMessage = popupI18n.t('update_check_unexpected_error');
+        fallbackMessage = popupI18n.t('manual_check_fallback');
+        break;
     }
 
-    // 显示增强的错误信息和回退建议
+    // 显示统一的错误信息
     showUpdateError(errorMessage, fallbackMessage, showRetryOption);
   } finally {
     // 清理更新检查状态
@@ -1044,21 +995,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     ResourceManager.addEventListener(checkHeaderBtn, 'click', eventHandlers.checkHeaderBtnClick);
   }
 
-  // DOM缓存已在主初始化中完成，无需重复初始化
-
-  // 初始化更新检查器
-  initializeUpdateChecker();
-  if (updateChecker) {
-
-    // 通过清理过期条目来优化缓存
-    updateChecker.optimizeCache().then(optimized => {
-      if (optimized) {
-        sendDebugLog(popupI18n.t('update_checker_cache_optimized'), 'info');
-      }
-    }).catch(error => {
-      sendDebugLog(`Cache optimization failed: ${error.message}`, 'warning');
-    });
-  }
 
   // 添加更新检查按钮事件监听器
   const updateCheckBtn = document.getElementById('updateCheckBtn');
@@ -1085,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 清理更新检查器实例
     if (updateChecker) {
-      updateChecker.clearCache();
       updateChecker = null;
     }
 
