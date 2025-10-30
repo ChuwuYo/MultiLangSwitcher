@@ -63,14 +63,12 @@ let initializationPromise = null;    // 初始化Promise，防止重复执行
 
 // 并发控制变量
 let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行执行
-let pendingLanguageRequests = new Map(); // 防抖：合并相同语言的重复请求
 
 /**
  * 清理并发控制状态（用于测试或重置）
  */
 const resetConcurrencyState = () => {
   updateRulesQueue = Promise.resolve();
-  pendingLanguageRequests.clear();
   sendBackgroundLog(backgroundI18n.t('concurrency_state_reset'), 'info');
 };
 
@@ -166,34 +164,17 @@ const clearAllDynamicRules = async () => {
  */
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
-  
-  // 防抖机制：检查是否有相同语言的待处理请求
-  const requestKey = `${language}_${isAutoSwitch}`;
-  if (pendingLanguageRequests.has(requestKey)) {
-    sendBackgroundLog(backgroundI18n.t('merging_duplicate_request', { language }), 'info');
-    return await pendingLanguageRequests.get(requestKey);
-  }
 
-  // 创建新的请求Promise并加入队列
-  const requestPromise = updateRulesQueue.then(() => 
+  // 并发控制：仅使用串行队列确保顺序执行
+  const requestPromise = updateRulesQueue.then(() =>
     updateHeaderRulesInternal(language, retryCount, isAutoSwitch)
   );
-  
-  // 将请求加入防抖映射
-  pendingLanguageRequests.set(requestKey, requestPromise);
-  
-  // 更新队列
-  updateRulesQueue = requestPromise.catch(() => {
-    // 即使失败也要继续队列，避免阻塞后续请求
-  });
 
-  try {
-    const result = await requestPromise;
-    return result;
-  } finally {
-    // 清理防抖映射
-    pendingLanguageRequests.delete(requestKey);
-  }
+  // 更新队列，即使失败也要保证队列继续
+  updateRulesQueue = requestPromise.catch(() => {});
+
+  // 直接返回请求的Promise
+  return requestPromise;
 };
 
 /**
