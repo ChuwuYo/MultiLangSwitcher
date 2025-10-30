@@ -123,13 +123,11 @@ class BaseI18n {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
             
             const timeoutId = setTimeout(() => {
-                script.remove(); // 清理超时的脚本标签
+                script.remove();
                 reject(new Error(`Script loading timed out: ${src}`));
-            }, 5000); // 5秒超时
+            }, 5000);
 
             script.onload = () => {
                 clearTimeout(timeoutId);
