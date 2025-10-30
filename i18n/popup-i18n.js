@@ -71,7 +71,12 @@ class PopupI18n extends BaseI18n {
 
     const statusText = document.querySelector('#statusText');
     if (statusText) {
-      statusText.innerHTML = `${this.t('current_language')} <span id="currentLanguage">${shouldKeepCurrent ? currentLangText : this.t('not_set')}</span>`;
+      // 使用安全的DOM操作替代innerHTML
+      statusText.textContent = this.t('current_language');
+      const span = document.createElement('span');
+      span.id = 'currentLanguage';
+      span.textContent = shouldKeepCurrent ? currentLangText : this.t('not_set');
+      statusText.appendChild(span);
     }
 
     // Auto switch section

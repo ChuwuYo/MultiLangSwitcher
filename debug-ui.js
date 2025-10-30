@@ -547,7 +547,14 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
           }
 
-          customLangResult.innerHTML = successHtml;
+          // 使用安全的DOM操作替代innerHTML
+          customLangResult.innerHTML = '';
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = successHtml;
+          // 复制内容但不执行脚本
+          while (tempDiv.firstChild) {
+            customLangResult.appendChild(tempDiv.firstChild);
+          }
           addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
 
           if (hasFormatIssues) {
@@ -652,7 +659,14 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             `<span class="error">${debugI18n.t('disabled')}</span>`;
           html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
 
-          resultElement.innerHTML = html;
+          // 使用安全的DOM操作替代innerHTML
+          resultElement.innerHTML = '';
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          // 复制内容但不执行脚本
+          while (tempDiv.firstChild) {
+            resultElement.appendChild(tempDiv.firstChild);
+          }
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
           // 同步更新自动切换开关状态

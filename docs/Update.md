@@ -12,3 +12,8 @@
 - **适配 UI 国际化脚本**:
   - 重构了 `i18n/popup-i18n.js`, `i18n/debug-i18n.js`, 和 `i18n/detect-i18n.js` 以兼容新的 `BaseI18n` 类。
   - 确保在 `DOMContentLoaded` 事件触发后，通过新的异步流程初始化并应用翻译，保证了 UI 渲染的正确时机。
+
+- **安全修复**:
+  - 修复了 `debug-ui.js` 中的 XSS 漏洞，将 `innerHTML` 赋值替换为安全的 DOM 操作，防止恶意脚本注入。
+  - 修复了 `i18n/popup-i18n.js` 中的 XSS 漏洞，使用 `textContent` 和 DOM 创建元素替代 `innerHTML`，确保翻译文本的安全渲染。
+  - 所有修复都保持了原有功能的同时提高了安全性，符合现代 Web 安全最佳实践。
