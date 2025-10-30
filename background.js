@@ -72,14 +72,6 @@ let initializationPromise = null;    // 初始化Promise，防止重复执行
 // 并发控制变量
 let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行执行
 
-/**
- * 清理并发控制状态（用于测试或重置）
- */
-const resetConcurrencyState = () => {
-  updateRulesQueue = Promise.resolve();
-  sendBackgroundLog(backgroundI18n.t('concurrency_state_reset'), 'info');
-};
-
 // 右键菜单初始化标志
 let contextMenusCreated = false;
 
@@ -120,17 +112,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('debug.html') });
   }
 });
-
-/**
- * 根据域名获取对应的语言
- * @param {string} domain - 域名
- * @returns {Promise<string|null>} 对应的语言代码或null
- */
-const getLanguageForDomain = (domain) => {
-  return domainRulesManager.getLanguageForDomain(domain);
-};
-
-
 
 // 在浏览器启动时初始化
 chrome.runtime.onStartup.addListener(() => {
@@ -1014,7 +995,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       const url = new URL(tab.url);
       const hostname = url.hostname.toLowerCase();
       
-      const targetLanguage = await getLanguageForDomain(hostname);
+      const targetLanguage = await domainRulesManager.getLanguageForDomain(hostname);
 
       if (targetLanguage) {
         // 如果找到特定于域的语言，则应用它
@@ -1043,8 +1024,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
   }
 });
-/*
-*
+
+/**
  * 处理获取动态规则请求
  * @param {Function} sendResponse - 响应函数
  */
