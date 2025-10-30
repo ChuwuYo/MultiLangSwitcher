@@ -531,21 +531,16 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         const response = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString });
 
         if (response && response.status === 'success') {
-          let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
-
-          // 如果格式可能有问题，添加警告信息
+          // 使用安全的DOM操作
+          const messages = [
+            { message: `${debugI18n.t('custom_language_applied')} ${languageString}`, className: 'success' }
+          ];
+          
           if (hasFormatIssues) {
-            successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
+            messages.push({ message: debugI18n.t('accept_language_format_warning'), className: 'warning' });
           }
-
-          // 使用安全的DOM操作替代innerHTML
-          customLangResult.innerHTML = '';
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = successHtml;
-          // 复制内容但不执行脚本
-          while (tempDiv.firstChild) {
-            customLangResult.appendChild(tempDiv.firstChild);
-          }
+          
+          setSafeContent(customLangResult, messages);
           addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
 
           if (hasFormatIssues) {
@@ -650,14 +645,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             `<span class="error">${debugI18n.t('disabled')}</span>`;
           html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
 
-          // 使用安全的DOM操作替代innerHTML
-          resultElement.innerHTML = '';
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = html;
-          // 复制内容但不执行脚本
-          while (tempDiv.firstChild) {
-            resultElement.appendChild(tempDiv.firstChild);
-          }
+          // 直接设置innerHTML（html内容来自可信源）
+          resultElement.innerHTML = html;
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
           // 同步更新自动切换开关状态
