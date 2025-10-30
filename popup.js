@@ -765,7 +765,7 @@ const performUpdateCheck = async () => {
     sendDebugLog(popupI18n.t('starting_update_check'), 'info');
 
     // 为更新检查器添加中止信号支持，具有优雅的回退机制
-    const updateInfo = await updateChecker.checkForUpdates();
+    const updateInfo = await updateChecker.checkForUpdates(updateCheckController.signal);
 
     // 检查请求是否被取消
     if (updateCheckController?.signal.aborted) {

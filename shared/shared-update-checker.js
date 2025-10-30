@@ -39,21 +39,26 @@ class UpdateChecker {
 
   /**
    * 检查更新，包含缓存逻辑
+   * @param {AbortSignal} [signal] - 用于中止请求的可选 AbortSignal
    * @returns {Promise<Object>} 更新信息对象
    */
-  async checkForUpdates() {
+  async checkForUpdates(signal) {
     const cached = await this.loadCache();
     if (cached) {
       return cached;
     }
 
     try {
-      const releaseData = await this.fetchLatestRelease();
+      const releaseData = await this.fetchLatestRelease(signal);
       const updateInfo = this.formatUpdateInfo(releaseData);
       await this.saveCache(updateInfo);
       return updateInfo;
     } catch (error) {
-      // 包装错误，添加明确的类型
+      // 如果是中止错误，直接重新抛出，由调用方（如 popup.js）处理
+      if (error.name === 'AbortError') {
+        throw error;
+      }
+      // 对于其他错误，进行分类和记录
       const classifiedError = this.classifyError(error);
       sendLocalizedUpdateLog('update_check_failed', { error: classifiedError.message }, 'error');
       throw classifiedError;
@@ -62,11 +67,22 @@ class UpdateChecker {
 
   /**
    * 从 GitHub API 获取最新发布信息，带超时处理
+   * @param {AbortSignal} [signal] - 用于中止请求的可选 AbortSignal
    * @returns {Promise<Object>} GitHub 发布数据
    */
-  async fetchLatestRelease() {
+  async fetchLatestRelease(signal = null) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+
+    // 如果外部提供了 signal，监听它的 abort 事件
+    if (signal) {
+      if (signal.aborted) {
+        clearTimeout(timeoutId);
+        // 使用 DOMException 以符合 fetch 的行为
+        throw new DOMException('Request aborted', 'AbortError');
+      }
+      signal.addEventListener('abort', () => controller.abort(), { once: true });
+    }
 
     try {
       const response = await fetch(this.apiUrl, {
@@ -90,10 +106,11 @@ class UpdateChecker {
       }
       return data;
     } catch (error) {
-      if (error.name === 'AbortError') {
+      // 如果是中止错误，但不是由外部信号触发的，那么它就是超时
+      if (error.name === 'AbortError' && !signal?.aborted) {
         throw new Error('Request timeout');
       }
-      throw error; // 重新抛出网络错误、解析错误等
+      throw error; // 重新抛出外部取消错误或其他网络错误
     } finally {
       clearTimeout(timeoutId);
     }
