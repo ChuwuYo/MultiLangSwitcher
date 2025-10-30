@@ -279,8 +279,6 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       // 您可以添加更多测试URL
     ];
 
-    let foundAcceptLanguage = null;
-    let allRequestsFailed = true;
     let lastError = null;
     let receivedHeaders = null; // 用于存储第一个成功请求的头信息
 
@@ -293,13 +291,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           return response.json();
         })
         .then(data => {
-          allRequestsFailed = false; // 至少有一个请求成功
           if (!receivedHeaders) receivedHeaders = data.headers; // 保存第一个成功的头信息
-          if (data.headers && data.headers['Accept-Language']) {
-            if (!foundAcceptLanguage) { // 只记录第一个找到的
-              foundAcceptLanguage = data.headers['Accept-Language'];
-            }
-          }
           return { success: true, data }; // 返回成功标记和数据
         })
         .catch(error => {
@@ -321,13 +313,12 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
 
       if (receivedHeaders['Accept-Language']) {
-        foundAcceptLanguage = receivedHeaders['Accept-Language'];
-        const acceptLanguageValue = foundAcceptLanguage.toLowerCase();
+        const acceptLanguageValue = receivedHeaders['Accept-Language'].toLowerCase();
         const expectedLanguage = language.toLowerCase();
 
         if (acceptLanguageValue.includes(expectedLanguage)) {
-          html += `<p class="success">${debugI18n.t('header_changed_success')} ${foundAcceptLanguage}</p>`;
-          addLogMessage(`${debugI18n.t('header_test_success')} ${foundAcceptLanguage}`, 'success');
+          html += `<p class="success">${debugI18n.t('header_changed_success')} ${receivedHeaders['Accept-Language']}</p>`;
+          addLogMessage(`${debugI18n.t('header_test_success')} ${receivedHeaders['Accept-Language']}`, 'success');
         } else {
           html += `<p class="error">${debugI18n.t('header_not_changed')}</p>`;
           html += `<p>${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}</p>`;
@@ -540,14 +531,16 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         const response = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString });
 
         if (response && response.status === 'success') {
-          let successHtml = `<p class="success">${debugI18n.t('custom_language_applied')} ${languageString}</p>`;
-
-          // 如果格式可能有问题，添加警告信息
+          // 使用安全的DOM操作
+          const messages = [
+            { message: `${debugI18n.t('custom_language_applied')} ${languageString}`, className: 'success' }
+          ];
+          
           if (hasFormatIssues) {
-            successHtml += `<p class="warning">${debugI18n.t('accept_language_format_warning')}</p>`;
+            messages.push({ message: debugI18n.t('accept_language_format_warning'), className: 'warning' });
           }
-
-          customLangResult.innerHTML = successHtml;
+          
+          setSafeContent(customLangResult, messages);
           addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
 
           if (hasFormatIssues) {
@@ -652,6 +645,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             `<span class="error">${debugI18n.t('disabled')}</span>`;
           html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
 
+          // 直接设置innerHTML（html内容来自可信源）
           resultElement.innerHTML = html;
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
@@ -816,7 +810,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   });
 
   // 监听来自 background.js 的消息
-  const messageListener = ResourceManager.addMessageListener(function (request, sender, sendResponse) {
+  ResourceManager.addMessageListener(function (request, sender, sendResponse) {
     if (request.type === 'AUTO_SWITCH_UI_UPDATE') {
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (autoSwitchToggle) {

@@ -1,65 +1,18 @@
 ## 🔧 TODO
 
-### 🔴 **高优先级 - 过度设计的问题**
-
-#### 1. **初始化守卫的三层检查**
-**位置**: `background.js:38-53`
-**问题描述**:
-- `ensureInitialized` 函数包含三层初始化检查：Promise存在性 → 初始化状态 → Promise等待
-- 对于扩展的初始化场景，这种多层防护过度谨慎
-
-**具体问题**:
-```javascript
-const ensureInitialized = async () => {
-  // 第一层：检查Promise是否存在且初始化未完成
-  if (initializationPromise && !isInitialized) {
-    await initializationPromise;
-  }
-  // 第二层：检查是否已初始化
-  if (!isInitialized) {
-    await initialize('lazy');
-  }
-};
-```
-
-#### 2. **错误分类的过度细化**
-**位置**: `shared/shared-update-checker.js:361-444`
-**问题描述**:
-- 为简单的GitHub更新检查定义了11种不同的错误类型
-- 包括：网络错误、超时、速率限制、404、500系列、无效响应、版本错误、SSL、DNS、CORS、取消等
-- 对于更新检查功能，这种细粒度分类确实过度
-
-**具体问题**:
-```javascript
-// 11种不同的错误类型处理
-if (errorMessage.includes('failed to fetch') || /* ... */) {
-  return this.createErrorInfo('NETWORK_ERROR', '...', true, '...', error);
-}
-// ... 更多错误类型判断
-```
-
 ### 🟡 **中优先级 - 可优化的设计**
 
-#### 3. **国际化系统的环境检测复杂度**
+#### 1. **国际化系统的环境检测复杂度**
 **位置**: `shared-utils.js:97-182`
 **问题描述**:
 - 多达8个翻译源的检查链，对于小型扩展可能过于复杂
 - 可以考虑使用Chrome标准的`chrome.i18n` API简化
 
-#### 4. **资源管理的环境差异化策略**
+#### 2. **资源管理的环境差异化策略**
 **位置**: `shared-resource-manager.js`
 **问题描述**:
 - 虽然设计合理，但在某些场景下可能过度谨慎
 - 浏览器自动清理机制通常已足够处理大部分情况
-
-### 🟢 **合理的复杂度（应保留的设计）**
-
-以下机制**看似复杂但实际合理**，不应简化：
-
-1. **域名匹配的多层策略** - 支持现代网站的语言子域名是实际需求
-2. **缓存系统** - 性能优化的必要措施
-3. **翻译回退机制** - 确保用户体验的容错设计
-4. **指数退避重试** - 处理GitHub API的必要手段
 
 ---
 
@@ -72,7 +25,7 @@ if (errorMessage.includes('failed to fetch') || /* ... */) {
 ### 第二阶段：精准简化
 - [x] 简化 `background.js` 的双重并发控制机制
 - [x] 合并 `shared-update-checker.js` 的错误类型（11种→3-4种）
-- [ ] 精简初始化守卫的三层检查逻辑
+- [x] 精简初始化守卫的三层检查逻辑
 
 ### 第三阶段：代码质量改进
 - [ ] 创建通用辅助函数减少样板代码

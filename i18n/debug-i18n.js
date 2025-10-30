@@ -8,25 +8,21 @@
 class DebugI18n extends BaseI18n {
   constructor() {
     super('debug', false); // 标记为浏览器环境
-    this.init();
   }
 
   /**
-   * 重写加载翻译方法，确保DOM加载完成后应用翻译
+   * 初始化并应用翻译到DOM。
    */
-  async loadTranslations() {
-    await super.loadTranslations();
-    
-    // 确保DOM完全加载后再应用翻译
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.applyTranslations());
-    } else {
-      // DOM已经加载完成，直接应用翻译
-      this.applyTranslations();
-    }
+  async applyTranslationsToDOM() {
+    await this.init();
+    this._applyTranslations();
   }
 
-  applyTranslations() {
+  /**
+   * 将翻译应用到DOM元素。
+   * @private
+   */
+  _applyTranslations() {
     // 设置页面标题和基本信息
     document.title = this.t('title');
     
@@ -149,7 +145,7 @@ class DebugI18n extends BaseI18n {
     // 处理按钮文本
     const buttons = {
       '#showRulesBtn': 'show_rules',
-      '#testHeaderBtn': 'test_header', 
+      '#testHeaderBtn': 'test_header',
       '#applyCustomLangBtn': 'apply_custom',
       '#clearLogsBtn': 'clear_logs',
       '#showDiagnosticsBtn': 'show_diagnostics',
@@ -264,8 +260,6 @@ class DebugI18n extends BaseI18n {
       examplesTitle.textContent = this.t('examples');
     }
     
-
-    
     const exampleComplex = document.querySelector('#exampleComplex');
     if (exampleComplex) {
       exampleComplex.innerHTML = `<code>en-US,en;q=0.9,zh-CN;q=0.8</code>: ${this.t('example_complex')}`;
@@ -287,22 +281,11 @@ class DebugI18n extends BaseI18n {
       resetBtnImg.alt = this.t('reset_accept_language_tooltip');
     }
   }
-
-  switchLanguage(lang) {
-    if (lang !== this.currentLang) {
-      this.currentLang = lang;
-      localStorage.setItem('app-lang', lang);
-      location.reload();
-    }
-  }
 }
 
 const debugI18n = new DebugI18n();
 
-// 确保在 DOM 加载完成后初始化
+// DOM加载完成后，初始化并应用翻译
 document.addEventListener('DOMContentLoaded', () => {
-  // 如果翻译已经加载但未应用，再次应用
-  if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
-    debugI18n.applyTranslations();
-  }
+  debugI18n.applyTranslationsToDOM();
 });

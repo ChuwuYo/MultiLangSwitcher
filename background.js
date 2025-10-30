@@ -8,9 +8,16 @@ importScripts('shared/shared-i18n-base.js');
 // 3. 导入具体的国际化类
 importScripts('i18n/background-i18n.js');
 importScripts('i18n/domain-manager-i18n.js');
-// 4. 导入域名规则管理器
+
+// 4. 将所有i18n模块的初始化Promise聚合到一个地方
+const i18nReady = Promise.all([
+  backgroundI18nReady,
+  domainManagerI18nReady
+]);
+
+// 5. 导入域名规则管理器
 importScripts('domain-rules-manager.js');
-// 5. 导入更新检查器
+// 6. 导入更新检查器
 importScripts('shared/shared-update-checker.js');
 
 // --- 资源管理器  ---
@@ -25,10 +32,8 @@ const DEFAULT_LANG_EN = 'en-US';   // 为英文用户设置的默认语言，也
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
 const sendBackgroundLog = (message, logType = 'info') => {
-  // 安全获取翻译，如果翻译系统未准备好则使用英文回退
-  const backgroundLabel = (backgroundI18n && backgroundI18n.isReady)
-    ? backgroundI18n.t('background')
-    : 'Background';
+  // 假设i18n已经准备好，因为调用此函数前会确保初始化完成
+  const backgroundLabel = backgroundI18n.t('background') || 'Background';
 
   // 确保同样的消息被用于控制台日志和调试日志
   console.log(`[${backgroundLabel} ${logType.toUpperCase()}] ${message}`);
@@ -40,13 +45,16 @@ const sendBackgroundLog = (message, logType = 'info') => {
  * @returns {Promise}
  */
 const ensureInitialized = async () => {
-  // 如果初始化正在进行但尚未完成，则等待它完成
-  if (initializationPromise && !isInitialized) {
-    await initializationPromise;
+  // 如果已经初始化完成，直接返回
+  if (isInitialized) {
+    return;
   }
   
-  // 如果尚未初始化，则调用initialize
-  if (!isInitialized) {
+  // 如果初始化正在进行，等待完成
+  if (initializationPromise) {
+    await initializationPromise;
+  } else {
+    // 如果尚未开始初始化，则启动初始化
     sendBackgroundLog('Lazy initialization triggered.', 'info');
     await initialize('lazy');
   }
@@ -63,14 +71,6 @@ let initializationPromise = null;    // 初始化Promise，防止重复执行
 
 // 并发控制变量
 let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行执行
-
-/**
- * 清理并发控制状态（用于测试或重置）
- */
-const resetConcurrencyState = () => {
-  updateRulesQueue = Promise.resolve();
-  sendBackgroundLog(backgroundI18n.t('concurrency_state_reset'), 'info');
-};
 
 // 右键菜单初始化标志
 let contextMenusCreated = false;
@@ -112,17 +112,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.tabs.create({ url: chrome.runtime.getURL('debug.html') });
   }
 });
-
-/**
- * 根据域名获取对应的语言
- * @param {string} domain - 域名
- * @returns {Promise<string|null>} 对应的语言代码或null
- */
-const getLanguageForDomain = (domain) => {
-  return domainRulesManager.getLanguageForDomain(domain);
-};
-
-
 
 // 在浏览器启动时初始化
 chrome.runtime.onStartup.addListener(() => {
@@ -354,8 +343,11 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
  * @param {string} reason - 初始化的原因 (e.g., 'install', 'update', 'startup')
  */
 const performInitialization = async (reason) => {
-  sendBackgroundLog(backgroundI18n.t('initializing_state', { reason }), 'info');
   try {
+    // 0. 等待所有i18n模块准备就绪
+    await i18nReady;
+    sendBackgroundLog(backgroundI18n.t('initializing_state', { reason }), 'info');
+
     // 1. 初始化域名规则管理器 (现在直接加载)
     await domainRulesManager.loadRules();
     sendBackgroundLog(backgroundI18n.t('domain_rules_loaded'), 'info');
@@ -1003,7 +995,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       const url = new URL(tab.url);
       const hostname = url.hostname.toLowerCase();
       
-      const targetLanguage = await getLanguageForDomain(hostname);
+      const targetLanguage = await domainRulesManager.getLanguageForDomain(hostname);
 
       if (targetLanguage) {
         // 如果找到特定于域的语言，则应用它
@@ -1032,8 +1024,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
   }
 });
-/*
-*
+
+/**
  * 处理获取动态规则请求
  * @param {Function} sendResponse - 响应函数
  */

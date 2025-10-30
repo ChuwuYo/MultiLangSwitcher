@@ -9,7 +9,7 @@ class LanguageToggle {
 
   /**
    * 检测当前语言设置
-   * @returns {string} 语言代码 ('zh' 或 'en')
+   * @returns {string} 语言代码
    */
   detectLanguage() {
     const saved = localStorage.getItem('app-lang');
@@ -21,7 +21,7 @@ class LanguageToggle {
    * 切换语言设置
    * @param {string} lang - 目标语言代码
    */
-  async switchLanguage(lang) {
+  switchLanguage(lang) {
     try {
       if (lang === this.currentLang) return;
 
@@ -61,7 +61,6 @@ class LanguageToggle {
 class ThemeManager {
   constructor() {
     this.themeToggleBtn = document.getElementById('themeToggleBtn');
-    this.currentTheme = localStorage.getItem('theme') || null;
     this.prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
     this.themeButtonDetails = {
@@ -81,8 +80,9 @@ class ThemeManager {
    */
   init() {
     // 应用初始主题
-    if (this.currentTheme) {
-      this.applyTheme(this.currentTheme);
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      this.applyTheme(savedTheme);
     } else {
       this.applyTheme(this.prefersDarkScheme.matches ? 'dark' : 'light');
     }
@@ -92,7 +92,7 @@ class ThemeManager {
 
   /**
    * 应用指定主题
-   * @param {string} theme - 主题名称 ('dark' 或 'light')
+   * @param {string} theme - 主题名称
    */
   applyTheme(theme) {
     document.documentElement.setAttribute('data-bs-theme', theme);
@@ -150,11 +150,11 @@ const initializePage = async () => {
 // 监听页面加载，初始化按钮和主题状态
 ResourceManager.addEventListener(document, 'DOMContentLoaded', initializePage);
 
-// 页面卸载时的清理（可选，主要依赖浏览器自动清理）
+// 页面卸载时的清理=
 const cleanupResources = () => {
   // 清理 ResourceManager 中跟踪的资源
   ResourceManager.cleanup();
 };
 
-// 注册清理事件（可选）
+// 注册清理事件=
 ResourceManager.addEventListener(window, 'beforeunload', cleanupResources);
