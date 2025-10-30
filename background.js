@@ -45,13 +45,16 @@ const sendBackgroundLog = (message, logType = 'info') => {
  * @returns {Promise}
  */
 const ensureInitialized = async () => {
-  // 如果初始化正在进行但尚未完成，则等待它完成
-  if (initializationPromise && !isInitialized) {
-    await initializationPromise;
+  // 如果已经初始化完成，直接返回
+  if (isInitialized) {
+    return;
   }
   
-  // 如果尚未初始化，则调用initialize
-  if (!isInitialized) {
+  // 如果初始化正在进行，等待完成
+  if (initializationPromise) {
+    await initializationPromise;
+  } else {
+    // 如果尚未开始初始化，则启动初始化
     sendBackgroundLog('Lazy initialization triggered.', 'info');
     await initialize('lazy');
   }

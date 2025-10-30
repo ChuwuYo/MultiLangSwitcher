@@ -1,6 +1,6 @@
 # 更新日志
 
-## 2025-10-30
+## 2025-10-31
 
 ### 优化
 
@@ -17,3 +17,7 @@
   - 修复了 `debug-ui.js` 中的 XSS 漏洞，将 `innerHTML` 赋值替换为安全的 DOM 操作，防止恶意脚本注入。
   - 修复了 `i18n/popup-i18n.js` 中的 XSS 漏洞，使用 `textContent` 和 DOM 创建元素替代 `innerHTML`，确保翻译文本的安全渲染。
   - 所有修复都保持了原有功能的同时提高了安全性，符合现代 Web 安全最佳实践。
+
+- **代码优化**:
+  - 简化了 `background.js` 中的 `ensureInitialized` 函数，移除了过度工程化的三层初始化检查。
+  - 由于 `initialize` 函数内部已实现并发控制，`ensureInitialized` 的多层防护是冗余的，现在直接检查初始化状态并调用 `initialize`，提高了代码简洁性和可读性。
