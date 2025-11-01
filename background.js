@@ -55,7 +55,6 @@ const ensureInitialized = async () => {
     await initializationPromise;
   } else {
     // 如果尚未开始初始化，则启动初始化
-    sendBackgroundLog('Lazy initialization triggered.', 'info');
     await initialize('lazy');
   }
 };
@@ -90,9 +89,9 @@ const createContextMenusOnce = async () => {
       contexts: ['action']
     });
     contextMenusCreated = true;
-    sendBackgroundLog('Context menus created', 'info');
+    sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
   } catch (e) {
-    sendBackgroundLog('Create contextMenus failed: ' + e.message, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${e.message}`, 'error');
   }
 };
 
@@ -390,19 +389,15 @@ const performInitialization = async (reason) => {
  */
 const initialize = (reason) => {
   if (initializationPromise) {
-    sendBackgroundLog(`Initialization already in progress. Waiting for completion.`, 'info');
     return initializationPromise;
   }
 
-  sendBackgroundLog(`Starting initialization with reason: ${reason}`, 'info');
   initializationPromise = (async () => {
     try {
       await performInitialization(reason);
       isInitialized = true;
-      sendBackgroundLog('Initialization completed successfully.', 'info');
     } catch (error) {
-      sendBackgroundLog(`Initialization failed: ${error.message}`, 'error');
-      // 在失败时重置，以便可以重试
+      sendBackgroundLog(`${backgroundI18n.t('initialization_failed', { message: error.message })}`, 'error');
       initializationPromise = null;
       isInitialized = false;
     }
@@ -638,37 +633,8 @@ const handleUpdateCheckRequest = async (sendResponse) => {
 
     sendBackgroundLog(backgroundI18n.t('update_check_initiated', { repo: `${repoOwner}/${repoName}` }), 'info');
 
-    // 创建更新检查器实例
     const updateChecker = new UpdateChecker(repoOwner, repoName, currentVersion);
-
-    // 首先检查缓存状态
-    const cacheStatus = updateChecker.getCacheStatus();
-    if (cacheStatus.hasCachedData && !cacheStatus.isExpired) {
-      sendBackgroundLog(backgroundI18n.t('update_check_cache_hit'), 'info');
-    } else if (cacheStatus.hasCachedData && cacheStatus.isExpired) {
-      sendBackgroundLog(backgroundI18n.t('update_check_cache_expired'), 'info');
-    }
-
-    sendBackgroundLog(backgroundI18n.t('update_check_api_request'), 'info');
-
-    // 执行更新检查
     const updateInfo = await updateChecker.checkForUpdates();
-
-    // 记录版本比较详情
-    sendBackgroundLog(backgroundI18n.t('update_check_version_comparison', {
-      current: updateInfo.currentVersion,
-      latest: updateInfo.latestVersion,
-      result: updateInfo.updateAvailable ? 'newer' : 'same_or_older'
-    }), 'info');
-
-    if (updateInfo.updateAvailable) {
-      sendBackgroundLog(backgroundI18n.t('update_check_update_available', {
-        current: updateInfo.currentVersion,
-        latest: updateInfo.latestVersion
-      }), 'success');
-    } else {
-      sendBackgroundLog(backgroundI18n.t('update_check_no_update_needed'), 'info');
-    }
 
     sendBackgroundLog(backgroundI18n.t('update_check_success'), 'success');
 
@@ -888,9 +854,9 @@ const handleClearCacheRequest = (sendResponse) => handleCacheOperation(
  sendResponse,
  () => domainRulesManager.clearCache(),
  {
-   start: 'Clearing cache...',
-   success: 'Cache cleared successfully',
-   fail: 'Clear cache failed'
+   start: backgroundI18n.t('clearing_cache'),
+   success: backgroundI18n.t('cache_cleared_successfully'),
+   fail: backgroundI18n.t('clear_cache_failed')
  }
 );
 
@@ -903,9 +869,9 @@ const handleResetCacheStatsRequest = (sendResponse) => handleCacheOperation(
   sendResponse,
   () => domainRulesManager.resetCacheStats(),
   {
-    start: 'Resetting cache statistics...',
-    success: 'Cache statistics reset successfully',
-    fail: 'Reset cache statistics failed'
+    start: backgroundI18n.t('resetting_cache_stats'),
+    success: backgroundI18n.t('cache_stats_reset_successfully'),
+    fail: backgroundI18n.t('reset_cache_stats_failed')
   }
 );
 
@@ -1039,7 +1005,7 @@ const handleGetDynamicRulesRequest = async (sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to get dynamic rules: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('get_dynamic_rules_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1064,7 +1030,7 @@ const handleGetMatchedRulesRequest = async (sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to get matched rules: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('get_matched_rules_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1093,7 +1059,7 @@ const handleUpdateDynamicRulesRequest = async (request, sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to update dynamic rules: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('update_dynamic_rules_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1120,7 +1086,7 @@ const handleGetStorageDataRequest = async (request, sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to get storage data: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('get_storage_data_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1146,7 +1112,7 @@ const handleSetStorageDataRequest = async (request, sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to set storage data: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('set_storage_data_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1173,7 +1139,7 @@ const handleGetManifestInfoRequest = (sendResponse) => {
       });
     }
   } catch (error) {
-    sendBackgroundLog(`Failed to get manifest info: ${error.message}`, 'error');
+    sendBackgroundLog(`${backgroundI18n.t('get_manifest_info_failed')}: ${error.message}`, 'error');
     if (typeof sendResponse === 'function') {
       sendResponse({
         success: false,
@@ -1185,11 +1151,9 @@ const handleGetManifestInfoRequest = (sendResponse) => {
 
 // 扩展卸载时的清理
 chrome.runtime.onSuspend.addListener(() => {
-  sendBackgroundLog('Extension suspending, cleaning up resources...', 'info');
+  sendBackgroundLog(backgroundI18n.t('extension_suspending'), 'info');
 
   // 清理需要手动清理的资源
   ResourceManager.cleanup();
 
-  // 清理其他可能的资源
-  // 注意：chrome.runtime.onMessage 监听器由系统自动管理，无需手动清理
 });
