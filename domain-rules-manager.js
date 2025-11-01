@@ -44,7 +44,6 @@ class DomainRulesManager {
 
     try {
       const url = chrome.runtime.getURL('domain-rules.json');
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('trying_load_rules_file') : 'Trying to load rules file'}:`, url);
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -52,21 +51,17 @@ class DomainRulesManager {
       }
 
       const data = await response.json();
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('rules_file_loaded_success') : 'Rules file loaded successfully'}:`, Object.keys(data));
 
       if (!data.domainLanguageRules) {
-        console.warn(`[DomainRulesManager] ${i18n ? i18n.t('domain_rules_field_not_found') : 'domainLanguageRules field not found in rules file'}`);
         this.rules = {};
         return this.rules;
       }
 
       this.rules = data.domainLanguageRules;
 
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('domain_rules_loaded_count', { count: Object.keys(this.rules).length }) : `Successfully loaded ${Object.keys(this.rules).length} domain rules`}`);
       return this.rules;
 
     } catch (error) {
-      console.error(`[DomainRulesManager] ${i18n ? i18n.t('domain_rules_load_failed') : 'Failed to load domain rules'}:`, error);
       this.rules = {};
       return this.rules;
     }
@@ -89,31 +84,24 @@ class DomainRulesManager {
     const i18n = this.ensureI18n();
 
     try {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('searching_domain') : 'Searching domain'}: ${domain}`);
 
       // 检查域名缓存
       if (this.domainCache.has(domain)) {
-        this.cacheStats.hits++; // 更新缓存命中统计
         const cachedResult = this.domainCache.get(domain);
         if (cachedResult) {
-          console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> ${cachedResult.language} (${cachedResult.source})`);
           return cachedResult.language;
         } else {
-          console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_cache') : 'Found in cache'}: ${domain} -> null (no match)`);
           return null;
         }
       }
 
-      this.cacheStats.misses++; // 更新缓存未命中统计
 
       // 确保规则已加载
       await this._ensureRulesLoaded();
       if (!this.rules) {
-        console.warn(`[DomainRulesManager] ${i18n ? i18n.t('loading_rules_failed') : 'Loading rules failed'}`);
         return null;
       }
 
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('loaded_rules_count', { count: Object.keys(this.rules).length }) : `Loaded ${Object.keys(this.rules).length} rules`}`);
 
       // 获取自定义规则
       const customRules = await this.getCustomRules();
@@ -122,15 +110,12 @@ class DomainRulesManager {
       const result = this._findMatchingRule(domain, customRules);
 
       if (result) {
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_matching_rule') : 'Found matching rule'}: ${domain} -> ${result.language} (${result.source})`);
         return result.language;
       }
 
-      this._logNoMatchFound(domain, i18n);
       return null;
 
     } catch (error) {
-      console.error(`[DomainRulesManager] ${i18n ? i18n.t('domain_language_lookup_failed') : 'Domain language lookup failed'} for ${domain}:`, error);
 
       // 记录错误但不抛出，返回null表示未找到匹配
       // 继续使用默认语言或其他回退机制
@@ -144,8 +129,6 @@ class DomainRulesManager {
    */
   async _ensureRulesLoaded() {
     if (!this.rules) {
-      const i18n = this.ensureI18n();
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('rules_not_loaded_loading') : 'Rules not loaded, loading now...'}`);
       await this.loadRules();
     }
   }
@@ -155,7 +138,7 @@ class DomainRulesManager {
    * @param {string} target - 要匹配的目标（域名）
    * @param {Object} customRules - 自定义规则
    * @param {string} sourceType - 匹配来源类型
-   * @param {string} logKey - 日志翻译键
+   * @param {string} matchType - 匹配类型标识
    * @returns {Object|null} 匹配结果或null
    * @private
    */
@@ -164,13 +147,11 @@ class DomainRulesManager {
 
    // 检查自定义规则
    if (customRules[target]) {
-     console.log(`[DomainRulesManager] ${i18n ? i18n.t('found_in_custom_rules') : 'Found in custom rules'}: ${target}`);
      return { language: customRules[target], source: `custom-${sourceType}` };
    }
 
    // 直接检查内置规则
    if (this.rules[target]) {
-     console.log(`[DomainRulesManager] ${i18n ? i18n.t(logKey) : logKey}: ${target}`);
      return { language: this.rules[target], source: `default-${sourceType}` };
    }
 
@@ -213,8 +194,6 @@ class DomainRulesManager {
 
     // 2. 检查基础域名匹配（去除语言子域名后）
     if (parsed.baseDomain) {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_base_domain') : 'Checking base domain'}: ${parsed.baseDomain}`);
-
       // 基础域名完整匹配
       result = this._matchRule(parsed.baseDomain, customRules, 'base', 'found_in_base_domain');
       if (result) return this._cacheAndReturn(domain, result);
@@ -223,16 +202,12 @@ class DomainRulesManager {
       const baseParts = parsed.baseDomain.split('.');
       if (baseParts.length >= 2) {
         const baseSecondLevel = baseParts.slice(-2).join('.');
-        console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_second_level') : 'Checking second-level domain'}: ${baseSecondLevel}`);
-
         result = this._matchRule(baseSecondLevel, customRules, 'second', 'found_in_second_level');
         if (result) return this._cacheAndReturn(domain, result);
       }
 
       // 基础域名的顶级域名匹配
       const baseTopLevel = baseParts[baseParts.length - 1];
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_top_level') : 'Checking top-level domain'}: ${baseTopLevel}`);
-
       result = this._matchRule(baseTopLevel, customRules, 'top', 'found_in_top_level');
       if (result) return this._cacheAndReturn(domain, result);
 
@@ -240,33 +215,15 @@ class DomainRulesManager {
 
     // 3. 检查原域名的二级域名匹配
     if (parsed.secondLevel) {
-      console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_second_level') : 'Checking second-level domain'}: ${parsed.secondLevel}`);
       result = this._matchRule(parsed.secondLevel, customRules, 'second', 'found_in_second_level');
       if (result) return this._cacheAndReturn(domain, result);
     }
 
     // 4. 检查原域名的顶级域名匹配
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('checking_top_level') : 'Checking top-level domain'}: ${parsed.topLevel}`);
     result = this._matchRule(parsed.topLevel, customRules, 'top', 'found_in_top_level');
 
     return this._cacheAndReturn(domain, result);
   }
-
-  /**
-   * 记录未找到匹配规则的日志
-   * @param {string} domain - 域名
-   * @param {Object} i18n - 国际化实例
-   * @private
-   */
-  _logNoMatchFound(domain, i18n) {
-    const parts = domain.split('.');
-    const secondLevel = parts.length >= 2 ? parts.slice(-2).join('.') : 'N/A';
-    const topLevel = parts[parts.length - 1];
-
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('no_matching_rule_found') : 'No matching rule found for domain'}: ${domain}`);
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('domain_parse_result') : 'Domain parse result - Full'}: ${domain}, ${i18n ? i18n.t('second_level') : 'Second-level'}: ${secondLevel}, ${i18n ? i18n.t('top_level') : 'Top-level'}: ${topLevel}`);
-  }
-
 
   /**
    * 解析域名并缓存结果
@@ -295,10 +252,7 @@ class DomainRulesManager {
    * 清理缓存
    */
   clearCache() {
-    const i18n = this.ensureI18n();
-
     this.domainCache.clear();
-    console.log(`[DomainRulesManager] ${i18n ? i18n.t('domain_cache_cleared') : 'Domain cache cleared'}`);
   }
 
   /**
@@ -331,13 +285,11 @@ class DomainRulesManager {
    * 重置缓存统计
    */
   resetCacheStats() {
-   this.cacheStats = {
-     hits: 0,
-     misses: 0
-   };
-   const i18n = this.ensureI18n();
-   console.log(`[DomainRulesManager] ${i18n ? i18n.t('cache_stats_reset') : 'Cache statistics reset'}`);
- }
+    this.cacheStats = {
+      hits: 0,
+      misses: 0
+    };
+  }
 
 
   /**
@@ -349,8 +301,6 @@ class DomainRulesManager {
       const result = await chrome.storage.local.get(['customDomainRules']);
       return result.customDomainRules || {};
     } catch (error) {
-      const i18n = this.ensureI18n();
-      console.error(`${i18n ? i18n.t('failed_get_custom_rules') : 'Failed to get custom rules'}:`, error);
       return {};
     }
   }
