@@ -9,12 +9,7 @@ MultiLangSwitcher/
 │   └── zh/                          - 中文语言包
 ├── docs/                            - 项目文档目录
 │   ├── README/                      - 多语言说明文档目录
-│   ├── Wiki/                        - 开发者 Wiki（项目核心架构和技术规范）
-│   ├── Code_Style_Guide.md          - 代码风格指南（详细的代码规范和最佳实践）
 │   ├── Project_Structure.md         - 项目结构文档（完整的文件结构说明）
-│   ├── I18n_Usage_Guide.md          - 国际化使用指南（国际化系统的使用方法）
-│   ├── Domain_Matching_Guide.md     - 域名匹配算法指南（性能优化实现）
-│   ├── Resource_Management_Guide.md - 资源管理指南（资源管理优化实现）
 │   ├── Update.md                    - 版本更新记录（项目变更历史）
 │   └── TODO.md                      - 待完成功能和改进项目
 ├── shared/                          - 共享资源目录
