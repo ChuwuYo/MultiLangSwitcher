@@ -397,7 +397,7 @@ const initialize = (reason) => {
       await performInitialization(reason);
       isInitialized = true;
     } catch (error) {
-      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }),'error') ;
+      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error') ;
       initializationPromise = null;
       isInitialized = false;
     }

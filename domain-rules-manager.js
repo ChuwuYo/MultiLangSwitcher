@@ -94,6 +94,7 @@ class DomainRulesManager {
       return result ? result.language : null;
 
     } catch (error) {
+      console.error(`[DomainRulesManager] Error getting language for domain "${domain}":`, error);
       return null;
     }
   }
@@ -167,30 +168,13 @@ class DomainRulesManager {
       return this._cacheAndReturn(domain, null);
     }
 
-    // 2. 检查基础域名匹配
-    if (parsed.baseDomain) {
-      result = this._matchRule(parsed.baseDomain, customRules, 'base');
-      if (result) return this._cacheAndReturn(domain, result);
-
-      const baseParts = parsed.baseDomain.split('.');
-      if (baseParts.length >= 2) {
-        const baseSecondLevel = baseParts.slice(-2).join('.');
-        result = this._matchRule(baseSecondLevel, customRules, 'second');
-        if (result) return this._cacheAndReturn(domain, result);
-      }
-
-      const baseTopLevel = baseParts[baseParts.length - 1];
-      result = this._matchRule(baseTopLevel, customRules, 'top');
-      if (result) return this._cacheAndReturn(domain, result);
-    }
-
-    // 3. 检查原域名的二级域名匹配
+    // 2. 检查二级域名匹配
     if (parsed.secondLevel) {
       result = this._matchRule(parsed.secondLevel, customRules, 'second');
       if (result) return this._cacheAndReturn(domain, result);
     }
 
-    // 4. 检查原域名的顶级域名匹配
+    // 3. 检查顶级域名匹配
     result = this._matchRule(parsed.topLevel, customRules, 'top');
     return this._cacheAndReturn(domain, result);
   }
@@ -198,7 +182,7 @@ class DomainRulesManager {
   /**
    * 解析域名
    * @param {string} domain - 域名
-   * @returns {Object} 解析结果 {parts, secondLevel, topLevel, baseDomain}
+   * @returns {Object} 解析结果 {parts, secondLevel, topLevel}
    * @private
    */
   _parseDomain(domain) {
@@ -206,8 +190,7 @@ class DomainRulesManager {
    return {
      parts,
      secondLevel: parts.length >= 2 ? parts.slice(-2).join('.') : null,
-     topLevel: parts[parts.length - 1],
-     baseDomain: null
+     topLevel: parts[parts.length - 1]
    };
  }
 
