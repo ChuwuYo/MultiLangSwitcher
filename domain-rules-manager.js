@@ -8,6 +8,7 @@ class DomainRulesManager {
 
     // 简化的缓存机制
     this.domainCache = new Map(); // 域名查询结果缓存
+    this.MAX_CACHE_SIZE = 100; // 缓存大小限制
 
     // 简化缓存统计
     this.cacheStats = {
@@ -87,6 +88,7 @@ class DomainRulesManager {
 
       // 检查域名缓存
       if (this.domainCache.has(domain)) {
+        this.cacheStats.hits++; // 增加命中计数
         const cachedResult = this.domainCache.get(domain);
         if (cachedResult) {
           return cachedResult.language;
@@ -113,12 +115,14 @@ class DomainRulesManager {
         return result.language;
       }
 
+      this.cacheStats.misses++; // 增加未命中计数
       return null;
 
     } catch (error) {
 
       // 记录错误但不抛出，返回null表示未找到匹配
       // 继续使用默认语言或其他回退机制
+      this.cacheStats.misses++; // 增加未命中计数
       return null;
     }
   }
@@ -166,7 +170,11 @@ class DomainRulesManager {
    * @private
    */
   _cacheAndReturn(domain, result) {
-   // 简化缓存逻辑：直接设置，无需LRU
+   // 简单的FIFO缓存：超过限制时删除最早的条目
+   if (this.domainCache.size >= this.MAX_CACHE_SIZE) {
+     const firstKey = this.domainCache.keys().next().value;
+     this.domainCache.delete(firstKey);
+   }
    this.domainCache.set(domain, result);
    return result;
  }
