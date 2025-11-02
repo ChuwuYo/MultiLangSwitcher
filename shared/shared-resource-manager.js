@@ -4,11 +4,10 @@
 const ResourceManager = {
   // 资源跟踪 - 仅跟踪需要手动清理的资源
    _trackedResources: {
-     timers: new Set(),
-     controllers: new Set(),
-     messageListeners: new Set(),
-     peerConnections: new Set()
-   },
+      timers: new Set(),
+      controllers: new Set(),
+      peerConnections: new Set()
+    },
 
   // 定时器管理 - 跟踪需要手动清理的定时器
   setTimeout: (callback, delay, ...args) => {
@@ -65,7 +64,7 @@ const ResourceManager = {
         controller.abort();
         ResourceManager._trackedResources.controllers.delete(controller);
       } catch (error) {
-        // 静默处理已abort的控制器
+        // 静默处理
       }
     }
   },
@@ -110,23 +109,18 @@ const ResourceManager = {
     return null;
   },
 
-  // 消息监听器管理 - 某些情况下需要手动移除
+  // 消息监听器管理 - 依赖浏览器自动清理，仅提供兼容性接口
   addMessageListener: (callback) => {
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
       chrome.runtime.onMessage.addListener(callback);
-      const listenerInfo = { type: 'messageListener', callback, addedAt: Date.now() };
-      ResourceManager._trackedResources.messageListeners.add(listenerInfo);
-      return listenerInfo;
-    } else {
-      console.warn('chrome.runtime.onMessage not available');
-      return null;
+      return { type: 'messageListener', callback, addedAt: Date.now() };
     }
+    return null;
   },
 
   removeMessageListener: (listenerInfo) => {
     if (listenerInfo && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
       chrome.runtime.onMessage.removeListener(listenerInfo.callback);
-      ResourceManager._trackedResources.messageListeners.delete(listenerInfo);
     }
   },
 
@@ -165,7 +159,7 @@ const ResourceManager = {
         try {
           controller.abort();
         } catch (error) {
-          // 静默处理
+          // 静默处理已abort的控制器
         }
       }
     });
@@ -179,18 +173,6 @@ const ResourceManager = {
     });
     resources.peerConnections.clear();
 
-    // 清理消息监听器 - 在某些情况下需要手动清理
-    resources.messageListeners.forEach(listenerInfo => {
-      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-        chrome.runtime.onMessage.removeListener(listenerInfo.callback);
-      }
-    });
-    resources.messageListeners.clear();
-
-    // 仅在调试模式下输出日志
-    if (typeof DEBUG_MODE !== 'undefined' && DEBUG_MODE) {
-      console.log('ResourceManager: Manual cleanup completed');
-    }
   },
 
   // 获取资源统计信息
@@ -199,8 +181,7 @@ const ResourceManager = {
     return {
       timers: resources.timers.size,
       controllers: resources.controllers.size,
-      peerConnections: resources.peerConnections.size,
-      messageListeners: resources.messageListeners.size
+      peerConnections: resources.peerConnections.size
     };
   }
 };

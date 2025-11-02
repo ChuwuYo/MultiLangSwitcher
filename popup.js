@@ -416,25 +416,26 @@ const initializeDOMCache = () => {
 /**
  * 调度批量DOM更新以提高性能
  * @param {Function} updateFn - 执行DOM更新的函数
+ * @param {boolean} immediate - 是否立即执行
  */
-const scheduleDOMUpdate = (updateFn) => {
-  // 验证输入
+const scheduleDOMUpdate = (updateFn, immediate = false) => {
   if (typeof updateFn !== 'function') return;
 
-  // 将更新函数添加到待处理队列
+  // 关键交互立即执行
+  if (immediate) {
+    try {
+      updateFn();
+    } catch (error) {
+      sendDebugLog(popupI18n.t('dom_update_error', { message: error.message }), 'error');
+    }
+    return;
+  }
+
   pendingDOMUpdates.push(updateFn);
 
-  // 如果没有已调度的更新，则调度一个
   if (!domUpdateScheduled) {
     domUpdateScheduled = true;
-
-    // 使用requestAnimationFrame获得最佳性能
-    if (typeof requestAnimationFrame !== 'undefined') {
-      requestAnimationFrame(processPendingDOMUpdates);
-    } else {
-      // 对于不支持requestAnimationFrame的环境的回退方案
-      ResourceManager.setTimeout(processPendingDOMUpdates, 16); // ~60fps
-    }
+    requestAnimationFrame(processPendingDOMUpdates);
   }
 };
 
@@ -448,7 +449,6 @@ const processPendingDOMUpdates = () => {
     return;
   }
 
-  // 执行所有待处理的更新
   const updates = pendingDOMUpdates.splice(0);
   for (const updateFn of updates) {
     try {
@@ -460,9 +460,9 @@ const processPendingDOMUpdates = () => {
 
   domUpdateScheduled = false;
 
-  // 如果在处理过程中添加了更多更新，则调度另一个批次
   if (pendingDOMUpdates.length > 0) {
-    scheduleDOMUpdate(() => { }); // 空函数用于触发处理
+    domUpdateScheduled = true;
+    requestAnimationFrame(processPendingDOMUpdates);
   }
 };
 
@@ -522,38 +522,29 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
 }
 
 /**
- * 显示更新检查的加载状态 - 立即执行
+ * 显示更新检查的加载状态
  */
 const showUpdateLoadingState = () => {
-  // 直接获取DOM元素，不使用缓存，确保立即响应
-  const updateNotification = document.getElementById('updateNotification');
-  const updateNotificationContent = document.getElementById('updateNotificationContent');
+  const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
+  const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
 
   if (!updateNotification || !updateNotificationContent) return;
 
   const alertDiv = updateNotification.querySelector('.alert');
 
-  // 立即执行DOM操作，不使用批处理
-  // 保持动画类，确保slideIn动画效果
-  updateNotification.style.display = 'block'; // 强制显示
-  alertDiv.className = 'alert alert-info mb-0 update-notification info';
-  updateNotificationContent.innerHTML = `
-    <div class="text-center update-version-info">
-      <div class="d-flex align-items-center justify-content-center">
-        <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
-        <strong>${popupI18n.t('fetching_version_info')}</strong>
+  // 使用立即执行模式确保用户感知到响应
+  scheduleDOMUpdate(() => {
+    alertDiv.className = 'alert alert-info mb-0 update-notification info';
+    updateNotificationContent.innerHTML = `
+      <div class="text-center update-version-info">
+        <div class="d-flex align-items-center justify-content-center">
+          <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+          <strong>${popupI18n.t('fetching_version_info')}</strong>
+        </div>
       </div>
-    </div>
-  `;
-
-  // 确保立即显示，不依赖任何异步操作
-  updateNotification.classList.remove('d-none');
-
-  // 强制重绘以确保动画效果
-  updateNotification.offsetHeight; // 触发重绘
-
-  // 强制浏览器立即渲染
-  void updateNotification.getBoundingClientRect();
+    `;
+    updateNotification.classList.remove('d-none');
+  }, true);
 }
 
 /**
@@ -747,14 +738,14 @@ const performUpdateCheck = async () => {
   updateCheckInProgress = true;
   lastUpdateCheckTime = Date.now();
 
-  // 隐藏之前的错误通知 - 直接使用DOM操作，不使用缓存
-  const updateErrorAlert = document.getElementById('updateErrorAlert');
-  if (updateErrorAlert) updateErrorAlert.classList.add('d-none');
+  // 隐藏之前的错误通知
+  const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
+  if (updateErrorAlert) {
+    scheduleDOMUpdate(() => updateErrorAlert.classList.add('d-none'), true);
+  }
 
-  // 立即显示加载状态 - 同步执行确保立即响应
+  // 立即显示加载状态和更新按钮状态
   showUpdateLoadingState();
-
-  // 更新按钮状态 - 放在加载状态显示之后，避免阻塞UI更新
   updateCheckButtonState(true);
 
   // 为此请求创建新的中止控制器
@@ -822,18 +813,17 @@ const performUpdateCheck = async () => {
 
 // 防抖的UI更新函数
 let lastUIUpdate = 0;
-const debouncedUIUpdate = (updateFn, delay = 100) => {
-  // 验证输入
+const debouncedUIUpdate = (updateFn, delay = 16) => {
   if (typeof updateFn !== 'function') return;
 
   const now = Date.now();
   if (now - lastUIUpdate > delay) {
     lastUIUpdate = now;
-    updateFn();
+    scheduleDOMUpdate(updateFn);
   } else {
     ResourceManager.setTimeout(() => {
       lastUIUpdate = Date.now();
-      updateFn();
+      scheduleDOMUpdate(updateFn);
     }, delay);
   }
 };
