@@ -41,25 +41,16 @@ class DomainRulesManager {
    * @private
    */
   async _loadRulesFromFile() {
-    const i18n = this.ensureI18n();
-
     try {
       const url = chrome.runtime.getURL('domain-rules.json');
-
       const response = await fetch(url);
+      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-
-      if (!data.domainLanguageRules) {
-        this.rules = {};
-        return this.rules;
-      }
-
-      this.rules = data.domainLanguageRules;
-
+      this.rules = data.domainLanguageRules || {};
       return this.rules;
 
     } catch (error) {
@@ -82,47 +73,27 @@ class DomainRulesManager {
    * @returns {Promise<string|null>} 语言代码或null
    */
   async getLanguageForDomain(domain) {
-    const i18n = this.ensureI18n();
-
     try {
-
-      // 检查域名缓存
+      // 检查缓存
       if (this.domainCache.has(domain)) {
-        this.cacheStats.hits++; // 增加命中计数
+        this.cacheStats.hits++;
         const cachedResult = this.domainCache.get(domain);
-        if (cachedResult) {
-          return cachedResult.language;
-        } else {
-          return null;
-        }
+        return cachedResult ? cachedResult.language : null;
       }
 
+      // 缓存未命中
+      this.cacheStats.misses++;
 
       // 确保规则已加载
       await this._ensureRulesLoaded();
-      if (!this.rules) {
-        return null;
-      }
+      if (!this.rules) return null;
 
-
-      // 获取自定义规则
+      // 获取自定义规则并查找匹配
       const customRules = await this.getCustomRules();
-
-      // 按优先级检查规则：自定义完整域名 > 内置完整域名 > 自定义二级域名 > 内置二级域名 > 自定义顶级域名 > 内置顶级域名
       const result = this._findMatchingRule(domain, customRules);
-
-      if (result) {
-        return result.language;
-      }
-
-      this.cacheStats.misses++; // 增加未命中计数
-      return null;
+      return result ? result.language : null;
 
     } catch (error) {
-
-      // 记录错误但不抛出，返回null表示未找到匹配
-      // 继续使用默认语言或其他回退机制
-      this.cacheStats.misses++; // 增加未命中计数
       return null;
     }
   }
@@ -142,13 +113,10 @@ class DomainRulesManager {
    * @param {string} target - 要匹配的目标（域名）
    * @param {Object} customRules - 自定义规则
    * @param {string} sourceType - 匹配来源类型
-   * @param {string} matchType - 匹配类型标识
    * @returns {Object|null} 匹配结果或null
    * @private
    */
-  _matchRule(target, customRules, sourceType, logKey) {
-   const i18n = this.ensureI18n();
-
+  _matchRule(target, customRules, sourceType) {
    // 检查自定义规则
    if (customRules[target]) {
      return { language: customRules[target], source: `custom-${sourceType}` };
@@ -180,77 +148,67 @@ class DomainRulesManager {
  }
 
   /**
-   * 查找匹配的规则（优化版本）
+   * 查找匹配的规则
    * @param {string} domain - 域名
    * @param {Object} customRules - 自定义规则
    * @returns {Object|null} 匹配结果 {language, source} 或 null
    * @private
    */
   _findMatchingRule(domain, customRules) {
-    const i18n = this.ensureI18n();
-    let result = null;
+    let result;
 
     // 1. 检查完整域名匹配
-    result = this._matchRule(domain, customRules, 'full', 'found_in_full_domain');
+    result = this._matchRule(domain, customRules, 'full');
     if (result) return this._cacheAndReturn(domain, result);
 
     // 解析域名
     const parsed = this._parseDomain(domain);
     if (parsed.parts.length < 2) {
-      return this._cacheAndReturn(domain, null); // 无效域名
+      return this._cacheAndReturn(domain, null);
     }
 
-    // 2. 检查基础域名匹配（去除语言子域名后）
+    // 2. 检查基础域名匹配
     if (parsed.baseDomain) {
-      // 基础域名完整匹配
-      result = this._matchRule(parsed.baseDomain, customRules, 'base', 'found_in_base_domain');
+      result = this._matchRule(parsed.baseDomain, customRules, 'base');
       if (result) return this._cacheAndReturn(domain, result);
 
-      // 基础域名的二级域名匹配
       const baseParts = parsed.baseDomain.split('.');
       if (baseParts.length >= 2) {
         const baseSecondLevel = baseParts.slice(-2).join('.');
-        result = this._matchRule(baseSecondLevel, customRules, 'second', 'found_in_second_level');
+        result = this._matchRule(baseSecondLevel, customRules, 'second');
         if (result) return this._cacheAndReturn(domain, result);
       }
 
-      // 基础域名的顶级域名匹配
       const baseTopLevel = baseParts[baseParts.length - 1];
-      result = this._matchRule(baseTopLevel, customRules, 'top', 'found_in_top_level');
+      result = this._matchRule(baseTopLevel, customRules, 'top');
       if (result) return this._cacheAndReturn(domain, result);
-
     }
 
     // 3. 检查原域名的二级域名匹配
     if (parsed.secondLevel) {
-      result = this._matchRule(parsed.secondLevel, customRules, 'second', 'found_in_second_level');
+      result = this._matchRule(parsed.secondLevel, customRules, 'second');
       if (result) return this._cacheAndReturn(domain, result);
     }
 
     // 4. 检查原域名的顶级域名匹配
-    result = this._matchRule(parsed.topLevel, customRules, 'top', 'found_in_top_level');
-
+    result = this._matchRule(parsed.topLevel, customRules, 'top');
     return this._cacheAndReturn(domain, result);
   }
 
   /**
-   * 解析域名并缓存结果
+   * 解析域名
    * @param {string} domain - 域名
    * @returns {Object} 解析结果 {parts, secondLevel, topLevel, baseDomain}
    * @private
    */
   _parseDomain(domain) {
-   // 解析域名
    const parts = domain.split('.');
-   const result = {
+   return {
      parts,
      secondLevel: parts.length >= 2 ? parts.slice(-2).join('.') : null,
      topLevel: parts[parts.length - 1],
-     baseDomain: null // 去除语言子域名后的基础域名
+     baseDomain: null
    };
-
-
-   return result;
  }
 
 
@@ -276,7 +234,6 @@ class DomainRulesManager {
 
   /**
    * 计算缓存命中率
-   * @param {string} cacheType - 缓存类型
    * @returns {string} 命中率描述
    * @private
    */
