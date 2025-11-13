@@ -354,27 +354,20 @@ const setAutoSwitchStatus = async (enabled) => {
     // 记录状态变更日志
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
-    // 通知background脚本状态变更
-    // 注意：此处使用 IIFE (立即调用函数表达式) 写法虽然可以实现"即发即弃"的异步调用，
-    // 但略显冗余。可以直接调用 chrome.runtime.sendMessage 并链式附加 .catch() 来处理错误，
-    // 这样代码会更简洁清晰：
-    // chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled })
-    //   .catch(notifyError => {
-    //     sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
-    //   });
-    (async () => {
-      try {
-        await chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
-      } catch (notifyError) {
+    // 通知 background 脚本状态变更（即发即弃，不影响当前流程；仅在失败时记录日志）
+    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled })
+      .catch((notifyError) => {
         sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
-      }
-    })();
+      });
 
     return true;
   } catch (error) {
     const message = error.message;
-    showError(popupI18n.t('update_storage_status_failed', { message }));
-    sendDebugLog(popupI18n.t('update_storage_status_failed', { message }), 'error');
+    const localized = popupI18n.t('update_storage_status_failed', { message });
+
+    // 避免重复字符串插值逻辑，统一使用 localized
+    showError(localized);
+    sendDebugLog(localized, 'error');
     return false;
   }
 }
@@ -811,9 +804,9 @@ const performUpdateCheck = async () => {
     // 清理更新检查状态
     updateCheckInProgress = false;
 
-    // 从 ResourceManager 跟踪列表中移除 controller，避免内存泄漏
+    // 使用对外暴露的 abortController 接口清理控制器（避免直接访问内部结构）
     if (updateCheckController) {
-      ResourceManager._trackedResources.controllers.delete(updateCheckController);
+      ResourceManager.abortController(updateCheckController);
       updateCheckController = null;
     }
 

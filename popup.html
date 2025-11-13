@@ -10,7 +10,6 @@
   <link rel="preload" href="fonts/MapleMonoNL-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <!-- 样式表引入 -->
   <link href="bootstrap.min.css" rel="stylesheet">
-  <link href="fonts/MapleMonoNL-Regular.woff2" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
   <style>
     /* 主体布局样式 */
@@ -178,6 +177,7 @@
 
     /* 重置按钮位置 */
     #resetBtn {
+      position: absolute;
       top: 42px;
     }
 
@@ -413,6 +413,19 @@
       max-width: 100%;
       overflow-wrap: break-word;
     }
+     /* 自动切换标签样式 */
+     .auto-switch-label {
+       font-size: 0.8em;
+       display: block;
+       margin-bottom: 5px;
+     }
+
+     /* 自动切换外层容器 */
+     .toggle-wrapper-inline {
+       font-size: 1em;
+       margin: 0 auto;
+       width: fit-content;
+     }
   </style>
 </head>
 
@@ -453,9 +466,8 @@
 
     <!-- 自动切换语言开关区域 -->
     <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" id="autoSwitchLabel"
-        style="font-size: 0.8em; display: block; margin-bottom: 5px;"></label>
-      <div class="toggle-wrapper" style="font-size: 1em; margin: 0 auto; width: fit-content;">
+      <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label"></label>
+      <div class="toggle-wrapper toggle-wrapper-inline">
         <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle">
         <div class="toggle-container">
           <div class="toggle-button">
