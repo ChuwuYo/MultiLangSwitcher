@@ -816,30 +816,35 @@ const performUpdateCheck = async () => {
 
 // 防抖的UI更新函数
 let lastUIUpdate = 0;
+let uiUpdateTimer = null;
 /**
- * 轻量级 UI 更新节流：
+ * 轻量级 UI 更新节流防抖：
  * - 仅用于被动同步（如 background 推送的状态），避免打断用户主动交互的即时反馈。
- * - 将多次更新折叠到短时间窗口内，仍通过 scheduleDOMUpdate 合批执行。
+ * - 超出时间窗口时立即执行，否则合并为最后一次调用，始终只保留一个等待中的定时器。
  */
 const debouncedUIUpdate = (updateFn, delay = 16) => {
   if (typeof updateFn !== 'function') return;
 
+  // 清除之前的等待定时器，避免累积（防抖）
+  if (uiUpdateTimer) {
+    ResourceManager.clearTimeout(uiUpdateTimer);
+    uiUpdateTimer = null;
+  }
+
   const now = Date.now();
 
-  // 若距离上次执行已超过窗口，直接安排到本帧批处理，确保快速可见
+  // 若距离上次执行已超过窗口，直接执行
   if (now - lastUIUpdate > delay) {
     lastUIUpdate = now;
     scheduleDOMUpdate(updateFn);
     return;
   }
 
-  // 否则在窗口结束后合并一次执行
-  ResourceManager.setTimeout(() => {
-    // 防止多次定时器竞争，这里仅按最后一次时间窗更新
-    if (Date.now() - lastUIUpdate >= delay) {
-      lastUIUpdate = Date.now();
-      scheduleDOMUpdate(updateFn);
-    }
+  // 否则推迟到窗口结束时执行最后一次调用
+  uiUpdateTimer = ResourceManager.setTimeout(() => {
+    lastUIUpdate = Date.now();
+    scheduleDOMUpdate(updateFn);
+    uiUpdateTimer = null;
   }, delay);
 };
 
