@@ -123,13 +123,13 @@ const showError = (message) => {
   // 检查DOM元素
   if (!errorAlert || !errorMessage) return;
 
-  // 使用批量DOM更新提高性能
+  // 错误反馈需即时可见，避免排队到后续帧
   scheduleDOMUpdate(() => {
     errorMessage.textContent = message;
     errorAlert.classList.remove('d-none');
-  });
+  }, true);
 
-  // 5秒后自动隐藏错误消息
+  // 5秒后自动隐藏错误消息（可延后合并）
   ResourceManager.setTimeout(() => {
     scheduleDOMUpdate(() => {
       errorAlert.classList.add('d-none');
@@ -150,7 +150,16 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
   const currentLanguageSpan = domCache.currentLanguageSpan || document.getElementById('currentLanguage');
   const languageSelect = domCache.languageSelect || document.getElementById('languageSelect');
 
-  // 使用批量DOM更新提高性能
+  // 如果当前值与目标语言一致，避免不必要的 DOM 写入
+  if (currentLanguageSpan && currentLanguageSpan.textContent === language && !showSuccess) {
+    if (languageSelect && languageSelect.value !== language) {
+      // 仅在下拉值不一致时同步一次
+      scheduleDOMUpdate(() => { languageSelect.value = language; }, true);
+    }
+    return;
+  }
+
+  // 使用批量DOM更新提高性能；语言切换属于关键可见状态，使用立即模式
   scheduleDOMUpdate(() => {
     // 更新当前语言显示
     if (currentLanguageSpan) currentLanguageSpan.textContent = language;
@@ -181,7 +190,7 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
         });
       }, 2000);
     }
-  });
+  }, true);
 };
 
 /**
@@ -345,27 +354,20 @@ const setAutoSwitchStatus = async (enabled) => {
     // 记录状态变更日志
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
-    // 通知background脚本状态变更
-    // 注意：此处使用 IIFE (立即调用函数表达式) 写法虽然可以实现"即发即弃"的异步调用，
-    // 但略显冗余。可以直接调用 chrome.runtime.sendMessage 并链式附加 .catch() 来处理错误，
-    // 这样代码会更简洁清晰：
-    // chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled })
-    //   .catch(notifyError => {
-    //     sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
-    //   });
-    (async () => {
-      try {
-        await chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled: enabled });
-      } catch (notifyError) {
+    // 通知 background 脚本状态变更（即发即弃，不影响当前流程；仅在失败时记录日志）
+    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled })
+      .catch((notifyError) => {
         sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
-      }
-    })();
+      });
 
     return true;
   } catch (error) {
     const message = error.message;
-    showError(popupI18n.t('update_storage_status_failed', { message }));
-    sendDebugLog(popupI18n.t('update_storage_status_failed', { message }), 'error');
+    const localized = popupI18n.t('update_storage_status_failed', { message });
+
+    // 避免重复字符串插值逻辑，统一使用 localized
+    showError(localized);
+    sendDebugLog(localized, 'error');
     return false;
   }
 }
@@ -421,7 +423,7 @@ const initializeDOMCache = () => {
 const scheduleDOMUpdate = (updateFn, immediate = false) => {
   if (typeof updateFn !== 'function') return;
 
-  // 关键交互立即执行
+  // 关键交互和首屏反馈：允许调用方请求“立即执行”
   if (immediate) {
     try {
       updateFn();
@@ -431,6 +433,7 @@ const scheduleDOMUpdate = (updateFn, immediate = false) => {
     return;
   }
 
+  // 将更新收敛到同一帧，避免多次强制回流
   pendingDOMUpdates.push(updateFn);
 
   if (!domUpdateScheduled) {
@@ -532,7 +535,7 @@ const showUpdateLoadingState = () => {
 
   const alertDiv = updateNotification.querySelector('.alert');
 
-  // 使用立即执行模式确保用户感知到响应
+  // 该提示用于反馈「已开始检查」，应立即可见
   scheduleDOMUpdate(() => {
     alertDiv.className = 'alert alert-info mb-0 update-notification info';
     updateNotificationContent.innerHTML = `
@@ -662,7 +665,7 @@ const updateCheckButtonState = (isChecking) => {
   // 检查DOM元素
   if (!updateCheckBtn || !updateCheckText || !updateCheckSpinner) return;
 
-  // 使用批量DOM更新提高性能
+  // 该状态直接影响用户对点击的反馈，使用立即模式消除可感知延迟
   scheduleDOMUpdate(() => {
     if (isChecking) {
       updateCheckBtn.disabled = true;
@@ -673,7 +676,7 @@ const updateCheckButtonState = (isChecking) => {
       updateCheckText.textContent = popupI18n.t('check_for_updates');
       updateCheckSpinner.classList.add('d-none');
     }
-  });
+  }, true);
 };
 
 /**
@@ -801,9 +804,9 @@ const performUpdateCheck = async () => {
     // 清理更新检查状态
     updateCheckInProgress = false;
 
-    // 从 ResourceManager 跟踪列表中移除 controller，避免内存泄漏
+    // 使用对外暴露的 abortController 接口清理控制器（避免直接访问内部结构）
     if (updateCheckController) {
-      ResourceManager._trackedResources.controllers.delete(updateCheckController);
+      ResourceManager.abortController(updateCheckController);
       updateCheckController = null;
     }
 
@@ -813,19 +816,36 @@ const performUpdateCheck = async () => {
 
 // 防抖的UI更新函数
 let lastUIUpdate = 0;
+let uiUpdateTimer = null;
+/**
+ * 轻量级 UI 更新节流防抖：
+ * - 仅用于被动同步（如 background 推送的状态），避免打断用户主动交互的即时反馈。
+ * - 超出时间窗口时立即执行，否则合并为最后一次调用，始终只保留一个等待中的定时器。
+ */
 const debouncedUIUpdate = (updateFn, delay = 16) => {
   if (typeof updateFn !== 'function') return;
 
+  // 清除之前的等待定时器，避免累积（防抖）
+  if (uiUpdateTimer) {
+    ResourceManager.clearTimeout(uiUpdateTimer);
+    uiUpdateTimer = null;
+  }
+
   const now = Date.now();
+
+  // 若距离上次执行已超过窗口，直接执行
   if (now - lastUIUpdate > delay) {
     lastUIUpdate = now;
     scheduleDOMUpdate(updateFn);
-  } else {
-    ResourceManager.setTimeout(() => {
-      lastUIUpdate = Date.now();
-      scheduleDOMUpdate(updateFn);
-    }, delay);
+    return;
   }
+
+  // 否则推迟到窗口结束时执行最后一次调用
+  uiUpdateTimer = ResourceManager.setTimeout(() => {
+    lastUIUpdate = Date.now();
+    scheduleDOMUpdate(updateFn);
+    uiUpdateTimer = null;
+  }, delay);
 };
 
 // --- 扩展初始化 ---
@@ -870,9 +890,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 自动切换开关变更处理
     autoSwitchChange: async (event) => {
       const enabled = event.target.checked;
+
+      // 先本地即时反馈，再异步持久化，提升交互流畅度
+      updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
+
       const success = await setAutoSwitchStatus(enabled);
-      if (success) {
-        updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
+      if (!success) {
+        // 回滚 UI 状态，使用立即模式
+        updateAutoSwitchUI(!enabled, autoSwitchToggle, languageSelect, applyButton);
       }
     },
 
@@ -901,10 +926,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         // 保存语言设置并更新显示
         await saveLanguageSetting(selectedLanguage);
-        if (currentLanguageSpan) currentLanguageSpan.textContent = selectedLanguage;
+        updateLanguageDisplay(selectedLanguage);
 
         // 更新请求头规则并触发自动检查
         await updateHeaderRules(selectedLanguage, true);
+
+        // 折叠下拉框，直接同步
         languageSelect.size = 1;
         sendDebugLog(popupI18n.t('collapse_language_select'), 'info');
       } catch (error) {
@@ -1046,21 +1073,19 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @param {HTMLElement} applyButton - 应用按钮元素
    */
   const handleAutoSwitchUIUpdate = (request, autoSwitchToggle, languageSelect, applyButton) => {
+    // 来自 background 的状态同步可能在短时间内多次触发，使用 debouncedUIUpdate 合并
     debouncedUIUpdate(() => {
       const autoSwitchEnabled = request.autoSwitchEnabled;
 
-      // 更新开关状态
-      if (autoSwitchToggle) {
-        autoSwitchToggle.checked = autoSwitchEnabled;
+      if (typeof autoSwitchEnabled === 'boolean') {
+        if (autoSwitchToggle) {
+          autoSwitchToggle.checked = autoSwitchEnabled;
+        }
+        updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
+        syncAutoSwitchStatusToStorage(autoSwitchEnabled);
       }
 
-      // 同步状态到本地存储
-      syncAutoSwitchStatusToStorage(autoSwitchEnabled);
-
-      // 更新UI状态
-      updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
-
-      // 处理当前语言信息更新
+      // 按需更新当前语言，避免多余写入
       if (request.currentLanguage) {
         updateCurrentLanguageInfo(request.currentLanguage, languageSelect);
       }
@@ -1107,10 +1132,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 检查必要元素
     if (!autoSwitchToggle) return;
 
-    autoSwitchToggle.checked = request.enabled;
-    updateAutoSwitchUI(request.enabled, autoSwitchToggle, languageSelect, applyButton);
+    const enabled = !!request.enabled;
 
-    const statusText = request.enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
+    // 若状态未变化则跳过，避免冗余 DOM 更新
+    if (autoSwitchToggle.checked === enabled) {
+      const statusTextSkipped = enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
+      sendDebugLog(popupI18n.t('received_status_sync', { status: statusTextSkipped }), 'info');
+      return;
+    }
+
+    autoSwitchToggle.checked = enabled;
+    updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
+
+    const statusText = enabled ? popupI18n.t('enabled') : popupI18n.t('disabled');
     sendDebugLog(popupI18n.t('received_status_sync', { status: statusText }), 'info');
   };
 
