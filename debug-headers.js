@@ -9,16 +9,21 @@ const showCurrentRules = async () => {
   try {
     sendDebugLog(debugI18n.t('getting_rules'), 'info');
 
-    const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    sendDebugLog(`${debugI18n.t('current_rules')} ${JSON.stringify(rules, null, 2)}`, 'info');
+    const rulesResult = await window.sharedDebugCore.getCurrentRules();
+    
+    if (!rulesResult.success) {
+      sendDebugLog(`${debugI18n.t('get_rules_error')} ${rulesResult.error}`, 'error');
+      return;
+    }
 
-    if (rules.length === 0) {
+    sendDebugLog(`${debugI18n.t('current_rules')} ${JSON.stringify(rulesResult.dynamicRules, null, 2)}`, 'info');
+
+    if (rulesResult.dynamicRules.length === 0) {
       sendDebugLog(debugI18n.t('no_rules_warning'), 'warning');
       return;
     }
 
-    const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
-    sendDebugLog(`${debugI18n.t('matched_rules')} ${JSON.stringify(matchedRules, null, 2)}`, 'info');
+    sendDebugLog(`${debugI18n.t('matched_rules')} ${JSON.stringify(rulesResult.matchedRules, null, 2)}`, 'info');
 
   } catch (error) {
     sendDebugLog(`${debugI18n.t('get_rules_error')} ${error.message}`, 'error');
@@ -38,13 +43,24 @@ const testHeaderChange = async (language) => {
   try {
     sendDebugLog(`${debugI18n.t('testing_language')} "${language}" ${debugI18n.t('header_effective')}`, 'info');
 
-    const timestamp = Date.now();
-    const data = await fetchWithRetry(`https://httpbin.org/headers?_=${timestamp}`, {
-      cache: 'no-store',
-      credentials: 'omit'
+    // 使用共享模块的标准化请求头测试
+    await window.sharedDebugCore.performHeaderTest(language, {
+      onProgress: (message) => {
+        sendDebugLog(message, 'info');
+      },
+      onResult: (result) => {
+        if (result.success) {
+          if (result.acceptLanguage) {
+            sendDebugLog(`${debugI18n.t('header_changed_success')} ${result.acceptLanguage}`, 'success');
+          } else {
+            sendDebugLog(`${debugI18n.t('no_accept_language')}`, 'error');
+          }
+        } else {
+          const errorMsg = result.error || '未知错误';
+          sendDebugLog(`${debugI18n.t('header_not_changed')} ${result.expectedLanguage}, ${debugI18n.t('actually_detected')} ${errorMsg}`, 'error');
+        }
+      }
     });
-
-    handleHeaderResponse(data, language);
 
   } catch (error) {
     sendDebugLog(`${debugI18n.t('test_failed')} ${error.message}`, 'error');
@@ -52,46 +68,6 @@ const testHeaderChange = async (language) => {
     if (error.message.includes('Failed to fetch')) {
       sendDebugLog(debugI18n.t('network_check_suggestion'), 'info');
     }
-  }
-};
-
-/**
- * 带重试机制的fetch请求
- * @param {string} url - 请求URL
- * @param {Object} options - fetch选项
- * @returns {Promise<Object>} 响应数据
- */
-const fetchWithRetry = async (url, options = {}) => {
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    throw new Error(`${debugI18n.t('http_error_status')} ${response.status}`);
-  }
-
-  return response.json();
-};
-
-/**
- * 处理获取到的请求头数据
- * @param {Object} data - 从API返回的数据
- * @param {string} language - 预期的语言代码
- */
-const handleHeaderResponse = (data, language) => {
-  const headers = data.headers;
-  sendDebugLog(`${debugI18n.t('received_headers')} ${JSON.stringify(headers, null, 2)}`, 'info');
-
-  if (!headers['Accept-Language']) {
-    sendDebugLog(debugI18n.t('no_accept_language'), 'error');
-    return;
-  }
-
-  const acceptLanguage = headers['Accept-Language'].toLowerCase();
-  const expectedLanguage = language.toLowerCase();
-
-  if (acceptLanguage.includes(expectedLanguage)) {
-    sendDebugLog(`${debugI18n.t('header_changed_success')} ${acceptLanguage}`, 'success');
-  } else {
-    sendDebugLog(`${debugI18n.t('header_not_changed')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguage}`, 'error');
   }
 };
 

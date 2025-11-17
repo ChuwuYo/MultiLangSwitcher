@@ -1,6 +1,5 @@
 // debug-ui.js - 调试页面UI交互脚本
 
-
 /**
  * 安全地创建带有样式类的消息元素
  * @param {string} message - 消息文本
@@ -73,27 +72,28 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     populateLanguageSelect(testLanguageSelect);
   }
 
-  // 显示当前规则和匹配的规则详情
-  ResourceManager.addEventListener(document.getElementById('showRulesBtn'), 'click', () => {
-    const resultElement = document.getElementById('rulesResult');
-    resultElement.innerHTML = debugI18n.t('getting_rule_info');
+    // 显示当前规则和匹配的规则详情
+    // 使用共享模块避免重复代码
+    ResourceManager.addEventListener(document.getElementById('showRulesBtn'), 'click', async () => {
+      const resultElement = document.getElementById('rulesResult');
+      setSafeContent(resultElement, debugI18n.t('getting_rule_info'));
 
-    // 通过消息传递获取动态规则
-    (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
-        if (!response || !response.success) {
-          setSafeErrorMessage(resultElement, '获取规则失败');
+        const rulesResult = await window.sharedDebugCore.getCurrentRules();
+        
+        if (!rulesResult.success) {
+          setSafeErrorMessage(resultElement, `${debugI18n.t('get_rules_error')} ${rulesResult.error}`);
           return;
         }
-        const rules = response.rules;
+
+        const { dynamicRules, matchedRules } = rulesResult;
         let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
 
-        if (rules.length === 0) {
+        if (dynamicRules.length === 0) {
           html += `<p class="error">${debugI18n.t('no_dynamic_rules')}</p>`;
         } else {
           html += '<ul>';
-          rules.forEach(rule => {
+          dynamicRules.forEach(rule => {
             let priorityClass = rule.priority < 100 ? 'error' : 'success';
             html += `<li>${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} <span class="${priorityClass}">${rule.priority}</span></li>`;
             html += `<li>${debugI18n.t('action')} ${rule.action.type}</li>`;
@@ -114,23 +114,14 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
               }
               html += '</ul></li>';
             }
-            html += '<hr>'; // 分隔不同规则
+            html += '<hr>';
           });
           html += '</ul>';
         }
 
-        // 通过消息传递获取最近匹配的规则信息
-        const matchedResponse = await chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' });
-        if (!matchedResponse || !matchedResponse.success) {
-          html += `<p class="error">获取匹配规则失败</p>`;
-          resultElement.innerHTML = html;
-          return;
-        }
-        const matchedRules = matchedResponse.matchedRules;
         html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
           html += '<ul>';
-          // 去重处理，避免显示重复的规则
           const uniqueRules = new Map();
           matchedRules.rulesMatchedInfo.forEach(info => {
             const key = `${info.rule.rulesetId || '_dynamic'}_${info.rule.ruleId}`;
@@ -157,10 +148,9 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         }
         resultElement.innerHTML = html;
       } catch (error) {
-        setSafeErrorMessage(resultElement, `获取规则失败: ${error.message}`);
+        setSafeErrorMessage(resultElement, `${debugI18n.t('get_rules_error')} ${error.message}`);
       }
-    })();
-  });
+    });
 
   // 日志功能
   const logOutput = document.getElementById('logOutput');
@@ -198,7 +188,6 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       }
     });
   };
-
 
   /**
    * 获取当前选中的日志类型过滤器
@@ -264,85 +253,49 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     }
   })();
 
+    // 测试请求头 - 使用共享模块
+    ResourceManager.addEventListener(document.getElementById('testHeaderBtn'), 'click', async () => {
+      const language = document.getElementById('testLanguage').value;
+      const resultElement = document.getElementById('headerTestResult');
+      setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
+      addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
 
-  // 测试请求头
-  ResourceManager.addEventListener(document.getElementById('testHeaderBtn'), 'click', async () => {
-    const language = document.getElementById('testLanguage').value;
-    const resultElement = document.getElementById('headerTestResult');
-    setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
-    addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
-
-    const timestamp = new Date().getTime();
-    const testUrls = [
-      `https://httpbin.org/headers?_=${timestamp}`,
-      `https://postman-echo.com/headers?_=${timestamp}`
-      // 您可以添加更多测试URL
-    ];
-
-    let lastError = null;
-    let receivedHeaders = null; // 用于存储第一个成功请求的头信息
-
-    const fetchPromises = testUrls.map(url =>
-      fetch(url, { cache: 'no-store', credentials: 'omit' })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`${debugI18n.t('http_error_status_from')} ${response.status} ${debugI18n.t('from')} ${url}`);
+      try {
+        // 使用共享模块的标准化请求头测试
+        const result = await window.sharedDebugCore.performHeaderTest(language, {
+          onProgress: (message) => {
+            addLogMessage(message, 'info');
+          },
+          onResult: (testResult) => {
+            let html = '';
+            
+            if (testResult.success && testResult.acceptLanguage) {
+              html += `<h5>${debugI18n.t('recent_successful_headers')}</h5>`;
+              html += `<pre>${JSON.stringify({ 'Accept-Language': testResult.acceptLanguage }, null, 2)}</pre>`;
+              html += `<p class="success">${debugI18n.t('header_changed_success')} ${testResult.acceptLanguage}</p>`;
+              addLogMessage(`${debugI18n.t('header_test_success')} ${testResult.acceptLanguage}`, 'success');
+            } else if (testResult.success) {
+              html += `<p class="error">${debugI18n.t('no_accept_language_any_endpoint')}</p>`;
+              html += getExternalCheckLinks();
+              addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
+            } else {
+              html += `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
+              if (testResult.error) {
+                html += `<p class="error">${debugI18n.t('last_error')} ${testResult.error}</p>`;
+              }
+              html += '<p>' + debugI18n.t('check_network_connection') + getExternalCheckLinks();
+              addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
+            }
+            
+            resultElement.innerHTML = html;
           }
-          return response.json();
-        })
-        .then(data => {
-          if (!receivedHeaders) receivedHeaders = data.headers; // 保存第一个成功的头信息
-          return { success: true, data }; // 返回成功标记和数据
-        })
-        .catch(error => {
-          lastError = error; // 记录最后一个错误
-          addLogMessage(`${debugI18n.t('request_failed')} ${url} ${debugI18n.t('failed')} ${error.message}`, 'warning');
-          return { success: false, error }; // 返回失败标记和错误
-        })
-    );
-
-    // 等待所有请求完成
-    const results = await Promise.all(fetchPromises);
-
-    let html = '';
-    let firstSuccessfulResult = results.find(result => result.success);
-
-    if (firstSuccessfulResult && firstSuccessfulResult.data && firstSuccessfulResult.data.headers) {
-      receivedHeaders = firstSuccessfulResult.data.headers; // 保存第一个成功的头信息
-      html += `<h5>${debugI18n.t('recent_successful_headers')}</h5>`;
-      html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
-
-      if (receivedHeaders['Accept-Language']) {
-        const acceptLanguageValue = receivedHeaders['Accept-Language'].toLowerCase();
-        const expectedLanguage = language.toLowerCase();
-
-        if (acceptLanguageValue.includes(expectedLanguage)) {
-          html += `<p class="success">${debugI18n.t('header_changed_success')} ${receivedHeaders['Accept-Language']}</p>`;
-          addLogMessage(`${debugI18n.t('header_test_success')} ${receivedHeaders['Accept-Language']}`, 'success');
-        } else {
-          html += `<p class="error">${debugI18n.t('header_not_changed')}</p>`;
-          html += `<p>${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}</p>`;
-          html += getExternalCheckLinks();
-          addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
-        }
-      } else {
-        // 请求成功，但未检测到 Accept-Language
-        html += `<p class="error">${debugI18n.t('no_accept_language_any_endpoint')}</p>`;
-        html += getExternalCheckLinks();
-        addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
+        });
+      } catch (error) {
+        const errorHtml = `<p class="error">${debugI18n.t('test_failed')} ${error.message}</p>`;
+        resultElement.innerHTML = errorHtml;
+        addLogMessage(`${debugI18n.t('test_failed')} ${error.message}`, 'error');
       }
-    } else {
-      // 所有请求均失败
-      html += `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
-      if (lastError) {
-        html += `<p class="error">${debugI18n.t('last_error')} ${lastError.message}</p>`;
-      }
-      html += '<p>' + debugI18n.t('check_network_connection') + getExternalCheckLinks();
-      addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
-    }
-
-    resultElement.innerHTML = html;
-  });
+    });
 
   // 修复规则优先级
   ResourceManager.addEventListener(document.getElementById('fixPriorityBtn'), 'click', () => {
@@ -443,64 +396,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     })();
   });
 
-  /**
-   * 验证 Accept-Language 格式是否可能有问题
-   * @param {string} languageString - 要验证的语言字符串
-   * @returns {boolean} - 如果格式可能有问题返回 true
-   */
-  const validateAcceptLanguageFormat = (languageString) => {
-    // 基本格式检查
-    const trimmed = languageString.trim();
-
-    // 空字符串检查
-    if (!trimmed) {
-      return true;
-    }
-
-    // 检查是否包含不合法字符（Accept-Language 应该只包含字母、数字、连字符、逗号、分号、等号、点和空格）
-    const invalidChars = /[^a-zA-Z0-9\-,;=.\s]/;
-    if (invalidChars.test(trimmed)) {
-      return true; // 包含不合法字符
-    }
-
-    // 检查是否有连续的逗号或以逗号开头/结尾
-    if (/,,|^,|,$/.test(trimmed)) {
-      return true;
-    }
-
-    // 检查基本结构：应该是逗号分隔的语言标签列表
-    const parts = trimmed.split(',');
-    for (const part of parts) {
-      const cleanPart = part.trim();
-      if (!cleanPart) {
-        return true; // 空的部分
-      }
-
-      // 检查每个部分的格式：language-tag 或 language-tag;q=value
-      const qIndex = cleanPart.indexOf(';q=');
-      const languageTag = qIndex === -1 ? cleanPart : cleanPart.substring(0, qIndex);
-
-      // 更宽松的语言标签验证：支持更复杂的格式如 zh-Hans-CN
-      // 基本格式：2-3个字母，可选地跟多个连字符分隔的2-8个字母/数字的子标签
-      const languageTagPattern = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/;
-      if (!languageTagPattern.test(languageTag)) {
-        return true; // 语言标签格式不正确
-      }
-
-      // 如果有质量值，检查其格式
-      if (qIndex !== -1) {
-        const qValue = cleanPart.substring(qIndex + 3);
-
-        // 检查质量值格式：应该是0到1之间的数字，最多3位小数
-        const qValuePattern = /^(0(\.\d{1,3})?|1(\.0{1,3})?)$/;
-        if (!qValuePattern.test(qValue)) {
-          return true; // 质量值格式不正确
-        }
-      }
-    }
-
-    return false; // 格式看起来正常
-  }
+    // 移除重复的 validateAcceptLanguageFormat 函数，使用共享模块版本
+    // validateAcceptLanguageFormat 逻辑现在在 shared/shared-debug-core.js 中
 
   // 应用自定义语言设置
   ResourceManager.addEventListener(document.getElementById('applyCustomLangBtn'), 'click', () => {
@@ -519,8 +416,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
 
     customLangInput.classList.remove('is-invalid');
 
-    // 检查格式是否可能有问题
-    const hasFormatIssues = validateAcceptLanguageFormat(languageString);
+    // 检查格式是否可能有问题 - 使用共享模块的版本
+    const hasFormatIssues = window.sharedDebugCore.validateAcceptLanguageFormat(languageString);
 
     setSafeContent(customLangResult, `${debugI18n.t('applying_custom_language')} ${languageString}...`);
     addLogMessage(`${debugI18n.t('try_apply_custom')} ${languageString}`, 'info');
@@ -876,7 +773,6 @@ const initializeCacheManagement = () => {
     ResourceManager.addEventListener(clearDomainCacheBtn, 'click', clearDomainCache);
   }
 
-
   // 重置缓存统计按钮
   const resetCacheStatsBtn = document.getElementById('resetCacheStatsBtn');
   if (resetCacheStatsBtn) {
@@ -1099,8 +995,6 @@ const updateCacheStatsDisplay = (stats) => {
   }
 
 }
-
-
 
 /**
  * 清理域名缓存
