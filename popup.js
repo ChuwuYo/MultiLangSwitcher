@@ -211,7 +211,12 @@ const performHeaderCheck = async (headerCheckContentPre) => {
 
       if (result.acceptLanguage) {
         sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${result.acceptLanguage}.`, 'success');
-        headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${result.acceptLanguage}</span>`;
+        headerCheckContentPre.innerHTML = '';
+        headerCheckContentPre.appendChild(document.createTextNode('Accept-Language: '));
+        const span = document.createElement('span');
+        span.className = 'text-success fw-bold';
+        span.textContent = result.acceptLanguage;
+        headerCheckContentPre.appendChild(span);
       } else {
         // 未找到Accept-Language头部
         sendDebugLog(popupI18n.t('quick_check_no_accept_language'), 'warning');
