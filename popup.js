@@ -490,18 +490,41 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
     errorContent += `<br><small class="text-muted mt-1">${fallbackMessage}</small>`;
   }
 
-  // 如果适用，添加重试选项
-  if (showRetryOption) {
-    errorContent += `<br><small class="mt-2">
-      <a href="#" onclick="debouncedUpdateCheck(); return false;" class="text-primary">
-        ${popupI18n.t('retry_update_check')}
-      </a>
-    </small>`;
-  }
-
-  // 使用批量DOM更新提高性能
+  // 使用安全的 DOM 操作构建错误消息
   scheduleDOMUpdate(() => {
-    updateErrorMessage.innerHTML = errorContent;
+    updateErrorMessage.innerHTML = '';
+    
+    // 添加主要错误消息
+    updateErrorMessage.appendChild(document.createTextNode(message));
+    
+    // 如果提供了回退建议，则添加
+    if (fallbackMessage) {
+      updateErrorMessage.appendChild(document.createElement('br'));
+      const small = document.createElement('small');
+      small.className = 'text-muted mt-1';
+      small.textContent = fallbackMessage;
+      updateErrorMessage.appendChild(small);
+    }
+    
+    // 如果适用，添加重试选项
+    if (showRetryOption) {
+      updateErrorMessage.appendChild(document.createElement('br'));
+      const smallContainer = document.createElement('small');
+      smallContainer.className = 'mt-2';
+      
+      const retryLink = document.createElement('a');
+      retryLink.href = '#';
+      retryLink.className = 'text-primary';
+      retryLink.textContent = popupI18n.t('retry_update_check');
+      retryLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        debouncedUpdateCheck();
+      });
+      
+      smallContainer.appendChild(retryLink);
+      updateErrorMessage.appendChild(smallContainer);
+    }
+    
     updateErrorAlert.classList.remove('d-none');
   });
 
