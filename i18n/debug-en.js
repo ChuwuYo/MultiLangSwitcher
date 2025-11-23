@@ -95,9 +95,6 @@ if (typeof debugEn === 'undefined') {
     "format_note": "Please follow this format in the input box above to set custom language.",
 
     // Keys used in debug-ui.js
-    "please_visit": "Please visit",
-    "or": "or",
-    "to_view": "to view.",
     "external_check_prefix": "Please visit",
     "external_check_or": "or",
     "external_check_suffix": "to view",
