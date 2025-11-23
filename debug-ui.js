@@ -2,6 +2,21 @@
 
 
 /**
+ * 安全地创建HTML元素并设置属性
+ * @param {string} tag - HTML标签名
+ * @param {Object} options - 配置选项
+ * @param {string} options.className - CSS类名
+ * @param {string} options.textContent - 文本内容
+ * @returns {HTMLElement} 创建的元素
+ */
+const createSafeElement = (tag, options = {}) => {
+  const element = document.createElement(tag);
+  if (options.className) element.className = options.className;
+  if (options.textContent !== undefined) element.textContent = options.textContent;
+  return element;
+};
+
+/**
  * 安全地创建带有样式类的消息元素
  * @param {string} message - 消息文本
  * @param {string} className - CSS类名 (success, error, warning, info)
@@ -55,15 +70,6 @@ const setSafeErrorMessage = (element, message) => {
  */
 const setSafeSuccessMessage = (element, message) => {
   setSafeContent(element, message, 'success');
-};
-
-/**
- * 获取外部请求头检查网站的链接HTML
- * @param {string} prefix - 链接前缀文本
- * @returns {string} 包含外部检查链接的HTML
- */
-const getExternalCheckLinks = (prefix = debugI18n.t('please_visit')) => {
-  return `<p>${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${debugI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${debugI18n.t('to_view')}</p>`;
 };
 
 ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
@@ -272,76 +278,116 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     setSafeContent(resultElement, `${debugI18n.t('testing_language_header')} "${language}" ${debugI18n.t('header_test_multiple')}`);
     addLogMessage(`${debugI18n.t('start_header_test')} ${language}`, 'info');
 
-    const timestamp = new Date().getTime();
-    const testUrls = [
-      `https://httpbin.org/headers?_=${timestamp}`,
-      `https://postman-echo.com/headers?_=${timestamp}`
-      // 您可以添加更多测试URL
-    ];
-
-    let lastError = null;
-    let receivedHeaders = null; // 用于存储第一个成功请求的头信息
-
-    const fetchPromises = testUrls.map(url =>
-      fetch(url, { cache: 'no-store', credentials: 'omit' })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`${debugI18n.t('http_error_status_from')} ${response.status} ${debugI18n.t('from')} ${url}`);
+    try {
+      // 使用共享模块获取请求头
+      const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+      
+      // 清空现有内容
+      resultElement.innerHTML = '';
+      
+      if (result.success) {
+        // 添加标题
+        resultElement.appendChild(createSafeElement('h5', { 
+          textContent: debugI18n.t('recent_successful_headers') 
+        }));
+        
+        // 添加headers
+        resultElement.appendChild(createSafeElement('pre', { 
+          textContent: JSON.stringify(result.headers, null, 2) 
+        }));
+        
+        if (result.acceptLanguage) {
+          const acceptLanguageValue = result.acceptLanguage.toLowerCase();
+          const expectedLanguage = language.toLowerCase();
+          
+          if (acceptLanguageValue.includes(expectedLanguage)) {
+            resultElement.appendChild(createSafeElement('p', {
+              className: 'success',
+              textContent: `${debugI18n.t('header_changed_success')} ${result.acceptLanguage}`
+            }));
+            addLogMessage(`${debugI18n.t('header_test_success')} ${result.acceptLanguage}`, 'success');
+          } else {
+            resultElement.appendChild(createSafeElement('p', {
+              className: 'error',
+              textContent: debugI18n.t('header_not_changed')
+            }));
+            
+            resultElement.appendChild(createSafeElement('p', {
+              textContent: `${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}`
+            }));
+            
+            const linksDiv = createSafeElement('div');
+            linksDiv.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+              prefix: debugI18n.t('external_check_prefix'),
+              or: debugI18n.t('external_check_or'),
+              suffix: debugI18n.t('external_check_suffix')
+            }));
+            resultElement.appendChild(linksDiv);
+            
+            addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
           }
-          return response.json();
-        })
-        .then(data => {
-          if (!receivedHeaders) receivedHeaders = data.headers; // 保存第一个成功的头信息
-          return { success: true, data }; // 返回成功标记和数据
-        })
-        .catch(error => {
-          lastError = error; // 记录最后一个错误
-          addLogMessage(`${debugI18n.t('request_failed')} ${url} ${debugI18n.t('failed')} ${error.message}`, 'warning');
-          return { success: false, error }; // 返回失败标记和错误
-        })
-    );
-
-    // 等待所有请求完成
-    const results = await Promise.all(fetchPromises);
-
-    let html = '';
-    let firstSuccessfulResult = results.find(result => result.success);
-
-    if (firstSuccessfulResult && firstSuccessfulResult.data && firstSuccessfulResult.data.headers) {
-      receivedHeaders = firstSuccessfulResult.data.headers; // 保存第一个成功的头信息
-      html += `<h5>${debugI18n.t('recent_successful_headers')}</h5>`;
-      html += `<pre>${JSON.stringify(receivedHeaders, null, 2)}</pre>`;
-
-      if (receivedHeaders['Accept-Language']) {
-        const acceptLanguageValue = receivedHeaders['Accept-Language'].toLowerCase();
-        const expectedLanguage = language.toLowerCase();
-
-        if (acceptLanguageValue.includes(expectedLanguage)) {
-          html += `<p class="success">${debugI18n.t('header_changed_success')} ${receivedHeaders['Accept-Language']}</p>`;
-          addLogMessage(`${debugI18n.t('header_test_success')} ${receivedHeaders['Accept-Language']}`, 'success');
         } else {
-          html += `<p class="error">${debugI18n.t('header_not_changed')}</p>`;
-          html += `<p>${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}</p>`;
-          html += getExternalCheckLinks();
-          addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
+          resultElement.appendChild(createSafeElement('p', {
+            className: 'error',
+            textContent: debugI18n.t('no_accept_language_any_endpoint')
+          }));
+          
+          const linksDiv = createSafeElement('div');
+          linksDiv.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+            prefix: debugI18n.t('external_check_prefix'),
+            or: debugI18n.t('external_check_or'),
+            suffix: debugI18n.t('external_check_suffix')
+          }));
+          resultElement.appendChild(linksDiv);
+          
+          addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
         }
       } else {
-        // 请求成功，但未检测到 Accept-Language
-        html += `<p class="error">${debugI18n.t('no_accept_language_any_endpoint')}</p>`;
-        html += getExternalCheckLinks();
-        addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
+        resultElement.appendChild(createSafeElement('p', {
+          className: 'error',
+          textContent: debugI18n.t('all_test_requests_failed')
+        }));
+        
+        resultElement.appendChild(createSafeElement('p', {
+          className: 'error',
+          textContent: `${debugI18n.t('last_error')} ${result.error}`
+        }));
+        
+        const linkP = createSafeElement('p');
+        linkP.textContent = debugI18n.t('check_network_connection') + ' ';
+        linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+          prefix: debugI18n.t('external_check_prefix'),
+          or: debugI18n.t('external_check_or'),
+          suffix: debugI18n.t('external_check_suffix')
+        }));
+        resultElement.appendChild(linkP);
+        
+        addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
       }
-    } else {
-      // 所有请求均失败
-      html += `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
-      if (lastError) {
-        html += `<p class="error">${debugI18n.t('last_error')} ${lastError.message}</p>`;
-      }
-      html += '<p>' + debugI18n.t('check_network_connection') + getExternalCheckLinks();
-      addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
+    } catch (error) {
+      resultElement.innerHTML = '';
+      
+      resultElement.appendChild(createSafeElement('p', {
+        className: 'error',
+        textContent: debugI18n.t('all_test_requests_failed')
+      }));
+      
+      resultElement.appendChild(createSafeElement('p', {
+        className: 'error',
+        textContent: error.message
+      }));
+      
+      const linkP = createSafeElement('p');
+      linkP.textContent = debugI18n.t('check_network_connection') + ' ';
+      linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+        prefix: debugI18n.t('external_check_prefix'),
+        or: debugI18n.t('external_check_or'),
+        suffix: debugI18n.t('external_check_suffix')
+      }));
+      resultElement.appendChild(linkP);
+      
+      addLogMessage(`${debugI18n.t('header_test_failed_all_endpoints')}: ${error.message}`, 'error');
     }
-
-    resultElement.innerHTML = html;
   });
 
   // 修复规则优先级

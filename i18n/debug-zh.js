@@ -97,9 +97,9 @@ if (typeof debugZh === 'undefined') {
     "format_note": "请在上面的输入框中遵循此格式设置自定义语言。",
 
     // debug-ui.js 中使用的键
-    "please_visit": "请自行跳转到",
-    "or": "或",
-    "to_view": "进行查看。",
+    "external_check_prefix": "请访问",
+    "external_check_or": "或",
+    "external_check_suffix": "进行查看",
     "getting_rule_info": "正在获取规则信息...",
     "dynamic_rules": "动态规则：",
     "no_dynamic_rules": "没有发现动态规则！",
