@@ -336,122 +336,56 @@ const fetchAndDisplayHeaders = async () => {
   headerInfoElement.textContent = detectI18n.t('fetching_headers');
   headerLanguageInfo.textContent = detectI18n.t('detecting');
 
-  const timestamp = new Date().getTime();
-  const TIMEOUT_MS = 10000;
-
-  const urls = [
-    `https://postman-echo.com/headers?_=${timestamp}`,
-    `https://httpbin.org/headers?_=${timestamp}`,
-    `https://header-echo.addr.tools/?_=${timestamp}`,
-  ];
-
   try {
-    const data = await fetchFromAnySource(urls, TIMEOUT_MS);
-    processHeadersData(data, headerInfoElement, headerLanguageInfo);
+    // 使用共享模块获取请求头
+    const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+    
+    if (result.success) {
+      // 显示完整的请求头信息
+      const formattedHeaders = JSON.stringify(result.headers, null, 2);
+      headerInfoElement.textContent = formattedHeaders;
+      
+      // 移除可能存在的旧提示信息
+      const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
+      if (existingAlertInfoP) {
+        existingAlertInfoP.remove();
+      }
+      
+      if (result.acceptLanguage) {
+        console.log(detectI18n.t('detected_accept_language'), result.acceptLanguage);
+        headerLanguageInfo.innerHTML = `
+          <p class="mb-1"><strong>${detectI18n.t('current_value')}</strong></p>
+          <p class="text-success fw-bold">${result.acceptLanguage}</p>
+          <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('request_header_method'))}</p>
+        `;
+      } else {
+        console.log(detectI18n.t('no_accept_language'));
+        headerLanguageInfo.innerHTML = `
+          <p class="text-warning">${detectI18n.t('not_detected_accept_language')}</p>
+          <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML(detectI18n.t('visit_manually'))}</p>
+        `;
+      }
+    } else {
+      // 所有尝试均失败
+      throw new Error(result.error);
+    }
   } catch (error) {
     console.error(detectI18n.t('all_attempts_failed'), error);
-    handleHeaderFetchError(error, headerInfoElement, headerLanguageInfo);
-  }
-}
-
-/**
- * 从多个源尝试获取数据，返回第一个成功的响应
- * @param {Array<string>} urls - 要尝试的URL列表
- * @param {number} timeoutMs - 超时时间（毫秒）
- * @returns {Promise<Object>} - 解析为第一个成功的响应数据
- */
-const fetchFromAnySource = (urls, timeoutMs) => {
-  const promises = urls.map(url => fetchWithTimeout(url, timeoutMs));
-  return Promise.any(promises);
-}
-
-/**
- * 带超时的fetch请求
- * @param {string} url - 请求URL
- * @param {number} timeoutMs - 超时时间（毫秒）
- * @returns {Promise<Object>} - 解析为响应数据
- */
-const fetchWithTimeout = async (url, timeoutMs) => {
-  const controller = ResourceManager.createAbortController();
-  const timeoutId = ResourceManager.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      cache: 'no-store',
-      credentials: 'omit',
-      signal: controller.signal
-    });
-
-    if (!response.ok) {
-      throw new Error(`${detectI18n.t('http_error_status')} ${response.status} ${detectI18n.t('from')} ${url}`);
+    
+    let combinedErrorMessage = detectI18n.t('fetch_failed_all_services');
+    if (error instanceof AggregateError) {
+      combinedErrorMessage += ' ' + detectI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
+    } else if (error.message) {
+      combinedErrorMessage += ' ' + error.message;
     }
-
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error(detectI18n.t('request_timeout').replace('{url}', url).replace('{timeout}', timeoutMs));
-    }
-    throw error;
-  } finally {
-    ResourceManager.clearTimeout(timeoutId);
-    // 控制器使用完毕后，从资源管理器中移除以避免内存泄漏
-    ResourceManager.abortController(controller);
-  }
-}
-
-/**
- * 处理请求头数据
- * @param {Object} data - 响应数据
- * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
- * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
- */
-const processHeadersData = (data, headerInfoElement, headerLanguageInfo) => {
-  const headers = data.headers;
-  const formattedHeaders = JSON.stringify(headers, null, 2);
-  headerInfoElement.textContent = formattedHeaders;
-
-  const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
-  if (existingAlertInfoP) {
-    existingAlertInfoP.remove();
-  }
-
-  const acceptLanguage = headers['Accept-Language'] || headers['accept-language'];
-
-  if (acceptLanguage) {
-    console.log(detectI18n.t('detected_accept_language'), acceptLanguage);
+    
+    headerInfoElement.textContent = combinedErrorMessage;
     headerLanguageInfo.innerHTML = `
-      <p class="mb-1"><strong>${detectI18n.t('current_value')}</strong></p>
-      <p class="text-success fw-bold">${acceptLanguage}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('request_header_method'))}</p>
-    `;
-  } else {
-    console.log(detectI18n.t('no_accept_language'));
-    headerLanguageInfo.innerHTML = `
-      <p class="text-warning">${detectI18n.t('not_detected_accept_language')}</p>
-      <p class="mt-2">${detectI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${detectI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${detectI18n.t('to_view')}</p>
+      <p class="text-danger">${detectI18n.t('detection_failed_all_services')}</p>
+      <p class="small text-muted">${error.message || error}</p>
+      <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML(detectI18n.t('visit_manually'))}</p>
     `;
   }
-}
-
-/**
- * 处理请求头获取错误
- * @param {Error} error - 错误对象
- * @param {HTMLElement} headerInfoElement - 显示请求头信息的元素
- * @param {HTMLElement} headerLanguageInfo - 显示语言信息的元素
- */
-const handleHeaderFetchError = (error, headerInfoElement, headerLanguageInfo) => {
-  let combinedErrorMessage = detectI18n.t('fetch_failed_all_services');
-  
-  if (error instanceof AggregateError) {
-    combinedErrorMessage += ' ' + detectI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
-  }
-  
-  headerInfoElement.textContent = combinedErrorMessage;
-  headerLanguageInfo.innerHTML = `
-    <p class="text-danger">${detectI18n.t('detection_failed_all_services')}</p>
-    <p class="small text-muted">${error.errors ? error.errors.map(e => e.message || e).join('; ') : (error.message || error)}</p>
-    <p class="mt-2">${detectI18n.t('visit_manually')} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${detectI18n.t('or')} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${detectI18n.t('to_view')}</p>
-  `;
 }
 
 /**

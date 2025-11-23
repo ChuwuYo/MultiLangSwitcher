@@ -198,64 +198,37 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
  * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
  */
 const performHeaderCheck = async (headerCheckContentPre) => {
-  // 生成时间戳避免缓存
-  const timestamp = new Date().getTime();
-  // 定义测试URL列表
-  const testUrls = [
-    `https://httpbin.org/headers?_=${timestamp}`,
-    `https://postman-echo.com/headers?_=${timestamp}`,
-    `https://header-echo.addr.tools/?_=${timestamp}`
-  ];
-
   // 显示初始加载状态
   headerCheckContentPre.textContent = popupI18n.t('fetching_headers') + '...';
+  sendDebugLog(popupI18n.t('start_quick_check'), 'info');
 
-  // 依次尝试每个测试URL
-  for (const url of testUrls) {
-    try {
-      const hostname = new URL(url).hostname;
-      headerCheckContentPre.textContent = `${popupI18n.t('fetching_headers')} (${hostname})...`;
-      sendDebugLog(`${popupI18n.t('trying_to_get_headers_from')} ${url}`, 'info');
+  try {
+    // 使用共享模块获取请求头
+    const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
 
-      // 发送请求获取头部信息
-      const response = await fetch(url, {
-        cache: 'no-cache',
-        signal: AbortSignal.timeout(5000) // 5秒超时
-      });
+    if (result.success) {
+      sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${result.endpoint}`, 'success');
 
-      // 检查响应状态
-      if (!response.ok) {
-        sendDebugLog(`${popupI18n.t('quick_check_request_failed')} HTTP error! status: ${response.status} from ${url}`, 'warning');
-        continue;
+      if (result.acceptLanguage) {
+        sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${result.acceptLanguage}.`, 'success');
+        headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${result.acceptLanguage}</span>`;
+      } else {
+        // 未找到Accept-Language头部
+        sendDebugLog(popupI18n.t('quick_check_no_accept_language'), 'warning');
+        headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
       }
-
-      // 解析响应数据
-      const data = await response.json();
-      sendDebugLog(`${popupI18n.t('successfully_got_headers_from')} ${url}`, 'success');
-
-      // 查找Accept-Language头部
-      const headers = data.headers;
-      const acceptLangHeader = headers['Accept-Language'] || headers['accept-language'];
-
-      if (acceptLangHeader) {
-        sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${acceptLangHeader}.`, 'success');
-        headerCheckContentPre.innerHTML = `Accept-Language: <span class="text-success fw-bold">${acceptLangHeader}</span>`;
-        return;
-      }
-
-      // 未找到Accept-Language头部
-      sendDebugLog(`${popupI18n.t('quick_check_no_accept_language')} ${url}`, 'warning');
-      headerCheckContentPre.textContent = popupI18n.t('no_accept_language_header');
-      return;
-    } catch (error) {
-      sendDebugLog(`${popupI18n.t('error_getting_headers_from')} ${url}: ${error.message}`, 'warning');
+    } else {
+      // 所有尝试均失败
+      sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}: ${result.error}`, 'error');
+      const finalErrorMsg = `${popupI18n.t('all_detection_points_failed_info')}<br>${window.HeaderCheckUtils.getExternalCheckLinksHTML(popupI18n.t('please_visit_manually'))}`;
+      headerCheckContentPre.innerHTML = finalErrorMsg;
     }
+  } catch (error) {
+    // 捕获意外错误
+    sendDebugLog(`${popupI18n.t('quick_check_unexpected_error')}: ${error.message}`, 'error');
+    const errorMsg = `${popupI18n.t('detection_error')}<br>${window.HeaderCheckUtils.getExternalCheckLinksHTML(popupI18n.t('please_visit_manually'))}`;
+    headerCheckContentPre.innerHTML = errorMsg;
   }
-
-  // 所有尝试均失败，显示错误信息
-  sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}`, 'error');
-  const finalErrorMsg = `${popupI18n.t('all_detection_points_failed_info')}<br>${popupI18n.t('please_visit_manually')} <a href="https://webcha.cn/" target="_blank" style="color: #007bff;">https://webcha.cn/</a>`;
-  headerCheckContentPre.innerHTML = finalErrorMsg;
 }
 
 /**
