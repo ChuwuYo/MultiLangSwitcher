@@ -362,7 +362,11 @@ const fetchAndDisplayHeaders = async () => {
         console.log(detectI18n.t('no_accept_language'));
         headerLanguageInfo.innerHTML = `
           <p class="text-warning">${detectI18n.t('not_detected_accept_language')}</p>
-          <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML(detectI18n.t('visit_manually'))}</p>
+          <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML({
+            prefix: detectI18n.t('external_check_prefix'),
+            or: detectI18n.t('external_check_or'),
+            suffix: detectI18n.t('external_check_suffix')
+          })}</p>
         `;
       }
     } else {
@@ -383,7 +387,11 @@ const fetchAndDisplayHeaders = async () => {
     headerLanguageInfo.innerHTML = `
       <p class="text-danger">${detectI18n.t('detection_failed_all_services')}</p>
       <p class="small text-muted">${error.message || error}</p>
-      <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML(detectI18n.t('visit_manually'))}</p>
+      <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML({
+        prefix: detectI18n.t('external_check_prefix'),
+        or: detectI18n.t('external_check_or'),
+        suffix: detectI18n.t('external_check_suffix')
+      })}</p>
     `;
   }
 }

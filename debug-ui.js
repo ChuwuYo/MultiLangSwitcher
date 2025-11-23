@@ -292,20 +292,32 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           } else {
             html += `<p class="error">${debugI18n.t('header_not_changed')}</p>`;
             html += `<p>${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}</p>`;
-            html += window.HeaderCheckUtils.getExternalCheckLinksHTML();
+            html += window.HeaderCheckUtils.getExternalCheckLinksHTML({
+              prefix: debugI18n.t('external_check_prefix'),
+              or: debugI18n.t('external_check_or'),
+              suffix: debugI18n.t('external_check_suffix')
+            });
             addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
           }
         } else {
           // 请求成功，但未检测到 Accept-Language
           html += `<p class="error">${debugI18n.t('no_accept_language_any_endpoint')}</p>`;
-          html += window.HeaderCheckUtils.getExternalCheckLinksHTML();
+          html += window.HeaderCheckUtils.getExternalCheckLinksHTML({
+            prefix: debugI18n.t('external_check_prefix'),
+            or: debugI18n.t('external_check_or'),
+            suffix: debugI18n.t('external_check_suffix')
+          });
           addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
         }
       } else {
         // 所有请求均失败
         html += `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
         html += `<p class="error">${debugI18n.t('last_error')} ${result.error}</p>`;
-        html += '<p>' + debugI18n.t('check_network_connection') + window.HeaderCheckUtils.getExternalCheckLinksHTML();
+        html += '<p>' + debugI18n.t('check_network_connection') + window.HeaderCheckUtils.getExternalCheckLinksHTML({
+          prefix: debugI18n.t('external_check_prefix'),
+          or: debugI18n.t('external_check_or'),
+          suffix: debugI18n.t('external_check_suffix')
+        });
         addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
       }
       
@@ -313,7 +325,11 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     } catch (error) {
       let html = `<p class="error">${debugI18n.t('all_test_requests_failed')}</p>`;
       html += `<p class="error">${error.message}</p>`;
-      html += '<p>' + debugI18n.t('check_network_connection') + window.HeaderCheckUtils.getExternalCheckLinksHTML();
+      html += '<p>' + debugI18n.t('check_network_connection') + window.HeaderCheckUtils.getExternalCheckLinksHTML({
+        prefix: debugI18n.t('external_check_prefix'),
+        or: debugI18n.t('external_check_or'),
+        suffix: debugI18n.t('external_check_suffix')
+      });
       resultElement.innerHTML = html;
       addLogMessage(`${debugI18n.t('header_test_failed_all_endpoints')}: ${error.message}`, 'error');
     }
