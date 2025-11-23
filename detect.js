@@ -383,9 +383,7 @@ const fetchAndDisplayHeaders = async () => {
     console.error(detectI18n.t('all_attempts_failed'), error);
     
     let combinedErrorMessage = detectI18n.t('fetch_failed_all_services');
-    if (error instanceof AggregateError) {
-      combinedErrorMessage += ' ' + detectI18n.t('detailed_error') + ' ' + error.errors.map(e => e.message || e).join('; ');
-    } else if (error.message) {
+    if (error.message) {
       combinedErrorMessage += ' ' + error.message;
     }
     
