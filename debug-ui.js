@@ -18,14 +18,12 @@ const escapeHtml = (text) => {
  * @param {Object} options - 配置选项
  * @param {string} options.className - CSS类名
  * @param {string} options.textContent - 文本内容
- * @param {string} options.innerHTML - HTML内容(仅用于可信内容)
  * @returns {HTMLElement} 创建的元素
  */
 const createSafeElement = (tag, options = {}) => {
   const element = document.createElement(tag);
   if (options.className) element.className = options.className;
   if (options.textContent !== undefined) element.textContent = options.textContent;
-  if (options.innerHTML !== undefined) element.innerHTML = options.innerHTML;
   return element;
 };
 
@@ -338,13 +336,13 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
               textContent: `${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}`
             }));
             
-            resultElement.appendChild(createSafeElement('div', {
-              innerHTML: window.HeaderCheckUtils.getExternalCheckLinksHTML({
-                prefix: debugI18n.t('external_check_prefix'),
-                or: debugI18n.t('external_check_or'),
-                suffix: debugI18n.t('external_check_suffix')
-              })
+            const linksDiv = createSafeElement('div');
+            linksDiv.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+              prefix: debugI18n.t('external_check_prefix'),
+              or: debugI18n.t('external_check_or'),
+              suffix: debugI18n.t('external_check_suffix')
             }));
+            resultElement.appendChild(linksDiv);
             
             addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
           }
@@ -354,13 +352,13 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             textContent: debugI18n.t('no_accept_language_any_endpoint')
           }));
           
-          resultElement.appendChild(createSafeElement('div', {
-            innerHTML: window.HeaderCheckUtils.getExternalCheckLinksHTML({
-              prefix: debugI18n.t('external_check_prefix'),
-              or: debugI18n.t('external_check_or'),
-              suffix: debugI18n.t('external_check_suffix')
-            })
+          const linksDiv = createSafeElement('div');
+          linksDiv.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+            prefix: debugI18n.t('external_check_prefix'),
+            or: debugI18n.t('external_check_or'),
+            suffix: debugI18n.t('external_check_suffix')
           }));
+          resultElement.appendChild(linksDiv);
           
           addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
         }
@@ -377,12 +375,10 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         
         const linkP = createSafeElement('p');
         linkP.textContent = debugI18n.t('check_network_connection') + ' ';
-        linkP.appendChild(createSafeElement('span', {
-          innerHTML: window.HeaderCheckUtils.getExternalCheckLinksHTML({
-            prefix: debugI18n.t('external_check_prefix'),
-            or: debugI18n.t('external_check_or'),
-            suffix: debugI18n.t('external_check_suffix')
-          })
+        linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+          prefix: debugI18n.t('external_check_prefix'),
+          or: debugI18n.t('external_check_or'),
+          suffix: debugI18n.t('external_check_suffix')
         }));
         resultElement.appendChild(linkP);
         
@@ -403,12 +399,10 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       
       const linkP = createSafeElement('p');
       linkP.textContent = debugI18n.t('check_network_connection') + ' ';
-      linkP.appendChild(createSafeElement('span', {
-        innerHTML: window.HeaderCheckUtils.getExternalCheckLinksHTML({
-          prefix: debugI18n.t('external_check_prefix'),
-          or: debugI18n.t('external_check_or'),
-          suffix: debugI18n.t('external_check_suffix')
-        })
+      linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+        prefix: debugI18n.t('external_check_prefix'),
+        or: debugI18n.t('external_check_or'),
+        suffix: debugI18n.t('external_check_suffix')
       }));
       resultElement.appendChild(linkP);
       

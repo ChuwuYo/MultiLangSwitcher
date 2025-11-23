@@ -360,14 +360,20 @@ const fetchAndDisplayHeaders = async () => {
         `;
       } else {
         console.log(detectI18n.t('no_accept_language'));
-        headerLanguageInfo.innerHTML = `
-          <p class="text-warning">${detectI18n.t('not_detected_accept_language')}</p>
-          <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML({
-            prefix: detectI18n.t('external_check_prefix'),
-            or: detectI18n.t('external_check_or'),
-            suffix: detectI18n.t('external_check_suffix')
-          })}</p>
-        `;
+        headerLanguageInfo.innerHTML = '';
+        const warningP = document.createElement('p');
+        warningP.className = 'text-warning';
+        warningP.textContent = detectI18n.t('not_detected_accept_language');
+        headerLanguageInfo.appendChild(warningP);
+        
+        const linkP = document.createElement('p');
+        linkP.className = 'mt-2';
+        linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+          prefix: detectI18n.t('external_check_prefix'),
+          or: detectI18n.t('external_check_or'),
+          suffix: detectI18n.t('external_check_suffix')
+        }));
+        headerLanguageInfo.appendChild(linkP);
       }
     } else {
       // 所有尝试均失败
@@ -384,15 +390,26 @@ const fetchAndDisplayHeaders = async () => {
     }
     
     headerInfoElement.textContent = combinedErrorMessage;
-    headerLanguageInfo.innerHTML = `
-      <p class="text-danger">${detectI18n.t('detection_failed_all_services')}</p>
-      <p class="small text-muted">${error.message || error}</p>
-      <p class="mt-2">${window.HeaderCheckUtils.getExternalCheckLinksHTML({
-        prefix: detectI18n.t('external_check_prefix'),
-        or: detectI18n.t('external_check_or'),
-        suffix: detectI18n.t('external_check_suffix')
-      })}</p>
-    `;
+    headerLanguageInfo.innerHTML = '';
+    
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = detectI18n.t('detection_failed_all_services');
+    headerLanguageInfo.appendChild(errorP);
+    
+    const detailP = document.createElement('p');
+    detailP.className = 'small text-muted';
+    detailP.textContent = error.message || error;
+    headerLanguageInfo.appendChild(detailP);
+    
+    const linkP = document.createElement('p');
+    linkP.className = 'mt-2';
+    linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+      prefix: detectI18n.t('external_check_prefix'),
+      or: detectI18n.t('external_check_or'),
+      suffix: detectI18n.t('external_check_suffix')
+    }));
+    headerLanguageInfo.appendChild(linkP);
   }
 }
 

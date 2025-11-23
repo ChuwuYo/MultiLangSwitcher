@@ -132,22 +132,41 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 };
 
 /**
- * 获取外部检查链接的 HTML
+ * 创建外部检查链接的 DOM 片段
  * 用于在检测失败时提供手动检查的选项
  * 
  * @param {Object} texts - 文本对象,包含国际化文本
  * @param {string} texts.prefix - 链接前缀文本 (如: "请访问" / "Please visit")
  * @param {string} texts.or - "或"的翻译 (如: "或" / "or")
  * @param {string} texts.suffix - "进行查看"的翻译 (如: "进行查看" / "to view")
- * @returns {string} HTML 字符串
+ * @returns {DocumentFragment} 包含链接的文档片段
  */
-const getExternalCheckLinksHTML = (texts = {}) => {
-    // 提供默认英文值作为回退
+const createExternalCheckLinks = (texts = {}) => {
     const prefix = texts.prefix || 'Please visit';
     const or = texts.or || 'or';
     const suffix = texts.suffix || 'to view';
     
-    return `${prefix} <a href="https://webcha.cn/" target="_blank">https://webcha.cn/</a> ${or} <a href="https://www.browserscan.net/zh" target="_blank">https://www.browserscan.net/zh</a> ${suffix}`;
+    const fragment = document.createDocumentFragment();
+    
+    fragment.appendChild(document.createTextNode(`${prefix} `));
+    
+    const link1 = document.createElement('a');
+    link1.href = 'https://webcha.cn/';
+    link1.target = '_blank';
+    link1.textContent = 'https://webcha.cn/';
+    fragment.appendChild(link1);
+    
+    fragment.appendChild(document.createTextNode(` ${or} `));
+    
+    const link2 = document.createElement('a');
+    link2.href = 'https://www.browserscan.net/zh';
+    link2.target = '_blank';
+    link2.textContent = 'https://www.browserscan.net/zh';
+    fragment.appendChild(link2);
+    
+    fragment.appendChild(document.createTextNode(` ${suffix}`));
+    
+    return fragment;
 };
 
 // 导出为全局对象（用于非模块环境）
@@ -155,6 +174,6 @@ if (typeof window !== 'undefined') {
     window.HeaderCheckUtils = {
         HEADER_CHECK_ENDPOINTS,
         fetchHeadersFromEndpoints,
-        getExternalCheckLinksHTML
+        createExternalCheckLinks
     };
 }

@@ -220,22 +220,26 @@ const performHeaderCheck = async (headerCheckContentPre) => {
     } else {
       // 所有尝试均失败
       sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}: ${result.error}`, 'error');
-      const finalErrorMsg = `${popupI18n.t('all_detection_points_failed_info')}<br>${window.HeaderCheckUtils.getExternalCheckLinksHTML({
+      headerCheckContentPre.innerHTML = '';
+      headerCheckContentPre.appendChild(document.createTextNode(popupI18n.t('all_detection_points_failed_info')));
+      headerCheckContentPre.appendChild(document.createElement('br'));
+      headerCheckContentPre.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
         prefix: popupI18n.t('external_check_prefix'),
         or: popupI18n.t('external_check_or'),
         suffix: popupI18n.t('external_check_suffix')
-      })}`;
-      headerCheckContentPre.innerHTML = finalErrorMsg;
+      }));
     }
   } catch (error) {
     // 捕获意外错误
     sendDebugLog(`${popupI18n.t('quick_check_unexpected_error')}: ${error.message}`, 'error');
-    const errorMsg = `${popupI18n.t('detection_error')}<br>${window.HeaderCheckUtils.getExternalCheckLinksHTML({
+    headerCheckContentPre.innerHTML = '';
+    headerCheckContentPre.appendChild(document.createTextNode(popupI18n.t('detection_error')));
+    headerCheckContentPre.appendChild(document.createElement('br'));
+    headerCheckContentPre.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
       prefix: popupI18n.t('external_check_prefix'),
       or: popupI18n.t('external_check_or'),
       suffix: popupI18n.t('external_check_suffix')
-    })}`;
-    headerCheckContentPre.innerHTML = errorMsg;
+    }));
   }
 }
 
