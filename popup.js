@@ -212,11 +212,13 @@ const performHeaderCheck = async (headerCheckContentPre) => {
       if (result.acceptLanguage) {
         sendDebugLog(`${popupI18n.t('quick_check_detected_accept_language')} ${result.acceptLanguage}.`, 'success');
         headerCheckContentPre.innerHTML = '';
-        headerCheckContentPre.appendChild(document.createTextNode('Accept-Language: '));
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(document.createTextNode('Accept-Language: '));
         const span = document.createElement('span');
         span.className = 'text-success fw-bold';
         span.textContent = result.acceptLanguage;
-        headerCheckContentPre.appendChild(span);
+        fragment.appendChild(span);
+        headerCheckContentPre.appendChild(fragment);
       } else {
         // 未找到Accept-Language头部
         sendDebugLog(popupI18n.t('quick_check_no_accept_language'), 'warning');
@@ -226,25 +228,29 @@ const performHeaderCheck = async (headerCheckContentPre) => {
       // 所有尝试均失败
       sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}: ${result.error}`, 'error');
       headerCheckContentPre.innerHTML = '';
-      headerCheckContentPre.appendChild(document.createTextNode(popupI18n.t('all_detection_points_failed_info')));
-      headerCheckContentPre.appendChild(document.createElement('br'));
-      headerCheckContentPre.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+      const fragment = document.createDocumentFragment();
+      fragment.appendChild(document.createTextNode(popupI18n.t('all_detection_points_failed_info')));
+      fragment.appendChild(document.createElement('br'));
+      fragment.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
         prefix: popupI18n.t('external_check_prefix'),
         or: popupI18n.t('external_check_or'),
         suffix: popupI18n.t('external_check_suffix')
       }));
+      headerCheckContentPre.appendChild(fragment);
     }
   } catch (error) {
     // 捕获意外错误
     sendDebugLog(`${popupI18n.t('quick_check_unexpected_error')}: ${error.message}`, 'error');
     headerCheckContentPre.innerHTML = '';
-    headerCheckContentPre.appendChild(document.createTextNode(popupI18n.t('detection_error')));
-    headerCheckContentPre.appendChild(document.createElement('br'));
-    headerCheckContentPre.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(document.createTextNode(popupI18n.t('detection_error')));
+    fragment.appendChild(document.createElement('br'));
+    fragment.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
       prefix: popupI18n.t('external_check_prefix'),
       or: popupI18n.t('external_check_or'),
       suffix: popupI18n.t('external_check_suffix')
     }));
+    headerCheckContentPre.appendChild(fragment);
   }
 }
 
@@ -493,22 +499,23 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
   // 使用安全的 DOM 操作构建错误消息
   scheduleDOMUpdate(() => {
     updateErrorMessage.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     
     // 添加主要错误消息
-    updateErrorMessage.appendChild(document.createTextNode(message));
+    fragment.appendChild(document.createTextNode(message));
     
     // 如果提供了回退建议，则添加
     if (fallbackMessage) {
-      updateErrorMessage.appendChild(document.createElement('br'));
+      fragment.appendChild(document.createElement('br'));
       const small = document.createElement('small');
       small.className = 'text-muted mt-1';
       small.textContent = fallbackMessage;
-      updateErrorMessage.appendChild(small);
+      fragment.appendChild(small);
     }
     
     // 如果适用，添加重试选项
     if (showRetryOption) {
-      updateErrorMessage.appendChild(document.createElement('br'));
+      fragment.appendChild(document.createElement('br'));
       const smallContainer = document.createElement('small');
       smallContainer.className = 'mt-2';
       
@@ -522,9 +529,10 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
       });
       
       smallContainer.appendChild(retryLink);
-      updateErrorMessage.appendChild(smallContainer);
+      fragment.appendChild(smallContainer);
     }
     
+    updateErrorMessage.appendChild(fragment);
     updateErrorAlert.classList.remove('d-none');
   });
 
