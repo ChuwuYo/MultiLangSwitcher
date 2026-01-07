@@ -215,6 +215,8 @@ const getFallbackTranslation = (key, params = {}) => {
       'failed_load_persistent_cache': 'Failed to load persistent cache: {error}',
       'failed_cache_update_info': 'Failed to cache update info persistently: {error}',
       'failed_clear_persistent_cache': 'Failed to clear persistent cache: {error}',
+      'github_api_failed_trying_fallback': 'GitHub API failed ({error}), trying jsDelivr fallback...',
+      'jsdelivr_fallback_failed': 'jsDelivr fallback also failed: {error}',
 
       // Simplified Error Messages
       'update_check_network_issue': 'Network Issue',
@@ -245,6 +247,8 @@ const getFallbackTranslation = (key, params = {}) => {
       'failed_load_persistent_cache': '加载持久化缓存失败: {error}',
       'failed_cache_update_info': '持久化缓存更新信息失败: {error}',
       'failed_clear_persistent_cache': '清除持久化缓存失败: {error}',
+      'github_api_failed_trying_fallback': 'GitHub API 失败（{error}），正在尝试 jsDelivr 备用源...',
+      'jsdelivr_fallback_failed': 'jsDelivr 备用源也失败了：{error}',
 
       // 简化后的错误信息
       'update_check_network_issue': '网络问题',
