@@ -138,6 +138,24 @@ const showError = (message) => {
 };
 
 /**
+ * 显示头部检查错误信息
+ * @param {HTMLElement} element - 用于显示结果的元素
+ * @param {string} messageKey - 国际化消息键
+ */
+const displayHeaderCheckError = (element, messageKey) => {
+  element.innerHTML = '';
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(document.createTextNode(popupI18n.t(messageKey)));
+  fragment.appendChild(document.createElement('br'));
+  fragment.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
+    prefix: popupI18n.t('external_check_prefix'),
+    or: popupI18n.t('external_check_or'),
+    suffix: popupI18n.t('external_check_suffix')
+  }));
+  element.appendChild(fragment);
+};
+
+/**
  * 更新语言显示
  * @param {string} language - 语言代码
  * @param {boolean} showSuccess - 是否显示成功提示
@@ -227,30 +245,12 @@ const performHeaderCheck = async (headerCheckContentPre) => {
     } else {
       // 所有尝试均失败
       sendDebugLog(`${popupI18n.t('quick_check_failed_all_points')}: ${result.error}`, 'error');
-      headerCheckContentPre.innerHTML = '';
-      const fragment = document.createDocumentFragment();
-      fragment.appendChild(document.createTextNode(popupI18n.t('all_detection_points_failed_info')));
-      fragment.appendChild(document.createElement('br'));
-      fragment.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
-        prefix: popupI18n.t('external_check_prefix'),
-        or: popupI18n.t('external_check_or'),
-        suffix: popupI18n.t('external_check_suffix')
-      }));
-      headerCheckContentPre.appendChild(fragment);
+      displayHeaderCheckError(headerCheckContentPre, 'all_detection_points_failed_info');
     }
   } catch (error) {
     // 捕获意外错误
     sendDebugLog(`${popupI18n.t('quick_check_unexpected_error')}: ${error.message}`, 'error');
-    headerCheckContentPre.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    fragment.appendChild(document.createTextNode(popupI18n.t('detection_error')));
-    fragment.appendChild(document.createElement('br'));
-    fragment.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
-      prefix: popupI18n.t('external_check_prefix'),
-      or: popupI18n.t('external_check_or'),
-      suffix: popupI18n.t('external_check_suffix')
-    }));
-    headerCheckContentPre.appendChild(fragment);
+    displayHeaderCheckError(headerCheckContentPre, 'detection_error');
   }
 }
 

@@ -210,11 +210,7 @@ class UpdateChecker {
   isNewerVersion(current, latest) {
     try {
       // 清理版本号：移除 'v' 前缀、预发布标签和构建元数据
-      const cleanVersion = (ver) => ver
-        .trim()                              // 1. 先移除首尾空格
-        .replace(/^v/, '')                   // 2. 移除 'v' 前缀
-        .replace(/[-+](beta|rc|alpha|dev|pre|snapshot|build).*/i, '')  // 3. 移除预发布标签和构建信息
-        .trim();                             // 4. 再次清理可能的残留空格
+      const cleanVersion = (ver) => (ver || '').trim().replace(/^v/, '').split(/[-+]/)[0];
 
       const currentClean = cleanVersion(current);
       const latestClean = cleanVersion(latest);
