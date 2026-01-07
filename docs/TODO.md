@@ -23,23 +23,23 @@
   - 影响: 检测异常时的显示
 
 ###### Phase 2: 中等优化 (建议修复 🟡)
-- [ ] **detect.js - fetchAndDisplayHeaders()** 失败分支 (行363-376)
+- [x] **detect.js - fetchAndDisplayHeaders()** 失败分支 (行363-376)
   - 3次 appendChild (警告 + 外部链接)
   - 影响: 检测页面未找到 Accept-Language 时
   
-- [ ] **detect.js - fetchAndDisplayHeaders()** 错误分支 (行391-410)
+- [x] **detect.js - fetchAndDisplayHeaders()** 错误分支 (行391-410)
   - 4次 appendChild (错误信息 + 详情 + 外部链接)
   - 影响: 检测页面所有尝试失败时
   
-- [ ] **debug-ui.js - testHeaderBtn** 失败分支 (行286-325)
+- [x] **debug-ui.js - testHeaderBtn** 失败分支 (行286-325)
   - 最多6次 appendChild
   - 影响: 调试页面请求头测试失败时
   
-- [ ] **debug-ui.js - testHeaderBtn** 异常分支 (行368-387)
+- [x] **debug-ui.js - testHeaderBtn** 异常分支 (行368-387)
   - 4次 appendChild
   - 影响: 调试页面请求头测试异常时
 
-- [ ] **debug-ui.js - testDomainCache()** (行970-1013)
+- [x] **debug-ui.js - testDomainCache()** (行970-1013)
   - 最多7次 appendChild
   - 影响: 调试页面域名缓存测试结果显示
 
