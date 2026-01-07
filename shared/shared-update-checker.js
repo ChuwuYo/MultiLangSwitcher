@@ -34,7 +34,7 @@ class UpdateChecker {
     this.currentVersion = currentVersion;
     this.apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/releases/latest`;
     this.cacheKey = `updateChecker_${repoOwner}_${repoName}`;
-    this.cacheTimeout = 4 * 60 * 60 * 1000; // 4小时缓存
+    this.cacheTimeout = 1 * 60 * 60 * 1000; // 1小时缓存
   }
 
   /**
@@ -66,9 +66,62 @@ class UpdateChecker {
   }
 
   /**
-   * 从 GitHub API 获取最新发布信息，带超时处理
+   * 从 jsDelivr CDN API 获取最新版本号（作为 GitHub API 的 Fallback）
+   * @returns {Promise<Object>} 兼容 GitHub API 的发布对象（含 tag_name）
+   */
+  async fetchLatestVersionFromJsDelivr() {
+    const jsDelivrUrl = `https://data.jsdelivr.com/v1/packages/gh/${this.repoOwner}/${this.repoName}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
+    try {
+      const response = await fetch(jsDelivrUrl, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`jsDelivr API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data || !Array.isArray(data.versions) || data.versions.length === 0) {
+        throw new Error('No versions found in jsDelivr response');
+      }
+
+      // 过滤出稳定版本（排除预发布版本）
+      const stableVersions = data.versions.filter(v => 
+        !/-beta|-rc|-alpha|-dev|-pre|-snapshot/i.test(v.version)
+      );
+      
+      if (stableVersions.length === 0) {
+        throw new Error('No stable versions found in jsDelivr response');
+      }
+
+      const latestVersion = stableVersions[0].version;
+
+      // 构造一个兼容 GitHub API 格式的简化对象
+      return {
+        tag_name: latestVersion,
+        html_url: `https://github.com/${this.repoOwner}/${this.repoName}/releases/tag/${latestVersion}`,
+        body: null,
+        published_at: null
+      };
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('jsDelivr request timeout');
+      }
+      throw new Error(`jsDelivr fallback failed: ${error.message}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * 改进后的 fetchLatestRelease，优先使用 GitHub API，失败时回退到 jsDelivr
    * @param {AbortSignal} [signal] - 用于中止请求的可选 AbortSignal
-   * @returns {Promise<Object>} GitHub 发布数据
+   * @returns {Promise<Object>} 发布数据（兼容 GitHub API）
    */
   async fetchLatestRelease(signal = null) {
     const controller = new AbortController();
@@ -85,6 +138,7 @@ class UpdateChecker {
     }
 
     try {
+      // 先尝试官方 GitHub API
       const response = await fetch(this.apiUrl, {
         signal: controller.signal,
         headers: {
@@ -94,7 +148,6 @@ class UpdateChecker {
       });
 
       if (!response.ok) {
-        // 直接抛出包含状态的错误，以便后续分类
         const error = new Error(`GitHub API error: ${response.status}`);
         error.status = response.status;
         throw error;
@@ -104,15 +157,28 @@ class UpdateChecker {
       if (!data || !data.tag_name) {
         throw new Error('Invalid API response: missing tag_name');
       }
+
       return data;
+
     } catch (error) {
-      // 如果是中止错误，但不是由外部信号触发的，那么它就是超时
-      if (error.name === 'AbortError' && !signal?.aborted) {
-        throw new Error('Request timeout');
+      // 如果是外部取消，直接抛出
+      if (signal?.aborted) {
+        throw new DOMException('Request aborted', 'AbortError');
       }
-      throw error; // 重新抛出外部取消错误或其他网络错误
+
+      // GitHub API 失败，尝试 jsDelivr 作为回退
+      sendLocalizedUpdateLog('github_api_failed_trying_fallback', { error: error.message }, 'warning');
+
+      try {
+        return await this.fetchLatestVersionFromJsDelivr();
+      } catch (fallbackError) {
+        // 回退也失败了，记录后抛出原始错误以保留根因
+        sendLocalizedUpdateLog('jsdelivr_fallback_failed', { error: fallbackError.message }, 'error');
+        throw error;
+      }
+
     } finally {
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); // 统一在这里清理
     }
   }
 
@@ -143,17 +209,28 @@ class UpdateChecker {
    */
   isNewerVersion(current, latest) {
     try {
-      const currentParts = current.split('.').map(Number);
-      const latestParts = latest.split('.').map(Number);
+      // 清理版本号：移除 'v' 前缀、预发布标签和构建元数据
+      const cleanVersion = (ver) => (ver || '').trim().replace(/^v/, '').split(/[-+]/)[0];
 
-      for (let i = 0; i < 3; i++) {
-        if (isNaN(currentParts[i]) || isNaN(latestParts[i])) {
-          return false; // 版本号格式错误
+      const currentClean = cleanVersion(current);
+      const latestClean = cleanVersion(latest);
+
+      const currentParts = currentClean.split('.').map(Number);
+      const latestParts = latestClean.split('.').map(Number);
+
+      const maxLength = Math.max(currentParts.length, latestParts.length);
+
+      for (let i = 0; i < maxLength; i++) {
+        const curr = currentParts[i] || 0; // 补 0 处理 1.2 vs 1.2.3
+        const lat = latestParts[i] || 0;
+
+        if (isNaN(curr) || isNaN(lat)) {
+          return false;
         }
-        if (latestParts[i] > currentParts[i]) {
+        if (lat > curr) {
           return true;
         }
-        if (latestParts[i] < currentParts[i]) {
+        if (lat < curr) {
           return false;
         }
       }

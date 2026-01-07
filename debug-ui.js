@@ -284,15 +284,16 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       
       // 清空现有内容
       resultElement.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       
       if (result.success) {
         // 添加标题
-        resultElement.appendChild(createSafeElement('h5', { 
+        fragment.appendChild(createSafeElement('h5', { 
           textContent: debugI18n.t('recent_successful_headers') 
         }));
         
         // 添加headers
-        resultElement.appendChild(createSafeElement('pre', { 
+        fragment.appendChild(createSafeElement('pre', { 
           textContent: JSON.stringify(result.headers, null, 2) 
         }));
         
@@ -301,18 +302,18 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           const expectedLanguage = language.toLowerCase();
           
           if (acceptLanguageValue.includes(expectedLanguage)) {
-            resultElement.appendChild(createSafeElement('p', {
+            fragment.appendChild(createSafeElement('p', {
               className: 'success',
               textContent: `${debugI18n.t('header_changed_success')} ${result.acceptLanguage}`
             }));
             addLogMessage(`${debugI18n.t('header_test_success')} ${result.acceptLanguage}`, 'success');
           } else {
-            resultElement.appendChild(createSafeElement('p', {
+            fragment.appendChild(createSafeElement('p', {
               className: 'error',
               textContent: debugI18n.t('header_not_changed')
             }));
             
-            resultElement.appendChild(createSafeElement('p', {
+            fragment.appendChild(createSafeElement('p', {
               textContent: `${debugI18n.t('expected_contains')} ${expectedLanguage}, ${debugI18n.t('actually_detected')} ${acceptLanguageValue}`
             }));
             
@@ -322,12 +323,12 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
               or: debugI18n.t('external_check_or'),
               suffix: debugI18n.t('external_check_suffix')
             }));
-            resultElement.appendChild(linksDiv);
+            fragment.appendChild(linksDiv);
             
             addLogMessage(`${debugI18n.t('header_test_failed_not_expected')} ${expectedLanguage}, ${debugI18n.t('actual')} ${acceptLanguageValue}`, 'error');
           }
         } else {
-          resultElement.appendChild(createSafeElement('p', {
+          fragment.appendChild(createSafeElement('p', {
             className: 'error',
             textContent: debugI18n.t('no_accept_language_any_endpoint')
           }));
@@ -338,17 +339,17 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             or: debugI18n.t('external_check_or'),
             suffix: debugI18n.t('external_check_suffix')
           }));
-          resultElement.appendChild(linksDiv);
+          fragment.appendChild(linksDiv);
           
           addLogMessage(debugI18n.t('header_test_failed_no_header'), 'error');
         }
       } else {
-        resultElement.appendChild(createSafeElement('p', {
+        fragment.appendChild(createSafeElement('p', {
           className: 'error',
           textContent: debugI18n.t('all_test_requests_failed')
         }));
         
-        resultElement.appendChild(createSafeElement('p', {
+        fragment.appendChild(createSafeElement('p', {
           className: 'error',
           textContent: `${debugI18n.t('last_error')} ${result.error}`
         }));
@@ -360,19 +361,21 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           or: debugI18n.t('external_check_or'),
           suffix: debugI18n.t('external_check_suffix')
         }));
-        resultElement.appendChild(linkP);
+        fragment.appendChild(linkP);
         
         addLogMessage(debugI18n.t('header_test_failed_all_endpoints'), 'error');
       }
+      resultElement.appendChild(fragment);
     } catch (error) {
       resultElement.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       
-      resultElement.appendChild(createSafeElement('p', {
+      fragment.appendChild(createSafeElement('p', {
         className: 'error',
         textContent: debugI18n.t('all_test_requests_failed')
       }));
       
-      resultElement.appendChild(createSafeElement('p', {
+      fragment.appendChild(createSafeElement('p', {
         className: 'error',
         textContent: error.message
       }));
@@ -384,7 +387,9 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         or: debugI18n.t('external_check_or'),
         suffix: debugI18n.t('external_check_suffix')
       }));
-      resultElement.appendChild(linkP);
+      fragment.appendChild(linkP);
+      
+      resultElement.appendChild(fragment);
       
       addLogMessage(`${debugI18n.t('header_test_failed_all_endpoints')}: ${error.message}`, 'error');
     }
@@ -968,9 +973,10 @@ const testDomainCache = async () => {
       const { language, fromCache, isUsingFallback, cacheStats } = response;
 
       resultElement.innerHTML = ''; // 清空
+      const fragment = document.createDocumentFragment();
 
       const successP = createSafeMessageElement(debugI18n.t('domain_test_success'), 'success');
-      resultElement.appendChild(successP);
+      fragment.appendChild(successP);
 
       // 添加调试信息
       console.log(`[Debug] Domain test response:`, { language, fromCache, isUsingFallback, cacheStats });
@@ -989,29 +995,31 @@ const testDomainCache = async () => {
         langStrong.textContent = language;
         resultP.appendChild(langStrong);
 
-        resultElement.appendChild(resultP);
+        fragment.appendChild(resultP);
 
         const cacheStatusP = document.createElement('p');
         cacheStatusP.textContent = `${debugI18n.t('cache_status')}: ${fromCache ? debugI18n.t('cache_hit') : debugI18n.t('cache_miss')}`;
-        resultElement.appendChild(cacheStatusP);
+        fragment.appendChild(cacheStatusP);
 
         // 如果使用了回退语言，显示说明
         if (isUsingFallback) {
           const fallbackP = document.createElement('p');
           fallbackP.className = 'text-muted mt-2';
           fallbackP.textContent = debugI18n.t('note_using_active_language');
-          resultElement.appendChild(fallbackP);
+          fragment.appendChild(fallbackP);
         }
       } else {
         const notFoundP = createSafeMessageElement(`${debugI18n.t('domain_not_found')}: ${domain}`, 'warning');
-        resultElement.appendChild(notFoundP);
+        fragment.appendChild(notFoundP);
 
         // 即使没有找到，也显示一些有用的信息
         const infoP = document.createElement('p');
         infoP.className = 'text-muted mt-2';
         infoP.textContent = debugI18n.t('domain_not_in_rules_no_active');
-        resultElement.appendChild(infoP);
+        fragment.appendChild(infoP);
       }
+      
+      resultElement.appendChild(fragment);
 
       // 更新缓存统计显示
       if (cacheStats) {

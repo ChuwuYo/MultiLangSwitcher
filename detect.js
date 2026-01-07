@@ -361,10 +361,12 @@ const fetchAndDisplayHeaders = async () => {
       } else {
         console.log(detectI18n.t('no_accept_language'));
         headerLanguageInfo.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        
         const warningP = document.createElement('p');
         warningP.className = 'text-warning';
         warningP.textContent = detectI18n.t('not_detected_accept_language');
-        headerLanguageInfo.appendChild(warningP);
+        fragment.appendChild(warningP);
         
         const linkP = document.createElement('p');
         linkP.className = 'mt-2';
@@ -373,7 +375,9 @@ const fetchAndDisplayHeaders = async () => {
           or: detectI18n.t('external_check_or'),
           suffix: detectI18n.t('external_check_suffix')
         }));
-        headerLanguageInfo.appendChild(linkP);
+        fragment.appendChild(linkP);
+        
+        headerLanguageInfo.appendChild(fragment);
       }
     } else {
       // 所有尝试均失败
@@ -390,15 +394,17 @@ const fetchAndDisplayHeaders = async () => {
     headerInfoElement.textContent = combinedErrorMessage;
     headerLanguageInfo.innerHTML = '';
     
+    const fragment = document.createDocumentFragment();
+    
     const errorP = document.createElement('p');
     errorP.className = 'text-danger';
     errorP.textContent = detectI18n.t('detection_failed_all_services');
-    headerLanguageInfo.appendChild(errorP);
+    fragment.appendChild(errorP);
     
     const detailP = document.createElement('p');
     detailP.className = 'small text-muted';
     detailP.textContent = error.message || error;
-    headerLanguageInfo.appendChild(detailP);
+    fragment.appendChild(detailP);
     
     const linkP = document.createElement('p');
     linkP.className = 'mt-2';
@@ -407,7 +413,9 @@ const fetchAndDisplayHeaders = async () => {
       or: detectI18n.t('external_check_or'),
       suffix: detectI18n.t('external_check_suffix')
     }));
-    headerLanguageInfo.appendChild(linkP);
+    fragment.appendChild(linkP);
+    
+    headerLanguageInfo.appendChild(fragment);
   }
 }
 
