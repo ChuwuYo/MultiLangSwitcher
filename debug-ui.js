@@ -82,7 +82,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示当前规则和匹配的规则详情
   ResourceManager.addEventListener(document.getElementById('showRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('rulesResult');
-    resultElement.innerHTML = debugI18n.t('getting_rule_info');
+    resultElement.textContent = debugI18n.t('getting_rule_info');
 
     // 通过消息传递获取动态规则
     (async () => {
@@ -455,7 +455,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 修复规则优先级
   ResourceManager.addEventListener(document.getElementById('fixPriorityBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
+    resultElement.textContent = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
     // 通过消息传递获取和更新动态规则
@@ -499,7 +499,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 清除并重新应用规则
   ResourceManager.addEventListener(document.getElementById('clearAllRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
+    resultElement.textContent = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
     // 通过消息传递获取和清除动态规则
@@ -672,7 +672,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   });
 
   // 重置自定义语言设置
-  document.getElementById('resetCustomLangBtn').addEventListener('click', async () => {
+  ResourceManager.addEventListener(document.getElementById('resetCustomLangBtn'), 'click', async () => {
     const customLangResult = document.getElementById('customLangResult');
     const customLangInput = document.getElementById('customLanguageInput');
 
@@ -693,7 +693,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示诊断信息
   ResourceManager.addEventListener(document.getElementById('showDiagnosticsBtn'), 'click', () => {
     const resultElement = document.getElementById('diagnosticsResult');
-    resultElement.innerHTML = debugI18n.t('collecting_diagnostics');
+    resultElement.textContent = debugI18n.t('collecting_diagnostics');
     addLogMessage(debugI18n.t('try_show_diagnostics'), 'info');
 
     const fragment = document.createDocumentFragment();
@@ -857,7 +857,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示域名映射规则
   ResourceManager.addEventListener(document.getElementById('showDomainRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('domainRulesResult');
-    resultElement.innerHTML = debugI18n.t('getting_domain_rules');
+    resultElement.textContent = debugI18n.t('getting_domain_rules');
     addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
 
     // 从 background.js 获取域名映射规则
