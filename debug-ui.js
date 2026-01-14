@@ -113,8 +113,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             const prioritySpan = document.createElement('span');
             prioritySpan.className = rule.priority < 100 ? 'error' : 'success';
             prioritySpan.textContent = rule.priority;
-            liId.textContent = `${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} `;
-            liId.appendChild(prioritySpan);
+            liId.append(`${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} `, prioritySpan);
             ul.appendChild(liId);
 
             const liAction = document.createElement('li');
@@ -154,7 +153,9 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
               liCond.appendChild(subUl);
               ul.appendChild(liCond);
             }
-            ul.appendChild(document.createElement('hr'));
+            const separatorLi = document.createElement('li');
+            separatorLi.className = 'rule-separator';
+            ul.appendChild(separatorLi);
           });
           fragment.appendChild(ul);
         }
@@ -193,12 +194,14 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
               const detailDiv = document.createElement('div');
               detailDiv.className = 'matched-rule-detail';
               
-              detailDiv.textContent = `${debugI18n.t('matched_url')} `;
               const code = document.createElement('code');
               code.textContent = info.request.url;
-              detailDiv.appendChild(code);
-              detailDiv.appendChild(document.createElement('br'));
-              detailDiv.append(`${debugI18n.t('resource_type')} ${info.request.resourceType}`);
+              detailDiv.append(
+                `${debugI18n.t('matched_url')} `,
+                code,
+                document.createElement('br'),
+                `${debugI18n.t('resource_type')} ${info.request.resourceType}`
+              );
               
               li.appendChild(detailDiv);
             }

@@ -174,3 +174,16 @@ html[data-bs-theme="dark"] #headerCheckContent {
   scrollbar-width: thin;
   scrollbar-color: #555 #2c3034;
 }
+
+/* 规则分隔线样式 */
+.rule-separator {
+  border-top: 1px solid var(--bs-border-color);
+  margin: 0.5rem 0;
+  padding: 0;
+  height: 1px;
+  list-style: none;
+}
+
+html[data-bs-theme="dark"] .rule-separator {
+  border-top-color: #495057;
+}
