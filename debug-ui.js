@@ -82,7 +82,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示当前规则和匹配的规则详情
   ResourceManager.addEventListener(document.getElementById('showRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('rulesResult');
-    resultElement.innerHTML = debugI18n.t('getting_rule_info');
+    resultElement.textContent = debugI18n.t('getting_rule_info');
 
     // 通过消息传递获取动态规则
     (async () => {
@@ -93,49 +93,91 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           return;
         }
         const rules = response.rules;
-        let html = `<h5>${debugI18n.t('dynamic_rules')}</h5>`;
+
+        resultElement.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
+        const title = document.createElement('h5');
+        title.textContent = debugI18n.t('dynamic_rules');
+        fragment.appendChild(title);
 
         if (rules.length === 0) {
-          html += `<p class="error">${debugI18n.t('no_dynamic_rules')}</p>`;
+          const p = document.createElement('p');
+          p.className = 'error';
+          p.textContent = debugI18n.t('no_dynamic_rules');
+          fragment.appendChild(p);
         } else {
-          html += '<ul>';
+          const ul = document.createElement('ul');
           rules.forEach(rule => {
-            let priorityClass = rule.priority < 100 ? 'error' : 'success';
-            html += `<li>${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} <span class="${priorityClass}">${rule.priority}</span></li>`;
-            html += `<li>${debugI18n.t('action')} ${rule.action.type}</li>`;
+            const liId = document.createElement('li');
+            const prioritySpan = document.createElement('span');
+            prioritySpan.className = rule.priority < 100 ? 'error' : 'success';
+            prioritySpan.textContent = rule.priority;
+            liId.append(`${debugI18n.t('rule_id')} ${rule.id}, ${debugI18n.t('priority')} `, prioritySpan);
+            ul.appendChild(liId);
+
+            const liAction = document.createElement('li');
+            liAction.textContent = `${debugI18n.t('action')} ${rule.action.type}`;
+            ul.appendChild(liAction);
+
             if (rule.action.requestHeaders) {
-              html += `<li>${debugI18n.t('modify_headers')}`;
-              html += '<ul>';
+              const liModify = document.createElement('li');
+              liModify.textContent = debugI18n.t('modify_headers');
+              const subUl = document.createElement('ul');
               rule.action.requestHeaders.forEach(header => {
-                html += `<li>${header.header}: ${header.value} (${debugI18n.t('operation')} ${header.operation})</li>`;
+                const subLi = document.createElement('li');
+                subLi.textContent = `${header.header}: ${header.value} (${debugI18n.t('operation')} ${header.operation})`;
+                subUl.appendChild(subLi);
               });
-              html += '</ul></li>';
+              liModify.appendChild(subUl);
+              ul.appendChild(liModify);
             }
+
             if (rule.condition) {
-              html += `<li>${debugI18n.t('conditions')}`;
-              html += '<ul>';
-              if (rule.condition.urlFilter) html += `<li>${debugI18n.t('url_filter')} <code>${rule.condition.urlFilter}</code></li>`;
-              if (rule.condition.resourceTypes && rule.condition.resourceTypes.length > 0) {
-                html += `<li>${debugI18n.t('resource_types')} ${rule.condition.resourceTypes.join(', ')}</li>`;
+              const liCond = document.createElement('li');
+              liCond.textContent = debugI18n.t('conditions');
+              const subUl = document.createElement('ul');
+              if (rule.condition.urlFilter) {
+                const subLi = document.createElement('li');
+                subLi.textContent = `${debugI18n.t('url_filter')} `;
+                const code = document.createElement('code');
+                code.textContent = rule.condition.urlFilter;
+                subLi.appendChild(code);
+                subUl.appendChild(subLi);
               }
-              html += '</ul></li>';
+              if (rule.condition.resourceTypes && rule.condition.resourceTypes.length > 0) {
+                const subLi = document.createElement('li');
+                subLi.textContent = `${debugI18n.t('resource_types')} ${rule.condition.resourceTypes.join(', ')}`;
+                subUl.appendChild(subLi);
+              }
+              liCond.appendChild(subUl);
+              ul.appendChild(liCond);
             }
-            html += '<hr>'; // 分隔不同规则
+            const separatorLi = document.createElement('li');
+            separatorLi.className = 'rule-separator';
+            ul.appendChild(separatorLi);
           });
-          html += '</ul>';
+          fragment.appendChild(ul);
         }
 
         // 通过消息传递获取最近匹配的规则信息
         const matchedResponse = await chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' });
         if (!matchedResponse || !matchedResponse.success) {
-          html += `<p class="error">获取匹配规则失败</p>`;
-          resultElement.innerHTML = html;
+          const p = document.createElement('p');
+          p.className = 'error';
+          p.textContent = '获取匹配规则失败';
+          fragment.appendChild(p);
+          resultElement.appendChild(fragment);
           return;
         }
         const matchedRules = matchedResponse.matchedRules;
-        html += `<h5>${debugI18n.t('recent_matched_rules')}</h5>`;
+
+        const matchedTitle = document.createElement('h5');
+        matchedTitle.textContent = debugI18n.t('recent_matched_rules');
+        fragment.appendChild(matchedTitle);
+
         if (matchedRules && matchedRules.rulesMatchedInfo && matchedRules.rulesMatchedInfo.length > 0) {
-          html += '<ul>';
+          const ul = document.createElement('ul');
           // 去重处理，避免显示重复的规则
           const uniqueRules = new Map();
           matchedRules.rulesMatchedInfo.forEach(info => {
@@ -146,22 +188,37 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           });
 
           uniqueRules.forEach(info => {
-            html += `<li>`;
-            html += `${debugI18n.t('ruleset_id')} ${info.rule.rulesetId || '_dynamic'}, ${debugI18n.t('rule_id')} ${info.rule.ruleId}`;
+            const li = document.createElement('li');
+            li.textContent = `${debugI18n.t('ruleset_id')} ${info.rule.rulesetId || '_dynamic'}, ${debugI18n.t('rule_id')} ${info.rule.ruleId}`;
             if (info.request) {
-              html += `<div class="matched-rule-detail">`;
-              html += `${debugI18n.t('matched_url')} <code>${info.request.url}</code><br>`;
-              html += `${debugI18n.t('resource_type')} ${info.request.resourceType}`;
-              html += `</div>`;
+              const detailDiv = document.createElement('div');
+              detailDiv.className = 'matched-rule-detail';
+              
+              const code = document.createElement('code');
+              code.textContent = info.request.url;
+              detailDiv.append(
+                `${debugI18n.t('matched_url')} `,
+                code,
+                document.createElement('br'),
+                `${debugI18n.t('resource_type')} ${info.request.resourceType}`
+              );
+              
+              li.appendChild(detailDiv);
             }
-            html += '</li>';
+            ul.appendChild(li);
           });
-          html += '</ul>';
-          html += `<p class="text-muted">${debugI18n.t('recent_match_note')}</p>`;
+          fragment.appendChild(ul);
+
+          const note = document.createElement('p');
+          note.className = 'text-muted';
+          note.textContent = debugI18n.t('recent_match_note');
+          fragment.appendChild(note);
         } else {
-          html += `<p>${debugI18n.t('no_recent_matches')}</p>`;
+          const p = document.createElement('p');
+          p.textContent = debugI18n.t('no_recent_matches');
+          fragment.appendChild(p);
         }
-        resultElement.innerHTML = html;
+        resultElement.appendChild(fragment);
       } catch (error) {
         setSafeErrorMessage(resultElement, `获取规则失败: ${error.message}`);
       }
@@ -398,7 +455,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 修复规则优先级
   ResourceManager.addEventListener(document.getElementById('fixPriorityBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = debugI18n.t('fixing_rule_priority');
+    resultElement.textContent = debugI18n.t('fixing_rule_priority');
     addLogMessage(debugI18n.t('try_fix_priority'), 'info');
 
     // 通过消息传递获取和更新动态规则
@@ -442,7 +499,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 清除并重新应用规则
   ResourceManager.addEventListener(document.getElementById('clearAllRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('fixResult');
-    resultElement.innerHTML = debugI18n.t('clearing_rules_reapply');
+    resultElement.textContent = debugI18n.t('clearing_rules_reapply');
     addLogMessage(debugI18n.t('try_clear_reapply'), 'info');
 
     // 通过消息传递获取和清除动态规则
@@ -615,7 +672,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   });
 
   // 重置自定义语言设置
-  document.getElementById('resetCustomLangBtn').addEventListener('click', async () => {
+  ResourceManager.addEventListener(document.getElementById('resetCustomLangBtn'), 'click', async () => {
     const customLangResult = document.getElementById('customLangResult');
     const customLangInput = document.getElementById('customLanguageInput');
 
@@ -636,43 +693,80 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示诊断信息
   ResourceManager.addEventListener(document.getElementById('showDiagnosticsBtn'), 'click', () => {
     const resultElement = document.getElementById('diagnosticsResult');
-    resultElement.innerHTML = debugI18n.t('collecting_diagnostics');
+    resultElement.textContent = debugI18n.t('collecting_diagnostics');
     addLogMessage(debugI18n.t('try_show_diagnostics'), 'info');
 
-    let html = '';
+    const fragment = document.createDocumentFragment();
     try {
-      html = `<h5>${debugI18n.t('extension_info')}</h5>`;
-      html += `<p>${debugI18n.t('extension_id')} ${chrome.runtime.id}</p>`;
+      const infoTitle = document.createElement('h5');
+      infoTitle.textContent = debugI18n.t('extension_info');
+      fragment.appendChild(infoTitle);
+
+      const extensionIdP = document.createElement('p');
+      extensionIdP.textContent = `${debugI18n.t('extension_id')} ${chrome.runtime.id}`;
+      fragment.appendChild(extensionIdP);
 
       // 获取清单文件信息
       const manifest = chrome.runtime.getManifest();
-      html += `<h5>${debugI18n.t('manifest_info')}</h5>`;
-      html += `<p>${debugI18n.t('name')} ${manifest.name}</p>`;
-      html += `<p>${debugI18n.t('version')} ${manifest.version}</p>`;
+      const manifestTitle = document.createElement('h5');
+      manifestTitle.textContent = debugI18n.t('manifest_info');
+      fragment.appendChild(manifestTitle);
+
+      const nameP = document.createElement('p');
+      nameP.textContent = `${debugI18n.t('name')} ${manifest.name}`;
+      fragment.appendChild(nameP);
+
+      const versionP = document.createElement('p');
+      versionP.textContent = `${debugI18n.t('version')} ${manifest.version}`;
+      fragment.appendChild(versionP);
+
       if (manifest.permissions) {
-        html += `<p>${debugI18n.t('permissions')}</p><ul>`;
+        const permissionsP = document.createElement('p');
+        permissionsP.textContent = debugI18n.t('permissions');
+        fragment.appendChild(permissionsP);
+
+        const permissionsUl = document.createElement('ul');
         manifest.permissions.forEach(permission => {
-          html += `<li>${permission}</li>`;
+          const li = document.createElement('li');
+          li.textContent = permission;
+          permissionsUl.appendChild(li);
         });
-        html += '</ul>';
+        fragment.appendChild(permissionsUl);
       } else {
-        html += `<p>${debugI18n.t('no_permissions')}</p>`;
+        const noPermissionsP = document.createElement('p');
+        noPermissionsP.textContent = debugI18n.t('no_permissions');
+        fragment.appendChild(noPermissionsP);
       }
 
       // 检查declarativeNetRequest权限
-      html += `<h5>${debugI18n.t('declarative_config')}</h5>`;
+      const declarativeTitle = document.createElement('h5');
+      declarativeTitle.textContent = debugI18n.t('declarative_config');
+      fragment.appendChild(declarativeTitle);
 
       const hasDeclarativePermission = manifest.permissions?.includes('declarativeNetRequest');
       const hasFeedbackPermission = manifest.permissions?.includes('declarativeNetRequestFeedback');
 
       if (hasDeclarativePermission) {
-        html += `<p class="success">${debugI18n.t('declarative_permission_found')}</p>`;
+        const p1 = document.createElement('p');
+        p1.className = 'success';
+        p1.textContent = debugI18n.t('declarative_permission_found');
+        fragment.appendChild(p1);
+
         if (hasFeedbackPermission) {
-          html += `<p class="success">${debugI18n.t('declarative_feedback_permission_found')}</p>`;
+          const p2 = document.createElement('p');
+          p2.className = 'success';
+          p2.textContent = debugI18n.t('declarative_feedback_permission_found');
+          fragment.appendChild(p2);
         }
-        html += `<p class="info">${debugI18n.t('using_dynamic_rules')}</p>`;
+        const p3 = document.createElement('p');
+        p3.className = 'info';
+        p3.textContent = debugI18n.t('using_dynamic_rules');
+        fragment.appendChild(p3);
       } else {
-        html += `<p class="error">${debugI18n.t('declarative_permission_missing')}</p>`;
+        const p1 = document.createElement('p');
+        p1.className = 'error';
+        p1.textContent = debugI18n.t('declarative_permission_missing');
+        fragment.appendChild(p1);
       }
 
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
@@ -680,28 +774,46 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         try {
           const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage', 'autoSwitchEnabled'] });
 
-          html += `<h5>${debugI18n.t('stored_language_settings')}</h5>`;
+          const storedTitle = document.createElement('h5');
+          storedTitle.textContent = debugI18n.t('stored_language_settings');
+          fragment.appendChild(storedTitle);
+
           if (result.data?.currentLanguage) {
-            html += `<p>${debugI18n.t('current_language')} ${result.data.currentLanguage}</p>`;
+            const p = document.createElement('p');
+            p.textContent = `${debugI18n.t('current_language')} ${result.data.currentLanguage}`;
+            fragment.appendChild(p);
             addLogMessage(`${debugI18n.t('diagnostics_stored_language')} ${result.data.currentLanguage}.`, 'info');
           } else {
-            html += `<p class="warning">${debugI18n.t('no_stored_language_found')}</p>`;
+            const p = document.createElement('p');
+            p.className = 'warning';
+            p.textContent = debugI18n.t('no_stored_language_found');
+            fragment.appendChild(p);
             addLogMessage(debugI18n.t('diagnostics_no_stored_language'), 'warning');
           }
 
           // 添加自动切换状态信息
-          html += `<h5>${debugI18n.t('auto_switch_function')}</h5>`;
-          const autoSwitchStatus = result.data?.autoSwitchEnabled ?
-            `<span class="success">${debugI18n.t('enabled')}</span>` :
-            `<span class="error">${debugI18n.t('disabled')}</span>`;
-          html += `<p>${debugI18n.t('status')} ${autoSwitchStatus}</p>`;
+          const autoSwitchTitle = document.createElement('h5');
+          autoSwitchTitle.textContent = debugI18n.t('auto_switch_function');
+          fragment.appendChild(autoSwitchTitle);
 
-          // 直接设置innerHTML（html内容来自可信源）
-          resultElement.innerHTML = html;
+          const statusP = document.createElement('p');
+          statusP.textContent = `${debugI18n.t('status')} `;
+          const statusSpan = document.createElement('span');
+          statusSpan.className = result.data?.autoSwitchEnabled ? 'success' : 'error';
+          statusSpan.textContent = result.data?.autoSwitchEnabled ? debugI18n.t('enabled') : debugI18n.t('disabled');
+          statusP.appendChild(statusSpan);
+          fragment.appendChild(statusP);
+
+          // 添加到DOM
+          resultElement.innerHTML = '';
+          resultElement.appendChild(fragment);
           addLogMessage(debugI18n.t('diagnostics_complete'), 'info');
 
           // 同步更新自动切换开关状态
-          document.getElementById('autoSwitchToggle').checked = !!result.data?.autoSwitchEnabled;
+          const autoSwitchToggle = document.getElementById('autoSwitchToggle');
+          if (autoSwitchToggle) {
+            autoSwitchToggle.checked = !!result.data?.autoSwitchEnabled;
+          }
         } catch (storageError) {
           console.error('Error collecting diagnostic information (storage):', storageError);
           addLogMessage(`${debugI18n.t('collect_diagnostics_storage_error')} ${storageError.message}`, 'error');
@@ -745,7 +857,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 显示域名映射规则
   ResourceManager.addEventListener(document.getElementById('showDomainRulesBtn'), 'click', () => {
     const resultElement = document.getElementById('domainRulesResult');
-    resultElement.innerHTML = debugI18n.t('getting_domain_rules');
+    resultElement.textContent = debugI18n.t('getting_domain_rules');
     addLogMessage(debugI18n.t('try_get_domain_rules'), 'info');
 
     // 从 background.js 获取域名映射规则
@@ -765,7 +877,12 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
 
         if (response && response.domainRules) {
           const rules = response.domainRules;
-          let html = `<h5>${debugI18n.t('domain_language_mapping')}</h5>`;
+          resultElement.innerHTML = '';
+          const fragment = document.createDocumentFragment();
+
+          const title = document.createElement('h5');
+          title.textContent = debugI18n.t('domain_language_mapping');
+          fragment.appendChild(title);
 
           // 按类别组织规则
           const categories = {
@@ -816,38 +933,64 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
             ].includes(domain)) {
               categories[debugI18n.t('oceania')][domain] = language;
             } else {
-              // 将最后两个else if合并为一个
               categories[debugI18n.t('other')][domain] = language;
             }
           });
 
-          // 生成HTML（只显示有规则的分类）
+          // 生成DOM（只显示有规则的分类）
           Object.keys(categories).forEach(category => {
             const categoryRules = categories[category];
-            const ruleCount = Object.keys(categoryRules).length;
+            const sortedDomains = Object.keys(categoryRules).sort();
+            const ruleCount = sortedDomains.length;
 
             if (ruleCount > 0) {
-              html += `<div class="mt-3"><strong>${category}</strong> (${ruleCount}${debugI18n.t('rules_count')}):</div>`;
-              html += '<div class="matched-rule-detail">';
+              const categoryDiv = document.createElement('div');
+              categoryDiv.className = 'mt-3';
+              const strong = document.createElement('strong');
+              strong.textContent = category;
+              categoryDiv.appendChild(strong);
+              categoryDiv.append(` (${ruleCount}${debugI18n.t('rules_count')}):`);
+              fragment.appendChild(categoryDiv);
 
-              // 将规则按字母顺序排序
-              const sortedDomains = Object.keys(categoryRules).sort();
+              const detailDiv = document.createElement('div');
+              detailDiv.className = 'matched-rule-detail';
 
-              // 创建表格显示，设置固定列宽
-              html += '<table class="table table-sm table-striped" style="table-layout: fixed;">';
-              html += `<thead><tr><th style="width: 50%;">${debugI18n.t('domain')}</th><th style="width: 50%;">${debugI18n.t('language')}</th></tr></thead>`;
-              html += '<tbody>';
+              const table = document.createElement('table');
+              table.className = 'table table-sm table-striped';
+              table.style.tableLayout = 'fixed';
 
+              const thead = document.createElement('thead');
+              const trHead = document.createElement('tr');
+              const thDomain = document.createElement('th');
+              thDomain.style.width = '50%';
+              thDomain.textContent = debugI18n.t('domain');
+              const thLang = document.createElement('th');
+              thLang.style.width = '50%';
+              thLang.textContent = debugI18n.t('language');
+              trHead.appendChild(thDomain);
+              trHead.appendChild(thLang);
+              thead.appendChild(trHead);
+              table.appendChild(thead);
+
+              const tbody = document.createElement('tbody');
               sortedDomains.forEach(domain => {
-                html += `<tr><td>${domain}</td><td>${categoryRules[domain]}</td></tr>`;
+                const tr = document.createElement('tr');
+                const tdDomain = document.createElement('td');
+                tdDomain.textContent = domain;
+                const tdLang = document.createElement('td');
+                tdLang.textContent = categoryRules[domain];
+                tr.appendChild(tdDomain);
+                tr.appendChild(tdLang);
+                tbody.appendChild(tr);
               });
+              table.appendChild(tbody);
 
-              html += '</tbody></table>';
-              html += '</div>';
+              detailDiv.appendChild(table);
+              fragment.appendChild(detailDiv);
             }
           });
 
-          resultElement.innerHTML = html;
+          resultElement.appendChild(fragment);
           addLogMessage(`${debugI18n.t('successfully_got_displayed_rules')}${Object.keys(rules).length}${debugI18n.t('domain_mapping_rules')}`, 'success');
         } else {
           setSafeErrorMessage(resultElement, debugI18n.t('failed_get_domain_rules_empty'));

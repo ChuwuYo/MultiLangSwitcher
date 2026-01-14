@@ -559,14 +559,29 @@ const showUpdateLoadingState = () => {
   // 该提示用于反馈「已开始检查」，应立即可见
   scheduleDOMUpdate(() => {
     alertDiv.className = 'alert alert-info mb-0 update-notification info';
-    updateNotificationContent.innerHTML = `
-      <div class="text-center update-version-info">
-        <div class="d-flex align-items-center justify-content-center">
-          <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
-          <strong>${popupI18n.t('fetching_version_info')}</strong>
-        </div>
-      </div>
-    `;
+    updateNotificationContent.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    const container = document.createElement('div');
+    container.className = 'text-center update-version-info';
+
+    const flexBox = document.createElement('div');
+    flexBox.className = 'd-flex align-items-center justify-content-center';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'spinner-border spinner-border-sm me-2';
+    spinner.setAttribute('role', 'status');
+    spinner.setAttribute('aria-hidden', 'true');
+
+    const strong = document.createElement('strong');
+    strong.textContent = popupI18n.t('fetching_version_info');
+
+    flexBox.appendChild(spinner);
+    flexBox.appendChild(strong);
+    container.appendChild(flexBox);
+    fragment.appendChild(container);
+    updateNotificationContent.appendChild(fragment);
+
     updateNotification.classList.remove('d-none');
   }, true);
 }
@@ -589,24 +604,49 @@ const showUpdateNotification = (updateInfo) => {
     // 当GitHub API不可用时处理回退模式
     if (updateInfo.fallbackMode) {
       alertDiv.className = 'alert alert-warning mb-0 update-notification warning';
-      updateNotificationContent.innerHTML = `
-        <div class="text-center update-version-info">
-          <strong>${popupI18n.t('update_check_fallback_title')}</strong>
-          <div class="version-comparison">
-            <div class="version-line" style="justify-content: center;">
-              <span class="version-badge">v${updateInfo.currentVersion}</span>
-            </div>
-          </div>
-          <div class="fallback-message mt-2">
-            <small class="text-muted">${popupI18n.t('update_check_fallback_message')}</small>
-          </div>
-          <div class="update-actions mt-2">
-            <a href="${updateInfo.releaseUrl}" target="_blank" class="btn btn-outline-warning btn-sm">
-              ${popupI18n.t('check_manually')}
-            </a>
-          </div>
-        </div>
-      `;
+      updateNotificationContent.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+
+      const container = document.createElement('div');
+      container.className = 'text-center update-version-info';
+
+      const strong = document.createElement('strong');
+      strong.textContent = popupI18n.t('update_check_fallback_title');
+      container.appendChild(strong);
+
+      const comparison = document.createElement('div');
+      comparison.className = 'version-comparison';
+      const versionLine = document.createElement('div');
+      versionLine.className = 'version-line';
+      versionLine.style.justifyContent = 'center';
+      const badge = document.createElement('span');
+      badge.className = 'version-badge';
+      badge.textContent = `v${updateInfo.currentVersion}`;
+      versionLine.appendChild(badge);
+      comparison.appendChild(versionLine);
+      container.appendChild(comparison);
+
+      const fallbackMsg = document.createElement('div');
+      fallbackMsg.className = 'fallback-message mt-2';
+      const small = document.createElement('small');
+      small.className = 'text-muted';
+      small.textContent = popupI18n.t('update_check_fallback_message');
+      fallbackMsg.appendChild(small);
+      container.appendChild(fallbackMsg);
+
+      const actions = document.createElement('div');
+      actions.className = 'update-actions mt-2';
+      const link = document.createElement('a');
+      link.href = updateInfo.releaseUrl;
+      link.target = '_blank';
+      link.className = 'btn btn-outline-warning btn-sm';
+      link.textContent = popupI18n.t('check_manually');
+      actions.appendChild(link);
+      container.appendChild(actions);
+
+      fragment.appendChild(container);
+      updateNotificationContent.appendChild(fragment);
+
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
       // 6秒后自动隐藏回退通知
@@ -620,45 +660,95 @@ const showUpdateNotification = (updateInfo) => {
       // 有可用更新
       alertDiv.className = 'alert alert-info mb-0 update-notification info';
 
-      const versionInfo = `
-        <div class="update-version-info">
-          <strong>${popupI18n.t('update_notification_title')}</strong>
-          <div class="version-comparison">
-            <div class="version-line">
-              <span>${popupI18n.t('current_version').replace('v{current}', '').replace('{current}', '')}</span>
-              <span class="version-badge">v${updateInfo.currentVersion}</span>
-            </div>
-            <div class="version-line">
-              <span>${popupI18n.t('latest_version').replace('v{latest}', '').replace('{latest}', '')}</span>
-              <span class="version-badge">v${updateInfo.latestVersion}</span>
-            </div>
-          </div>
-        </div>
-        <div class="update-actions">
-          <a href="${updateInfo.releaseUrl}" target="_blank" class="btn btn-outline-primary">
-            ${popupI18n.t('view_release')}
-          </a>
-          <a href="https://github.com/ChuwuYo/MultiLangSwitcher/archive/refs/tags/v${updateInfo.latestVersion}.zip" target="_blank" class="btn btn-primary">
-            ${popupI18n.t('download_update')}
-          </a>
-        </div>
-      `;
+      updateNotificationContent.innerHTML = '';
+      const fragment = document.createDocumentFragment();
 
-      updateNotificationContent.innerHTML = versionInfo;
+      const versionInfo = document.createElement('div');
+      versionInfo.className = 'update-version-info';
+
+      const strong = document.createElement('strong');
+      strong.textContent = popupI18n.t('update_notification_title');
+      versionInfo.appendChild(strong);
+
+      const comparison = document.createElement('div');
+      comparison.className = 'version-comparison';
+
+      // 当前版本行
+      const currentLine = document.createElement('div');
+      currentLine.className = 'version-line';
+      const currentLabel = document.createElement('span');
+      currentLabel.textContent = popupI18n.t('current_version').replace('v{current}', '').replace('{current}', '');
+      const currentBadge = document.createElement('span');
+      currentBadge.className = 'version-badge';
+      currentBadge.textContent = `v${updateInfo.currentVersion}`;
+      currentLine.appendChild(currentLabel);
+      currentLine.appendChild(currentBadge);
+      comparison.appendChild(currentLine);
+
+      // 最新版本行
+      const latestLine = document.createElement('div');
+      latestLine.className = 'version-line';
+      const latestLabel = document.createElement('span');
+      latestLabel.textContent = popupI18n.t('latest_version').replace('v{latest}', '').replace('{latest}', '');
+      const latestBadge = document.createElement('span');
+      latestBadge.className = 'version-badge';
+      latestBadge.textContent = `v${updateInfo.latestVersion}`;
+      latestLine.appendChild(latestLabel);
+      latestLine.appendChild(latestBadge);
+      comparison.appendChild(latestLine);
+
+      versionInfo.appendChild(comparison);
+      fragment.appendChild(versionInfo);
+
+      const actions = document.createElement('div');
+      actions.className = 'update-actions';
+      
+      const viewLink = document.createElement('a');
+      viewLink.href = updateInfo.releaseUrl;
+      viewLink.target = '_blank';
+      viewLink.className = 'btn btn-outline-primary';
+      viewLink.textContent = popupI18n.t('view_release');
+      actions.appendChild(viewLink);
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = `https://github.com/ChuwuYo/MultiLangSwitcher/archive/refs/tags/v${updateInfo.latestVersion}.zip`;
+      downloadLink.target = '_blank';
+      downloadLink.className = 'btn btn-primary';
+      downloadLink.textContent = popupI18n.t('download_update');
+      actions.appendChild(downloadLink);
+
+      fragment.appendChild(actions);
+      updateNotificationContent.appendChild(fragment);
+
       sendDebugLog(popupI18n.t('update_available', { version: updateInfo.latestVersion }), 'info');
     } else {
       // 没有可用更新
       alertDiv.className = 'alert alert-success mb-0 update-notification success';
-      updateNotificationContent.innerHTML = `
-        <div class="text-center update-version-info">
-          <strong>${popupI18n.t('no_updates_available')}</strong>
-          <div class="version-comparison">
-            <div class="version-line" style="justify-content: center;">
-              <span class="version-badge">v${updateInfo.currentVersion}</span>
-            </div>
-          </div>
-        </div>
-      `;
+      updateNotificationContent.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+
+      const container = document.createElement('div');
+      container.className = 'text-center update-version-info';
+
+      const strong = document.createElement('strong');
+      strong.textContent = popupI18n.t('no_updates_available');
+      container.appendChild(strong);
+
+      const comparison = document.createElement('div');
+      comparison.className = 'version-comparison';
+      const versionLine = document.createElement('div');
+      versionLine.className = 'version-line';
+      versionLine.style.justifyContent = 'center';
+      const badge = document.createElement('span');
+      badge.className = 'version-badge';
+      badge.textContent = `v${updateInfo.currentVersion}`;
+      versionLine.appendChild(badge);
+      comparison.appendChild(versionLine);
+      container.appendChild(comparison);
+
+      fragment.appendChild(container);
+      updateNotificationContent.appendChild(fragment);
+
       sendDebugLog(popupI18n.t('extension_is_up_to_date'), 'info');
 
       // 4秒后自动隐藏成功通知

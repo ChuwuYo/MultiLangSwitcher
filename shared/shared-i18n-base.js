@@ -73,8 +73,8 @@ class BaseI18n {
 
         // 其次使用Chrome扩展API或浏览器API
         const langSource = (typeof chrome?.i18n?.getUILanguage === 'function' && chrome.i18n.getUILanguage()) ||
-                         (typeof navigator?.language === 'string' && navigator.language) ||
-                         'en';
+            (typeof navigator?.language === 'string' && navigator.language) ||
+            'en';
 
         this.currentLang = langSource.toLowerCase().startsWith('zh') ? 'zh' : 'en';
     }
@@ -123,7 +123,7 @@ class BaseI18n {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
-            
+
             const timeoutId = setTimeout(() => {
                 script.remove();
                 reject(new Error(`Script loading timed out: ${src}`));
@@ -133,7 +133,7 @@ class BaseI18n {
                 clearTimeout(timeoutId);
                 resolve();
             };
-            
+
             script.onerror = () => {
                 clearTimeout(timeoutId);
                 reject(new Error(`Failed to load script: ${src}`));
@@ -158,7 +158,7 @@ class BaseI18n {
         const text = this.translations[key] || key;
         return this._formatString(text, params);
     }
-    
+
     /**
      * 格式化字符串，替换占位符。
      * @param {string} str - 包含占位符的字符串。
@@ -170,7 +170,7 @@ class BaseI18n {
         if (!params || typeof params !== 'object' || Object.keys(params).length === 0) {
             return str;
         }
-        
+
         let result = str;
         for (const [param, value] of Object.entries(params)) {
             // 使用全局替换，以处理同一个占位符多次出现的情况

@@ -353,11 +353,27 @@ const fetchAndDisplayHeaders = async () => {
       
       if (result.acceptLanguage) {
         console.log(detectI18n.t('detected_accept_language'), result.acceptLanguage);
-        headerLanguageInfo.innerHTML = `
-          <p class="mb-1"><strong>${detectI18n.t('current_value')}</strong></p>
-          <p class="text-success fw-bold">${result.acceptLanguage}</p>
-          <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('request_header_method'))}</p>
-        `;
+        headerLanguageInfo.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
+        const titleP = document.createElement('p');
+        titleP.className = 'mb-1';
+        const strong = document.createElement('strong');
+        strong.textContent = detectI18n.t('current_value');
+        titleP.appendChild(strong);
+        fragment.appendChild(titleP);
+
+        const valP = document.createElement('p');
+        valP.className = 'text-success fw-bold';
+        valP.textContent = result.acceptLanguage;
+        fragment.appendChild(valP);
+
+        const footerP = document.createElement('p');
+        footerP.className = 'mb-0 mt-2 small text-muted';
+        footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('request_header_method'));
+        fragment.appendChild(footerP);
+
+        headerLanguageInfo.appendChild(fragment);
       } else {
         console.log(detectI18n.t('no_accept_language'));
         headerLanguageInfo.innerHTML = '';
@@ -429,16 +445,47 @@ const detectJsLanguage = () => {
   try {
     const lang = navigator.language || 'N/A';
     const langs = navigator.languages ? navigator.languages.join(', ') : 'N/A';
-    jsLanguageInfoElement.innerHTML = `
-      <p class="mb-1"><strong>navigator.language:</strong></p>
-      <p class="text-info fw-bold">${lang}</p>
-      <p class="mb-1 mt-2"><strong>navigator.languages:</strong></p>
-      <p class="text-info fw-bold">${langs}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('javascript_method'))}</p>
-    `;
+
+    jsLanguageInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    const langTitleP = document.createElement('p');
+    langTitleP.className = 'mb-1';
+    const strongLang = document.createElement('strong');
+    strongLang.textContent = 'navigator.language:';
+    langTitleP.appendChild(strongLang);
+    fragment.appendChild(langTitleP);
+
+    const langValP = document.createElement('p');
+    langValP.className = 'text-info fw-bold';
+    langValP.textContent = lang;
+    fragment.appendChild(langValP);
+
+    const langsTitleP = document.createElement('p');
+    langsTitleP.className = 'mb-1 mt-2';
+    const strongLangs = document.createElement('strong');
+    strongLangs.textContent = 'navigator.languages:';
+    langsTitleP.appendChild(strongLangs);
+    fragment.appendChild(langsTitleP);
+
+    const langsValP = document.createElement('p');
+    langsValP.className = 'text-info fw-bold';
+    langsValP.textContent = langs;
+    fragment.appendChild(langsValP);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('javascript_method'));
+    fragment.appendChild(footerP);
+
+    jsLanguageInfoElement.appendChild(fragment);
     console.log('JS Language:', { language: lang, languages: langs });
   } catch (error) {
-    jsLanguageInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    jsLanguageInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
+    jsLanguageInfoElement.appendChild(errorP);
     console.error(detectI18n.t('js_language_detection_failed'), error);
   }
 }
@@ -467,14 +514,34 @@ const detectCanvasFingerprint = () => {
     const dataUrl = canvas.toDataURL();
     const fingerprint = md5(dataUrl);
 
-    canvasInfoElement.innerHTML = `
-      <p class="mb-1"><strong>Canvas hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('canvas_method'))}</p>
-    `;
+    canvasInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    const hashTitleP = document.createElement('p');
+    hashTitleP.className = 'mb-1';
+    const strongHash = document.createElement('strong');
+    strongHash.textContent = 'Canvas hash:';
+    hashTitleP.appendChild(strongHash);
+    fragment.appendChild(hashTitleP);
+
+    const hashValP = document.createElement('p');
+    hashValP.className = 'text-dark fw-bold small';
+    hashValP.textContent = fingerprint;
+    fragment.appendChild(hashValP);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('canvas_method'));
+    fragment.appendChild(footerP);
+
+    canvasInfoElement.appendChild(fragment);
     console.log('Canvas Fingerprint (MD5):', fingerprint);
   } catch (error) {
-    canvasInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    canvasInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
+    canvasInfoElement.appendChild(errorP);
     console.error(detectI18n.t('canvas_fingerprint_detection_failed'), error);
   }
 }
@@ -490,7 +557,11 @@ const detectWebglFingerprint = () => {
     const canvas = ResourceManager.createCanvasElement();
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) {
-      webglInfoElement.innerHTML = `<p class="text-warning">${detectI18n.t('webgl_not_supported')}</p>`;
+      webglInfoElement.innerHTML = '';
+      const warningP = document.createElement('p');
+      warningP.className = 'text-warning';
+      warningP.textContent = detectI18n.t('webgl_not_supported');
+      webglInfoElement.appendChild(warningP);
       console.warn('WebGL not supported');
       return;
     }
@@ -504,23 +575,46 @@ const detectWebglFingerprint = () => {
     const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
     const fingerprint = md5(fingerprintData);
 
-    webglInfoElement.innerHTML = `
-      <p class="mb-1"><strong>WebGL hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked vendor:</strong></p>
-      <p class="text-dark small">${vendor}</p>
-      <p class="mb-1 mt-2"><strong>WebGL unmasked renderer:</strong></p>
-      <p class="text-dark small">${renderer}</p>
-      <p class="mb-1 mt-2"><strong>WebGL version:</strong></p>
-      <p class="text-dark small">${version}</p>
-      <p class="mb-1 mt-2"><strong>Shading Language Version:</strong></p>
-      <p class="text-dark small">${shadingLanguageVersion}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('webgl_method'))}</p>
-    `;
+    webglInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    /**
+     * Helper to create a detail group (title + value)
+     */
+    const addDetail = (title, value, isBold = false, mt = 'mt-2') => {
+      const titleP = document.createElement('p');
+      titleP.className = `mb-1 ${mt}`;
+      const strongTitle = document.createElement('strong');
+      strongTitle.textContent = title;
+      titleP.appendChild(strongTitle);
+      fragment.appendChild(titleP);
+
+      const valP = document.createElement('p');
+      valP.className = `text-dark small${isBold ? ' fw-bold' : ''}`;
+      valP.textContent = value;
+      fragment.appendChild(valP);
+    };
+
+    addDetail('WebGL hash:', fingerprint, true, '');
+    addDetail('WebGL unmasked vendor:', vendor);
+    addDetail('WebGL unmasked renderer:', renderer);
+    addDetail('WebGL version:', version);
+    addDetail('Shading Language Version:', shadingLanguageVersion);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webgl_method'));
+    fragment.appendChild(footerP);
+
+    webglInfoElement.appendChild(fragment);
     console.log('WebGL Fingerprint (MD5):', fingerprint);
     console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
   } catch (error) {
-    webglInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    webglInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
+    webglInfoElement.appendChild(errorP);
     console.error(detectI18n.t('webgl_fingerprint_detection_failed'), error);
   }
 }
@@ -533,12 +627,19 @@ const detectAudioFingerprint = async () => {
   const audioInfoElement = document.getElementById('audioFingerprintInfo');
   if (!audioInfoElement) return;
   
-  audioInfoElement.innerHTML = `<p>${detectI18n.t('detecting')}</p>`;
+  audioInfoElement.innerHTML = '';
+  const loadingP = document.createElement('p');
+  loadingP.textContent = detectI18n.t('detecting');
+  audioInfoElement.appendChild(loadingP);
   
   try {
     const audioCtx = window.OfflineAudioContext;
     if (!audioCtx) {
-      audioInfoElement.innerHTML = `<p class="text-warning">${detectI18n.t('audio_not_supported')}</p>`;
+      audioInfoElement.innerHTML = '';
+      const warningP = document.createElement('p');
+      warningP.className = 'text-warning';
+      warningP.textContent = detectI18n.t('audio_not_supported');
+      audioInfoElement.appendChild(warningP);
       console.warn('AudioContext not supported');
       return;
     }
@@ -571,14 +672,34 @@ const detectAudioFingerprint = async () => {
     const fingerprintData = sum.toString();
     const fingerprint = md5(fingerprintData);
 
-    audioInfoElement.innerHTML = `
-      <p class="mb-1"><strong>AudioContext hash:</strong></p>
-      <p class="text-dark fw-bold small">${fingerprint}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('audio_method'))}</p>
-    `;
+    audioInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    const hashTitleP = document.createElement('p');
+    hashTitleP.className = 'mb-1';
+    const strongHash = document.createElement('strong');
+    strongHash.textContent = 'AudioContext hash:';
+    hashTitleP.appendChild(strongHash);
+    fragment.appendChild(hashTitleP);
+
+    const hashValP = document.createElement('p');
+    hashValP.className = 'text-dark fw-bold small';
+    hashValP.textContent = fingerprint;
+    fragment.appendChild(hashValP);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('audio_method'));
+    fragment.appendChild(footerP);
+
+    audioInfoElement.appendChild(fragment);
     console.log('Audio Fingerprint (MD5):', fingerprint);
   } catch (error) {
-    audioInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    audioInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
+    audioInfoElement.appendChild(errorP);
     console.error(detectI18n.t('audio_fingerprint_detection_failed'), error);
   }
 }
@@ -593,16 +714,47 @@ const detectIntlApi = () => {
   try {
     const dateTimeLocale = Intl.DateTimeFormat().resolvedOptions().locale || 'N/A';
     const numberFormatLocale = Intl.NumberFormat().resolvedOptions().locale || 'N/A';
-    intlApiInfoElement.innerHTML = `
-      <p class="mb-1"><strong>DateTimeFormat Locale:</strong></p>
-      <p class="text-secondary fw-bold">${dateTimeLocale}</p>
-      <p class="mb-1 mt-2"><strong>NumberFormat Locale:</strong></p>
-      <p class="text-secondary fw-bold">${numberFormatLocale}</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('intl_method'))}</p>
-    `;
+
+    intlApiInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    const dtTitleP = document.createElement('p');
+    dtTitleP.className = 'mb-1';
+    const strongDt = document.createElement('strong');
+    strongDt.textContent = 'DateTimeFormat Locale:';
+    dtTitleP.appendChild(strongDt);
+    fragment.appendChild(dtTitleP);
+
+    const dtValP = document.createElement('p');
+    dtValP.className = 'text-secondary fw-bold';
+    dtValP.textContent = dateTimeLocale;
+    fragment.appendChild(dtValP);
+
+    const nfTitleP = document.createElement('p');
+    nfTitleP.className = 'mb-1 mt-2';
+    const strongNf = document.createElement('strong');
+    strongNf.textContent = 'NumberFormat Locale:';
+    nfTitleP.appendChild(strongNf);
+    fragment.appendChild(nfTitleP);
+
+    const nfValP = document.createElement('p');
+    nfValP.className = 'text-secondary fw-bold';
+    nfValP.textContent = numberFormatLocale;
+    fragment.appendChild(nfValP);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('intl_method'));
+    fragment.appendChild(footerP);
+
+    intlApiInfoElement.appendChild(fragment);
     console.log('Intl API Locale:', { dateTime: dateTimeLocale, numberFormat: numberFormatLocale });
   } catch (error) {
-    intlApiInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    intlApiInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
+    intlApiInfoElement.appendChild(errorP);
     console.error(detectI18n.t('intl_api_detection_failed'), error);
   }
 }
@@ -614,27 +766,70 @@ const detectWebRtc = async () => {
   const webRtcInfoElement = document.getElementById('webRtcInfo');
   if (!webRtcInfoElement) return;
   
-  webRtcInfoElement.innerHTML = `<p>${detectI18n.t('trying_webrtc')}</p>`;
+  webRtcInfoElement.innerHTML = '';
+  const tryingP = document.createElement('p');
+  tryingP.textContent = detectI18n.t('trying_webrtc');
+  webRtcInfoElement.appendChild(tryingP);
   
   try {
     const ips = await collectWebRtcIps();
     
     if (ips.length > 0) {
-      webRtcInfoElement.innerHTML = `
-        <p class="mb-1"><strong>${detectI18n.t('webrtc_local_ip')}</strong></p>
-        <p class="small text-muted mb-1">${detectI18n.t('webrtc_description')}</p>
-        <ul class="list-unstyled mb-0">
-          ${ips.map(ip => `<li class="text-info fw-bold">${ip}</li>`).join('')}
-        </ul>
-        <p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'))}</p>
-      `;
+      webRtcInfoElement.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+
+      const titleP = document.createElement('p');
+      titleP.className = 'mb-1';
+      const strongTitle = document.createElement('strong');
+      strongTitle.textContent = detectI18n.t('webrtc_local_ip');
+      titleP.appendChild(strongTitle);
+      fragment.appendChild(titleP);
+
+      const descP = document.createElement('p');
+      descP.className = 'small text-muted mb-1';
+      descP.textContent = detectI18n.t('webrtc_description');
+      fragment.appendChild(descP);
+
+      const list = document.createElement('ul');
+      list.className = 'list-unstyled mb-0';
+      ips.forEach(ip => {
+        const item = document.createElement('li');
+        item.className = 'text-info fw-bold';
+        item.textContent = ip;
+        list.appendChild(item);
+      });
+      fragment.appendChild(list);
+
+      const footerP = document.createElement('p');
+      footerP.className = 'mb-0 mt-2 small text-muted';
+      footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'));
+      fragment.appendChild(footerP);
+
+      webRtcInfoElement.appendChild(fragment);
       console.info(detectI18n.t('webrtc_detected_local_ip'), ips);
     } else {
-      webRtcInfoElement.innerHTML = `<p class="text-success">${detectI18n.t('webrtc_no_ip_detected')}</p><p class="mb-0 mt-2 small text-muted">${detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'))}</p>`;
+      webRtcInfoElement.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+
+      const successP = document.createElement('p');
+      successP.className = 'text-success';
+      successP.textContent = detectI18n.t('webrtc_no_ip_detected');
+      fragment.appendChild(successP);
+
+      const footerP = document.createElement('p');
+      footerP.className = 'mb-0 mt-2 small text-muted';
+      footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'));
+      fragment.appendChild(footerP);
+
+      webRtcInfoElement.appendChild(fragment);
       console.log(detectI18n.t('webrtc_no_local_ip'));
     }
   } catch (error) {
-    webRtcInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('webrtc_not_supported')}: ${error.message}</p>`;
+    webRtcInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('webrtc_not_supported')}: ${error.message}`;
+    webRtcInfoElement.appendChild(errorP);
     console.error(detectI18n.t('webrtc_detection_failed'), error);
   }
 }
@@ -693,18 +888,43 @@ const detectFingerprint = () => {
     const timezoneOffset = new Date().getTimezoneOffset();
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
 
-    fingerprintInfoElement.innerHTML = `
-      <p class="mb-1"><strong>User Agent:</strong></p>
-      <p class="text-success small">${ua}</p>
-      <p class="mb-1 mt-2"><strong>Screen information:</strong></p>
-      <p class="text-success fw-bold">${screenRes}</p>
-      <p class="mb-1 mt-2"><strong>Timezone:</strong></p>
-      <p class="text-success fw-bold">${timezone} (Offset: ${timezoneOffset})</p>
-      <p class="mb-0 mt-2 small text-muted">${detectI18n.t('partial_fingerprint')}</p>
-    `;
+    fingerprintInfoElement.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    /**
+     * Helper to add a fingerprint detail
+     */
+    const addDetail = (title, value, isBold = false, mt = 'mt-2', isSmall = false) => {
+      const titleP = document.createElement('p');
+      titleP.className = `mb-1 ${mt}`;
+      const strongTitle = document.createElement('strong');
+      strongTitle.textContent = title;
+      titleP.appendChild(strongTitle);
+      fragment.appendChild(titleP);
+
+      const valP = document.createElement('p');
+      valP.className = `text-success${isBold ? ' fw-bold' : ''}${isSmall ? ' small' : ''}`;
+      valP.textContent = value;
+      fragment.appendChild(valP);
+    };
+
+    addDetail('User Agent:', ua, false, '', true);
+    addDetail('Screen information:', screenRes, true);
+    addDetail('Timezone:', `${timezone} (Offset: ${timezoneOffset})`, true);
+
+    const footerP = document.createElement('p');
+    footerP.className = 'mb-0 mt-2 small text-muted';
+    footerP.textContent = detectI18n.t('partial_fingerprint');
+    fragment.appendChild(footerP);
+
+    fingerprintInfoElement.appendChild(fragment);
     console.log('Fingerprint Info:', { ua, screenRes, timezone, timezoneOffset });
   } catch (error) {
-    fingerprintInfoElement.innerHTML = `<p class="text-danger">${detectI18n.t('fingerprint')}${detectI18n.t('detection_failed')}: ${error.message}</p>`;
+    fingerprintInfoElement.innerHTML = '';
+    const errorP = document.createElement('p');
+    errorP.className = 'text-danger';
+    errorP.textContent = `${detectI18n.t('fingerprint')}${detectI18n.t('detection_failed')}: ${error.message}`;
+    fingerprintInfoElement.appendChild(errorP);
     console.error(detectI18n.t('fingerprint_detection_failed'), error);
   }
 }
