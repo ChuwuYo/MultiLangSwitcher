@@ -44,17 +44,17 @@
   - 影响: 调试页面域名缓存测试结果显示
 
 ###### Phase 3: innerHTML 模板优化 (可选 🟢)
-- [ ] **popup.js** - 更新通知相关 (4处)
+- [x] **popup.js** - 更新通知相关 (4处)
   - 行554-561: showUpdateLoadingState()
   - 行584-601: showUpdateNotification() 回退模式
   - 行639: showUpdateNotification() 更新可用
   - 行644-654: showUpdateNotification() 无更新
   
-- [ ] **detect.js** - 检测结果显示 (17处)
+- [x] **detect.js** - 检测结果显示 (17处)
   - Canvas/WebGL/Audio/Intl/WebRTC/Fingerprint 检测
   - 虽然安全(仅 i18n 文本)，但用 DocumentFragment 更现代
   
-- [ ] **debug-ui.js** - 调试信息显示 (9处)
+- [x] **debug-ui.js** - 调试信息显示 (9处)
   - 规则显示、诊断信息等
   - 使用 DocumentFragment 替代 innerHTML 模板
 
