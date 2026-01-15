@@ -17,7 +17,10 @@ MultiLangSwitcher/
 │   ├── shared-utils.js              - 共享工具函数
 │   ├── shared-i18n-base.js          - 基础国际化类
 │   ├── shared-update-checker.js     - 共享更新检查器
-│   └── shared-language-options.js   - 共享语言选项列表
+│   ├── shared-language-options.js   - 共享语言选项列表
+│   ├── header-check-utils.js        - 请求头检查工具函数
+│   ├── shared-resource-manager.js   - 共享资源管理器
+│   └── theme-init.js                - 主题初始化脚本
 ├── fonts/                           - 字体资源目录
 ├── i18n/                            - 国际化文本资源目录
 │   ├── background-en.js             - 后台页面英文文本
@@ -37,7 +40,6 @@ MultiLangSwitcher/
 │   └── detect-zh.js                 - 测试页面中文文本
 ├── images/                          - 图片资源目录
 ├── manifest.json                    - 扩展配置清单文件
-├── .gitignore                       - Git 忽略文件
 ├── popup.html                       - 扩展弹窗页面
 ├── popup.js                         - 弹窗交互逻辑脚本
 ├── detect.html                      - 请求头测试页面
