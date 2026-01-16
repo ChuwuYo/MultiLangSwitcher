@@ -846,8 +846,6 @@ const handleUpdateCheckError = (error) => {
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   (async () => {
     try {
-      await ensureInitialized();
-
       // 统一消息处理入口：所有分支只返回数据或抛错，最终由 sendOk/sendErr 统一响应
       const type = request?.type;
       if (!type) {
@@ -855,6 +853,13 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       }
 
       let data = {};
+      // 调试日志属于广播消息：后台无需参与业务处理，避免触发 unknown type 报错/噪音
+      if (type === 'DEBUG_LOG') {
+        data = {};
+      } else {
+        await ensureInitialized();
+      }
+
       if (type === 'UPDATE_RULES') {
         data = await handleUpdateRulesRequest(request);
       } else if (type === 'AUTO_SWITCH_TOGGLED') {
@@ -887,6 +892,8 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         data = await handleSetStorageDataRequest(request);
       } else if (type === 'GET_MANIFEST_INFO') {
         data = await handleGetManifestInfoRequest();
+      } else if (type === 'DEBUG_LOG') {
+        data = {};
       } else {
         throw new Error(`Unknown message type: ${type}`);
       }
