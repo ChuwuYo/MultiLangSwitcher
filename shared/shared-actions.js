@@ -3,6 +3,53 @@
  * 提供与后台脚本通信的标准化接口
  */
 
+const requestBackground = async (type, payload = {}) => {
+  // 统一与后台通信的入口：将各种历史响应格式收敛为“成功返回数据 / 失败抛错”
+  if (!type) {
+    throw new Error('Message type is required');
+  }
+  if (!chrome?.runtime?.sendMessage) {
+    throw new Error('Chrome runtime API is not available');
+  }
+
+  let response;
+  try {
+    response = await chrome.runtime.sendMessage({ type, ...payload });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message);
+  }
+
+  if (!response) {
+    throw new Error('No response from background script');
+  }
+
+  // 新协议：{ ok: true, data } / { ok: false, error }
+  if (response.ok === true) {
+    return response.data;
+  }
+  if (response.ok === false) {
+    const message = response?.error?.message || response?.message || 'Background error';
+    const err = new Error(message);
+    if (response?.error && typeof response.error === 'object') {
+      Object.assign(err, response.error);
+    }
+    throw err;
+  }
+
+  // 兼容旧协议：status/success 字段混用，统一转换为返回或抛错
+  if (response?.status === 'success') return response;
+  if (response?.status === 'error') {
+    throw new Error(response?.message || 'Background error');
+  }
+  if (response?.success === true) return response;
+  if (response?.success === false) {
+    throw new Error(response?.error || 'Background error');
+  }
+
+  return response;
+};
+
 /**
  * 向后台脚本发送重置 Accept-Language 设置的请求
  * 使用 Promise 封装 chrome.runtime.sendMessage API，符合项目异步处理规范
@@ -11,34 +58,11 @@
  */
 const resetAcceptLanguage = async () => {
   try {
-    // 检查 Chrome API 可用性
-    if (!chrome?.runtime?.sendMessage) {
-      throw new Error('Chrome runtime API is not available');
+    const response = await requestBackground('RESET_ACCEPT_LANGUAGE');
+    if (typeof sendDebugLog === 'function') {
+      sendDebugLog('Accept-Language settings reset successfully', 'success');
     }
-
-    // 发送重置请求到后台脚本
-    const response = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ type: 'RESET_ACCEPT_LANGUAGE' }, response => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        resolve(response);
-      });
-    });
-
-    // 验证响应状态
-    if (response?.status === 'success') {
-      // 记录成功日志
-      if (typeof sendDebugLog === 'function') {
-        sendDebugLog('Accept-Language settings reset successfully', 'success');
-      }
-      return response;
-    }
-
-    // 处理非成功响应
-    const errorMessage = response?.message || 'Background script returned non-success status without error message';
-    throw new Error(errorMessage);
+    return response;
 
   } catch (error) {
     // 集中化错误处理和日志记录

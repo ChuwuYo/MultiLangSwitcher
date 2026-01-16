@@ -79,20 +79,8 @@ const updateHeaderRules = async (language, autoCheck = false) => {
   const cleanLanguage = language.trim();
   sendDebugLog(`${popupI18n.t('trying_to_update_rules')} ${cleanLanguage}. ${popupI18n.t('auto_check')} ${autoCheck}.`, 'info');
 
-  // 使用直接的Promise调用
-  const response = await chrome.runtime.sendMessage({
-    type: 'UPDATE_RULES',
-    language: cleanLanguage
-  });
-
-  // 处理响应结果
-  if (response?.status === 'error') {
-    throw new Error(response.message);
-  }
-
-  if (response?.status !== 'success') {
-    throw new Error(popupI18n.t('unexpected_response_format'));
-  }
+  // 统一消息调用：成功返回 data，失败直接抛错
+  const response = await requestBackground('UPDATE_RULES', { language: cleanLanguage });
 
   // 成功处理
   sendDebugLog(`${popupI18n.t('rules_updated_successfully')} ${response.language}.`, 'success');
@@ -277,7 +265,8 @@ const getCurrentLanguage = async () => {
  */
 const getLanguageFromBackground = async () => {
   try {
-    const response = await chrome.runtime.sendMessage({ type: 'GET_CURRENT_LANG' });
+    // 从后台获取：{ currentLanguage, autoSwitchEnabled }
+    const response = await requestBackground('GET_CURRENT_LANG');
 
     if (response?.currentLanguage) {
       sendDebugLog(popupI18n.t('get_current_language_from_background', { language: response.currentLanguage }), 'info');
@@ -297,7 +286,8 @@ const getLanguageFromBackground = async () => {
  */
 const getLanguageFromStorage = async () => {
   try {
-    const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage'] });
+    // 从存储获取：{ data: { currentLanguage } }
+    const result = await requestBackground('GET_STORAGE_DATA', { keys: ['currentLanguage'] });
 
     if (result?.data?.currentLanguage) {
       sendDebugLog(`${popupI18n.t('loaded_stored_language')} ${result.data.currentLanguage}.`, 'info');
@@ -329,7 +319,7 @@ const getDefaultLanguage = () => {
 const getAutoSwitchStatus = async () => {
   try {
     // 从本地存储获取自动切换状态
-    const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] });
+    const result = await requestBackground('GET_STORAGE_DATA', { keys: ['autoSwitchEnabled'] });
     return !!result.data?.autoSwitchEnabled;
   } catch (error) {
     sendDebugLog(popupI18n.t('error_getting_auto_switch_status', { message: error.message }), 'error');
@@ -345,13 +335,13 @@ const getAutoSwitchStatus = async () => {
 const setAutoSwitchStatus = async (enabled) => {
   try {
     // 保存自动切换状态到本地存储
-    await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: enabled } });
+    await requestBackground('SET_STORAGE_DATA', { data: { autoSwitchEnabled: enabled } });
 
     // 记录状态变更日志
     sendDebugLog(`${popupI18n.t('auto_switch_status_saved')} ${enabled ? popupI18n.t('enabled') : popupI18n.t('disabled')}.`, 'info');
 
     // 通知 background 脚本状态变更（即发即弃，不影响当前流程；仅在失败时记录日志）
-    chrome.runtime.sendMessage({ type: 'AUTO_SWITCH_TOGGLED', enabled })
+    requestBackground('AUTO_SWITCH_TOGGLED', { enabled })
       .catch((notifyError) => {
         sendDebugLog(`${popupI18n.t('failed_notify_background')}: ${notifyError.message}`, 'warning');
       });
@@ -380,7 +370,7 @@ const saveLanguageSetting = async (language) => {
   }
 
   // 保存语言设置到本地存储
-  await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { currentLanguage: language } });
+  await requestBackground('SET_STORAGE_DATA', { data: { currentLanguage: language } });
 
   sendDebugLog(`${popupI18n.t('language_settings_saved')} ${language}.`, 'info');
 };
@@ -1209,7 +1199,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   const syncAutoSwitchStatusToStorage = async (autoSwitchEnabled) => {
     try {
-      await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled } });
+      // 后台统一响应格式，直接 await 即可
+      await requestBackground('SET_STORAGE_DATA', { data: { autoSwitchEnabled } });
       sendDebugLog(popupI18n.t('synced_auto_switch_status_to_storage', { status: autoSwitchEnabled }), 'info');
     } catch (error) {
       sendDebugLog(popupI18n.t('update_storage_status_failed', { message: error.message }), 'error');

@@ -87,11 +87,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 通过消息传递获取动态规则
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
-        if (!response || !response.success) {
-          setSafeErrorMessage(resultElement, '获取规则失败');
-          return;
-        }
+        // 统一消息调用：成功直接返回数据，失败走 catch
+        const response = await requestBackground('GET_DYNAMIC_RULES');
         const rules = response.rules;
 
         resultElement.innerHTML = '';
@@ -161,15 +158,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         }
 
         // 通过消息传递获取最近匹配的规则信息
-        const matchedResponse = await chrome.runtime.sendMessage({ type: 'GET_MATCHED_RULES' });
-        if (!matchedResponse || !matchedResponse.success) {
-          const p = document.createElement('p');
-          p.className = 'error';
-          p.textContent = '获取匹配规则失败';
-          fragment.appendChild(p);
-          resultElement.appendChild(fragment);
-          return;
-        }
+        const matchedResponse = await requestBackground('GET_MATCHED_RULES');
         const matchedRules = matchedResponse.matchedRules;
 
         const matchedTitle = document.createElement('h5');
@@ -305,7 +294,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
   // 页面加载时同步自动切换状态
   (async () => {
     try {
-      const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['autoSwitchEnabled'] });
+      // 统一消息调用：避免到处写 response.success 检查
+      const result = await requestBackground('GET_STORAGE_DATA', { keys: ['autoSwitchEnabled'] });
 
       const autoSwitchToggle = document.getElementById('autoSwitchToggle');
       if (!autoSwitchToggle) return;
@@ -461,11 +451,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 通过消息传递获取和更新动态规则
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
-        if (!response || !response.success) {
-          setSafeContent(resultElement, '获取规则失败', 'error');
-          return;
-        }
+        // 统一消息调用：避免重复的 response.success 校验
+        const response = await requestBackground('GET_DYNAMIC_RULES');
 
         const existingRules = response.rules;
         const existingRuleIds = existingRules.map(rule => rule.id);
@@ -476,19 +463,13 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
           };
         });
 
-        const updateResponse = await chrome.runtime.sendMessage({
-          type: 'UPDATE_DYNAMIC_RULES',
+        await requestBackground('UPDATE_DYNAMIC_RULES', {
           removeRuleIds: existingRuleIds,
           addRules: updatedRules
         });
 
-        if (!updateResponse || !updateResponse.success) {
-          setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
-          addLogMessage(`${debugI18n.t('fix_priority_failed')} ${updateResponse?.error || 'Unknown error'}`, 'error');
-        } else {
-          setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
-          addLogMessage(debugI18n.t('priority_updated_log'), 'success');
-        }
+        setSafeContent(resultElement, debugI18n.t('priority_updated_success'), 'success');
+        addLogMessage(debugI18n.t('priority_updated_log'), 'success');
       } catch (error) {
         setSafeContent(resultElement, `${debugI18n.t('fix_failed')} ${error.message}`, 'error');
         addLogMessage(`${debugI18n.t('fix_priority_failed')} ${error.message}`, 'error');
@@ -505,45 +486,22 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 通过消息传递获取和清除动态规则
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_DYNAMIC_RULES' });
-        if (!response || !response.success) {
-          setSafeErrorMessage(resultElement, '获取规则失败');
-          return;
-        }
+        const response = await requestBackground('GET_DYNAMIC_RULES');
 
         const existingRules = response.rules;
         const existingRuleIds = existingRules.map(rule => rule.id);
 
-        const clearResponse = await chrome.runtime.sendMessage({
-          type: 'UPDATE_DYNAMIC_RULES',
+        await requestBackground('UPDATE_DYNAMIC_RULES', {
           removeRuleIds: existingRuleIds
         });
 
-        if (!clearResponse || !clearResponse.success) {
-          setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${clearResponse?.error || 'Unknown error'}`);
-          addLogMessage(`${debugI18n.t('clear_rules_failed')} ${clearResponse?.error || 'Unknown error'}`, 'error');
-        } else {
-          // 清除成功后，重新应用默认或存储的规则
-          const storageResponse = await chrome.runtime.sendMessage({
-            type: 'GET_STORAGE_DATA',
-            keys: ['currentLanguage']
-          });
+        // 清除成功后，重新应用默认或存储的规则
+        const storageResponse = await requestBackground('GET_STORAGE_DATA', { keys: ['currentLanguage'] });
+        const languageToApply = storageResponse.data?.currentLanguage || 'zh-CN';
 
-          const languageToApply = storageResponse.data?.currentLanguage || 'zh-CN';
-          // Send message to background.js to request rule update
-          const updateResponse = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageToApply });
-
-          if (updateResponse && updateResponse.status === 'success') {
-            setSafeSuccessMessage(resultElement, `${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}`);
-            addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
-          } else if (updateResponse && updateResponse.status === 'error') {
-            setSafeErrorMessage(resultElement, `${debugI18n.t('background_reapply_failed')} ${updateResponse.message}`);
-            addLogMessage(`${debugI18n.t('background_reapply_failed_log')} ${updateResponse.message}`, 'error');
-          } else {
-            setSafeContent(resultElement, debugI18n.t('background_no_clear_response'), 'warning');
-            addLogMessage(debugI18n.t('background_no_clear_response_log'), 'warning');
-          }
-        }
+        await requestBackground('UPDATE_RULES', { language: languageToApply });
+        setSafeSuccessMessage(resultElement, `${debugI18n.t('rules_cleared_reapplied')} ${languageToApply}`);
+        addLogMessage(`${debugI18n.t('rules_cleared_reapplied_log')} ${languageToApply}`, 'success');
       } catch (error) {
         setSafeErrorMessage(resultElement, `${debugI18n.t('clear_failed')} ${error.message}`);
         addLogMessage(`${debugI18n.t('clear_rules_failed')} ${error.message}`, 'error');
@@ -636,33 +594,22 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 发送消息到 background.js 请求更新规则
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'UPDATE_RULES', language: languageString });
+        await requestBackground('UPDATE_RULES', { language: languageString });
 
-        if (response && response.status === 'success') {
-          // 使用安全的DOM操作
-          const messages = [
-            { message: `${debugI18n.t('custom_language_applied')} ${languageString}`, className: 'success' }
-          ];
-          
-          if (hasFormatIssues) {
-            messages.push({ message: debugI18n.t('accept_language_format_warning'), className: 'warning' });
-          }
-          
-          setSafeContent(customLangResult, messages);
-          addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
+        // 使用安全的DOM操作
+        const messages = [
+          { message: `${debugI18n.t('custom_language_applied')} ${languageString}`, className: 'success' }
+        ];
+        
+        if (hasFormatIssues) {
+          messages.push({ message: debugI18n.t('accept_language_format_warning'), className: 'warning' });
+        }
+        
+        setSafeContent(customLangResult, messages);
+        addLogMessage(`${debugI18n.t('custom_language_applied_log')} ${languageString}`, 'success');
 
-          if (hasFormatIssues) {
-            addLogMessage(debugI18n.t('accept_language_format_warning'), 'warning');
-          }
-
-          // 可选：更新存储中的语言，如果希望自定义设置持久化
-          // await chrome.storage.local.set({ currentLanguage: languageString });
-        } else if (response && response.status === 'error') {
-          setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed_backend')} ${response.message}`, 'error');
-          addLogMessage(`${debugI18n.t('backend_apply_custom_failed')} ${response.message}`, 'error');
-        } else {
-          setSafeContent(customLangResult, debugI18n.t('background_no_clear_response'), 'warning');
-          addLogMessage(debugI18n.t('backend_no_custom_response'), 'warning');
+        if (hasFormatIssues) {
+          addLogMessage(debugI18n.t('accept_language_format_warning'), 'warning');
         }
       } catch (error) {
         setSafeContent(customLangResult, `${debugI18n.t('apply_custom_failed')} ${error.message}`, 'error');
@@ -772,7 +719,7 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
       // 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
       (async () => {
         try {
-          const result = await chrome.runtime.sendMessage({ type: 'GET_STORAGE_DATA', keys: ['currentLanguage', 'autoSwitchEnabled'] });
+          const result = await requestBackground('GET_STORAGE_DATA', { keys: ['currentLanguage', 'autoSwitchEnabled'] });
 
           const storedTitle = document.createElement('h5');
           storedTitle.textContent = debugI18n.t('stored_language_settings');
@@ -836,18 +783,11 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 发送消息到 background.js 更新自动切换状态
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({
-          type: 'AUTO_SWITCH_TOGGLED',
-          enabled: isEnabled
-        });
-
-        if (response && response.status === 'success') {
-          addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
-          // 更新存储中的状态
-          await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: isEnabled } });
-        } else {
-          addLogMessage(debugI18n.t('unknown_response_auto_switch'), 'warning');
-        }
+        // 后台统一响应格式，失败会抛错
+        await requestBackground('AUTO_SWITCH_TOGGLED', { enabled: isEnabled });
+        addLogMessage(isEnabled ? debugI18n.t('auto_switch_enabled') : debugI18n.t('auto_switch_disabled'), 'success');
+        // 更新存储中的状态
+        await requestBackground('SET_STORAGE_DATA', { data: { autoSwitchEnabled: isEnabled } });
       } catch (error) {
         addLogMessage(`${debugI18n.t('update_auto_switch_failed')} ${error.message}`, 'error');
       }
@@ -863,17 +803,11 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 从 background.js 获取域名映射规则
     (async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'GET_DOMAIN_RULES' });
+        const response = await requestBackground('GET_DOMAIN_RULES');
 
         // 响应检查
         console.log(debugI18n.t('received_domain_response'), response);
         addLogMessage(`${debugI18n.t('received_response')} ${JSON.stringify(response)}`, 'info');
-
-        if (response && response.error) {
-          setSafeErrorMessage(resultElement, `${debugI18n.t('get_domain_rules_error')} ${response.error}`);
-          addLogMessage(`${debugI18n.t('get_domain_rules_error')} ${response.error}`, 'error');
-          return;
-        }
 
         if (response && response.domainRules) {
           const rules = response.domainRules;
@@ -1011,7 +945,8 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
         autoSwitchToggle.checked = !!request.autoSwitchEnabled;
         (async () => {
           try {
-            await chrome.runtime.sendMessage({ type: 'SET_STORAGE_DATA', data: { autoSwitchEnabled: !!request.autoSwitchEnabled } });
+            // 同步到存储：统一消息调用，失败直接抛错
+            await requestBackground('SET_STORAGE_DATA', { data: { autoSwitchEnabled: !!request.autoSwitchEnabled } });
           } catch (notifyError) {
             addLogMessage(`${debugI18n.t('failed_update_storage')}: ${notifyError.message}`, 'warning');
           }
@@ -1038,17 +973,26 @@ ResourceManager.addEventListener(document, 'DOMContentLoaded', () => {
     // 清理 ResourceManager 中跟踪的资源
     ResourceManager.cleanup();
 
-    addLogMessage(debugI18n.t('debug_ui_cleanup_completed'), 'info');
+    // 页面卸载阶段可能早于日志模块初始化完成，避免引用未定义函数导致额外报错
+    if (typeof addLogMessage === 'function') {
+      addLogMessage(debugI18n.t('debug_ui_cleanup_completed'), 'info');
+    }
   };
 
   // 注册清理事件
   ResourceManager.addEventListener(window, 'beforeunload', cleanupResources);
 
   // 缓存管理功能
-  initializeCacheManagement();
+  // 避免在同一作用域内触发 TDZ（const 初始化前调用）
+  ResourceManager.setTimeout(() => {
+    try {
+      initializeCacheManagement();
+    } catch (error) {
+      console.error(`[Cache] Failed to initialize cache management: ${error.message}`);
+    }
+  }, 0);
 
-
-}); // DOMContentLoaded 结束
+});
 
 /**
  * 初始化缓存管理功能
@@ -1106,14 +1050,9 @@ const testDomainCache = async () => {
   try {
     setSafeContent(resultElement, debugI18n.t('testing_domain', { domain }));
 
-    // 通过消息传递请求后台测试域名
-    const response = await chrome.runtime.sendMessage({
-      type: 'TEST_DOMAIN_CACHE',
-      domain: domain
-    });
-
-    if (response && response.success) {
-      const { language, fromCache, isUsingFallback, cacheStats } = response;
+    // 通过消息传递请求后台测试域名：成功返回数据，失败走 catch
+    const response = await requestBackground('TEST_DOMAIN_CACHE', { domain: domain });
+    const { language, fromCache, isUsingFallback, cacheStats } = response;
 
       resultElement.innerHTML = ''; // 清空
       const fragment = document.createDocumentFragment();
@@ -1170,10 +1109,6 @@ const testDomainCache = async () => {
       }
 
       console.log(`[Cache] Domain test: ${domain} → ${language || 'not found'} (${fromCache ? 'cached' : 'new'})`);
-
-    } else {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('domain_test_failed')}: ${response?.error || 'Unknown error'}`);
-    }
 
   } catch (error) {
     setSafeErrorMessage(resultElement, `${debugI18n.t('domain_test_failed')}: ${error.message}`);
@@ -1249,12 +1184,8 @@ const handleCacheOperation = async (messageType, successMessageKey, additionalCa
   const resultElement = document.getElementById('cacheOperationResult');
 
   try {
-    const response = await chrome.runtime.sendMessage({ type: messageType });
-
-    if (!response || !response.success) {
-      setSafeErrorMessage(resultElement, `${debugI18n.t('cache_operation_failed')}: ${response?.error || 'Unknown error'}`);
-      return;
-    }
+    // 统一消息调用：避免 response.success/status 的重复判断
+    const response = await requestBackground(messageType);
 
     // 更新缓存统计显示
     if (response.stats) {

@@ -40,6 +40,39 @@ const sendBackgroundLog = (message, logType = 'info') => {
   sendDebugLog(`[${backgroundLabel}] ${message}`, logType);
 };
 
+const normalizeMessageError = (error) => {
+  // 统一错误输出格式：保证 message 存在，并尽量透传可用字段
+  if (error && typeof error === 'object') {
+    const message = typeof error.message === 'string' ? error.message : String(error);
+    const type = typeof error.type === 'string' ? error.type : undefined;
+    const retryable = typeof error.retryable === 'boolean' ? error.retryable : undefined;
+    const userMessage = typeof error.userMessage === 'string' ? error.userMessage : undefined;
+    const errorType = typeof error.errorType === 'string' ? error.errorType : undefined;
+    return {
+      message,
+      ...(type ? { type } : {}),
+      ...(errorType ? { errorType } : {}),
+      ...(typeof retryable === 'boolean' ? { retryable } : {}),
+      ...(userMessage ? { userMessage } : {})
+    };
+  }
+  return { message: String(error) };
+};
+
+const sendOk = (sendResponse, data = {}) => {
+  // 统一成功响应：前端只需要关心 ok/data 两个字段
+  if (typeof sendResponse === 'function') {
+    sendResponse({ ok: true, data });
+  }
+};
+
+const sendErr = (sendResponse, error) => {
+  // 统一失败响应：避免前端到处写 response.success/status/error 判断
+  if (typeof sendResponse === 'function') {
+    sendResponse({ ok: false, error: normalizeMessageError(error) });
+  }
+};
+
 /**
  * 确保初始化已完成的守卫函数
  * @returns {Promise}
@@ -442,9 +475,8 @@ const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
 /**
  * 处理更新规则请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleUpdateRulesRequest = async (request, sendResponse) => {
+const handleUpdateRulesRequest = async (request) => {
   try {
     const language = request.language;
     sendBackgroundLog(backgroundI18n.t('trying_update_rules', { language }), 'info');
@@ -454,25 +486,21 @@ const handleUpdateRulesRequest = async (request, sendResponse) => {
 
     await chrome.storage.local.set({ currentLanguage: language });
 
-    if (typeof sendResponse === 'function') {
-      sendResponse({ status: 'success', language: result.language });
-    }
-
     // 只在状态发生变化时才通知UI更新
     if (result.status === 'success') {
       notifyPopupUIUpdate(autoSwitchEnabled, result.language);
     }
+    return { status: result.status, language: result.language };
   } catch (error) {
-    handleUpdateRulesError(error, sendResponse);
+    handleUpdateRulesError(error);
   }
 };
 
 /**
  * 处理更新规则错误
  * @param {Error} error - 错误对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleUpdateRulesError = (error, sendResponse) => {
+const handleUpdateRulesError = (error) => {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorType = error.type || 'UNKNOWN_ERROR';
 
@@ -484,44 +512,29 @@ const handleUpdateRulesError = (error, sendResponse) => {
     sendBackgroundLog(`${backgroundI18n.t('original_error')}: ${error.originalError}`, 'error');
   }
 
-  if (typeof sendResponse === 'function') {
-    sendResponse({
-      status: 'error',
-      message: errorMessage,
-      errorType: errorType
-    });
-  }
+  const err = new Error(errorMessage);
+  err.type = errorType;
+  err.errorType = errorType;
+  if (error.originalError) err.originalError = error.originalError;
+  throw err;
 };
 
 /**
  * 处理自动切换开关请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleAutoSwitchToggleRequest = async (request, sendResponse) => {
-  try {
-    autoSwitchEnabled = request.enabled;
-    sendBackgroundLog(`${backgroundI18n.t('auto_switch_status_updated')}: ${autoSwitchEnabled}`, 'info');
+const handleAutoSwitchToggleRequest = async (request) => {
+  autoSwitchEnabled = request.enabled;
+  sendBackgroundLog(`${backgroundI18n.t('auto_switch_status_updated')}: ${autoSwitchEnabled}`, 'info');
 
-    await chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
+  await chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
 
-    const { currentLanguage: storedLanguage } = await chrome.storage.local.get(['currentLanguage']);
-    await applyLanguageRulesBasedOnState(storedLanguage);
+  const { currentLanguage: storedLanguage } = await chrome.storage.local.get(['currentLanguage']);
+  await applyLanguageRulesBasedOnState(storedLanguage);
 
-    const currentEffectiveLanguage = autoSwitchEnabled ? DEFAULT_LANG_EN : (storedLanguage || DEFAULT_LANG_EN);
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({ status: 'success' });
-    }
-    notifyPopupUIUpdate(autoSwitchEnabled, currentEffectiveLanguage);
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    sendBackgroundLog(`${backgroundI18n.t('auto_switch_toggle_failed')}: ${errorMessage}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({ status: 'error', message: errorMessage });
-    }
-  }
+  const currentEffectiveLanguage = autoSwitchEnabled ? DEFAULT_LANG_EN : (storedLanguage || DEFAULT_LANG_EN);
+  notifyPopupUIUpdate(autoSwitchEnabled, currentEffectiveLanguage);
+  return { autoSwitchEnabled, currentLanguage: currentEffectiveLanguage };
 };
 
 /**
@@ -546,34 +559,23 @@ const applyLanguageRulesBasedOnState = async (storedLanguage) => {
 
 /**
  * 处理获取当前语言请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleGetCurrentLangRequest = async (sendResponse) => {
-  try {
-    const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    const currentRule = rules.find(rule => rule.id === RULE_ID);
-    const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
+const handleGetCurrentLangRequest = async () => {
+  const rules = await chrome.declarativeNetRequest.getDynamicRules();
+  const currentRule = rules.find(rule => rule.id === RULE_ID);
+  const actualCurrentLang = currentRule?.action?.requestHeaders?.find(h => h.header === 'Accept-Language')?.value;
 
-    const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
-        autoSwitchEnabled: !!result.autoSwitchEnabled
-      });
-    }
-  } catch (error) {
-    sendBackgroundLog(`${backgroundI18n.t('get_current_lang_error')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({ error: error.message });
-    }
-  }
+  const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
+  return {
+    currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
+    autoSwitchEnabled: !!result.autoSwitchEnabled
+  };
 };
 
 /**
  * 处理重置Accept-Language请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleResetAcceptLanguageRequest = async (sendResponse) => {
+const handleResetAcceptLanguageRequest = async () => {
   try {
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: [RULE_ID]
@@ -582,15 +584,11 @@ const handleResetAcceptLanguageRequest = async (sendResponse) => {
     await chrome.storage.local.remove(['currentLanguage']);
     lastAppliedLanguage = null;
     sendBackgroundLog(backgroundI18n.t('accept_language_reset_successful'), 'success');
-    if (typeof sendResponse === 'function') {
-      sendResponse({ status: 'success' });
-    }
     notifyPopupUIUpdate(autoSwitchEnabled, null);
+    return {};
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('reset_error')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({ status: 'error', message: error.message });
-    }
+    throw error;
   }
 };
 
@@ -598,34 +596,22 @@ const handleResetAcceptLanguageRequest = async (sendResponse) => {
  * 处理获取域名规则请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleGetDomainRulesRequest = async (sendResponse) => {
+const handleGetDomainRulesRequest = async () => {
   sendBackgroundLog(backgroundI18n.t('received_domain_rules_request'), 'info');
 
-  try {
-    await domainRulesManager.loadRules();
-    const rules = domainRulesManager.getRules();
-    const stats = domainRulesManager.getRulesStats();
+  await domainRulesManager.loadRules();
+  const rules = domainRulesManager.getRules();
+  const stats = domainRulesManager.getRulesStats();
 
-    sendBackgroundLog(backgroundI18n.t('domain_rules_fetch_success', { count: Object.keys(rules || {}).length }), 'success');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({ domainRules: rules, stats: stats });
-    }
-  } catch (error) {
-    const errorMessage = `${backgroundI18n.t('domain_rules_load_failed')}: ${error.message}`;
-    sendBackgroundLog(errorMessage, 'error');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({ error: errorMessage });
-    }
-  }
+  sendBackgroundLog(backgroundI18n.t('domain_rules_fetch_success', { count: Object.keys(rules || {}).length }), 'success');
+  return { domainRules: rules, stats: stats };
 };
 
 /**
  * 处理更新检查请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleUpdateCheckRequest = async (sendResponse) => {
+const handleUpdateCheckRequest = async () => {
   try {
     const repoOwner = 'ChuwuYo';
     const repoName = 'MultiLangSwitcher';
@@ -637,16 +623,9 @@ const handleUpdateCheckRequest = async (sendResponse) => {
     const updateInfo = await updateChecker.checkForUpdates();
 
     sendBackgroundLog(backgroundI18n.t('update_check_success'), 'success');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        status: 'success',
-        updateInfo: updateInfo
-      });
-    }
-
+    return { updateInfo: updateInfo };
   } catch (error) {
-    handleUpdateCheckError(error, sendResponse);
+    handleUpdateCheckError(error);
   }
 };
 
@@ -654,7 +633,7 @@ const handleUpdateCheckRequest = async (sendResponse) => {
  * 处理获取缓存统计请求
  * @param {Function} sendResponse - 响应函数
  */
-const handleGetCacheStatsRequest = async (sendResponse) => {
+const handleGetCacheStatsRequest = async () => {
   try {
     // 确保域名规则管理器已加载
     await domainRulesManager.loadRules();
@@ -670,23 +649,11 @@ const handleGetCacheStatsRequest = async (sendResponse) => {
     };
 
     sendBackgroundLog(`${backgroundI18n.t('cache_stats_requested')}: ${JSON.stringify(combinedStats)}`, 'info');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        stats: combinedStats
-      });
-    }
+    return { stats: combinedStats };
   } catch (error) {
     const errorMessage = `${backgroundI18n.t('get_cache_stats_failed')}: ${error.message}`;
     sendBackgroundLog(errorMessage, 'error');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+    throw new Error(errorMessage);
   }
 };
 
@@ -695,7 +662,7 @@ const handleGetCacheStatsRequest = async (sendResponse) => {
  * @param {Object} request - 请求对象
  * @param {Function} sendResponse - 响应函数
  */
-const handleTestDomainCacheRequest = async (request, sendResponse) => {
+const handleTestDomainCacheRequest = async (request) => {
   try {
     const domain = request.domain;
     if (!domain) {
@@ -781,37 +748,26 @@ const handleTestDomainCacheRequest = async (request, sendResponse) => {
       cacheStatus,
       fallbackStatus
     }), 'info');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        language: language,
-        fromCache: fromCache,
-        isUsingFallback: isUsingFallback,
-        cacheStats: combinedStats
-      });
-    }
+    return {
+      language: language,
+      fromCache: fromCache,
+      isUsingFallback: isUsingFallback,
+      cacheStats: combinedStats
+    };
 
   } catch (error) {
     const errorMessage = backgroundI18n.t('domain_cache_test_failed', { error: error.message });
     sendBackgroundLog(errorMessage, 'error');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+    throw new Error(errorMessage);
   }
 };
 
 /**
  * 通用缓存操作处理辅助函数
- * @param {Function} sendResponse - 响应函数
  * @param {Function} operation - 要执行的操作函数
  * @param {Object} logMessages - 日志消息对象
  */
-const handleCacheOperation = async (sendResponse, operation, logMessages) => {
+const handleCacheOperation = async (operation, logMessages) => {
   try {
     sendBackgroundLog(logMessages.start, 'info');
 
@@ -824,33 +780,19 @@ const handleCacheOperation = async (sendResponse, operation, logMessages) => {
     const combinedStats = { ...cacheStats, ...rulesStats };
 
     sendBackgroundLog(logMessages.success, 'success');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        stats: combinedStats
-      });
-    }
+    return { stats: combinedStats };
   } catch (error) {
     const errorMessage = `${logMessages.fail}: ${error.message}`;
     sendBackgroundLog(errorMessage, 'error');
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: errorMessage
-      });
-    }
+    throw new Error(errorMessage);
   }
 };
 
 
 /**
  * 处理清理缓存请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleClearCacheRequest = (sendResponse) => handleCacheOperation(
- sendResponse,
+const handleClearCacheRequest = () => handleCacheOperation(
  () => domainRulesManager.clearCache(),
  {
    start: backgroundI18n.t('clearing_cache'),
@@ -862,10 +804,8 @@ const handleClearCacheRequest = (sendResponse) => handleCacheOperation(
 
 /**
  * 处理重置缓存统计请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleResetCacheStatsRequest = (sendResponse) => handleCacheOperation(
-  sendResponse,
+const handleResetCacheStatsRequest = () => handleCacheOperation(
   () => domainRulesManager.resetCacheStats(),
   {
     start: backgroundI18n.t('resetting_cache_stats'),
@@ -877,9 +817,8 @@ const handleResetCacheStatsRequest = (sendResponse) => handleCacheOperation(
 /**
  * 处理更新检查错误
  * @param {Error} error - 错误对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleUpdateCheckError = (error, sendResponse) => {
+const handleUpdateCheckError = (error) => {
   const errorMessage = error instanceof Error ? error.message : String(error);
 
   // Log specific error types with appropriate translations
@@ -896,56 +835,65 @@ const handleUpdateCheckError = (error, sendResponse) => {
   } else {
     sendBackgroundLog(backgroundI18n.t('update_check_failed', { error: errorMessage }), 'error');
   }
-
-  if (typeof sendResponse === 'function') {
-    sendResponse({
-      status: 'error',
-      error: {
-        type: error.type || 'UNKNOWN_ERROR',
-        message: error.message || errorMessage,
-        userMessage: error.message || 'An unexpected error occurred',
-        retryable: error.retryable || false
-      }
-    });
-  }
+  const err = new Error(error.message || errorMessage);
+  err.type = error.type || 'UNKNOWN_ERROR';
+  err.userMessage = error.message || 'An unexpected error occurred';
+  err.retryable = !!error.retryable;
+  throw err;
 };
 
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   (async () => {
-    await ensureInitialized();
-    if (request.type === 'UPDATE_RULES') {
-      handleUpdateRulesRequest(request, sendResponse);
-    } else if (request.type === 'AUTO_SWITCH_TOGGLED') {
-      handleAutoSwitchToggleRequest(request, sendResponse);
-    } else if (request.type === 'GET_CURRENT_LANG') {
-      handleGetCurrentLangRequest(sendResponse);
-    } else if (request.type === 'RESET_ACCEPT_LANGUAGE') {
-      handleResetAcceptLanguageRequest(sendResponse);
-    } else if (request.type === 'GET_DOMAIN_RULES') {
-      handleGetDomainRulesRequest(sendResponse);
-    } else if (request.type === 'UPDATE_CHECK') {
-      handleUpdateCheckRequest(sendResponse);
-    } else if (request.type === 'GET_CACHE_STATS') {
-      handleGetCacheStatsRequest(sendResponse);
-    } else if (request.type === 'TEST_DOMAIN_CACHE') {
-      handleTestDomainCacheRequest(request, sendResponse);
-    } else if (request.type === 'CLEAR_DOMAIN_CACHE') {
-      handleClearCacheRequest(sendResponse);
-    } else if (request.type === 'RESET_CACHE_STATS') {
-      handleResetCacheStatsRequest(sendResponse);
-    } else if (request.type === 'GET_DYNAMIC_RULES') {
-      handleGetDynamicRulesRequest(sendResponse);
-    } else if (request.type === 'GET_MATCHED_RULES') {
-      handleGetMatchedRulesRequest(sendResponse);
-    } else if (request.type === 'UPDATE_DYNAMIC_RULES') {
-      handleUpdateDynamicRulesRequest(request, sendResponse);
-    } else if (request.type === 'GET_STORAGE_DATA') {
-      handleGetStorageDataRequest(request, sendResponse);
-    } else if (request.type === 'SET_STORAGE_DATA') {
-      handleSetStorageDataRequest(request, sendResponse);
-    } else if (request.type === 'GET_MANIFEST_INFO') {
-      handleGetManifestInfoRequest(sendResponse);
+    try {
+      await ensureInitialized();
+
+      // 统一消息处理入口：所有分支只返回数据或抛错，最终由 sendOk/sendErr 统一响应
+      const type = request?.type;
+      if (!type) {
+        throw new Error('Invalid message type');
+      }
+
+      let data = {};
+      if (type === 'UPDATE_RULES') {
+        data = await handleUpdateRulesRequest(request);
+      } else if (type === 'AUTO_SWITCH_TOGGLED') {
+        data = await handleAutoSwitchToggleRequest(request);
+      } else if (type === 'GET_CURRENT_LANG') {
+        data = await handleGetCurrentLangRequest();
+      } else if (type === 'RESET_ACCEPT_LANGUAGE') {
+        data = await handleResetAcceptLanguageRequest();
+      } else if (type === 'GET_DOMAIN_RULES') {
+        data = await handleGetDomainRulesRequest();
+      } else if (type === 'UPDATE_CHECK') {
+        data = await handleUpdateCheckRequest();
+      } else if (type === 'GET_CACHE_STATS') {
+        data = await handleGetCacheStatsRequest();
+      } else if (type === 'TEST_DOMAIN_CACHE') {
+        data = await handleTestDomainCacheRequest(request);
+      } else if (type === 'CLEAR_DOMAIN_CACHE') {
+        data = await handleClearCacheRequest();
+      } else if (type === 'RESET_CACHE_STATS') {
+        data = await handleResetCacheStatsRequest();
+      } else if (type === 'GET_DYNAMIC_RULES') {
+        data = await handleGetDynamicRulesRequest();
+      } else if (type === 'GET_MATCHED_RULES') {
+        data = await handleGetMatchedRulesRequest();
+      } else if (type === 'UPDATE_DYNAMIC_RULES') {
+        data = await handleUpdateDynamicRulesRequest(request);
+      } else if (type === 'GET_STORAGE_DATA') {
+        data = await handleGetStorageDataRequest(request);
+      } else if (type === 'SET_STORAGE_DATA') {
+        data = await handleSetStorageDataRequest(request);
+      } else if (type === 'GET_MANIFEST_INFO') {
+        data = await handleGetManifestInfoRequest();
+      } else {
+        throw new Error(`Unknown message type: ${type}`);
+      }
+
+      sendOk(sendResponse, data || {});
+    } catch (error) {
+      sendErr(sendResponse, error);
     }
   })();
   return true;
@@ -992,159 +940,89 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 /**
  * 处理获取动态规则请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleGetDynamicRulesRequest = async (sendResponse) => {
+const handleGetDynamicRulesRequest = async () => {
   try {
     const rules = await chrome.declarativeNetRequest.getDynamicRules();
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        rules: rules
-      });
-    }
+    return { rules: rules };
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('get_dynamic_rules_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
 /**
  * 处理获取匹配规则请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleGetMatchedRulesRequest = async (sendResponse) => {
+const handleGetMatchedRulesRequest = async () => {
   try {
     const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        matchedRules: matchedRules
-      });
-    }
+    return { matchedRules: matchedRules };
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('get_matched_rules_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
 /**
  * 处理更新动态规则请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleUpdateDynamicRulesRequest = async (request, sendResponse) => {
+const handleUpdateDynamicRulesRequest = async (request) => {
   try {
     const { removeRuleIds, addRules } = request;
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: removeRuleIds || [],
       addRules: addRules || []
     });
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true
-      });
-    }
+    return {};
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('update_dynamic_rules_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
 /**
  * 处理获取存储数据请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleGetStorageDataRequest = async (request, sendResponse) => {
+const handleGetStorageDataRequest = async (request) => {
   try {
     const { keys } = request;
     const result = await chrome.storage.local.get(keys);
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        data: result
-      });
-    }
+    return { data: result };
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('get_storage_data_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
 /**
  * 处理设置存储数据请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
  */
-const handleSetStorageDataRequest = async (request, sendResponse) => {
+const handleSetStorageDataRequest = async (request) => {
   try {
     const { data } = request;
     await chrome.storage.local.set(data);
-    
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true
-      });
-    }
+    return {};
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('set_storage_data_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
 /**
  * 处理获取清单信息请求
- * @param {Function} sendResponse - 响应函数
  */
-const handleGetManifestInfoRequest = (sendResponse) => {
+const handleGetManifestInfoRequest = () => {
   try {
     const manifest = chrome.runtime.getManifest();
     const extensionId = chrome.runtime.id;
-
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: true,
-        manifest: manifest,
-        extensionId: extensionId
-      });
-    }
+    return { manifest: manifest, extensionId: extensionId };
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('get_manifest_info_failed')}: ${error.message}`, 'error');
-    if (typeof sendResponse === 'function') {
-      sendResponse({
-        success: false,
-        error: error.message
-      });
-    }
+    throw error;
   }
 };
 
