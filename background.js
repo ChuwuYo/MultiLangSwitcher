@@ -108,32 +108,63 @@ let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行�
 let contextMenusCreated = false;
 
 const createContextMenusOnce = async () => {
-  if (contextMenusCreated) return; // 避免重复创建
-  try {
-    await chrome.contextMenus.removeAll();
-    await chrome.contextMenus.create({
-      id: 'open-detect-page',
-      title: 'Detection Page',
-      contexts: ['action']
-    });
-    await chrome.contextMenus.create({
-      id: 'open-debug-page',
-      title: 'Debug Page',
-      contexts: ['action']
-    });
-    contextMenusCreated = true;
-    sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
-  } catch (e) {
-    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${e.message}`, 'error');
+  // 如果已经创建过，直接返回
+  if (contextMenusCreated) {
+    return;
   }
+  
+  // 使用Promise锁防止并发执行
+  if (createContextMenusOnce.promise) {
+    return createContextMenusOnce.promise;
+  }
+  
+  createContextMenusOnce.promise = (async () => {
+    try {
+      // 先查询现有菜单
+      const existingMenus = await chrome.contextMenus.query({});
+      const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
+      const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
+      
+      // 如果菜单已完整存在，标记为已创建并返回
+      if (hasDetectMenu && hasDebugMenu) {
+        contextMenusCreated = true;
+        sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
+        return;
+      }
+      
+      // 菜单不完整或不存在，先清理再重新创建
+      if (existingMenus.length > 0) {
+        await chrome.contextMenus.removeAll();
+      }
+      
+      // 创建菜单项 - 使用国际化标题
+      await chrome.contextMenus.create({
+        id: 'open-detect-page',
+        title: backgroundI18n.t('menu_detection_page') || 'Detection Page',
+        contexts: ['action']
+      });
+      await chrome.contextMenus.create({
+        id: 'open-debug-page',
+        title: backgroundI18n.t('menu_debug_page') || 'Debug Page',
+        contexts: ['action']
+      });
+      
+      contextMenusCreated = true;
+      sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
+    } catch (error) {
+      // 记录错误
+      sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
+      throw error;
+    } finally {
+      createContextMenusOnce.promise = null;
+    }
+  })();
+  
+  return createContextMenusOnce.promise;
 };
 
-// 安装与启动时尝试创建（幂等）
+// 只在安装时创建菜单，onStartup不需要重复创建
 chrome.runtime.onInstalled.addListener(() => {
-  createContextMenusOnce();
-});
-
-chrome.runtime.onStartup.addListener(() => {
   createContextMenusOnce();
 });
 

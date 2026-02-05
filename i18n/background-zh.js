@@ -53,6 +53,8 @@ if (typeof backgroundZh === 'undefined') {
   "auto_switch_toggle_failed": "自动切换状态切换失败",
   "context_menus_created": "右键菜单已创建",
   "create_context_menus_failed": "创建右键菜单失败",
+  "menu_detection_page": "检测页面",
+  "menu_debug_page": "调试页面",
   "clearing_cache": "正在清理缓存...",
   "cache_cleared_successfully": "缓存清理成功",
   "clear_cache_failed": "清理缓存失败",

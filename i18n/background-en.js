@@ -53,6 +53,8 @@ if (typeof backgroundEn === 'undefined') {
   "auto_switch_toggle_failed": "Auto switch toggle failed",
   "context_menus_created": "Context menus created",
   "create_context_menus_failed": "Failed to create context menus",
+  "menu_detection_page": "Detection Page",
+  "menu_debug_page": "Debug Page",
   "clearing_cache": "Clearing cache...",
   "cache_cleared_successfully": "Cache cleared successfully",
   "clear_cache_failed": "Failed to clear cache",
