@@ -2,28 +2,17 @@
 if (typeof backgroundEn === 'undefined') {
   var backgroundEn = {
   "background": "Background",
-  "extension_installed": "MultiLangSwitcher extension installed/updated. Reason: {reason}",
   "domain_rules_loaded": "Domain rules loaded successfully",
   "trying_update_rules": "Trying to update request header rules to: {language}",
   "rules_updated_successfully": "Request header rules successfully updated to: {language}",
-  "auto_switch_enabled": "Auto switch enabled. Subsequent requests will switch language by domain.",
-  "auto_switch_disabled": "Auto switch disabled. Restored to user language: {language}",
-  "language_already_set": "Language already set to {language}, skipping update",
-  "rules_already_set": "Rules already set to {language}, updating cache",
   "rules_update_completed": "Rules update completed, status",
   "rules_update_failed": "Rules update failed",
   "auto_switch_status_updated": "Auto switch function status updated to",
   "received_domain_rules_request": "Received request to get domain mapping rules",
-  "domain_rules_fetch_success": "Successfully fetched {count} domain mapping rules",
-  "domain_rules_load_failed": "Failed to load domain rules",
-  "initializing_state": "Initializing state due to: {reason}",
   "initialization_complete": "Initialization complete.",
   "initialization_failed": "Initialization failed: {message}",
   "fallback_state_set": "Set to safe fallback state after initialization failure.",
   "fallback_state_failed": "Failed to set fallback state: {message}",
-  "status": "Status",
-  "auto_switching_hostname": "Auto-switching for hostname '{hostname}' to language '{language}'",
-  "no_matching_rule": "Domain '{hostname}' has no matching rule, using fallback language: {fallback}",
   "error_processing_url": "Error processing URL ('{url}') for auto-switch",
   "retry": "retry",
   "update_rules_failed": "Failed to update declarativeNetRequest rules",
@@ -39,10 +28,8 @@ if (typeof backgroundEn === 'undefined') {
   "original_error": "Original error",
   "failed_notify_ui_error": "Failed to notify UI of error",
   "failed_notify_ui_update": "Failed to notify UI update",
-  "get_current_lang_error": "GET_CURRENT_LANG error",
   "accept_language_reset_successful": "Accept-Language reset successful",
   "reset_error": "Reset error",
-  "clearing_existing_rules": "Clearing {count} existing rules",
   "rules_cleared_successfully": "Rules cleared successfully",
   "clear_rules_failed": "Failed to clear rules",
   "batch_operation_completed": "Batch operation completed",
@@ -50,9 +37,10 @@ if (typeof backgroundEn === 'undefined') {
   "added": "added",
   "rules": "rules",
   "rule": "rule",
-  "auto_switch_toggle_failed": "Auto switch toggle failed",
   "context_menus_created": "Context menus created",
   "create_context_menus_failed": "Failed to create context menus",
+  "menu_detection_page": "Detection Page",
+  "menu_debug_page": "Debug Page",
   "clearing_cache": "Clearing cache...",
   "cache_cleared_successfully": "Cache cleared successfully",
   "clear_cache_failed": "Failed to clear cache",
@@ -66,27 +54,21 @@ if (typeof backgroundEn === 'undefined') {
   "set_storage_data_failed": "Failed to set storage data",
   "get_manifest_info_failed": "Failed to get manifest info",
   "extension_suspending": "Extension suspending, cleaning up resources...",
-  
+  "tab_update_init_failed": "Tab update initialization failed",
+
   // Update checker related keys for background logging
-  "update_check_initiated": "Update check initiated for repository: {repo}",
   "update_check_success": "Update check completed successfully",
-  
+
   // Cache stats related keys
   "cache_stats_requested": "Cache statistics requested",
   "get_cache_stats_failed": "Failed to get cache statistics",
 
   // Domain cache test related keys
-  "testing_domain_cache": "Testing domain cache for: {domain}",
-  "domain_test_result": "Domain test result: {domain} → {language} ({cacheStatus}{fallbackStatus})",
   "domain_cache_test_failed": "Domain cache test failed: {error}",
   "cached": "cached",
   "new": "new",
   "fallback": ", fallback",
-  "domain_required_error": "Domain is required",
-
-  // Concurrency control related keys
-  "auto_switch_skip_duplicate": "Auto-switch skipping duplicate language: {language}",
-  "cache_empty_but_language_same": "Cache empty but language same: {language}, continuing processing"
+  "domain_required_error": "Domain is required"
 
 };
 } // 结束 if (typeof backgroundEn === 'undefined') 检查

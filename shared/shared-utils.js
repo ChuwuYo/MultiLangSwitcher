@@ -50,38 +50,45 @@ const detectBrowserLanguage = () => {
  */
 const getUpdateTranslation = (key, params = {}, context = 'popup') => {
   try {
-    // 尝试从全局i18n实例获取翻译
-    let translation = key; // 默认返回键名作为fallback
-
-    // 智能检测上下文：如果指定了background但backgroundI18n不可用，尝试其他i18n实例
-    if (context === 'background' && typeof backgroundI18n !== 'undefined' && backgroundI18n.initialized) {
-      translation = backgroundI18n.t(key, params);
-    } else if (context === 'popup' && typeof popupI18n !== 'undefined') {
-      translation = popupI18n.t(key);
-    } else {
-      // 自动检测可用的i18n实例
-      if (typeof backgroundI18n !== 'undefined' && backgroundI18n.initialized) {
-        translation = backgroundI18n.t(key, params);
-      } else if (typeof popupI18n !== 'undefined') {
-        translation = popupI18n.t(key);
-      } else if (typeof debugI18n !== 'undefined') {
-        translation = debugI18n.t(key);
+    // 统一的i18n实例查找逻辑
+    const availableI18nInstances = [];
+    
+    // 根据上下文优先级添加实例
+    if (context === 'background' && typeof backgroundI18n !== 'undefined' && backgroundI18n.isReady) {
+      availableI18nInstances.push(backgroundI18n);
+    }
+    if (context === 'popup' && typeof popupI18n !== 'undefined' && popupI18n.isReady) {
+      availableI18nInstances.push(popupI18n);
+    }
+    
+    // 添加其他可能的实例作为备用
+    const otherInstances = [
+      typeof backgroundI18n !== 'undefined' ? backgroundI18n : undefined,
+      typeof popupI18n !== 'undefined' ? popupI18n : undefined,
+      typeof debugI18n !== 'undefined' ? debugI18n : undefined,
+      typeof detectI18n !== 'undefined' ? detectI18n : undefined
+    ].filter(instance => 
+      instance && 
+      instance.isReady && 
+      !availableI18nInstances.includes(instance)
+    );
+    
+    availableI18nInstances.push(...otherInstances);
+    
+    // 尝试从找到的i18n实例获取翻译
+    for (const i18nInstance of availableI18nInstances) {
+      try {
+        const translation = i18nInstance.t(key, params);
+        if (translation && translation !== key) {
+          return translation;
+        }
+      } catch (error) {
+        continue; // 忽略错误，尝试下一个实例
       }
     }
-
-    // 如果没有找到翻译或翻译就是键名本身，使用fallback机制
-    if (translation === key) {
-      translation = getFallbackTranslation(key, params);
-    }
-
-    // 替换参数占位符（针对popup上下文，因为popup的t方法不支持参数）
-    if ((context === 'popup' || typeof popupI18n !== 'undefined') && Object.keys(params).length > 0) {
-      Object.keys(params).forEach(param => {
-        translation = translation.replace(`{${param}}`, params[param]);
-      });
-    }
-
-    return translation;
+    
+    // 所有i18n实例都失败，使用简化的fallback
+    return getFallbackTranslation(key, params);
   } catch (error) {
     console.warn('Failed to get update translation:', error);
     return getFallbackTranslation(key, params);
@@ -89,107 +96,21 @@ const getUpdateTranslation = (key, params = {}, context = 'popup') => {
 };
 
 /**
- * 获取通用的fallback翻译
+ * 获取简化的通用fallback翻译
  * @param {string} key - 翻译键
  * @param {Object} params - 参数对象
  * @returns {string} fallback翻译文本
  */
 const getFallbackTranslation = (key, params = {}) => {
-  // 检测当前语言，优先使用i18n实例的语言设置
-  let currentLang = 'en';
-  try {
-    // 1. 优先从已初始化的i18n实例获取当前语言
-    if (typeof backgroundI18n !== 'undefined' && backgroundI18n.isReady) {
-      currentLang = backgroundI18n.currentLang;
-    } else if (typeof popupI18n !== 'undefined' && popupI18n.isReady) {
-      currentLang = popupI18n.currentLang;
-    } else if (typeof debugI18n !== 'undefined' && debugI18n.isReady) {
-      currentLang = debugI18n.currentLang;
-    } else if (typeof detectI18n !== 'undefined' && detectI18n.isReady) {
-      currentLang = detectI18n.currentLang;
-    } else {
-      // 2. 如果没有可用的i18n实例，尝试使用localStorage中保存的用户语言设置
-      // 注意：在Service Worker环境中localStorage不可用，需要安全检查
-      if (typeof localStorage !== 'undefined' && localStorage) {
-        try {
-          const savedLang = localStorage.getItem('app-lang');
-          if (savedLang) {
-            currentLang = savedLang;
-          } else {
-            // 3. 如果没有保存的设置，使用浏览器语言检测
-            if (typeof detectBrowserLanguage === 'function') {
-              currentLang = detectBrowserLanguage();
-            } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-              const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-              currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
-            }
-          }
-        } catch (error) {
-          // localStorage访问失败时的降级处理
-          if (typeof detectBrowserLanguage === 'function') {
-            currentLang = detectBrowserLanguage();
-          } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-            const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-            currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
-          }
-        }
-      } else {
-        // 4. 在Service Worker环境中或localStorage不可用时，使用浏览器语言检测
-        if (typeof detectBrowserLanguage === 'function') {
-          currentLang = detectBrowserLanguage();
-        } else if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getUILanguage) {
-          const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-          currentLang = browserLang.startsWith('zh') ? 'zh' : 'en';
-        }
-      }
-    }
-  } catch (error) {
-    currentLang = 'en';
-  }
-
-  // 尝试从现有的翻译对象获取翻译
-  let translation = null;
-
-  // 定义要尝试的翻译对象列表（按优先级排序）
-  const translationSources = currentLang === 'zh'
-    ? [
-      () => typeof backgroundZh !== 'undefined' ? backgroundZh : null,
-      () => typeof popupZh !== 'undefined' ? popupZh : null,
-      () => typeof debugZh !== 'undefined' ? debugZh : null,
-      () => typeof detectZh !== 'undefined' ? detectZh : null,
-      () => typeof domainManagerZh !== 'undefined' ? domainManagerZh : null
-    ]
-    : [
-      () => typeof backgroundEn !== 'undefined' ? backgroundEn : null,
-      () => typeof popupEn !== 'undefined' ? popupEn : null,
-      () => typeof debugEn !== 'undefined' ? debugEn : null,
-      () => typeof detectEn !== 'undefined' ? detectEn : null,
-      () => typeof domainManagerEn !== 'undefined' ? domainManagerEn : null
-    ];
-
-  // 依次尝试从各个翻译对象中获取翻译
-  for (const getTranslationObj of translationSources) {
-    try {
-      const translationObj = getTranslationObj();
-      if (translationObj && translationObj[key] && translationObj[key] !== key) {
-        translation = translationObj[key];
-        break;
-      }
-    } catch (error) {
-      // 忽略访问错误，继续尝试下一个
-      continue;
-    }
-  }
-
-  // 如果找到翻译，处理参数替换并返回
-  if (translation && translation !== key) {
-    Object.keys(params).forEach(param => {
-      translation = translation.replace(new RegExp(`\\{${param}\\}`, 'g'), params[param]);
-    });
-    return translation;
-  }
-
-  // 完整的 fallback 翻译
+  // 从主i18n实例获取当前语言，确保实时同步
+  const mainI18n = typeof popupI18n !== 'undefined' ? popupI18n :
+                   typeof debugI18n !== 'undefined' ? debugI18n :
+                   typeof popupI18n !== 'undefined' ? popupI18n :
+                   typeof detectI18n !== 'undefined' ? detectI18n : null;
+  
+  const currentLang = mainI18n?.currentLang || 'en';
+  
+  // 统一的fallback翻译库
   const fallbackTranslations = {
     en: {
       // General UI
@@ -222,6 +143,9 @@ const getFallbackTranslation = (key, params = {}) => {
       'update_check_network_issue': 'Network Issue',
       'update_check_service_issue': 'Service Issue',
       'update_check_unexpected_error': 'An unexpected error occurred.',
+
+      // Debug Messages
+      'debug_log_started': 'Debug log started',
     },
     zh: {
       // General UI
@@ -254,16 +178,22 @@ const getFallbackTranslation = (key, params = {}) => {
       'update_check_network_issue': '网络问题',
       'update_check_service_issue': '服务问题',
       'update_check_unexpected_error': '发生意外错误。',
+
+      // 调试信息
+      'debug_log_started': '调试日志已启动',
     }
   };
 
+  // 简化的翻译查找和格式化
   const translations = fallbackTranslations[currentLang] || fallbackTranslations['en'];
   let text = translations[key] || key;
 
-  // 替换参数占位符
-  Object.keys(params).forEach(param => {
-    text = text.replace(`{${param}}`, params[param]);
-  });
+  // 参数替换 - 与BaseI18n._formatString保持一致
+  if (params && typeof params === 'object' && Object.keys(params).length > 0) {
+    for (const [param, value] of Object.entries(params)) {
+      text = text.split(`{${param}}`).join(String(value));
+    }
+  }
 
   return text;
 }

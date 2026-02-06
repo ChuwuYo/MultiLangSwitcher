@@ -10,7 +10,6 @@ MultiLangSwitcher/
 ├── docs/                            - 项目文档目录
 │   ├── README/                      - 多语言说明文档目录
 │   ├── Project_Structure.md         - 项目结构文档（完整的文件结构说明）
-│   ├── Update.md                    - 版本更新记录（项目变更历史）
 │   └── TODO.md                      - 待完成功能和改进项目
 ├── shared/                          - 共享资源目录
 │   ├── shared-actions.js            - 共享常量定义

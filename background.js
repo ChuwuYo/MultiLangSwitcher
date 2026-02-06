@@ -66,6 +66,17 @@ const sendOk = (sendResponse, data = {}) => {
   }
 };
 
+// 全局状态变量
+let autoSwitchEnabled = false;  // 自动切换状态
+let isInitialized = false;      // 初始化完成标志
+let initializationPromise = null;    // 初始化Promise，防止重复执行
+
+// 右键菜单初始化标志
+let contextMenuPromise = null;
+
+// 规则更新锁，确保串行执行
+let updateRulesLock = Promise.resolve();
+
 const sendErr = (sendResponse, error) => {
   // 统一失败响应：避免前端到处写 response.success/status/error 判断
   if (typeof sendResponse === 'function') {
@@ -91,51 +102,86 @@ const ensureInitialized = async () => {
     await initialize('lazy');
   }
 };
-// 全局状态变量
-let rulesCache = null;          // 规则缓存，避免重复获取已知规则
-let lastAppliedLanguage = null; // 最后应用的语言
-let autoSwitchEnabled = false;  // 自动切换状态
-let pendingUIUpdate = null;     // 待处理的UI更新
-let latestAutoSwitchEnabled = false; // 用于存储最新的 autoSwitchEnabled 状态
-let latestCurrentLanguage = null;    // 用于存储最新的 currentLanguage 状态
-let isInitialized = false;           // 初始化完成标志
-let initializationPromise = null;    // 初始化Promise，防止重复执行
-
-// 并发控制变量
-let updateRulesQueue = Promise.resolve(); // 规则更新队列，确保串行执行
-
-// 右键菜单初始化标志
-let contextMenusCreated = false;
 
 const createContextMenusOnce = async () => {
-  if (contextMenusCreated) return; // 避免重复创建
-  try {
-    await chrome.contextMenus.removeAll();
-    await chrome.contextMenus.create({
-      id: 'open-detect-page',
-      title: 'Detection Page',
-      contexts: ['action']
-    });
-    await chrome.contextMenus.create({
-      id: 'open-debug-page',
-      title: 'Debug Page',
-      contexts: ['action']
-    });
-    contextMenusCreated = true;
-    sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
-  } catch (e) {
-    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${e.message}`, 'error');
+  // 如果已经有初始化操作在进行，等待其完成
+  if (contextMenuPromise) {
+    return contextMenuPromise;
   }
+
+  contextMenuPromise = (async () => {
+    try {
+      // 确保 i18n 初始化完成
+      await i18nReady;
+      
+      // 先查询现有菜单（部分浏览器不支持 query）
+      let existingMenus = null;
+      if (chrome.contextMenus && typeof chrome.contextMenus.query === 'function') {
+        try {
+          existingMenus = await chrome.contextMenus.query({});
+        } catch (error) {
+          existingMenus = null;
+        }
+      }
+
+      if (Array.isArray(existingMenus)) {
+        const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
+        const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
+
+        // 如果菜单已完整存在，标记为已创建并返回
+        if (hasDetectMenu && hasDebugMenu) {
+          sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
+          return;
+        }
+
+        // 菜单不完整或不存在，先清理再重新创建
+        if (existingMenus.length > 0 && chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+          await chrome.contextMenus.removeAll();
+        }
+      } else if (chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+        // 无法查询时，直接清理再创建，避免重复菜单
+        await chrome.contextMenus.removeAll();
+      }
+      
+      // 创建菜单项 - 使用国际化标题
+      const createContextMenu = (options) => {
+        return new Promise((resolve, reject) => {
+          try {
+            chrome.contextMenus.create(options, () => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else {
+                resolve();
+              }
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+      };
+
+      await createContextMenu({
+        id: 'open-detect-page',
+        title: backgroundI18n.t('menu_detection_page') || 'Detection Page',
+        contexts: ['action']
+      });
+      await createContextMenu({
+        id: 'open-debug-page',
+        title: backgroundI18n.t('menu_debug_page') || 'Debug Page',
+        contexts: ['action']
+      });
+      
+      sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
+    } catch (error) {
+      // 记录错误
+      sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
+      contextMenuPromise = null; // 失败时允许重试
+      throw error;
+    }
+  })();
+
+  return contextMenuPromise;
 };
-
-// 安装与启动时尝试创建（幂等）
-chrome.runtime.onInstalled.addListener(() => {
-  createContextMenusOnce();
-});
-
-chrome.runtime.onStartup.addListener(() => {
-  createContextMenusOnce();
-});
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'open-detect-page') {
@@ -147,10 +193,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // 在浏览器启动时初始化
 chrome.runtime.onStartup.addListener(() => {
-  initialize('startup');
+  initialize('startup').catch(error => {
+    sendBackgroundLog(`${backgroundI18n.t('on_startup_init_failed')}: ${error.message}`, 'error');
+  });
 });
 
 // 在扩展安装或更新时初始化
+chrome.runtime.onInstalled.addListener(async details => {
+  try {
+    // 安装时的所有初始化操作集中在一起，未来如果有其他安装时操作，直接加在这里
+    await createContextMenusOnce();
+    await initialize(details.reason);
+  } catch (error) {
+    sendBackgroundLog(`${backgroundI18n.t('on_install_init_failed')}: ${error.message}`, 'error');
+  }
+});
 
 // 指数退避重试配置
 const MAX_RETRY_ATTEMPTS = 3;
@@ -177,7 +234,7 @@ const clearAllDynamicRules = async () => {
 }
 
 /**
- * 带并发控制的规则更新包装器
+ * 规则更新函数，包含简单的并发控制和直接查询declarativeNetRequest
  * @param {string} language - 要设置的语言代码
  * @param {number} retryCount - 当前重试次数
  * @param {boolean} isAutoSwitch - 是否由自动切换触发
@@ -186,32 +243,24 @@ const clearAllDynamicRules = async () => {
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
-  // 并发控制：仅使用串行队列确保顺序执行
-  const requestPromise = updateRulesQueue.then(() =>
-    updateHeaderRulesInternal(language, retryCount, isAutoSwitch)
-  );
+  // 使用Promise链实现互斥锁，确保规则更新串行执行
+  let resolve;
+  const prevLock = updateRulesLock;
+  updateRulesLock = new Promise(r => { resolve = r; });
+  await prevLock;
 
-  // 更新队列，即使失败也要保证队列继续
-  updateRulesQueue = requestPromise.catch(() => {});
-
-  // 直接返回请求的Promise
-  return requestPromise;
+  try {
+    return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
+  } finally {
+    resolve();
+  }
 };
 
-/**
- * 内部规则更新实现，支持错误重试和规则缓存
- * @param {string} language - 要设置的语言代码
- * @param {number} retryCount - 当前重试次数
- * @param {boolean} isAutoSwitch - 是否由自动切换触发
- * @returns {Promise<Object>} 更新结果
- */
-const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch = false) => {
-  language = language ? language.trim() : DEFAULT_LANG_EN;
-
-  // 优化的缓存检查：对所有调用（包括自动切换）都进行短路检查
-  if (language === lastAppliedLanguage && rulesCache && rulesCache.length > 0) {
-    // 验证缓存中确实存在对应的规则
-    const existingRule = rulesCache.find(rule =>
+const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => {
+  try {
+    // 直接查询当前规则状态，替代缓存检查
+    const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const existingRule = currentRules.find(rule =>
       rule.id === RULE_ID &&
       rule.action.requestHeaders &&
       rule.action.requestHeaders.some(header =>
@@ -219,47 +268,22 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
         header.value === language
       )
     );
-    
+
     if (existingRule) {
       const logMessage = isAutoSwitch
         ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
         : backgroundI18n.t('language_already_set', { language });
       sendBackgroundLog(logMessage, 'info');
-      return { status: 'cached', language };
-    } else {
-      // 语言相同但缓存中没有对应规则，记录警告并继续处理
-      sendBackgroundLog(backgroundI18n.t('cache_empty_but_language_same', { language }), 'warning');
-    }
-  }
-
-  sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
-
-  // 性能监控：记录开始时间
-  const startTime = performance.now();
-
-  try {
-    // 获取现有规则
-    const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-    rulesCache = existingRules;
-
-    // 检查是否已存在相同语言的规则
-    const existingRule = existingRules.find(rule =>
-      rule.id === RULE_ID &&
-      rule.action.requestHeaders &&
-      rule.action.requestHeaders.some(header =>
-        header.header === 'Accept-Language' &&
-        header.value === language
-      )
-    );
-
-    if (existingRule) {
-      sendBackgroundLog(backgroundI18n.t('rules_already_set', { language }), 'info');
-      lastAppliedLanguage = language;
       return { status: 'unchanged', language };
     }
 
+    sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
+
+    // 性能监控：记录开始时间
+    const startTime = performance.now();
+
     // 批量处理：仅当存在时才移除具有 RULE_ID 的旧规则，然后添加新规则
-    const removeRuleIds = existingRules.some(rule => rule.id === RULE_ID) ? [RULE_ID] : [];
+    const removeRuleIds = currentRules.some(rule => rule.id === RULE_ID) ? [RULE_ID] : [];
     const newRule = {
       "id": RULE_ID,
       "priority": 100,
@@ -297,17 +321,13 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
 
-    // 规则更新成功，同步更新状态
-    lastAppliedLanguage = language;
-    rulesCache = await chrome.declarativeNetRequest.getDynamicRules(); // 更新缓存
     sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
-
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('update_rules_failed')}: ${error.message}`, 'error');
     return handleRuleUpdateError(error, language, retryCount);
   }
-}
+};
 
 /**
  * 处理规则更新错误，实现指数退避重试
@@ -341,9 +361,13 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 
     sendBackgroundLog(`${backgroundI18n.t('retry_after', { delay, count: nextRetryCount })}`, 'warning');
 
-    // 等待后重试
+    // 等待后重试 - 直接调用内部函数，因为互斥锁已经在外部 updateHeaderRules 中获取
     await new Promise(resolve => ResourceManager.setTimeout(resolve, delay));
-    return await updateHeaderRulesInternal(language, nextRetryCount, false);
+    try {
+      return await updateHeaderRulesInternal(language, nextRetryCount, false);
+    } catch (retryError) {
+      return handleRuleUpdateError(retryError, language, nextRetryCount);
+    }
   } else {
     // 超过重试次数或不可重试的错误
     const finalError = new Error(`${backgroundI18n.t('update_rules_failed_with_type', { type: errorType })}: ${error.message}`);
@@ -401,7 +425,6 @@ const performInitialization = async (reason) => {
     sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error');
     // 设置一个明确、安全的回退状态
     autoSwitchEnabled = false;
-    lastAppliedLanguage = null;
     try {
       await clearAllDynamicRules();
       await chrome.storage.local.set({ autoSwitchEnabled: false, currentLanguage: '' });
@@ -430,9 +453,10 @@ const initialize = (reason) => {
       await performInitialization(reason);
       isInitialized = true;
     } catch (error) {
-      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error') ;
+      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error');
       initializationPromise = null;
       isInitialized = false;
+      throw error; // 重新抛出错误，让调用者知道初始化失败
     }
   })();
 
@@ -440,10 +464,7 @@ const initialize = (reason) => {
 };
 
 
-// 当扩展安装或更新时触发
-chrome.runtime.onInstalled.addListener(details => {
-  initialize(details.reason);
-});
+
 
 /**
  * 防抖的UI更新通知
@@ -451,24 +472,15 @@ chrome.runtime.onInstalled.addListener(details => {
  * @param {string} currentLanguage - 当前语言代码
  */
 const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
-  // Store the latest state
-  latestAutoSwitchEnabled = autoSwitchEnabled;
-  latestCurrentLanguage = currentLanguage;
-
-  if (pendingUIUpdate) {
-    clearTimeout(pendingUIUpdate);
-  }
-  pendingUIUpdate = ResourceManager.setTimeout(() => {
-    const message = {
-      type: 'AUTO_SWITCH_UI_UPDATE',
-      autoSwitchEnabled: latestAutoSwitchEnabled,
-      currentLanguage: latestCurrentLanguage
-    };
-    chrome.runtime.sendMessage(message).catch((notifyError) => {
-      sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
-    });
-    sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${latestAutoSwitchEnabled}, ${backgroundI18n.t('language')}=${latestCurrentLanguage}`, 'info');
-  }, 100); // Reduced debounce delay to 100ms
+  const message = {
+    type: 'AUTO_SWITCH_UI_UPDATE',
+    autoSwitchEnabled: autoSwitchEnabled,
+    currentLanguage: currentLanguage
+  };
+  chrome.runtime.sendMessage(message).catch((notifyError) => {
+    sendBackgroundLog(`${backgroundI18n.t('failed_notify_ui_update')}: ${notifyError.message}`, 'warning');
+  });
+  sendBackgroundLog(`${backgroundI18n.t('ui_update')}: ${backgroundI18n.t('auto_switch')}=${autoSwitchEnabled}, ${backgroundI18n.t('language')}=${currentLanguage}`, 'info');
 }
 
 
@@ -492,31 +504,11 @@ const handleUpdateRulesRequest = async (request) => {
     }
     return { status: result.status, language: result.language };
   } catch (error) {
-    handleUpdateRulesError(error);
+    // 记录错误日志并重新抛出，让上层统一处理
+    const errorMessage = error?.message || String(error);
+    sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage}`, 'error');
+    throw error;
   }
-};
-
-/**
- * 处理更新规则错误
- * @param {Error} error - 错误对象
- */
-const handleUpdateRulesError = (error) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const errorType = error.type || 'UNKNOWN_ERROR';
-
-  // 详细的错误日志，便于Debug页面查看
-  sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage} (${backgroundI18n.t('rule_update_error_type')}: ${errorType})`, 'error');
-
-  // 如果有原始错误，也记录下来
-  if (error.originalError) {
-    sendBackgroundLog(`${backgroundI18n.t('original_error')}: ${error.originalError}`, 'error');
-  }
-
-  const err = new Error(errorMessage);
-  err.type = errorType;
-  err.errorType = errorType;
-  if (error.originalError) err.originalError = error.originalError;
-  throw err;
 };
 
 /**
@@ -567,7 +559,7 @@ const handleGetCurrentLangRequest = async () => {
 
   const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
   return {
-    currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
+    currentLanguage: actualCurrentLang || result.currentLanguage,
     autoSwitchEnabled: !!result.autoSwitchEnabled
   };
 };
@@ -582,7 +574,6 @@ const handleResetAcceptLanguageRequest = async () => {
     });
 
     await chrome.storage.local.remove(['currentLanguage']);
-    lastAppliedLanguage = null;
     sendBackgroundLog(backgroundI18n.t('accept_language_reset_successful'), 'success');
     notifyPopupUIUpdate(autoSwitchEnabled, null);
     return {};
@@ -625,7 +616,20 @@ const handleUpdateCheckRequest = async () => {
     sendBackgroundLog(backgroundI18n.t('update_check_success'), 'success');
     return { updateInfo: updateInfo };
   } catch (error) {
-    handleUpdateCheckError(error);
+    // 根据错误类型记录日志并重新抛出
+    const errorType = error?.type || 'UNKNOWN_ERROR';
+    const errorMessage = error?.message || String(error);
+    
+    const errorMessages = {
+      'TIMEOUT': backgroundI18n.t('update_check_timeout', { timeout: 10000 }),
+      'NETWORK_ERROR': backgroundI18n.t('update_check_network_error', { error: errorMessage }),
+      'RATE_LIMIT': backgroundI18n.t('update_check_rate_limited'),
+      'INVALID_RESPONSE': backgroundI18n.t('update_check_invalid_response', { response: errorMessage }),
+      'VERSION_ERROR': backgroundI18n.t('update_check_parsing_error', { error: errorMessage })
+    };
+    
+    sendBackgroundLog(errorMessages[errorType] || backgroundI18n.t('update_check_failed', { error: errorMessage }), 'error');
+    throw error;
   }
 };
 
@@ -782,9 +786,9 @@ const handleCacheOperation = async (operation, logMessages) => {
     sendBackgroundLog(logMessages.success, 'success');
     return { stats: combinedStats };
   } catch (error) {
-    const errorMessage = `${logMessages.fail}: ${error.message}`;
+    const errorMessage = `${logMessages.fail}: ${error?.message || String(error)}`;
     sendBackgroundLog(errorMessage, 'error');
-    throw new Error(errorMessage);
+    throw error;
   }
 };
 
@@ -814,34 +818,6 @@ const handleResetCacheStatsRequest = () => handleCacheOperation(
   }
 );
 
-/**
- * 处理更新检查错误
- * @param {Error} error - 错误对象
- */
-const handleUpdateCheckError = (error) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-
-  // Log specific error types with appropriate translations
-  if (error.type === 'TIMEOUT') {
-    sendBackgroundLog(backgroundI18n.t('update_check_timeout', { timeout: 10000 }), 'error');
-  } else if (error.type === 'NETWORK_ERROR') {
-    sendBackgroundLog(backgroundI18n.t('update_check_network_error', { error: errorMessage }), 'error');
-  } else if (error.type === 'RATE_LIMIT') {
-    sendBackgroundLog(backgroundI18n.t('update_check_rate_limited'), 'error');
-  } else if (error.type === 'INVALID_RESPONSE') {
-    sendBackgroundLog(backgroundI18n.t('update_check_invalid_response', { response: errorMessage }), 'error');
-  } else if (error.type === 'VERSION_ERROR') {
-    sendBackgroundLog(backgroundI18n.t('update_check_parsing_error', { error: errorMessage }), 'error');
-  } else {
-    sendBackgroundLog(backgroundI18n.t('update_check_failed', { error: errorMessage }), 'error');
-  }
-  const err = new Error(error.message || errorMessage);
-  err.type = error.type || 'UNKNOWN_ERROR';
-  err.userMessage = error.message || 'An unexpected error occurred';
-  err.retryable = !!error.retryable;
-  throw err;
-};
-
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   (async () => {
@@ -852,14 +828,15 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         throw new Error('Invalid message type');
       }
 
-      let data = {};
       // 调试日志属于广播消息：后台无需参与业务处理，避免触发 unknown type 报错/噪音
       if (type === 'DEBUG_LOG') {
-        data = {};
-      } else {
-        await ensureInitialized();
+        sendOk(sendResponse, {});
+        return;
       }
+      
+      await ensureInitialized();
 
+      let data;
       if (type === 'UPDATE_RULES') {
         data = await handleUpdateRulesRequest(request);
       } else if (type === 'AUTO_SWITCH_TOGGLED') {
@@ -892,8 +869,6 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         data = await handleSetStorageDataRequest(request);
       } else if (type === 'GET_MANIFEST_INFO') {
         data = await handleGetManifestInfoRequest();
-      } else if (type === 'DEBUG_LOG') {
-        data = {};
       } else {
         throw new Error(`Unknown message type: ${type}`);
       }
@@ -908,7 +883,12 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  await ensureInitialized();
+  try {
+    await ensureInitialized();
+  } catch (error) {
+    sendBackgroundLog(`${backgroundI18n.t('tab_update_init_failed')}: ${error.message}`, 'error');
+    return;
+  }
 
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab?.url?.startsWith('http')) {
     try {
