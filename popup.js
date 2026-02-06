@@ -13,30 +13,7 @@ let lastUpdateCheckTime = 0;
 
 // 使用统一的资源管理器
 
-// DOM元素缓存
-let domCache = {
-  // 更新检查相关元素
-  updateCheckBtn: null,
-  updateCheckText: null,
-  updateCheckSpinner: null,
-  updateNotification: null,
-  updateNotificationContent: null,
-  updateErrorAlert: null,
-  updateErrorMessage: null,
-  // 主要功能元素缓存
-  languageSelect: null,
-  applyButton: null,
-  currentLanguageSpan: null,
-  checkHeaderBtn: null,
-  autoSwitchToggle: null,
-  resetBtn: null,
-  errorAlert: null,
-  errorMessage: null
-};
-
-// 批量DOM更新
-let pendingDOMUpdates = [];
-let domUpdateScheduled = false;
+const getEl = (id) => document.getElementById(id);
 
 /**
  * 更新自动切换UI状态
@@ -104,24 +81,20 @@ const showError = (message) => {
   // 验证输入
   if (!message) return;
 
-  // 使用缓存的DOM元素提高性能
-  const errorAlert = domCache.errorAlert || document.getElementById('errorAlert');
-  const errorMessage = domCache.errorMessage || document.getElementById('errorMessage');
+  // 直接获取DOM元素
+  const errorAlert = getEl('errorAlert');
+  const errorMessage = getEl('errorMessage');
 
   // 检查DOM元素
   if (!errorAlert || !errorMessage) return;
 
   // 错误反馈需即时可见，避免排队到后续帧
-  scheduleDOMUpdate(() => {
-    errorMessage.textContent = message;
-    errorAlert.classList.remove('d-none');
-  }, true);
+  errorMessage.textContent = message;
+  errorAlert.classList.remove('d-none');
 
   // 5秒后自动隐藏错误消息（可延后合并）
   ResourceManager.setTimeout(() => {
-    scheduleDOMUpdate(() => {
-      errorAlert.classList.add('d-none');
-    });
+    errorAlert.classList.add('d-none');
   }, 5000);
 };
 
@@ -152,51 +125,47 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
   // 验证输入
   if (!language) return;
 
-  // 使用缓存的DOM元素提高性能
-  const currentLanguageSpan = domCache.currentLanguageSpan || document.getElementById('currentLanguage');
-  const languageSelect = domCache.languageSelect || document.getElementById('languageSelect');
+  // 直接获取DOM元素
+  const currentLanguageSpan = getEl('currentLanguage');
+  const languageSelect = getEl('languageSelect');
 
   // 如果当前值与目标语言一致，避免不必要的 DOM 写入
   if (currentLanguageSpan && currentLanguageSpan.textContent === language && !showSuccess) {
     if (languageSelect && languageSelect.value !== language) {
       // 仅在下拉值不一致时同步一次
-      scheduleDOMUpdate(() => { languageSelect.value = language; }, true);
+      languageSelect.value = language;
     }
     return;
   }
 
   // 使用批量DOM更新提高性能；语言切换属于关键可见状态，使用立即模式
-  scheduleDOMUpdate(() => {
-    // 更新当前语言显示
-    if (currentLanguageSpan) currentLanguageSpan.textContent = language;
-    // 同步语言选择框的值
-    if (languageSelect) languageSelect.value = language;
+  // 更新当前语言显示
+  if (currentLanguageSpan) currentLanguageSpan.textContent = language;
+  // 同步语言选择框的值
+  if (languageSelect) languageSelect.value = language;
 
-    // 如果需要显示成功提示
-    if (showSuccess) {
-      const statusTextElement = document.getElementById('statusText');
-      if (!statusTextElement) return;
+  // 如果需要显示成功提示
+  if (showSuccess) {
+    const statusTextElement = getEl('statusText');
+    if (!statusTextElement) return;
 
-      // 移除之前的成功提示
-      const oldSuccessSpan = statusTextElement.querySelector('.text-success');
-      if (oldSuccessSpan) oldSuccessSpan.remove();
+    // 移除之前的成功提示
+    const oldSuccessSpan = statusTextElement.querySelector('.text-success');
+    if (oldSuccessSpan) oldSuccessSpan.remove();
 
-      // 创建新的成功提示
-      const successSpan = document.createElement('span');
-      successSpan.className = 'text-success ms-1';
-      successSpan.textContent = popupI18n.t('applied');
-      currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+    // 创建新的成功提示
+    const successSpan = document.createElement('span');
+    successSpan.className = 'text-success ms-1';
+    successSpan.textContent = popupI18n.t('applied');
+    currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
 
-      // 2秒后移除成功提示
-      ResourceManager.setTimeout(() => {
-        scheduleDOMUpdate(() => {
-          if (successSpan.parentNode === statusTextElement) {
-            successSpan.remove();
-          }
-        });
-      }, 2000);
-    }
-  }, true);
+    // 2秒后移除成功提示
+    ResourceManager.setTimeout(() => {
+      if (successSpan.parentNode === statusTextElement) {
+        successSpan.remove();
+      }
+    }, 2000);
+  }
 };
 
 /**
@@ -378,80 +347,12 @@ const saveLanguageSetting = async (language) => {
 /**
  * 初始化DOM元素缓存以优化性能
  */
-const initializeDOMCache = () => {
-  // 更新检查器相关元素
-  domCache.updateCheckBtn = document.getElementById('updateCheckBtn');
-  domCache.updateCheckText = document.getElementById('updateCheckText');
-  domCache.updateCheckSpinner = document.getElementById('updateCheckSpinner');
-  domCache.updateNotification = document.getElementById('updateNotification');
-  domCache.updateNotificationContent = document.getElementById('updateNotificationContent');
-  domCache.updateErrorAlert = document.getElementById('updateErrorAlert');
-  domCache.updateErrorMessage = document.getElementById('updateErrorMessage');
-
-  // 主要弹窗功能元素
-  domCache.languageSelect = document.getElementById('languageSelect');
-  domCache.applyButton = document.getElementById('applyButton');
-  domCache.currentLanguageSpan = document.getElementById('currentLanguage');
-  domCache.checkHeaderBtn = document.getElementById('checkHeaderBtn');
-  domCache.autoSwitchToggle = document.getElementById('autoSwitchToggle');
-  domCache.resetBtn = document.getElementById('resetBtn');
-  domCache.errorAlert = document.getElementById('errorAlert');
-  domCache.errorMessage = document.getElementById('errorMessage');
-
-  sendDebugLog(popupI18n.t('dom_cache_initialized'), 'info');
-}
-
-/**
- * 调度批量DOM更新以提高性能
- * @param {Function} updateFn - 执行DOM更新的函数
- * @param {boolean} immediate - 是否立即执行
- */
-const scheduleDOMUpdate = (updateFn, immediate = false) => {
+const runDOMUpdate = (updateFn) => {
   if (typeof updateFn !== 'function') return;
-
-  // 关键交互和首屏反馈：允许调用方请求“立即执行”
-  if (immediate) {
-    try {
-      updateFn();
-    } catch (error) {
-      sendDebugLog(popupI18n.t('dom_update_error', { message: error.message }), 'error');
-    }
-    return;
-  }
-
-  // 将更新收敛到同一帧，避免多次强制回流
-  pendingDOMUpdates.push(updateFn);
-
-  if (!domUpdateScheduled) {
-    domUpdateScheduled = true;
-    requestAnimationFrame(processPendingDOMUpdates);
-  }
-};
-
-/**
- * 在单个批次中处理所有待处理的DOM更新
- */
-const processPendingDOMUpdates = () => {
-  // 检查是否有待处理的更新
-  if (pendingDOMUpdates.length === 0) {
-    domUpdateScheduled = false;
-    return;
-  }
-
-  const updates = pendingDOMUpdates.splice(0);
-  for (const updateFn of updates) {
-    try {
-      updateFn();
-    } catch (error) {
-      sendDebugLog(popupI18n.t('dom_update_error', { message: error.message }), 'error');
-    }
-  }
-
-  domUpdateScheduled = false;
-
-  if (pendingDOMUpdates.length > 0) {
-    domUpdateScheduled = true;
-    requestAnimationFrame(processPendingDOMUpdates);
+  try {
+    updateFn();
+  } catch (error) {
+    sendDebugLog(popupI18n.t('dom_update_error', { message: error.message }), 'error');
   }
 };
 
@@ -472,9 +373,9 @@ const initializeUpdateChecker = () => {
  * @param {boolean} [showRetryOption] - 是否显示重试选项
  */
 const showUpdateError = (message, fallbackMessage = null, showRetryOption = false) => {
-  // 使用缓存的DOM元素提高性能
-  const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
-  const updateErrorMessage = domCache.updateErrorMessage || document.getElementById('updateErrorMessage');
+  // 直接获取DOM元素
+  const updateErrorAlert = getEl('updateErrorAlert');
+  const updateErrorMessage = getEl('updateErrorMessage');
 
   if (!updateErrorAlert || !updateErrorMessage) return;
 
@@ -487,7 +388,7 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
   }
 
   // 使用安全的 DOM 操作构建错误消息
-  scheduleDOMUpdate(() => {
+  runDOMUpdate(() => {
     updateErrorMessage.innerHTML = '';
     const fragment = document.createDocumentFragment();
     
@@ -529,9 +430,7 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
   // 对于复杂错误使用更长的自动隐藏时间
   const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
   ResourceManager.setTimeout(() => {
-    scheduleDOMUpdate(() => {
-      updateErrorAlert.classList.add('d-none');
-    });
+    updateErrorAlert.classList.add('d-none');
   }, hideDelay);
 }
 
@@ -539,15 +438,15 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
  * 显示更新检查的加载状态
  */
 const showUpdateLoadingState = () => {
-  const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
-  const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
+  const updateNotification = getEl('updateNotification');
+  const updateNotificationContent = getEl('updateNotificationContent');
 
   if (!updateNotification || !updateNotificationContent) return;
 
   const alertDiv = updateNotification.querySelector('.alert');
 
   // 该提示用于反馈「已开始检查」，应立即可见
-  scheduleDOMUpdate(() => {
+  runDOMUpdate(() => {
     alertDiv.className = 'alert alert-info mb-0 update-notification info';
     updateNotificationContent.innerHTML = '';
     const fragment = document.createDocumentFragment();
@@ -581,16 +480,14 @@ const showUpdateLoadingState = () => {
  * @param {Object} updateInfo - 更新信息
  */
 const showUpdateNotification = (updateInfo) => {
-  // 使用缓存的DOM元素提高性能
-  const updateNotification = domCache.updateNotification || document.getElementById('updateNotification');
-  const updateNotificationContent = domCache.updateNotificationContent || document.getElementById('updateNotificationContent');
+  const updateNotification = getEl('updateNotification');
+  const updateNotificationContent = getEl('updateNotificationContent');
 
   if (!updateNotification || !updateNotificationContent) return;
 
   const alertDiv = updateNotification.querySelector('.alert');
 
-  // 使用批量DOM更新提高性能
-  scheduleDOMUpdate(() => {
+  runDOMUpdate(() => {
     // 当GitHub API不可用时处理回退模式
     if (updateInfo.fallbackMode) {
       alertDiv.className = 'alert alert-warning mb-0 update-notification warning';
@@ -641,9 +538,7 @@ const showUpdateNotification = (updateInfo) => {
 
       // 6秒后自动隐藏回退通知
       ResourceManager.setTimeout(() => {
-        scheduleDOMUpdate(() => {
-          updateNotification.classList.add('d-none');
-        });
+        updateNotification.classList.add('d-none');
       }, 5000);
 
     } else if (updateInfo.updateAvailable) {
@@ -743,9 +638,7 @@ const showUpdateNotification = (updateInfo) => {
 
       // 4秒后自动隐藏成功通知
       ResourceManager.setTimeout(() => {
-        scheduleDOMUpdate(() => {
-          updateNotification.classList.add('d-none');
-        });
+        updateNotification.classList.add('d-none');
       }, 4000);
     }
 
@@ -758,16 +651,16 @@ const showUpdateNotification = (updateInfo) => {
  * @param {boolean} isChecking - 是否正在进行更新检查
  */
 const updateCheckButtonState = (isChecking) => {
-  // 使用缓存的DOM元素提高性能
-  const updateCheckBtn = domCache.updateCheckBtn || document.getElementById('updateCheckBtn');
-  const updateCheckText = domCache.updateCheckText || document.getElementById('updateCheckText');
-  const updateCheckSpinner = domCache.updateCheckSpinner || document.getElementById('updateCheckSpinner');
+  // 直接获取DOM元素
+  const updateCheckBtn = getEl('updateCheckBtn');
+  const updateCheckText = getEl('updateCheckText');
+  const updateCheckSpinner = getEl('updateCheckSpinner');
 
   // 检查DOM元素
   if (!updateCheckBtn || !updateCheckText || !updateCheckSpinner) return;
 
   // 该状态直接影响用户对点击的反馈，使用立即模式消除可感知延迟
-  scheduleDOMUpdate(() => {
+  runDOMUpdate(() => {
     if (isChecking) {
       updateCheckBtn.disabled = true;
       updateCheckText.textContent = popupI18n.t('checking_updates');
@@ -843,9 +736,9 @@ const performUpdateCheck = async () => {
   lastUpdateCheckTime = Date.now();
 
   // 隐藏之前的错误通知
-  const updateErrorAlert = domCache.updateErrorAlert || document.getElementById('updateErrorAlert');
+  const updateErrorAlert = getEl('updateErrorAlert');
   if (updateErrorAlert) {
-    scheduleDOMUpdate(() => updateErrorAlert.classList.add('d-none'), true);
+    updateErrorAlert.classList.add('d-none');
   }
 
   // 立即显示加载状态和更新按钮状态
@@ -937,14 +830,14 @@ const debouncedUIUpdate = (updateFn, delay = 16) => {
   // 若距离上次执行已超过窗口，直接执行
   if (now - lastUIUpdate > delay) {
     lastUIUpdate = now;
-    scheduleDOMUpdate(updateFn);
+    runDOMUpdate(updateFn);
     return;
   }
 
   // 否则推迟到窗口结束时执行最后一次调用
   uiUpdateTimer = ResourceManager.setTimeout(() => {
     lastUIUpdate = Date.now();
-    scheduleDOMUpdate(updateFn);
+    runDOMUpdate(updateFn);
     uiUpdateTimer = null;
   }, delay);
 };
@@ -960,16 +853,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 初始化DOM缓存以提高性能
-  initializeDOMCache();
-
   // 获取DOM元素（使用缓存）
-  const languageSelect = domCache.languageSelect;
-  const applyButton = domCache.applyButton;
-  const currentLanguageSpan = domCache.currentLanguageSpan;
-  const checkHeaderBtn = domCache.checkHeaderBtn;
-  const autoSwitchToggle = domCache.autoSwitchToggle;
-  const resetBtn = domCache.resetBtn;
+  const languageSelect = getEl('languageSelect');
+  const applyButton = getEl('applyButton');
+  const currentLanguageSpan = getEl('currentLanguage');
+  const checkHeaderBtn = getEl('checkHeaderBtn');
+  const autoSwitchToggle = getEl('autoSwitchToggle');
+  const resetBtn = getEl('resetBtn');
 
   // 初始化语言选项下拉列表
   populateLanguageSelect(languageSelect);
@@ -1131,11 +1021,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 清除DOM更新相关的定时器
-    if (domUpdateScheduled) {
-      domUpdateScheduled = false;
-      pendingDOMUpdates.length = 0;
-    }
-
     // 清理更新检查器实例
     if (updateChecker) {
       updateChecker = null;

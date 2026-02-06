@@ -58,10 +58,19 @@ class UpdateChecker {
       if (error.name === 'AbortError') {
         throw error;
       }
-      // 对于其他错误，进行分类和记录
-      const classifiedError = this.classifyError(error);
-      sendLocalizedUpdateLog('update_check_failed', { error: classifiedError.message }, 'error');
-      throw classifiedError;
+      // 对于其他错误，进行轻量级分类和记录
+      const message = String(error?.message || '').toLowerCase();
+      let errorType = 'UNEXPECTED_ERROR';
+
+      if (error?.status >= 400) {
+        errorType = 'SERVICE_ISSUE';
+      } else if (message.includes('failed to fetch') || message.includes('network') || message.includes('timeout')) {
+        errorType = 'NETWORK_ISSUE';
+      }
+
+      error.type = errorType;
+      sendLocalizedUpdateLog('update_check_failed', { error: error.message }, 'error');
+      throw error;
     }
   }
 
@@ -239,29 +248,6 @@ class UpdateChecker {
       sendLocalizedUpdateLog('version_comparison_failed', { error: error.message }, 'warning');
       return false;
     }
-  }
-
-  /**
-   * 分类 API 错误，并附加一个明确的类型
-   * @param {Error} error - 原始错误
-   * @returns {Error} 带有 `type` 属性的错误对象
-   */
-  classifyError(error) {
-    const message = error.message.toLowerCase();
-    let errorType = 'UNEXPECTED_ERROR'; // 默认类型
-
-    // 1. 网络问题
-    if (message.includes('failed to fetch') || message.includes('network') || message.includes('timeout') || message.includes('dns') || message.includes('ssl') || message.includes('cors')) {
-      errorType = 'NETWORK_ISSUE';
-    }
-    // 2. 服务问题 (API)
-    else if (error.status >= 400 || message.includes('api') || message.includes('rate limit') || message.includes('invalid') || message.includes('unexpected token')) {
-      errorType = 'SERVICE_ISSUE';
-    }
-
-    // 附加类型并返回
-    error.type = errorType;
-    return error;
   }
 
   /**
