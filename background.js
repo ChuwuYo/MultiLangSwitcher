@@ -66,6 +66,17 @@ const sendOk = (sendResponse, data = {}) => {
   }
 };
 
+// 全局状态变量
+let autoSwitchEnabled = false;  // 自动切换状态
+let isInitialized = false;      // 初始化完成标志
+let initializationPromise = null;    // 初始化Promise，防止重复执行
+
+// 并发控制变量
+let isUpdatingRules = false;    // 简单的布尔锁，防止同时更新规则
+
+// 右键菜单初始化标志
+let contextMenuPromise = null;
+
 const sendErr = (sendResponse, error) => {
   // 统一失败响应：避免前端到处写 response.success/status/error 判断
   if (typeof sendResponse === 'function') {
@@ -91,16 +102,6 @@ const ensureInitialized = async () => {
     await initialize('lazy');
   }
 };
-// 全局状态变量
-let autoSwitchEnabled = false;  // 自动切换状态
-let isInitialized = false;      // 初始化完成标志
-let initializationPromise = null;    // 初始化Promise，防止重复执行
-
-// 并发控制变量
-let isUpdatingRules = false;    // 简单的互斥锁，防止同时更新规则
-
-// 右键菜单初始化标志
-let contextMenuPromise = null;
 
 const createContextMenusOnce = async () => {
   // 如果已经有初始化操作在进行，等待其完成
@@ -110,6 +111,9 @@ const createContextMenusOnce = async () => {
 
   contextMenuPromise = (async () => {
     try {
+      // 确保 i18n 初始化完成
+      await i18nReady;
+      
       // 先查询现有菜单（部分浏览器不支持 query）
       let existingMenus = null;
       if (chrome.contextMenus && typeof chrome.contextMenus.query === 'function') {
@@ -140,12 +144,28 @@ const createContextMenusOnce = async () => {
       }
       
       // 创建菜单项 - 使用国际化标题
-      await chrome.contextMenus.create({
+      const createContextMenu = (options) => {
+        return new Promise((resolve, reject) => {
+          try {
+            chrome.contextMenus.create(options, () => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+              } else {
+                resolve();
+              }
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+      };
+
+      await createContextMenu({
         id: 'open-detect-page',
         title: backgroundI18n.t('menu_detection_page') || 'Detection Page',
         contexts: ['action']
       });
-      await chrome.contextMenus.create({
+      await createContextMenu({
         id: 'open-debug-page',
         title: backgroundI18n.t('menu_debug_page') || 'Debug Page',
         contexts: ['action']
@@ -158,7 +178,12 @@ const createContextMenusOnce = async () => {
       contextMenuPromise = null; // 失败时允许重试
       throw error;
     }
-  })();
+  })().catch(error => {
+    // 处理 i18nReady 可能的拒绝
+    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
+    contextMenuPromise = null; // 失败时允许重试
+    throw error;
+  });
 
   return contextMenuPromise;
 };
@@ -177,10 +202,14 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 // 在扩展安装或更新时初始化
-chrome.runtime.onInstalled.addListener(details => {
-  // 安装时的所有初始化操作集中在一起，未来如果有其他安装时操作，直接加在这里
-  createContextMenusOnce();
-  initialize(details.reason);
+chrome.runtime.onInstalled.addListener(async details => {
+  try {
+    // 安装时的所有初始化操作集中在一起，未来如果有其他安装时操作，直接加在这里
+    await createContextMenusOnce();
+    await initialize(details.reason);
+  } catch (error) {
+    sendBackgroundLog(`${backgroundI18n.t('on_install_init_failed')}: ${error.message}`, 'error');
+  }
 });
 
 // 指数退避重试配置
@@ -217,7 +246,7 @@ const clearAllDynamicRules = async () => {
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
-  // 简单的互斥锁并发控制，防止同时更新规则
+  // 使用简单的布尔锁防止同时更新规则
   while (isUpdatingRules) {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
@@ -335,7 +364,7 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 
     sendBackgroundLog(`${backgroundI18n.t('retry_after', { delay, count: nextRetryCount })}`, 'warning');
 
-    // 等待后重试
+    // 等待后重试 - 直接调用内部函数，因为互斥锁已经在外部 updateHeaderRules 中获取
     await new Promise(resolve => ResourceManager.setTimeout(resolve, delay));
     try {
       return await updateHeaderRulesInternal(language, nextRetryCount, false);
@@ -836,13 +865,13 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         throw new Error('Invalid message type');
       }
 
-      let data = {};
       // 调试日志属于广播消息：后台无需参与业务处理，避免触发 unknown type 报错/噪音
       if (type === 'DEBUG_LOG') {
-        data = {};
-      } else {
-        await ensureInitialized();
+        sendOk(sendResponse, {});
+        return;
       }
+      
+      await ensureInitialized();
 
       if (type === 'UPDATE_RULES') {
         data = await handleUpdateRulesRequest(request);
@@ -876,8 +905,6 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         data = await handleSetStorageDataRequest(request);
       } else if (type === 'GET_MANIFEST_INFO') {
         data = await handleGetManifestInfoRequest();
-      } else if (type === 'DEBUG_LOG') {
-        data = {};
       } else {
         throw new Error(`Unknown message type: ${type}`);
       }

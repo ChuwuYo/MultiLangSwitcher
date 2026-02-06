@@ -97,11 +97,13 @@ const createResourceManager = () => {
 
   // 创建离线音频上下文 - 用于音频指纹检测
   const createOfflineAudioContext = (numberOfChannels, length, sampleRate) => {
-    const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (OfflineAudioContext) {
-      return new OfflineAudioContext(numberOfChannels, length, sampleRate);
+    // 安全地检查 OfflineAudioContext 是否可用（在 service worker 中不可用）
+    if (typeof window === 'undefined' || !window.OfflineAudioContext) {
+      throw new Error('OfflineAudioContext not supported');
     }
-    throw new Error('OfflineAudioContext not supported');
+    
+    const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return new OfflineAudioContext(numberOfChannels, length, sampleRate);
   };
 
   // 清理方法 - 仅清理确实需要手动清理的资源

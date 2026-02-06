@@ -443,6 +443,7 @@ const showUpdateLoadingState = () => {
   if (!updateNotification || !updateNotificationContent) return;
 
   const alertDiv = updateNotification.querySelector('.alert');
+  if (!alertDiv) return;
 
   // 该提示用于反馈「已开始检查」，应立即可见
   runDOMUpdate(() => {
@@ -485,6 +486,7 @@ const showUpdateNotification = (updateInfo) => {
   if (!updateNotification || !updateNotificationContent) return;
 
   const alertDiv = updateNotification.querySelector('.alert');
+  if (!alertDiv) return;
 
   runDOMUpdate(() => {
     // 当GitHub API不可用时处理回退模式
@@ -852,7 +854,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 获取DOM元素（使用缓存）
+  // 获取DOM元素
   const languageSelect = getEl('languageSelect');
   const applyButton = getEl('applyButton');
   const currentLanguageSpan = getEl('currentLanguage');
@@ -1003,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   // 添加更新检查按钮事件监听器
-  const updateCheckBtn = document.getElementById('updateCheckBtn');
+  const updateCheckBtn = getEl('updateCheckBtn');
   if (updateCheckBtn) {
     ResourceManager.addEventListener(updateCheckBtn, 'click', eventHandlers.updateCheckBtnClick);
   }
