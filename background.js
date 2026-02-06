@@ -92,8 +92,6 @@ const ensureInitialized = async () => {
   }
 };
 // 全局状态变量
-let rulesCache = null;          // 规则缓存，避免重复获取已知规则
-let lastAppliedLanguage = null; // 最后应用的语言
 let autoSwitchEnabled = false;  // 自动切换状态
 let pendingUIUpdate = null;     // 待处理的UI更新
 let latestAutoSwitchEnabled = false; // 用于存储最新的 autoSwitchEnabled 状态
@@ -243,7 +241,7 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
 };
 
 /**
- * 内部规则更新实现，支持错误重试和规则缓存
+ * 内部规则更新实现，支持错误重试，直接查询declarativeNetRequest
  * @param {string} language - 要设置的语言代码
  * @param {number} retryCount - 当前重试次数
  * @param {boolean} isAutoSwitch - 是否由自动切换触发
@@ -252,28 +250,23 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
 const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
-  // 优化的缓存检查：对所有调用（包括自动切换）都进行短路检查
-  if (language === lastAppliedLanguage && rulesCache && rulesCache.length > 0) {
-    // 验证缓存中确实存在对应的规则
-    const existingRule = rulesCache.find(rule =>
-      rule.id === RULE_ID &&
-      rule.action.requestHeaders &&
-      rule.action.requestHeaders.some(header =>
-        header.header === 'Accept-Language' &&
-        header.value === language
-      )
-    );
-    
-    if (existingRule) {
-      const logMessage = isAutoSwitch
-        ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
-        : backgroundI18n.t('language_already_set', { language });
-      sendBackgroundLog(logMessage, 'info');
-      return { status: 'cached', language };
-    } else {
-      // 语言相同但缓存中没有对应规则，记录警告并继续处理
-      sendBackgroundLog(backgroundI18n.t('cache_empty_but_language_same', { language }), 'warning');
-    }
+  // 直接查询当前规则状态，替代缓存检查
+  const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const existingRule = currentRules.find(rule =>
+    rule.id === RULE_ID &&
+    rule.action.requestHeaders &&
+    rule.action.requestHeaders.some(header =>
+      header.header === 'Accept-Language' &&
+      header.value === language
+    )
+  );
+
+  if (existingRule) {
+    const logMessage = isAutoSwitch
+      ? backgroundI18n.t('auto_switch_skip_duplicate', { language })
+      : backgroundI18n.t('language_already_set', { language });
+    sendBackgroundLog(logMessage, 'info');
+    return { status: 'unchanged', language };
   }
 
   sendBackgroundLog(`${backgroundI18n.t('trying_update_rules', { language })}${retryCount > 0 ? ` (${backgroundI18n.t('retry')} #${retryCount})` : ''}`, 'info');
@@ -282,28 +275,8 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
   const startTime = performance.now();
 
   try {
-    // 获取现有规则
-    const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-    rulesCache = existingRules;
-
-    // 检查是否已存在相同语言的规则
-    const existingRule = existingRules.find(rule =>
-      rule.id === RULE_ID &&
-      rule.action.requestHeaders &&
-      rule.action.requestHeaders.some(header =>
-        header.header === 'Accept-Language' &&
-        header.value === language
-      )
-    );
-
-    if (existingRule) {
-      sendBackgroundLog(backgroundI18n.t('rules_already_set', { language }), 'info');
-      lastAppliedLanguage = language;
-      return { status: 'unchanged', language };
-    }
-
     // 批量处理：仅当存在时才移除具有 RULE_ID 的旧规则，然后添加新规则
-    const removeRuleIds = existingRules.some(rule => rule.id === RULE_ID) ? [RULE_ID] : [];
+    const removeRuleIds = currentRules.some(rule => rule.id === RULE_ID) ? [RULE_ID] : [];
     const newRule = {
       "id": RULE_ID,
       "priority": 100,
@@ -341,9 +314,6 @@ const updateHeaderRulesInternal = async (language, retryCount = 0, isAutoSwitch 
     const endTime = performance.now();
     const duration = Math.round(endTime - startTime);
 
-    // 规则更新成功，同步更新状态
-    lastAppliedLanguage = language;
-    rulesCache = await chrome.declarativeNetRequest.getDynamicRules(); // 更新缓存
     sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
 
@@ -445,7 +415,6 @@ const performInitialization = async (reason) => {
     sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error');
     // 设置一个明确、安全的回退状态
     autoSwitchEnabled = false;
-    lastAppliedLanguage = null;
     try {
       await clearAllDynamicRules();
       await chrome.storage.local.set({ autoSwitchEnabled: false, currentLanguage: '' });
@@ -611,7 +580,7 @@ const handleGetCurrentLangRequest = async () => {
 
   const result = await chrome.storage.local.get(['currentLanguage', 'autoSwitchEnabled']);
   return {
-    currentLanguage: actualCurrentLang || result.currentLanguage || lastAppliedLanguage,
+    currentLanguage: actualCurrentLang || result.currentLanguage,
     autoSwitchEnabled: !!result.autoSwitchEnabled
   };
 };
@@ -626,7 +595,6 @@ const handleResetAcceptLanguageRequest = async () => {
     });
 
     await chrome.storage.local.remove(['currentLanguage']);
-    lastAppliedLanguage = null;
     sendBackgroundLog(backgroundI18n.t('accept_language_reset_successful'), 'success');
     notifyPopupUIUpdate(autoSwitchEnabled, null);
     return {};
