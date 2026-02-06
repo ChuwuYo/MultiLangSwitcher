@@ -1,161 +1,116 @@
-// 统一的资源管理器 - 平衡自动清理和手动控制
-// 适用于浏览器扩展的各种页面类型
+// 统一的资源管理器 - 仅管理确实需要手动清理的资源
+// 1) 定时器/AbortController 需要显式清理
+// 2) 事件与消息监听依赖浏览器生命周期自动清理
+// 3) RTCPeerConnection 需要显式 close，但不做额外统计
 
-const ResourceManager = {
-  // 资源跟踪 - 仅跟踪需要手动清理的资源
-   _trackedResources: {
-      timers: new Set(),
-      controllers: new Set(),
-      peerConnections: new Set()
-    },
+const createResourceManager = () => {
+  const trackedTimers = new Set();
+  const trackedControllers = new Set();
+  const trackedPeerConnections = new Set();
 
-  // 定时器管理 - 跟踪需要手动清理的定时器
-  setTimeout: (callback, delay, ...args) => {
-    const id = setTimeout(callback, delay, ...args);
-    ResourceManager._trackedResources.timers.add(id);
-    return id;
-  },
-
-  setInterval: (callback, delay, ...args) => {
-    const id = setInterval(callback, delay, ...args);
-    ResourceManager._trackedResources.timers.add(id);
-    return id;
-  },
-
-  clearTimeout: (id) => {
-    clearTimeout(id);
-    ResourceManager._trackedResources.timers.delete(id);
-  },
-
-  clearInterval: (id) => {
-    clearInterval(id);
-    ResourceManager._trackedResources.timers.delete(id);
-  },
-
-  // 向后兼容方法 - 确保资源被正确跟踪
-  addTimer: (timerId) => {
-    if (timerId) {
-      ResourceManager._trackedResources.timers.add(timerId);
-      return timerId;
+  const trackTimer = (id) => {
+    if (id !== null && id !== undefined) {
+      trackedTimers.add(id);
+      return id;
     }
     return null;
-  },
+  };
 
-  addController: (controller) => {
+  const clearTimer = (id) => {
+    clearTimeout(id);
+    clearInterval(id);
+    trackedTimers.delete(id);
+  };
+
+  const addController = (controller) => {
     if (controller) {
-      ResourceManager._trackedResources.controllers.add(controller);
+      trackedControllers.add(controller);
       return controller;
     }
     return null;
-  },
+  };
 
-  // 控制器管理 - 跟踪需要手动清理的控制器
-  createController: () => {
-    const controller = new AbortController();
-    ResourceManager._trackedResources.controllers.add(controller);
-    return controller;
-  },
+  const createController = () => addController(new AbortController());
 
-  createAbortController: () => ResourceManager.createController(),
-
-  abortController: (controller) => {
-    if (controller && !controller.signal.aborted) {
-      try {
-        controller.abort();
-        ResourceManager._trackedResources.controllers.delete(controller);
-      } catch (error) {
-        // 静默处理
-      }
+  const abortController = (controller) => {
+    if (!controller || typeof controller.abort !== 'function') {
+      return;
     }
-  },
+    if (controller.signal && controller.signal.aborted) {
+      return;
+    }
+    try {
+      controller.abort();
+    } catch (error) {
+      // 静默处理
+    }
+    trackedControllers.delete(controller);
+  };
 
-  // RTCPeerConnection 管理 - 需要手动关闭
-  createRTCPeerConnection: (configuration) => {
-    let RTCPeerConnectionClass;
+  const getRTCPeerConnectionClass = () => {
     if (typeof RTCPeerConnection !== 'undefined') {
-      RTCPeerConnectionClass = RTCPeerConnection;
-    } else if (typeof webkitRTCPeerConnection !== 'undefined') {
-      RTCPeerConnectionClass = webkitRTCPeerConnection;
-    } else {
+      return RTCPeerConnection;
+    }
+    if (typeof webkitRTCPeerConnection !== 'undefined') {
+      return webkitRTCPeerConnection;
+    }
+    return null;
+  };
+
+  const createRTCPeerConnection = (configuration) => {
+    const RTCPeerConnectionClass = getRTCPeerConnectionClass();
+    if (!RTCPeerConnectionClass) {
       throw new Error('RTCPeerConnection not supported');
     }
 
     const peerConnection = new RTCPeerConnectionClass(configuration);
-    ResourceManager._trackedResources.peerConnections.add(peerConnection);
+    trackedPeerConnections.add(peerConnection);
 
     // 添加自动清理
     peerConnection.addEventListener('connectionstatechange', () => {
       if (peerConnection.connectionState === 'closed' || peerConnection.connectionState === 'failed') {
-        ResourceManager._trackedResources.peerConnections.delete(peerConnection);
+        trackedPeerConnections.delete(peerConnection);
       }
     });
 
     return peerConnection;
-  },
+  };
 
-  closeRTCPeerConnection: (peerConnection) => {
+  const closeRTCPeerConnection = (peerConnection) => {
     if (peerConnection && typeof peerConnection.close === 'function') {
-      peerConnection.close();
-      ResourceManager._trackedResources.peerConnections.delete(peerConnection);
+      try {
+        peerConnection.close();
+      } catch (error) {
+        // 静默处理
+      }
+      trackedPeerConnections.delete(peerConnection);
     }
-  },
-
-  // 事件监听器管理 - 依赖浏览器自动清理，仅提供统一接口
-  addEventListener: (element, event, handler, options = null) => {
-    if (element && typeof element.addEventListener === 'function') {
-      element.addEventListener(event, handler, options);
-    }
-    // 不再跟踪，因为浏览器会自动清理
-    return null;
-  },
-
-  // 消息监听器管理 - 依赖浏览器自动清理，仅提供兼容性接口
-  addMessageListener: (callback) => {
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-      chrome.runtime.onMessage.addListener(callback);
-      return { type: 'messageListener', callback, addedAt: Date.now() };
-    }
-    return null;
-  },
-
-  removeMessageListener: (listenerInfo) => {
-    if (listenerInfo && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-      chrome.runtime.onMessage.removeListener(listenerInfo.callback);
-    }
-  },
+  };
 
   // 页面特有资源创建方法 - 用于指纹检测
-  createCanvasElement: () => document.createElement('canvas'),
+  const createCanvasElement = () => document.createElement('canvas');
 
   // 创建离线音频上下文 - 用于音频指纹检测
-  createOfflineAudioContext: (numberOfChannels, length, sampleRate) => {
+  const createOfflineAudioContext = (numberOfChannels, length, sampleRate) => {
     const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (OfflineAudioContext) {
       return new OfflineAudioContext(numberOfChannels, length, sampleRate);
-    } else {
-      throw new Error('OfflineAudioContext not supported');
     }
-  },
-
-  // 向后兼容方法 - 实际创建离线音频上下文
-  createAudioContext: (numberOfChannels, length, sampleRate) => {
-    return ResourceManager.createOfflineAudioContext(numberOfChannels, length, sampleRate);
-  },
+    throw new Error('OfflineAudioContext not supported');
+  };
 
   // 清理方法 - 仅清理确实需要手动清理的资源
-  cleanup: () => {
-    const resources = ResourceManager._trackedResources;
-
+  const cleanup = () => {
     // 清理定时器
-    resources.timers.forEach(id => {
+    trackedTimers.forEach((id) => {
       clearTimeout(id);
       clearInterval(id);
     });
-    resources.timers.clear();
+    trackedTimers.clear();
 
     // 清理控制器
-    resources.controllers.forEach(controller => {
-      if (!controller.signal.aborted) {
+    trackedControllers.forEach((controller) => {
+      if (typeof controller.abort === 'function' && (!controller.signal || !controller.signal.aborted)) {
         try {
           controller.abort();
         } catch (error) {
@@ -163,28 +118,76 @@ const ResourceManager = {
         }
       }
     });
-    resources.controllers.clear();
+    trackedControllers.clear();
 
     // 清理 RTCPeerConnection
-    resources.peerConnections.forEach(peerConnection => {
+    trackedPeerConnections.forEach((peerConnection) => {
       if (typeof peerConnection.close === 'function') {
-        peerConnection.close();
+        try {
+          peerConnection.close();
+        } catch (error) {
+          // 静默处理
+        }
       }
     });
-    resources.peerConnections.clear();
+    trackedPeerConnections.clear();
+  };
 
-  },
+  return {
+    // 定时器管理 - 跟踪需要手动清理的定时器
+    setTimeout: (callback, delay, ...args) => trackTimer(setTimeout(callback, delay, ...args)),
+    setInterval: (callback, delay, ...args) => trackTimer(setInterval(callback, delay, ...args)),
+    clearTimeout: (id) => clearTimer(id),
+    clearInterval: (id) => clearTimer(id),
 
-  // 获取资源统计信息
-  getStats: () => {
-    const resources = ResourceManager._trackedResources;
-    return {
-      timers: resources.timers.size,
-      controllers: resources.controllers.size,
-      peerConnections: resources.peerConnections.size
-    };
-  }
+    // 向后兼容方法 - 确保资源被正确跟踪
+    addTimer: (timerId) => trackTimer(timerId),
+    addController,
+    createController,
+    createAbortController: createController,
+    abortController,
+
+    // RTCPeerConnection 管理 - 需要手动关闭
+    createRTCPeerConnection,
+    closeRTCPeerConnection,
+
+    // 事件监听器管理 - 依赖浏览器自动清理，仅提供统一接口
+    addEventListener: (element, event, handler, options = null) => {
+      if (element && typeof element.addEventListener === 'function') {
+        element.addEventListener(event, handler, options);
+      }
+      // 不再跟踪，因为浏览器会自动清理
+      return null;
+    },
+
+    // 消息监听器管理 - 依赖浏览器自动清理，仅提供兼容性接口
+    addMessageListener: (callback) => {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.addListener(callback);
+        return { type: 'messageListener', callback, addedAt: Date.now() };
+      }
+      return null;
+    },
+
+    removeMessageListener: (listenerInfo) => {
+      if (listenerInfo && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.removeListener(listenerInfo.callback);
+      }
+    },
+
+    createCanvasElement,
+    createOfflineAudioContext,
+
+    // 向后兼容方法 - 实际创建离线音频上下文
+    createAudioContext: (numberOfChannels, length, sampleRate) => {
+      return createOfflineAudioContext(numberOfChannels, length, sampleRate);
+    },
+
+    cleanup
+  };
 };
+
+const ResourceManager = createResourceManager();
 
 // 根据环境导出为全局对象
 if (typeof window !== 'undefined') {

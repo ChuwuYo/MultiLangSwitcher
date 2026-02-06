@@ -120,20 +120,33 @@ const createContextMenusOnce = async () => {
   
   createContextMenusOnce.promise = (async () => {
     try {
-      // 先查询现有菜单
-      const existingMenus = await chrome.contextMenus.query({});
-      const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
-      const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
-      
-      // 如果菜单已完整存在，标记为已创建并返回
-      if (hasDetectMenu && hasDebugMenu) {
-        contextMenusCreated = true;
-        sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
-        return;
+      // 先查询现有菜单（部分浏览器不支持 query）
+      let existingMenus = null;
+      if (chrome.contextMenus && typeof chrome.contextMenus.query === 'function') {
+        try {
+          existingMenus = await chrome.contextMenus.query({});
+        } catch (error) {
+          existingMenus = null;
+        }
       }
-      
-      // 菜单不完整或不存在，先清理再重新创建
-      if (existingMenus.length > 0) {
+
+      if (Array.isArray(existingMenus)) {
+        const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
+        const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
+
+        // 如果菜单已完整存在，标记为已创建并返回
+        if (hasDetectMenu && hasDebugMenu) {
+          contextMenusCreated = true;
+          sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
+          return;
+        }
+
+        // 菜单不完整或不存在，先清理再重新创建
+        if (existingMenus.length > 0 && chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+          await chrome.contextMenus.removeAll();
+        }
+      } else if (chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+        // 无法查询时，直接清理再创建，避免重复菜单
         await chrome.contextMenus.removeAll();
       }
       
