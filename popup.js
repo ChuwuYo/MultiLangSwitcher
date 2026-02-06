@@ -351,7 +351,8 @@ const saveLanguageSetting = async (language) => {
 };
 
 /**
- * 初始化DOM元素缓存以优化性能
+ * 安全执行DOM更新操作，捕获并记录错误
+ * @param {Function} updateFn - 要执行的DOM更新函数
  */
 const runDOMUpdate = (updateFn) => {
   if (typeof updateFn !== 'function') return;
@@ -384,14 +385,6 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
   const updateErrorMessage = getEl('updateErrorMessage');
 
   if (!updateErrorAlert || !updateErrorMessage) return;
-
-  // 构建错误消息内容
-  let errorContent = message;
-
-  // 如果提供了回退建议，则添加
-  if (fallbackMessage) {
-    errorContent += `<br><small class="text-muted mt-1">${fallbackMessage}</small>`;
-  }
 
   // 使用安全的 DOM 操作构建错误消息
   runDOMUpdate(() => {
@@ -478,7 +471,7 @@ const showUpdateLoadingState = () => {
     updateNotificationContent.appendChild(fragment);
 
     updateNotification.classList.remove('d-none');
-  }, true);
+  });
 }
 
 /**
@@ -676,7 +669,7 @@ const updateCheckButtonState = (isChecking) => {
       updateCheckText.textContent = popupI18n.t('check_for_updates');
       updateCheckSpinner.classList.add('d-none');
     }
-  }, true);
+  });
 };
 
 /**

@@ -163,11 +163,6 @@ const createContextMenusOnce = async () => {
   return contextMenuPromise;
 };
 
-// 只在安装时创建菜单，onStartup不需要重复创建
-chrome.runtime.onInstalled.addListener(() => {
-  createContextMenusOnce();
-});
-
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'open-detect-page') {
     chrome.tabs.create({ url: chrome.runtime.getURL('detect.html') });
@@ -182,6 +177,11 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 // 在扩展安装或更新时初始化
+chrome.runtime.onInstalled.addListener(details => {
+  // 安装时的所有初始化操作集中在一起，未来如果有其他安装时操作，直接加在这里
+  createContextMenusOnce();
+  initialize(details.reason);
+});
 
 // 指数退避重试配置
 const MAX_RETRY_ATTEMPTS = 3;
@@ -437,10 +437,7 @@ const initialize = (reason) => {
 };
 
 
-// 当扩展安装或更新时触发
-chrome.runtime.onInstalled.addListener(details => {
-  initialize(details.reason);
-});
+
 
 /**
  * 防抖的UI更新通知

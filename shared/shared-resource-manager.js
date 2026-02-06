@@ -88,7 +88,12 @@ const createResourceManager = () => {
   };
 
   // 页面特有资源创建方法 - 用于指纹检测
-  const createCanvasElement = () => document.createElement('canvas');
+  const createCanvasElement = () => {
+    if (typeof document !== 'undefined') {
+      return document.createElement('canvas');
+    }
+    throw new Error('Canvas creation not supported in this environment');
+  };
 
   // 创建离线音频上下文 - 用于音频指纹检测
   const createOfflineAudioContext = (numberOfChannels, length, sampleRate) => {
