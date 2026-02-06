@@ -99,11 +99,14 @@ const createResourceManager = () => {
   const createOfflineAudioContext = (numberOfChannels, length, sampleRate) => {
     // 安全地检查 OfflineAudioContext 是否可用（在 service worker 中不可用）
     // 支持标准 API 和 webkit 前缀版本
-    const OfflineAudioContext = window?.OfflineAudioContext || window?.webkitOfflineAudioContext;
+    if (typeof window === 'undefined') {
+      throw new Error('OfflineAudioContext not supported');
+    }
+    const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (!OfflineAudioContext) {
       throw new Error('OfflineAudioContext not supported');
     }
-    
+
     return new OfflineAudioContext(numberOfChannels, length, sampleRate);
   };
 

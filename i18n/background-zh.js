@@ -54,6 +54,7 @@ if (typeof backgroundZh === 'undefined') {
   "set_storage_data_failed": "设置存储数据失败",
   "get_manifest_info_failed": "获取清单信息失败",
   "extension_suspending": "扩展正在挂起，清理资源中...",
+  "tab_update_init_failed": "标签页更新初始化失败",
 
   // Update checker related keys for background logging
   "update_check_success": "更新检查成功完成",

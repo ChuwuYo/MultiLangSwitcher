@@ -54,6 +54,7 @@ if (typeof backgroundEn === 'undefined') {
   "set_storage_data_failed": "Failed to set storage data",
   "get_manifest_info_failed": "Failed to get manifest info",
   "extension_suspending": "Extension suspending, cleaning up resources...",
+  "tab_update_init_failed": "Tab update initialization failed",
 
   // Update checker related keys for background logging
   "update_check_success": "Update check completed successfully",

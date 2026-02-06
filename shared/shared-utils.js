@@ -102,14 +102,13 @@ const getUpdateTranslation = (key, params = {}, context = 'popup') => {
  * @returns {string} fallback翻译文本
  */
 const getFallbackTranslation = (key, params = {}) => {
-  // 简化的语言检测逻辑 - 与BaseI18n保持一致
-  let currentLang = 'en';
-  try {
-    // 优先使用浏览器语言检测
-    currentLang = detectBrowserLanguage();
-  } catch (error) {
-    currentLang = 'en';
-  }
+  // 从主i18n实例获取当前语言，确保实时同步
+  const mainI18n = typeof popupI18n !== 'undefined' ? popupI18n :
+                   typeof debugI18n !== 'undefined' ? debugI18n :
+                   typeof popupI18n !== 'undefined' ? popupI18n :
+                   typeof detectI18n !== 'undefined' ? detectI18n : null;
+  
+  const currentLang = mainI18n?.currentLang || 'en';
   
   // 统一的fallback翻译库
   const fallbackTranslations = {

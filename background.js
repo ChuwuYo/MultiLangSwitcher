@@ -74,6 +74,9 @@ let initializationPromise = null;    // 初始化Promise，防止重复执行
 // 右键菜单初始化标志
 let contextMenuPromise = null;
 
+// 规则更新锁，确保串行执行
+let updateRulesLock = Promise.resolve();
+
 const sendErr = (sendResponse, error) => {
   // 统一失败响应：避免前端到处写 response.success/status/error 判断
   if (typeof sendResponse === 'function') {
@@ -240,7 +243,17 @@ const clearAllDynamicRules = async () => {
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
-  return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
+  // 使用Promise链实现互斥锁，确保规则更新串行执行
+  let resolve;
+  const prevLock = updateRulesLock;
+  updateRulesLock = new Promise(r => { resolve = r; });
+  await prevLock;
+
+  try {
+    return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
+  } finally {
+    resolve();
+  }
 };
 
 const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => {
@@ -870,7 +883,12 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  await ensureInitialized();
+  try {
+    await ensureInitialized();
+  } catch (error) {
+    sendBackgroundLog(`${backgroundI18n.t('tab_update_init_failed')}: ${error.message}`, 'error');
+    return;
+  }
 
   if (autoSwitchEnabled && changeInfo.status === 'complete' && tab?.url?.startsWith('http')) {
     try {
