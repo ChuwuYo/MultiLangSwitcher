@@ -1,6 +1,5 @@
 // debug-ui.js - 调试页面UI交互脚本
 
-
 /**
  * 安全地创建HTML元素并设置属性
  * @param {string} tag - HTML标签名

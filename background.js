@@ -71,9 +71,6 @@ let autoSwitchEnabled = false;  // 自动切换状态
 let isInitialized = false;      // 初始化完成标志
 let initializationPromise = null;    // 初始化Promise，防止重复执行
 
-// 并发控制变量
-let isUpdatingRules = false;    // 简单的布尔锁，防止同时更新规则
-
 // 右键菜单初始化标志
 let contextMenuPromise = null;
 
@@ -178,12 +175,7 @@ const createContextMenusOnce = async () => {
       contextMenuPromise = null; // 失败时允许重试
       throw error;
     }
-  })().catch(error => {
-    // 处理 i18nReady 可能的拒绝
-    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
-    contextMenuPromise = null; // 失败时允许重试
-    throw error;
-  });
+  })();
 
   return contextMenuPromise;
 };
@@ -198,7 +190,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // 在浏览器启动时初始化
 chrome.runtime.onStartup.addListener(() => {
-  initialize('startup');
+  initialize('startup').catch(error => {
+    sendBackgroundLog(`${backgroundI18n.t('on_startup_init_failed')}: ${error.message}`, 'error');
+  });
 });
 
 // 在扩展安装或更新时初始化
@@ -246,17 +240,7 @@ const clearAllDynamicRules = async () => {
 const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
   language = language ? language.trim() : DEFAULT_LANG_EN;
 
-  // 使用简单的布尔锁防止同时更新规则
-  while (isUpdatingRules) {
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-
-  isUpdatingRules = true;
-  try {
-    return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
-  } finally {
-    isUpdatingRules = false;
-  }
+  return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
 };
 
 const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => {
@@ -456,9 +440,10 @@ const initialize = (reason) => {
       await performInitialization(reason);
       isInitialized = true;
     } catch (error) {
-      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error') ;
+      sendBackgroundLog(backgroundI18n.t('initialization_failed', { message: error.message }), 'error');
       initializationPromise = null;
       isInitialized = false;
+      throw error; // 重新抛出错误，让调用者知道初始化失败
     }
   })();
 
@@ -506,31 +491,11 @@ const handleUpdateRulesRequest = async (request) => {
     }
     return { status: result.status, language: result.language };
   } catch (error) {
-    handleUpdateRulesError(error);
+    // 记录错误日志并重新抛出，让上层统一处理
+    const errorMessage = error?.message || String(error);
+    sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage}`, 'error');
+    throw error;
   }
-};
-
-/**
- * 处理更新规则错误
- * @param {Error} error - 错误对象
- */
-const handleUpdateRulesError = (error) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const errorType = error.type || 'UNKNOWN_ERROR';
-
-  // 详细的错误日志，便于Debug页面查看
-  sendBackgroundLog(`${backgroundI18n.t('rules_update_failed')}: ${errorMessage} (${backgroundI18n.t('rule_update_error_type')}: ${errorType})`, 'error');
-
-  // 如果有原始错误，也记录下来
-  if (error.originalError) {
-    sendBackgroundLog(`${backgroundI18n.t('original_error')}: ${error.originalError}`, 'error');
-  }
-
-  const err = new Error(errorMessage);
-  err.type = errorType;
-  err.errorType = errorType;
-  if (error.originalError) err.originalError = error.originalError;
-  throw err;
 };
 
 /**
@@ -638,7 +603,20 @@ const handleUpdateCheckRequest = async () => {
     sendBackgroundLog(backgroundI18n.t('update_check_success'), 'success');
     return { updateInfo: updateInfo };
   } catch (error) {
-    handleUpdateCheckError(error);
+    // 根据错误类型记录日志并重新抛出
+    const errorType = error?.type || 'UNKNOWN_ERROR';
+    const errorMessage = error?.message || String(error);
+    
+    const errorMessages = {
+      'TIMEOUT': backgroundI18n.t('update_check_timeout', { timeout: 10000 }),
+      'NETWORK_ERROR': backgroundI18n.t('update_check_network_error', { error: errorMessage }),
+      'RATE_LIMIT': backgroundI18n.t('update_check_rate_limited'),
+      'INVALID_RESPONSE': backgroundI18n.t('update_check_invalid_response', { response: errorMessage }),
+      'VERSION_ERROR': backgroundI18n.t('update_check_parsing_error', { error: errorMessage })
+    };
+    
+    sendBackgroundLog(errorMessages[errorType] || backgroundI18n.t('update_check_failed', { error: errorMessage }), 'error');
+    throw error;
   }
 };
 
@@ -795,9 +773,9 @@ const handleCacheOperation = async (operation, logMessages) => {
     sendBackgroundLog(logMessages.success, 'success');
     return { stats: combinedStats };
   } catch (error) {
-    const errorMessage = `${logMessages.fail}: ${error.message}`;
+    const errorMessage = `${logMessages.fail}: ${error?.message || String(error)}`;
     sendBackgroundLog(errorMessage, 'error');
-    throw new Error(errorMessage);
+    throw error;
   }
 };
 
@@ -827,34 +805,6 @@ const handleResetCacheStatsRequest = () => handleCacheOperation(
   }
 );
 
-/**
- * 处理更新检查错误
- * @param {Error} error - 错误对象
- */
-const handleUpdateCheckError = (error) => {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-
-  // Log specific error types with appropriate translations
-  if (error.type === 'TIMEOUT') {
-    sendBackgroundLog(backgroundI18n.t('update_check_timeout', { timeout: 10000 }), 'error');
-  } else if (error.type === 'NETWORK_ERROR') {
-    sendBackgroundLog(backgroundI18n.t('update_check_network_error', { error: errorMessage }), 'error');
-  } else if (error.type === 'RATE_LIMIT') {
-    sendBackgroundLog(backgroundI18n.t('update_check_rate_limited'), 'error');
-  } else if (error.type === 'INVALID_RESPONSE') {
-    sendBackgroundLog(backgroundI18n.t('update_check_invalid_response', { response: errorMessage }), 'error');
-  } else if (error.type === 'VERSION_ERROR') {
-    sendBackgroundLog(backgroundI18n.t('update_check_parsing_error', { error: errorMessage }), 'error');
-  } else {
-    sendBackgroundLog(backgroundI18n.t('update_check_failed', { error: errorMessage }), 'error');
-  }
-  const err = new Error(error.message || errorMessage);
-  err.type = error.type || 'UNKNOWN_ERROR';
-  err.userMessage = error.message || 'An unexpected error occurred';
-  err.retryable = !!error.retryable;
-  throw err;
-};
-
 // 监听来自 popup 或 debug 页面的消息
 chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
   (async () => {
@@ -873,6 +823,7 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
       
       await ensureInitialized();
 
+      let data;
       if (type === 'UPDATE_RULES') {
         data = await handleUpdateRulesRequest(request);
       } else if (type === 'AUTO_SWITCH_TOGGLED') {

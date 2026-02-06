@@ -2,28 +2,17 @@
 if (typeof backgroundZh === 'undefined') {
   var backgroundZh = {
   "background": "后台",
-  "extension_installed": "MultiLangSwitcher 扩展已安装/更新. 原因: {reason}",
   "domain_rules_loaded": "域名规则加载成功",
   "trying_update_rules": "正在尝试更新请求头规则为: {language}",
   "rules_updated_successfully": "请求头规则已成功更新为: {language}",
-  "auto_switch_enabled": "自动切换已启用。后续请求将根据域名自动切换语言。",
-  "auto_switch_disabled": "自动切换已禁用。恢复到用户设置的语言: {language}",
-  "language_already_set": "语言已是 {language}，跳过更新",
-  "rules_already_set": "规则已是 {language}，更新缓存",
   "rules_update_completed": "规则更新完成，状态",
   "rules_update_failed": "规则更新失败",
   "auto_switch_status_updated": "自动切换功能状态已更新为",
   "received_domain_rules_request": "收到获取域名映射规则请求",
-  "domain_rules_fetch_success": "成功获取{count}条域名映射规则",
-  "domain_rules_load_failed": "加载域名规则失败",
-  "initializing_state": "因 {reason} 初始化状态",
   "initialization_complete": "初始化完成。",
   "initialization_failed": "初始化失败: {message}",
   "fallback_state_set": "初始化失败后，已设置为安全的回退状态。",
   "fallback_state_failed": "设置回退状态失败: {message}",
-  "status": "状态",
-  "auto_switching_hostname": "正在为域名 '{hostname}' 自动切换到语言 '{language}'",
-  "no_matching_rule": "域名 '{hostname}' 没有匹配的规则，使用回退语言: {fallback}",
   "error_processing_url": "处理URL('{url}')进行自动切换时出错",
   "retry": "重试",
   "update_rules_failed": "更新 declarativeNetRequest 规则失败",
@@ -38,11 +27,9 @@ if (typeof backgroundZh === 'undefined') {
   "language": "语言",
   "original_error": "原始错误",
   "failed_notify_ui_error": "通知UI错误失败",
-  "failed_notify_ui_update": "通知UI更新失败", 
-  "get_current_lang_error": "获取当前语言错误",
+  "failed_notify_ui_update": "通知UI更新失败",
   "accept_language_reset_successful": "Accept-Language 重置成功",
   "reset_error": "重置错误",
-  "clearing_existing_rules": "正在清理 {count} 条现有规则",
   "rules_cleared_successfully": "规则清理成功",
   "clear_rules_failed": "清理规则失败",
   "batch_operation_completed": "批量操作完成",
@@ -50,7 +37,6 @@ if (typeof backgroundZh === 'undefined') {
   "added": "添加",
   "rules": "条规则",
   "rule": "条规则",
-  "auto_switch_toggle_failed": "自动切换状态切换失败",
   "context_menus_created": "右键菜单已创建",
   "create_context_menus_failed": "创建右键菜单失败",
   "menu_detection_page": "检测页面",
@@ -70,25 +56,18 @@ if (typeof backgroundZh === 'undefined') {
   "extension_suspending": "扩展正在挂起，清理资源中...",
 
   // Update checker related keys for background logging
-  "update_check_initiated": "已启动更新检查，仓库: {repo}",
   "update_check_success": "更新检查成功完成",
-  
+
   // Cache stats related keys
   "cache_stats_requested": "缓存统计已请求",
   "get_cache_stats_failed": "获取缓存统计失败",
 
   // Domain cache test related keys
-  "testing_domain_cache": "正在测试域名缓存: {domain}",
-  "domain_test_result": "域名测试结果: {domain} → {language} ({cacheStatus}{fallbackStatus})",
   "domain_cache_test_failed": "域名缓存测试失败: {error}",
   "cached": "缓存",
   "new": "新查询",
   "fallback": ", 回退",
-  "domain_required_error": "域名是必需的",
+  "domain_required_error": "域名是必需的"
 
-  // 并发控制相关翻译键
-  "auto_switch_skip_duplicate": "自动切换跳过重复语言: {language}",
-  "cache_empty_but_language_same": "缓存为空但语言相同: {language}，继续处理"
-  
 };
 } // 结束 if (typeof backgroundZh === 'undefined') 检查

@@ -144,6 +144,9 @@ const getFallbackTranslation = (key, params = {}) => {
       'update_check_network_issue': 'Network Issue',
       'update_check_service_issue': 'Service Issue',
       'update_check_unexpected_error': 'An unexpected error occurred.',
+
+      // Debug Messages
+      'debug_log_started': 'Debug log started',
     },
     zh: {
       // General UI
@@ -176,6 +179,9 @@ const getFallbackTranslation = (key, params = {}) => {
       'update_check_network_issue': '网络问题',
       'update_check_service_issue': '服务问题',
       'update_check_unexpected_error': '发生意外错误。',
+
+      // 调试信息
+      'debug_log_started': '调试日志已启动',
     }
   };
 
