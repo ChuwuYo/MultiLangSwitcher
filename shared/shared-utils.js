@@ -63,10 +63,10 @@ const getUpdateTranslation = (key, params = {}, context = 'popup') => {
     
     // 添加其他可能的实例作为备用
     const otherInstances = [
-      backgroundI18n,
-      popupI18n,
-      debugI18n,
-      detectI18n
+      typeof backgroundI18n !== 'undefined' ? backgroundI18n : undefined,
+      typeof popupI18n !== 'undefined' ? popupI18n : undefined,
+      typeof debugI18n !== 'undefined' ? debugI18n : undefined,
+      typeof detectI18n !== 'undefined' ? detectI18n : undefined
     ].filter(instance => 
       instance && 
       instance.isReady && 

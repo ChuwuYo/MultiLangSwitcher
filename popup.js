@@ -157,11 +157,17 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
     const successSpan = document.createElement('span');
     successSpan.className = 'text-success ms-1';
     successSpan.textContent = popupI18n.t('applied');
-    currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+    
+    // 安全地插入成功提示
+    if (currentLanguageSpan) {
+      currentLanguageSpan.insertAdjacentElement('afterend', successSpan);
+    } else {
+      statusTextElement.appendChild(successSpan);
+    }
 
     // 2秒后移除成功提示
     ResourceManager.setTimeout(() => {
-      if (successSpan.parentNode === statusTextElement) {
+      if (successSpan.parentNode) {
         successSpan.remove();
       }
     }, 2000);
@@ -536,7 +542,7 @@ const showUpdateNotification = (updateInfo) => {
 
       sendDebugLog(popupI18n.t('showing_fallback_notification'), 'warning');
 
-      // 6秒后自动隐藏回退通知
+      // 5秒后自动隐藏回退通知
       ResourceManager.setTimeout(() => {
         updateNotification.classList.add('d-none');
       }, 5000);

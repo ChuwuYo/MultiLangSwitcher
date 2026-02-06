@@ -100,66 +100,67 @@ let initializationPromise = null;    // 初始化Promise，防止重复执行
 let isUpdatingRules = false;    // 简单的互斥锁，防止同时更新规则
 
 // 右键菜单初始化标志
-let contextMenusCreated = false;
+let contextMenuPromise = null;
 
 const createContextMenusOnce = async () => {
-  // 如果已经创建过，直接返回
-  if (contextMenusCreated) {
-    return;
+  // 如果已经有初始化操作在进行，等待其完成
+  if (contextMenuPromise) {
+    return contextMenuPromise;
   }
-  
-  // 简单的标志位防止并发执行
-  contextMenusCreated = true;
-  
-  try {
-    // 先查询现有菜单（部分浏览器不支持 query）
-    let existingMenus = null;
-    if (chrome.contextMenus && typeof chrome.contextMenus.query === 'function') {
-      try {
-        existingMenus = await chrome.contextMenus.query({});
-      } catch (error) {
-        existingMenus = null;
-      }
-    }
 
-    if (Array.isArray(existingMenus)) {
-      const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
-      const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
-
-      // 如果菜单已完整存在，标记为已创建并返回
-      if (hasDetectMenu && hasDebugMenu) {
-        sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
-        return;
+  contextMenuPromise = (async () => {
+    try {
+      // 先查询现有菜单（部分浏览器不支持 query）
+      let existingMenus = null;
+      if (chrome.contextMenus && typeof chrome.contextMenus.query === 'function') {
+        try {
+          existingMenus = await chrome.contextMenus.query({});
+        } catch (error) {
+          existingMenus = null;
+        }
       }
 
-      // 菜单不完整或不存在，先清理再重新创建
-      if (existingMenus.length > 0 && chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+      if (Array.isArray(existingMenus)) {
+        const hasDetectMenu = existingMenus.some(menu => menu.id === 'open-detect-page');
+        const hasDebugMenu = existingMenus.some(menu => menu.id === 'open-debug-page');
+
+        // 如果菜单已完整存在，标记为已创建并返回
+        if (hasDetectMenu && hasDebugMenu) {
+          sendBackgroundLog(backgroundI18n.t('context_menus_already_exists'), 'info');
+          return;
+        }
+
+        // 菜单不完整或不存在，先清理再重新创建
+        if (existingMenus.length > 0 && chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+          await chrome.contextMenus.removeAll();
+        }
+      } else if (chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
+        // 无法查询时，直接清理再创建，避免重复菜单
         await chrome.contextMenus.removeAll();
       }
-    } else if (chrome.contextMenus && typeof chrome.contextMenus.removeAll === 'function') {
-      // 无法查询时，直接清理再创建，避免重复菜单
-      await chrome.contextMenus.removeAll();
+      
+      // 创建菜单项 - 使用国际化标题
+      await chrome.contextMenus.create({
+        id: 'open-detect-page',
+        title: backgroundI18n.t('menu_detection_page') || 'Detection Page',
+        contexts: ['action']
+      });
+      await chrome.contextMenus.create({
+        id: 'open-debug-page',
+        title: backgroundI18n.t('menu_debug_page') || 'Debug Page',
+        contexts: ['action']
+      });
+      
+      sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
+    } catch (error) {
+      // 记录错误
+      sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
+      contextMenuPromise = null; // 失败时允许重试
+      throw error;
     }
-    
-    // 创建菜单项 - 使用国际化标题
-    await chrome.contextMenus.create({
-      id: 'open-detect-page',
-      title: backgroundI18n.t('menu_detection_page') || 'Detection Page',
-      contexts: ['action']
-    });
-    await chrome.contextMenus.create({
-      id: 'open-debug-page',
-      title: backgroundI18n.t('menu_debug_page') || 'Debug Page',
-      contexts: ['action']
-    });
-    
-    sendBackgroundLog(backgroundI18n.t('context_menus_created'), 'info');
-  } catch (error) {
-    // 记录错误
-    sendBackgroundLog(`${backgroundI18n.t('create_context_menus_failed')}: ${error.message}`, 'error');
-    contextMenusCreated = false; // 失败时重置标志
-    throw error;
-  }
+  })();
+
+  return contextMenuPromise;
 };
 
 // 只在安装时创建菜单，onStartup不需要重复创建
@@ -222,6 +223,14 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
   }
 
   isUpdatingRules = true;
+  try {
+    return await updateHeaderRulesInternal(language, retryCount, isAutoSwitch);
+  } finally {
+    isUpdatingRules = false;
+  }
+};
+
+const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => {
   try {
     // 直接查询当前规则状态，替代缓存检查
     const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -288,14 +297,11 @@ const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false)
 
     sendBackgroundLog(`${backgroundI18n.t('rules_updated_successfully', { language })}${isAutoSwitch ? ` (${backgroundI18n.t('auto_switch')})` : ''} (${duration}ms)`, 'success');
     return { status: 'success', language };
-
   } catch (error) {
     sendBackgroundLog(`${backgroundI18n.t('update_rules_failed')}: ${error.message}`, 'error');
     return handleRuleUpdateError(error, language, retryCount);
-  } finally {
-    isUpdatingRules = false;
   }
-}
+};
 
 /**
  * 处理规则更新错误，实现指数退避重试
@@ -331,7 +337,11 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 
     // 等待后重试
     await new Promise(resolve => ResourceManager.setTimeout(resolve, delay));
-    return await updateHeaderRulesInternal(language, nextRetryCount, false);
+    try {
+      return await updateHeaderRulesInternal(language, nextRetryCount, false);
+    } catch (retryError) {
+      return handleRuleUpdateError(retryError, language, nextRetryCount);
+    }
   } else {
     // 超过重试次数或不可重试的错误
     const finalError = new Error(`${backgroundI18n.t('update_rules_failed_with_type', { type: errorType })}: ${error.message}`);
