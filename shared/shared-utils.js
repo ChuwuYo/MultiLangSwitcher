@@ -103,10 +103,10 @@ const getUpdateTranslation = (key, params = {}, context = 'popup') => {
  */
 const getFallbackTranslation = (key, params = {}) => {
   // 从主i18n实例获取当前语言，确保实时同步
-  const mainI18n = typeof popupI18n !== 'undefined' ? popupI18n :
-                   typeof debugI18n !== 'undefined' ? debugI18n :
+  const mainI18n = typeof debugI18n !== 'undefined' ? debugI18n :
                    typeof popupI18n !== 'undefined' ? popupI18n :
-                   typeof detectI18n !== 'undefined' ? detectI18n : null;
+                   typeof detectI18n !== 'undefined' ? detectI18n :
+                   typeof backgroundI18n !== 'undefined' ? backgroundI18n : null;
   
   const currentLang = mainI18n?.currentLang || 'en';
   
