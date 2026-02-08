@@ -152,6 +152,6 @@ License
 
 <div align="center">
 
-[![FOSSA Status](https://app.fossa.com/projects/git%2Bgithub.com%2FChuwuYo%2FMultiLangSwitcher.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FChuwuYo%2FMultiLangSwitcher?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FChuwuYo%2FMultiLangSwitcher.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FChuwuYo%2FMultiLangSwitcher?ref=badge_large)
 
 </div>
