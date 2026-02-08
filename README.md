@@ -48,7 +48,7 @@ If you need to switch the browser UA, you can take a look at this project:[User-
 Additionally, you can configure browser language settings as shown to confuse simple `navigator.languages` detection (though this will increase the uniqueness of your browser fingerprint).
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/c056e5ee-6c65-4786-98d4-ee33f4beef47" alt="Suggestion">
+    <img src="https://github.com/user-attachments/assets/db34383a-f75a-4d6d-8237-99363823cb66" alt="Suggestion">
 </div>
 
 This is a demonstration of customizing the `Accept-Language` string.
