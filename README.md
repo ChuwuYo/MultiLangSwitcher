@@ -28,7 +28,7 @@ The website's layout and styling are built with Bootstrap.
 
 If the built-in request header detection fails or returns no results, you can manually navigate to [BrowserScan](https://www.browserscan.net) or [header-echo](https://header-echo.addr.tools/) for further verification.
 
-If you need to switch the browser UA, you can take a look at this project:[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
+If you need to switch the browser UA, you can take a look at this project: [User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 
 <center>
     <table>
@@ -108,7 +108,8 @@ Note: This extension has not been published to the Chrome Web Store due to the d
 
 ### Install from Source Code
 
-1.  **Download or Clone the Code**: Clone the project repository to your local computer. (Or download the ZIP from the release and unzip it)
+1.  **Download or Clone the Code**: Clone the project repository to your local computer (Or download the ZIP from the release and unzip it)
+    
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```

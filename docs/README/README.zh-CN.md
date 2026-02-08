@@ -112,6 +112,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 ### 从源代码安装
 
 1.  **下载或克隆代码**: 将本项目仓库克隆到您的本地计算机。(或者从release下载ZIP解压)
+    
     ```bash
     git clone https://github.com/ChuwuYo/MultiLangSwitcher.git
     ```
