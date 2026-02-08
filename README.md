@@ -54,7 +54,7 @@ Additionally, you can configure browser language settings as shown to confuse si
 This is a demonstration of customizing the `Accept-Language` string.
 
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/4136c601-5f02-467e-9f42-12eefb5a65dc" alt="Custom Accept-Language">
+    <img src="https://github.com/user-attachments/assets/7af03711-2164-4f60-ada0-30c4d882be4a" alt="Custom Accept-Language">
 </div>
 
 ***
