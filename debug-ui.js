@@ -1019,7 +1019,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 				try {
 					const response = await requestBackground("GET_DOMAIN_RULES");
 
-				addLogMessage(
+					addLogMessage(
 						`${debugI18n.t("received_response")} ${JSON.stringify(response)}`,
 						"info",
 					);
@@ -1045,8 +1045,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 							[debugI18n.t("other")]: {},
 						};
 
-					// 对规则进行分类（基于domain-rules.json中实际存在的域名）
-					Object.keys(rules).forEach((domain) => {
+						// 对规则进行分类（基于domain-rules.json中实际存在的域名）
+						Object.keys(rules).forEach((domain) => {
 							const language = rules[domain];
 
 							if (domain.includes(".")) {

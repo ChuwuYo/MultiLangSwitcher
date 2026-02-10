@@ -391,8 +391,8 @@ const fetchAndDisplayHeaders = async () => {
 				existingAlertInfoP.remove();
 			}
 
-		if (result.acceptLanguage) {
-			headerLanguageInfo.innerHTML = "";
+			if (result.acceptLanguage) {
+				headerLanguageInfo.innerHTML = "";
 				const fragment = document.createDocumentFragment();
 
 				const titleP = document.createElement("p");
@@ -415,8 +415,8 @@ const fetchAndDisplayHeaders = async () => {
 				fragment.appendChild(footerP);
 
 				headerLanguageInfo.appendChild(fragment);
-		} else {
-			headerLanguageInfo.innerHTML = "";
+			} else {
+				headerLanguageInfo.innerHTML = "";
 				const fragment = document.createDocumentFragment();
 
 				const warningP = document.createElement("p");
