@@ -1019,9 +1019,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 				try {
 					const response = await requestBackground("GET_DOMAIN_RULES");
 
-					// 响应检查
-					console.log(debugI18n.t("received_domain_response"), response);
-					addLogMessage(
+				addLogMessage(
 						`${debugI18n.t("received_response")} ${JSON.stringify(response)}`,
 						"info",
 					);
@@ -1047,12 +1045,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 							[debugI18n.t("other")]: {},
 						};
 
-						// 对规则进行分类（基于domain-rules.json中实际存在的域名）
-						console.log(
-							debugI18n.t("start_classify_domain_rules"),
-							Object.keys(rules).length,
-						);
-						Object.keys(rules).forEach((domain) => {
+					// 对规则进行分类（基于domain-rules.json中实际存在的域名）
+					Object.keys(rules).forEach((domain) => {
 							const language = rules[domain];
 
 							if (domain.includes(".")) {
@@ -1408,14 +1402,6 @@ const testDomainCache = async () => {
 		);
 		fragment.appendChild(successP);
 
-		// 添加调试信息
-		console.log(`[Debug] Domain test response:`, {
-			language,
-			fromCache,
-			isUsingFallback,
-			cacheStats,
-		});
-
 		if (language) {
 			const resultP = document.createElement("p");
 			resultP.textContent = `${debugI18n.t("domain_found")}: `;
@@ -1463,10 +1449,6 @@ const testDomainCache = async () => {
 		if (cacheStats) {
 			updateCacheStatsDisplay(cacheStats);
 		}
-
-		console.log(
-			`[Cache] Domain test: ${domain} → ${language || "not found"} (${fromCache ? "cached" : "new"})`,
-		);
 	} catch (error) {
 		setSafeErrorMessage(
 			resultElement,
@@ -1559,7 +1541,6 @@ const handleCacheOperation = async (
 
 		const successMessage = debugI18n.t(successMessageKey);
 		setSafeSuccessMessage(resultElement, successMessage);
-		console.log(`[Cache] ${successMessage}`);
 	} catch (error) {
 		setSafeErrorMessage(
 			resultElement,

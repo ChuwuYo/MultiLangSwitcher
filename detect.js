@@ -391,12 +391,8 @@ const fetchAndDisplayHeaders = async () => {
 				existingAlertInfoP.remove();
 			}
 
-			if (result.acceptLanguage) {
-				console.log(
-					detectI18n.t("detected_accept_language"),
-					result.acceptLanguage,
-				);
-				headerLanguageInfo.innerHTML = "";
+		if (result.acceptLanguage) {
+			headerLanguageInfo.innerHTML = "";
 				const fragment = document.createDocumentFragment();
 
 				const titleP = document.createElement("p");
@@ -419,9 +415,8 @@ const fetchAndDisplayHeaders = async () => {
 				fragment.appendChild(footerP);
 
 				headerLanguageInfo.appendChild(fragment);
-			} else {
-				console.log(detectI18n.t("no_accept_language"));
-				headerLanguageInfo.innerHTML = "";
+		} else {
+			headerLanguageInfo.innerHTML = "";
 				const fragment = document.createDocumentFragment();
 
 				const warningP = document.createElement("p");
@@ -530,7 +525,6 @@ const detectJsLanguage = () => {
 		fragment.appendChild(footerP);
 
 		jsLanguageInfoElement.appendChild(fragment);
-		console.log("JS Language:", { language: lang, languages: langs });
 	} catch (error) {
 		jsLanguageInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -588,7 +582,6 @@ const detectCanvasFingerprint = () => {
 		fragment.appendChild(footerP);
 
 		canvasInfoElement.appendChild(fragment);
-		console.log("Canvas Fingerprint (MD5):", fingerprint);
 	} catch (error) {
 		canvasInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -616,7 +609,6 @@ const detectWebglFingerprint = () => {
 			warningP.className = "text-warning";
 			warningP.textContent = detectI18n.t("webgl_not_supported");
 			webglInfoElement.appendChild(warningP);
-			console.warn("WebGL not supported");
 			return;
 		}
 
@@ -665,13 +657,6 @@ const detectWebglFingerprint = () => {
 		fragment.appendChild(footerP);
 
 		webglInfoElement.appendChild(fragment);
-		console.log("WebGL Fingerprint (MD5):", fingerprint);
-		console.log("WebGL Details:", {
-			vendor,
-			renderer,
-			version,
-			shadingLanguageVersion,
-		});
 	} catch (error) {
 		webglInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -703,7 +688,6 @@ const detectAudioFingerprint = async () => {
 			warningP.className = "text-warning";
 			warningP.textContent = detectI18n.t("audio_not_supported");
 			audioInfoElement.appendChild(warningP);
-			console.warn("AudioContext not supported");
 			return;
 		}
 
@@ -758,7 +742,6 @@ const detectAudioFingerprint = async () => {
 		fragment.appendChild(footerP);
 
 		audioInfoElement.appendChild(fragment);
-		console.log("Audio Fingerprint (MD5):", fingerprint);
 	} catch (error) {
 		audioInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -817,10 +800,6 @@ const detectIntlApi = () => {
 		fragment.appendChild(footerP);
 
 		intlApiInfoElement.appendChild(fragment);
-		console.log("Intl API Locale:", {
-			dateTime: dateTimeLocale,
-			numberFormat: numberFormatLocale,
-		});
 	} catch (error) {
 		intlApiInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -880,7 +859,6 @@ const detectWebRtc = async () => {
 			fragment.appendChild(footerP);
 
 			webRtcInfoElement.appendChild(fragment);
-			console.info(detectI18n.t("webrtc_detected_local_ip"), ips);
 		} else {
 			webRtcInfoElement.innerHTML = "";
 			const fragment = document.createDocumentFragment();
@@ -898,7 +876,6 @@ const detectWebRtc = async () => {
 			fragment.appendChild(footerP);
 
 			webRtcInfoElement.appendChild(fragment);
-			console.log(detectI18n.t("webrtc_no_local_ip"));
 		}
 	} catch (error) {
 		webRtcInfoElement.innerHTML = "";
@@ -1002,12 +979,6 @@ const detectFingerprint = () => {
 		fragment.appendChild(footerP);
 
 		fingerprintInfoElement.appendChild(fragment);
-		console.log("Fingerprint Info:", {
-			ua,
-			screenRes,
-			timezone,
-			timezoneOffset,
-		});
 	} catch (error) {
 		fingerprintInfoElement.innerHTML = "";
 		const errorP = document.createElement("p");
@@ -1047,11 +1018,8 @@ const addRefreshButton = () => {
 
 		// 如果还是找不到，就直接附加到 container 的末尾
 		container.appendChild(refreshButton);
-		console.warn(detectI18n.t("button_add_failed_container"));
 		return;
 	}
-
-	console.error(detectI18n.t("button_add_failed_no_container"));
 };
 
 /**

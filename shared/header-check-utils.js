@@ -65,7 +65,6 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 				if (!response.ok) {
 					const error = `HTTP ${response.status} from ${baseEndpoint}`;
 					errors.push(error);
-					console.warn(`[Header Check] ${error}`);
 					continue;
 				}
 
@@ -93,10 +92,6 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 					}
 				}
 
-				console.log(
-					`[Header Check] Successfully retrieved headers from ${baseEndpoint}`,
-				);
-
 				return {
 					success: true,
 					data: data,
@@ -117,13 +112,11 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 				errorMessage = `${error.message} from ${baseEndpoint}`;
 			}
 			errors.push(errorMessage);
-			console.warn(`[Header Check] ${errorMessage}`);
 		}
 	}
 
 	// 所有端点都失败
 	const errorMessage = `All ${HEADER_CHECK_ENDPOINTS.length} endpoints failed. Errors: ${errors.join("; ")}`;
-	console.error(`[Header Check] ${errorMessage}`);
 
 	return {
 		success: false,
