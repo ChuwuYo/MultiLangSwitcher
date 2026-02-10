@@ -1,61 +1,53 @@
 {
-  "manifest_version": 3,
-  "name": "MultiLangSwitcher",
-  "version": "2.0.0",
-  "minimum_chrome_version": "88.0",
-  "description": "__MSG_extension_description__",
-  "default_locale": "zh",
-  "homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",
-  "author": "ChuwuYo",
-  "incognito": "spanning",
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "images/icon16.png",
-      "32": "images/icon32.png",
-      "48": "images/icon48.png",
-      "64": "images/icon64.png",
-      "128": "images/icon128.png",
-      "256": "images/icon256.png",
-      "512": "images/icon512.png"
-    }
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "permissions": [
-    "storage",
-    "declarativeNetRequest",
-    "declarativeNetRequestFeedback",
-    "tabs",
-    "webRequest",
-    "contextMenus"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
-  "icons": {
-    "16": "images/icon16.png",
-    "32": "images/icon32.png",
-    "48": "images/icon48.png",
-    "64": "images/icon64.png",
-    "128": "images/icon128.png",
-    "256": "images/icon256.png",
-    "512": "images/icon512.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "images/*",
-        "domain-rules.json",
-        "fonts/*"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+	"manifest_version": 3,
+	"name": "MultiLangSwitcher",
+	"version": "2.0.0",
+	"minimum_chrome_version": "88.0",
+	"description": "__MSG_extension_description__",
+	"default_locale": "zh",
+	"homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",
+	"author": "ChuwuYo",
+	"incognito": "spanning",
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "images/icon16.png",
+			"32": "images/icon32.png",
+			"48": "images/icon48.png",
+			"64": "images/icon64.png",
+			"128": "images/icon128.png",
+			"256": "images/icon256.png",
+			"512": "images/icon512.png"
+		}
+	},
+	"background": {
+		"service_worker": "background.js"
+	},
+	"permissions": [
+		"storage",
+		"declarativeNetRequest",
+		"declarativeNetRequestFeedback",
+		"tabs",
+		"webRequest",
+		"contextMenus"
+	],
+	"host_permissions": ["<all_urls>"],
+	"icons": {
+		"16": "images/icon16.png",
+		"32": "images/icon32.png",
+		"48": "images/icon48.png",
+		"64": "images/icon64.png",
+		"128": "images/icon128.png",
+		"256": "images/icon256.png",
+		"512": "images/icon512.png"
+	},
+	"web_accessible_resources": [
+		{
+			"resources": ["images/*", "domain-rules.json", "fonts/*"],
+			"matches": ["<all_urls>"]
+		}
+	],
+	"content_security_policy": {
+		"extension_pages": "script-src 'self'; object-src 'self'"
+	}
 }

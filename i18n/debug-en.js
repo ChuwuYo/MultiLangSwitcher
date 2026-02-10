@@ -1,272 +1,318 @@
 // 防止重复声明
-if (typeof debugEn === 'undefined') {
-  var debugEn = {
-    // Page basic information
-    "title": "MultiLangSwitcher Debug Page",
-    "heading": "MultiLangSwitcher Debug Tools",
-    "subtitle": "This page helps you diagnose and solve language preference issues",
-    "tip_label": "Tip:",
-    "tip": "If your request headers cannot be successfully changed, you can use this page for diagnosis. After opening this page, operations in other parts of the extension (such as the popup page) will display logs here.",
+if (typeof debugEn === "undefined") {
+	var debugEn = {
+		// Page basic information
+		title: "MultiLangSwitcher Debug Page",
+		heading: "MultiLangSwitcher Debug Tools",
+		subtitle:
+			"This page helps you diagnose and solve language preference issues",
+		tip_label: "Tip:",
+		tip: "If your request headers cannot be successfully changed, you can use this page for diagnosis. After opening this page, operations in other parts of the extension (such as the popup page) will display logs here.",
 
-    // Section titles and descriptions
-    "current_rules": "Current Rules Information",
-    "current_rules_desc": "Shows the dynamic rules currently in effect by the extension and details of recently matched rules.",
-    "header_test": "Request Header Test",
-    "header_test_desc": "Send a request to the test address to check if the Accept-Language header is set as expected.",
-    "custom_language": "Custom Language Preference",
-    "custom_language_desc": "Enter a complete Accept-Language string, such as \"en-US,en;q=0.9,fr;q=0.8\".",
-    "format_explanation": "Accept-Language Format Explanation",
-    "format_explanation_desc": "Understand the structure of the Accept-Language request header.",
-    "live_logs": "Live Logs",
-    "live_logs_desc": "Shows log messages sent by the extension at runtime to help track issues.",
-    "common_fixes": "Common Problem Fixes",
-    "common_fixes_desc": "Try to automatically fix some common configuration issues.",
-    "diagnostics": "Extension Diagnostic Information",
-    "diagnostics_desc": "Shows basic information, permissions, and configuration of the extension.",
-    "auto_switch_feature": "Auto Switch Feature",
-    "auto_switch_desc": "Control the feature to automatically switch language by domain. (May detect incorrectly)",
+		// Section titles and descriptions
+		current_rules: "Current Rules Information",
+		current_rules_desc:
+			"Shows the dynamic rules currently in effect by the extension and details of recently matched rules.",
+		header_test: "Request Header Test",
+		header_test_desc:
+			"Send a request to the test address to check if the Accept-Language header is set as expected.",
+		custom_language: "Custom Language Preference",
+		custom_language_desc:
+			'Enter a complete Accept-Language string, such as "en-US,en;q=0.9,fr;q=0.8".',
+		format_explanation: "Accept-Language Format Explanation",
+		format_explanation_desc:
+			"Understand the structure of the Accept-Language request header.",
+		live_logs: "Live Logs",
+		live_logs_desc:
+			"Shows log messages sent by the extension at runtime to help track issues.",
+		common_fixes: "Common Problem Fixes",
+		common_fixes_desc:
+			"Try to automatically fix some common configuration issues.",
+		diagnostics: "Extension Diagnostic Information",
+		diagnostics_desc:
+			"Shows basic information, permissions, and configuration of the extension.",
+		auto_switch_feature: "Auto Switch Feature",
+		auto_switch_desc:
+			"Control the feature to automatically switch language by domain. (May detect incorrectly)",
 
-    // Button texts
-    "show_rules": "Show Current Rules",
-    "test_header": "Test Request Header",
-    "apply_custom": "Apply Custom Language",
-    "clear_logs": "Clear Logs",
-    "show_diagnostics": "Show Diagnostic Information",
-    "show_domain_rules": "Show Domain Mapping Rules",
+		// Button texts
+		show_rules: "Show Current Rules",
+		test_header: "Test Request Header",
+		apply_custom: "Apply Custom Language",
+		clear_logs: "Clear Logs",
+		show_diagnostics: "Show Diagnostic Information",
+		show_domain_rules: "Show Domain Mapping Rules",
 
-    // Cache management translations
-    "cache_management_title": "Domain Matching Cache Management",
-    "cache_management_desc": "Manage the domain matching algorithm cache system for improved performance and debugging",
-    "cache_stats_title": "Cache Statistics",
-    "domain_cache_label": "Domain Cache",
-    "refresh_cache_stats": "Refresh Stats",
-    "clear_domain_cache": "Clear Domain Cache",
-    "reset_cache_stats": "Reset Statistics",
-    "cache_stats_refreshed": "Cache statistics refreshed",
-    "domain_cache_cleared": "Domain cache cleared",
-    "cache_stats_reset": "Cache statistics reset",
-    "cache_operation_failed": "Cache operation failed",
-    "cache_hit_rate": "Hit Rate",
-    "test_domain_label": "Test Domain Cache:",
-    "test_domain_btn": "Test",
-    "domain_test_success": "Domain test successful",
-    "domain_test_failed": "Domain test failed",
-    "domain_not_found": "Domain not found in rules",
-    "domain_found": "Domain found",
+		// Cache management translations
+		cache_management_title: "Domain Matching Cache Management",
+		cache_management_desc:
+			"Manage the domain matching algorithm cache system for improved performance and debugging",
+		cache_stats_title: "Cache Statistics",
+		domain_cache_label: "Domain Cache",
+		refresh_cache_stats: "Refresh Stats",
+		clear_domain_cache: "Clear Domain Cache",
+		reset_cache_stats: "Reset Statistics",
+		cache_stats_refreshed: "Cache statistics refreshed",
+		domain_cache_cleared: "Domain cache cleared",
+		cache_stats_reset: "Cache statistics reset",
+		cache_operation_failed: "Cache operation failed",
+		cache_hit_rate: "Hit Rate",
+		test_domain_label: "Test Domain Cache:",
+		test_domain_btn: "Test",
+		domain_test_success: "Domain test successful",
+		domain_test_failed: "Domain test failed",
+		domain_not_found: "Domain not found in rules",
+		domain_found: "Domain found",
 
-    // Labels and forms
-    "test_language_label": "Test Target Language:",
-    "custom_language_label": "Custom Language String:",
-    "custom_language_placeholder": "Example: en-US,en;q=0.9,fr;q=0.8",
-    "info": "Info",
-    "warning": "Warning",
-    "error": "Error",
-    "success": "Success",
-    "enable_auto_switch": "Enable Auto Switch (by domain)",
+		// Labels and forms
+		test_language_label: "Test Target Language:",
+		custom_language_label: "Custom Language String:",
+		custom_language_placeholder: "Example: en-US,en;q=0.9,fr;q=0.8",
+		info: "Info",
+		warning: "Warning",
+		error: "Error",
+		success: "Success",
+		enable_auto_switch: "Enable Auto Switch (by domain)",
 
-    // Initial display texts
-    "click_view_rules": "Click the button to view current rules...",
-    "click_test_header": "Click the button to test request header...",
-    "select_fix_option": "Select a fix option...",
-    "click_view_diagnostics": "Click the button to view diagnostic information...",
-    "click_view_domain_rules": "Click the button to view domain mapping rules...",
+		// Initial display texts
+		click_view_rules: "Click the button to view current rules...",
+		click_test_header: "Click the button to test request header...",
+		select_fix_option: "Select a fix option...",
+		click_view_diagnostics:
+			"Click the button to view diagnostic information...",
+		click_view_domain_rules: "Click the button to view domain mapping rules...",
 
-    // Reset functionality
-    "attempt_reset_accept_language": "Attempting to reset Accept-Language settings via debug page.",
+		// Reset functionality
+		attempt_reset_accept_language:
+			"Attempting to reset Accept-Language settings via debug page.",
 
-    // Fix options
-    "fix_priority": "Fix Rule Priority",
-    "fix_priority_desc": "Increase dynamic rule priority to 100 to override static rules",
-    "clear_reapply": "Clear and Reapply Rules",
-    "clear_reapply_desc": "Delete all dynamic rules and recreate with current settings",
+		// Fix options
+		fix_priority: "Fix Rule Priority",
+		fix_priority_desc:
+			"Increase dynamic rule priority to 100 to override static rules",
+		clear_reapply: "Clear and Reapply Rules",
+		clear_reapply_desc:
+			"Delete all dynamic rules and recreate with current settings",
 
-    // Accept-Language format explanation
-    "basic_format": "Basic Format:",
-    "language_code": "Language code",
-    "region_code": "Region code",
-    "quality_value": "Quality value",
-    "required": "required",
-    "optional": "optional",
-    "examples": "Examples:",
-    "language_code_required": "e.g. en (English), zh (Chinese). Uses ISO 639-1 standard.",
-    "region_code_optional": "e.g. US (United States), CN (Mainland China), HK (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.",
-    "quality_value_optional": "Range 0 to 1, indicates priority, default is 1.",
-    "example_complex": "Priority American English, followed by general English, then Simplified Chinese.",
-    "format_note": "Please follow this format in the input box above to set custom language.",
+		// Accept-Language format explanation
+		basic_format: "Basic Format:",
+		language_code: "Language code",
+		region_code: "Region code",
+		quality_value: "Quality value",
+		required: "required",
+		optional: "optional",
+		examples: "Examples:",
+		language_code_required:
+			"e.g. en (English), zh (Chinese). Uses ISO 639-1 standard.",
+		region_code_optional:
+			"e.g. US (United States), CN (Mainland China), HK (Hong Kong). Uses ISO 3166-1 Alpha 2 standard.",
+		quality_value_optional: "Range 0 to 1, indicates priority, default is 1.",
+		example_complex:
+			"Priority American English, followed by general English, then Simplified Chinese.",
+		format_note:
+			"Please follow this format in the input box above to set custom language.",
 
-    // Keys used in debug-ui.js
-    "external_check_prefix": "Please visit",
-    "external_check_or": "or",
-    "external_check_suffix": "to view",
-    "getting_rule_info": "Getting rule information...",
-    "dynamic_rules": "Dynamic rules:",
-    "no_dynamic_rules": "No dynamic rules found!",
-    "rule_id": "Rule ID:",
-    "priority": "Priority:",
-    "action": "Action:",
-    "modify_headers": "Modify headers:",
-    "operation": "Operation:",
-    "conditions": "Conditions:",
-    "url_filter": "URL filter:",
-    "resource_types": "Resource types:",
-    "recent_matched_rules": "Recent matched rules:",
-    "ruleset_id": "Ruleset ID:",
-    "matched_url": "Matched URL:",
-    "resource_type": "Resource type:",
-    "recent_match_note": "Note: This shows rules matched in recent page loads, not necessarily all rules match history.",
-    "no_recent_matches": "No recent rule matches",
-    "debug_log_started": "Debug log started",
+		// Keys used in debug-ui.js
+		external_check_prefix: "Please visit",
+		external_check_or: "or",
+		external_check_suffix: "to view",
+		getting_rule_info: "Getting rule information...",
+		dynamic_rules: "Dynamic rules:",
+		no_dynamic_rules: "No dynamic rules found!",
+		rule_id: "Rule ID:",
+		priority: "Priority:",
+		action: "Action:",
+		modify_headers: "Modify headers:",
+		operation: "Operation:",
+		conditions: "Conditions:",
+		url_filter: "URL filter:",
+		resource_types: "Resource types:",
+		recent_matched_rules: "Recent matched rules:",
+		ruleset_id: "Ruleset ID:",
+		matched_url: "Matched URL:",
+		resource_type: "Resource type:",
+		recent_match_note:
+			"Note: This shows rules matched in recent page loads, not necessarily all rules match history.",
+		no_recent_matches: "No recent rule matches",
+		debug_log_started: "Debug log started",
 
-    // Request header test related
-    "testing_language_header": "Testing language",
-    "header_test_multiple": "request header... (will try multiple detection points)",
-    "start_header_test": "Starting header test, language:",
-    "request_failed": "Request",
-    "failed": "failed:",
-    "recent_successful_headers": "Recent successful request headers (from first successful detection point):",
-    "header_changed_success": "✓ Request header successfully changed! Detected value:",
-    "header_test_success": "Header test successful: Accept-Language is",
-    "header_not_changed": "✗ Request header not successfully changed!",
-    "expected_contains": "Expected to contain:",
-    "actually_detected": "Actually detected:",
-    "header_test_failed_not_expected": "Header test failed: Accept-Language not set as expected. Expected to contain:",
-    "actual": "Actual:",
-    "no_accept_language_any_endpoint": "✗ No Accept-Language request header detected at any detection point!",
-    "header_test_failed_no_header": "Header test failed: No Accept-Language request header detected.",
-    "all_test_requests_failed": "✗ All test requests failed.",
-    "last_error": "Last error:",
-    "check_network_connection": "Please check your network connection, or try",
-    "header_test_failed_all_endpoints": "Header test failed: All detection points failed to get request headers.",
-    "http_error_status_from": "HTTP error! Status:",
-    "from": "from",
+		// Request header test related
+		testing_language_header: "Testing language",
+		header_test_multiple:
+			"request header... (will try multiple detection points)",
+		start_header_test: "Starting header test, language:",
+		request_failed: "Request",
+		failed: "failed:",
+		recent_successful_headers:
+			"Recent successful request headers (from first successful detection point):",
+		header_changed_success:
+			"✓ Request header successfully changed! Detected value:",
+		header_test_success: "Header test successful: Accept-Language is",
+		header_not_changed: "✗ Request header not successfully changed!",
+		expected_contains: "Expected to contain:",
+		actually_detected: "Actually detected:",
+		header_test_failed_not_expected:
+			"Header test failed: Accept-Language not set as expected. Expected to contain:",
+		actual: "Actual:",
+		no_accept_language_any_endpoint:
+			"✗ No Accept-Language request header detected at any detection point!",
+		header_test_failed_no_header:
+			"Header test failed: No Accept-Language request header detected.",
+		all_test_requests_failed: "✗ All test requests failed.",
+		last_error: "Last error:",
+		check_network_connection: "Please check your network connection, or try",
+		header_test_failed_all_endpoints:
+			"Header test failed: All detection points failed to get request headers.",
+		http_error_status_from: "HTTP error! Status:",
+		from: "from",
 
-    // Fix functionality related
-    "fixing_rule_priority": "Fixing rule priority...",
-    "try_fix_priority": "Trying to fix rule priority...",
-    "fix_failed": "Fix failed:",
-    "fix_priority_failed": "Fix rule priority failed:",
-    "priority_updated_success": "Rule priority successfully updated to 100",
-    "priority_updated_log": "Rule priority successfully updated to 100.",
-    "clearing_rules_reapply": "Clearing all dynamic rules and reapplying...",
-    "try_clear_reapply": "Trying to clear all dynamic rules and reapply...",
-    "clear_failed": "Clear failed:",
-    "clear_rules_failed": "Clear rules failed:",
-    "reapply_rules_error": "Error reapplying rules:",
-    "request_background_reapply_failed": "Request background reapply rules failed:",
-    "rules_cleared_reapplied": "All rules cleared and reapplied language:",
-    "rules_cleared_reapplied_log": "Rules cleared and reapplied language:",
-    "background_reapply_failed": "Background reapply rules failed:",
-    "background_reapply_failed_log": "Background reapply rules failed:",
-    "background_no_clear_response": "Background did not clearly respond success or failure.",
-    "background_no_clear_response_log": "Background did not clearly respond success or failure.",
+		// Fix functionality related
+		fixing_rule_priority: "Fixing rule priority...",
+		try_fix_priority: "Trying to fix rule priority...",
+		fix_failed: "Fix failed:",
+		fix_priority_failed: "Fix rule priority failed:",
+		priority_updated_success: "Rule priority successfully updated to 100",
+		priority_updated_log: "Rule priority successfully updated to 100.",
+		clearing_rules_reapply: "Clearing all dynamic rules and reapplying...",
+		try_clear_reapply: "Trying to clear all dynamic rules and reapply...",
+		clear_failed: "Clear failed:",
+		clear_rules_failed: "Clear rules failed:",
+		reapply_rules_error: "Error reapplying rules:",
+		request_background_reapply_failed:
+			"Request background reapply rules failed:",
+		rules_cleared_reapplied: "All rules cleared and reapplied language:",
+		rules_cleared_reapplied_log: "Rules cleared and reapplied language:",
+		background_reapply_failed: "Background reapply rules failed:",
+		background_reapply_failed_log: "Background reapply rules failed:",
+		background_no_clear_response:
+			"Background did not clearly respond success or failure.",
+		background_no_clear_response_log:
+			"Background did not clearly respond success or failure.",
 
-    // Custom language related
-    "enter_valid_language": "Please enter a valid language string.",
-    "try_apply_custom_empty": "Trying to apply custom language, but input is empty.",
-    "applying_custom_language": "Applying custom language:",
-    "try_apply_custom": "Trying to apply custom language:",
-    "apply_custom_failed": "Apply custom language failed:",
-    "custom_language_applied": "✓ Custom language successfully applied:",
-    "custom_language_applied_log": "Custom language successfully applied:",
-    "apply_custom_failed_backend": "✗ Apply custom language failed:",
-    "backend_apply_custom_failed": "Backend apply custom language failed:",
-    "backend_no_custom_response": "Background did not clearly respond to custom language application success or failure.",
+		// Custom language related
+		enter_valid_language: "Please enter a valid language string.",
+		try_apply_custom_empty:
+			"Trying to apply custom language, but input is empty.",
+		applying_custom_language: "Applying custom language:",
+		try_apply_custom: "Trying to apply custom language:",
+		apply_custom_failed: "Apply custom language failed:",
+		custom_language_applied: "✓ Custom language successfully applied:",
+		custom_language_applied_log: "Custom language successfully applied:",
+		apply_custom_failed_backend: "✗ Apply custom language failed:",
+		backend_apply_custom_failed: "Backend apply custom language failed:",
+		backend_no_custom_response:
+			"Background did not clearly respond to custom language application success or failure.",
 
-    // Diagnostic information related
-    "collecting_diagnostics": "Collecting diagnostic information...",
-    "try_show_diagnostics": "Trying to show diagnostic information...",
-    "extension_info": "Extension Information:",
-    "extension_id": "Extension ID:",
-    "manifest_info": "Manifest File Information:",
-    "name": "Name:",
-    "version": "Version:",
-    "permissions": "Permissions:",
-    "no_permissions": "No permissions declared.",
-    "declarative_config": "declarativeNetRequest Configuration:",
-    "disabled_manifest": "Disabled (manifest)",
-    "enabled_manifest": "Enabled (manifest)",
-    "path": "Path:",
-    "status": "Status:",
-    "reason": "Reason:",
-    "no_ruleset_found": "No ruleset found.",
-    "declarative_permission_found": "✓ declarativeNetRequest permission found",
-    "declarative_feedback_permission_found": "✓ declarativeNetRequestFeedback permission found",
-    "declarative_permission_missing": "✗ declarativeNetRequest permission missing",
-    "using_dynamic_rules": "This extension uses dynamic rules (recommended approach)",
-    "storage_failed": "Get storage failed:",
-    "stored_language_settings": "Stored Language Settings:",
-    "current_language": "Current Language:",
-    "diagnostics_stored_language": "Diagnostic info: Stored language setting is",
-    "no_stored_language_found": "No stored language settings found (may use default value)",
-    "diagnostics_no_stored_language": "Diagnostic info: No stored language settings found.",
-    "auto_switch_function": "Auto Switch Function:",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
-    "diagnostics_complete": "Diagnostic information display complete.",
-    "collect_diagnostics_storage_error": "Error collecting diagnostic information (storage):",
-    "collect_storage_info_error": "Error collecting storage information:",
-    "collect_diagnostics_manifest_error": "Error collecting diagnostic information (manifest/id):",
-    "collect_basic_info_error": "Error collecting basic information:",
+		// Diagnostic information related
+		collecting_diagnostics: "Collecting diagnostic information...",
+		try_show_diagnostics: "Trying to show diagnostic information...",
+		extension_info: "Extension Information:",
+		extension_id: "Extension ID:",
+		manifest_info: "Manifest File Information:",
+		name: "Name:",
+		version: "Version:",
+		permissions: "Permissions:",
+		no_permissions: "No permissions declared.",
+		declarative_config: "declarativeNetRequest Configuration:",
+		disabled_manifest: "Disabled (manifest)",
+		enabled_manifest: "Enabled (manifest)",
+		path: "Path:",
+		status: "Status:",
+		reason: "Reason:",
+		no_ruleset_found: "No ruleset found.",
+		declarative_permission_found: "✓ declarativeNetRequest permission found",
+		declarative_feedback_permission_found:
+			"✓ declarativeNetRequestFeedback permission found",
+		declarative_permission_missing:
+			"✗ declarativeNetRequest permission missing",
+		using_dynamic_rules:
+			"This extension uses dynamic rules (recommended approach)",
+		storage_failed: "Get storage failed:",
+		stored_language_settings: "Stored Language Settings:",
+		current_language: "Current Language:",
+		diagnostics_stored_language: "Diagnostic info: Stored language setting is",
+		no_stored_language_found:
+			"No stored language settings found (may use default value)",
+		diagnostics_no_stored_language:
+			"Diagnostic info: No stored language settings found.",
+		auto_switch_function: "Auto Switch Function:",
+		enabled: "Enabled",
+		disabled: "Disabled",
+		diagnostics_complete: "Diagnostic information display complete.",
+		collect_diagnostics_storage_error:
+			"Error collecting diagnostic information (storage):",
+		collect_storage_info_error: "Error collecting storage information:",
+		collect_diagnostics_manifest_error:
+			"Error collecting diagnostic information (manifest/id):",
+		collect_basic_info_error: "Error collecting basic information:",
 
-    // Auto switch functionality related
-    "try_enable_disable_auto": "Trying to",
-    "enable": "enable",
-    "disable": "disable",
-    "auto_switch_function_ellipsis": "auto switch function...",
-    "update_auto_switch_failed": "Update auto switch status failed:",
-    "auto_switch_enabled": "Auto switch function enabled",
-    "auto_switch_disabled": "Auto switch function disabled",
-    "failed_update_storage": "Failed to update storage",
-    "unknown_response_auto_switch": "Received unknown response when updating auto switch status",
+		// Auto switch functionality related
+		try_enable_disable_auto: "Trying to",
+		enable: "enable",
+		disable: "disable",
+		auto_switch_function_ellipsis: "auto switch function...",
+		update_auto_switch_failed: "Update auto switch status failed:",
+		auto_switch_enabled: "Auto switch function enabled",
+		auto_switch_disabled: "Auto switch function disabled",
+		failed_update_storage: "Failed to update storage",
+		unknown_response_auto_switch:
+			"Received unknown response when updating auto switch status",
 
-    // Domain mapping rules related
-    "getting_domain_rules": "Getting domain mapping rules...",
-    "try_get_domain_rules": "Trying to get domain mapping rules...",
-    "get_domain_rules_failed": "Get domain mapping rules failed:",
-    "received_domain_response": "Received domain rules response:",
-    "received_response": "Received response:",
-    "get_domain_rules_error": "Error getting domain mapping rules:",
-    "domain_language_mapping": "Domain Language Mapping Rules:",
-    "second_level_domain": "Second-level Domain",
-    "asia": "Asia",
-    "north_america": "North America",
-    "south_america": "South America",
-    "europe": "Europe",
-    "oceania": "Oceania",
-    "middle_east": "Middle East",
-    "other": "Other",
-    "rules_count": "rules",
-    "domain": "Domain",
-    "language": "Language",
-    "start_classify_domain_rules": "Starting to classify domain rules, total:",
-    "successfully_got_displayed_rules": "Successfully got and displayed",
-    "domain_mapping_rules": "domain mapping rules",
-    "failed_get_domain_rules_empty": "Failed to get domain mapping rules or rules are empty",
-    "failed_get_domain_rules_response": "Failed to get domain mapping rules or rules are empty. Response content:",
-    "received_auto_switch_update": "Received auto switch status update:",
-    "current_language_colon": "current language:",
-    "auto_switch_status_sync": "Auto switch status synchronized",
-    "status_sync_received": "Status sync received: auto switch",
-    "reset_accept_language_success": "Accept-Language has been successfully reset.",
-    "reset_accept_language_failed": "Reset failed: {message}",
+		// Domain mapping rules related
+		getting_domain_rules: "Getting domain mapping rules...",
+		try_get_domain_rules: "Trying to get domain mapping rules...",
+		get_domain_rules_failed: "Get domain mapping rules failed:",
+		received_domain_response: "Received domain rules response:",
+		received_response: "Received response:",
+		get_domain_rules_error: "Error getting domain mapping rules:",
+		domain_language_mapping: "Domain Language Mapping Rules:",
+		second_level_domain: "Second-level Domain",
+		asia: "Asia",
+		north_america: "North America",
+		south_america: "South America",
+		europe: "Europe",
+		oceania: "Oceania",
+		middle_east: "Middle East",
+		other: "Other",
+		rules_count: "rules",
+		domain: "Domain",
+		language: "Language",
+		start_classify_domain_rules: "Starting to classify domain rules, total:",
+		successfully_got_displayed_rules: "Successfully got and displayed",
+		domain_mapping_rules: "domain mapping rules",
+		failed_get_domain_rules_empty:
+			"Failed to get domain mapping rules or rules are empty",
+		failed_get_domain_rules_response:
+			"Failed to get domain mapping rules or rules are empty. Response content:",
+		received_auto_switch_update: "Received auto switch status update:",
+		current_language_colon: "current language:",
+		auto_switch_status_sync: "Auto switch status synchronized",
+		status_sync_received: "Status sync received: auto switch",
+		reset_accept_language_success:
+			"Accept-Language has been successfully reset.",
+		reset_accept_language_failed: "Reset failed: {message}",
 
-    // debug-headers.js messages
-    "get_rules_error": "Error getting rules: ",
-    "invalid_language_code": "Error: Please provide a valid language code",
-    "network_check_suggestion": "Suggestion: Check network connection or try other test services",
+		// debug-headers.js messages
+		get_rules_error: "Error getting rules: ",
+		invalid_language_code: "Error: Please provide a valid language code",
+		network_check_suggestion:
+			"Suggestion: Check network connection or try other test services",
 
-    // Accept-Language format validation
-    "accept_language_format_warning": "Your custom Accept-Language format may be incorrect, please verify it yourself.",
+		// Accept-Language format validation
+		accept_language_format_warning:
+			"Your custom Accept-Language format may be incorrect, please verify it yourself.",
 
-    // New cache-related translations
-    "cache_status": "Cache Status",
-    "cache_hit": "Cache Hit",
-    "cache_miss": "New Query",
-    "note_using_active_language": "Note: This domain uses the current active language setting",
-    "domain_not_in_rules_no_active": "This domain is not in rules and there is no active language setting",
+		// New cache-related translations
+		cache_status: "Cache Status",
+		cache_hit: "Cache Hit",
+		cache_miss: "New Query",
+		note_using_active_language:
+			"Note: This domain uses the current active language setting",
+		domain_not_in_rules_no_active:
+			"This domain is not in rules and there is no active language setting",
 
-    // Domain test related translations
-    "please_enter_domain": "Please enter a domain",
-    "testing_domain": "Testing domain: {domain}..."
-  };
+		// Domain test related translations
+		please_enter_domain: "Please enter a domain",
+		testing_domain: "Testing domain: {domain}...",
+	};
 } // 结束 if (typeof debugEn === 'undefined') 检查

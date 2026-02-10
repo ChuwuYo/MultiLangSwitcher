@@ -1,5 +1,5 @@
 {
-  "extension_description": {
-    "message": "Quickly switch the Accept-Language request header via manual selection or automatic domain-based switching to provide a better localized web content experience."
-  }
+	"extension_description": {
+		"message": "Quickly switch the Accept-Language request header via manual selection or automatic domain-based switching to provide a better localized web content experience."
+	}
 }

@@ -21,185 +21,184 @@
 
 /* eslint-disable */
 function md5(string) {
-  function safeAdd(x, y) {
-    var lsw = (x & 0xffff) + (y & 0xffff)
-    var msw = (x >> 16) + (y >> 16) + (lsw >> 16)
-    return (msw << 16) | (lsw & 0xffff)
-  }
+	function safeAdd(x, y) {
+		var lsw = (x & 0xffff) + (y & 0xffff);
+		var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+		return (msw << 16) | (lsw & 0xffff);
+	}
 
-  function bitRotateLeft(num, cnt) {
-    return (num << cnt) | (num >>> (32 - cnt))
-  }
+	function bitRotateLeft(num, cnt) {
+		return (num << cnt) | (num >>> (32 - cnt));
+	}
 
-  function md5cmn(q, a, b, x, s, t) {
-    return safeAdd(bitRotateLeft(safeAdd(safeAdd(a, q), safeAdd(x, t)), s), b)
-  }
-  function md5ff(a, b, c, d, x, s, t) {
-    return md5cmn((b & c) | (~b & d), a, b, x, s, t)
-  }
-  function md5gg(a, b, c, d, x, s, t) {
-    return md5cmn((b & d) | (c & ~d), a, b, x, s, t)
-  }
-  function md5hh(a, b, c, d, x, s, t) {
-    return md5cmn(b ^ c ^ d, a, b, x, s, t)
-  }
-  function md5ii(a, b, c, d, x, s, t) {
-    return md5cmn(c ^ (b | ~d), a, b, x, s, t)
-  }
+	function md5cmn(q, a, b, x, s, t) {
+		return safeAdd(bitRotateLeft(safeAdd(safeAdd(a, q), safeAdd(x, t)), s), b);
+	}
+	function md5ff(a, b, c, d, x, s, t) {
+		return md5cmn((b & c) | (~b & d), a, b, x, s, t);
+	}
+	function md5gg(a, b, c, d, x, s, t) {
+		return md5cmn((b & d) | (c & ~d), a, b, x, s, t);
+	}
+	function md5hh(a, b, c, d, x, s, t) {
+		return md5cmn(b ^ c ^ d, a, b, x, s, t);
+	}
+	function md5ii(a, b, c, d, x, s, t) {
+		return md5cmn(c ^ (b | ~d), a, b, x, s, t);
+	}
 
-  function binlMD5(x, len) {
-    x[len >> 5] |= 0x80 << (len % 32)
-    x[(((len + 64) >>> 9) << 4) + 14] = len
+	function binlMD5(x, len) {
+		x[len >> 5] |= 0x80 << (len % 32);
+		x[(((len + 64) >>> 9) << 4) + 14] = len;
 
-    var i
-    var olda
-    var oldb
-    var oldc
-    var oldd
-    var a = 1732584193
-    var b = -271733879
-    var c = -1732584194
-    var d = 271733878
+		var i;
+		var olda;
+		var oldb;
+		var oldc;
+		var oldd;
+		var a = 1732584193;
+		var b = -271733879;
+		var c = -1732584194;
+		var d = 271733878;
 
-    for (i = 0; i < x.length; i += 16) {
-      olda = a
-      oldb = b
-      oldc = c
-      oldd = d
+		for (i = 0; i < x.length; i += 16) {
+			olda = a;
+			oldb = b;
+			oldc = c;
+			oldd = d;
 
-      a = md5ff(a, b, c, d, x[i], 7, -680876936)
-      d = md5ff(d, a, b, c, x[i + 1], 12, -389564586)
-      c = md5ff(c, d, a, b, x[i + 2], 17, 606105819)
-      b = md5ff(b, c, d, a, x[i + 3], 22, -1044525330)
-      a = md5ff(a, b, c, d, x[i + 4], 7, -176418897)
-      d = md5ff(d, a, b, c, x[i + 5], 12, 1200080426)
-      c = md5ff(c, d, a, b, x[i + 6], 17, -1473231341)
-      b = md5ff(b, c, d, a, x[i + 7], 22, -45705983)
-      a = md5ff(a, b, c, d, x[i + 8], 7, 1770035416)
-      d = md5ff(d, a, b, c, x[i + 9], 12, -1958414417)
-      c = md5ff(c, d, a, b, x[i + 10], 17, -42063)
-      b = md5ff(b, c, d, a, x[i + 11], 22, -1990404162)
-      a = md5ff(a, b, c, d, x[i + 12], 7, 1804603682)
-      d = md5ff(d, a, b, c, x[i + 13], 12, -40341101)
-      c = md5ff(c, d, a, b, x[i + 14], 17, -1502002290)
-      b = md5ff(b, c, d, a, x[i + 15], 22, 1236535329)
+			a = md5ff(a, b, c, d, x[i], 7, -680876936);
+			d = md5ff(d, a, b, c, x[i + 1], 12, -389564586);
+			c = md5ff(c, d, a, b, x[i + 2], 17, 606105819);
+			b = md5ff(b, c, d, a, x[i + 3], 22, -1044525330);
+			a = md5ff(a, b, c, d, x[i + 4], 7, -176418897);
+			d = md5ff(d, a, b, c, x[i + 5], 12, 1200080426);
+			c = md5ff(c, d, a, b, x[i + 6], 17, -1473231341);
+			b = md5ff(b, c, d, a, x[i + 7], 22, -45705983);
+			a = md5ff(a, b, c, d, x[i + 8], 7, 1770035416);
+			d = md5ff(d, a, b, c, x[i + 9], 12, -1958414417);
+			c = md5ff(c, d, a, b, x[i + 10], 17, -42063);
+			b = md5ff(b, c, d, a, x[i + 11], 22, -1990404162);
+			a = md5ff(a, b, c, d, x[i + 12], 7, 1804603682);
+			d = md5ff(d, a, b, c, x[i + 13], 12, -40341101);
+			c = md5ff(c, d, a, b, x[i + 14], 17, -1502002290);
+			b = md5ff(b, c, d, a, x[i + 15], 22, 1236535329);
 
-      a = md5gg(a, b, c, d, x[i + 1], 5, -165796510)
-      d = md5gg(d, a, b, c, x[i + 6], 9, -1069501632)
-      c = md5gg(c, d, a, b, x[i + 11], 14, 643717713)
-      b = md5gg(b, c, d, a, x[i], 20, -373897302)
-      a = md5gg(a, b, c, d, x[i + 5], 5, -701558691)
-      d = md5gg(d, a, b, c, x[i + 10], 9, 38016083)
-      c = md5gg(c, d, a, b, x[i + 15], 14, -660478335)
-      b = md5gg(b, c, d, a, x[i + 4], 20, -405537848)
-      a = md5gg(a, b, c, d, x[i + 9], 5, 568446438)
-      d = md5gg(d, a, b, c, x[i + 14], 9, -1019803690)
-      c = md5gg(c, d, a, b, x[i + 3], 14, -187363961)
-      b = md5gg(b, c, d, a, x[i + 8], 20, 1163531501)
-      a = md5gg(a, b, c, d, x[i + 13], 5, -1444681467)
-      d = md5gg(d, a, b, c, x[i + 2], 9, -51403784)
-      c = md5gg(c, d, a, b, x[i + 7], 14, 1735328473)
-      b = md5gg(b, c, d, a, x[i + 12], 20, -1926607734)
+			a = md5gg(a, b, c, d, x[i + 1], 5, -165796510);
+			d = md5gg(d, a, b, c, x[i + 6], 9, -1069501632);
+			c = md5gg(c, d, a, b, x[i + 11], 14, 643717713);
+			b = md5gg(b, c, d, a, x[i], 20, -373897302);
+			a = md5gg(a, b, c, d, x[i + 5], 5, -701558691);
+			d = md5gg(d, a, b, c, x[i + 10], 9, 38016083);
+			c = md5gg(c, d, a, b, x[i + 15], 14, -660478335);
+			b = md5gg(b, c, d, a, x[i + 4], 20, -405537848);
+			a = md5gg(a, b, c, d, x[i + 9], 5, 568446438);
+			d = md5gg(d, a, b, c, x[i + 14], 9, -1019803690);
+			c = md5gg(c, d, a, b, x[i + 3], 14, -187363961);
+			b = md5gg(b, c, d, a, x[i + 8], 20, 1163531501);
+			a = md5gg(a, b, c, d, x[i + 13], 5, -1444681467);
+			d = md5gg(d, a, b, c, x[i + 2], 9, -51403784);
+			c = md5gg(c, d, a, b, x[i + 7], 14, 1735328473);
+			b = md5gg(b, c, d, a, x[i + 12], 20, -1926607734);
 
-      a = md5hh(a, b, c, d, x[i + 5], 4, -378558)
-      d = md5hh(d, a, b, c, x[i + 8], 11, -2022574463)
-      c = md5hh(c, d, a, b, x[i + 11], 16, 1839030562)
-      b = md5hh(b, c, d, a, x[i + 14], 23, -35309556)
-      a = md5hh(a, b, c, d, x[i + 1], 4, -1530992060)
-      d = md5hh(d, a, b, c, x[i + 4], 11, 1272893353)
-      c = md5hh(c, d, a, b, x[i + 7], 16, -155497632)
-      b = md5hh(b, c, d, a, x[i + 10], 23, -1094730640)
-      a = md5hh(a, b, c, d, x[i + 13], 4, 681279174)
-      d = md5hh(d, a, b, c, x[i], 11, -358537222)
-      c = md5hh(c, d, a, b, x[i + 3], 16, -722521979)
-      b = md5hh(b, c, d, a, x[i + 6], 23, 76029189)
-      a = md5hh(a, b, c, d, x[i + 9], 4, -640364487)
-      d = md5hh(d, a, b, c, x[i + 12], 11, -421815835)
-      c = md5hh(c, d, a, b, x[i + 15], 16, 530742520)
-      b = md5hh(b, c, d, a, x[i + 2], 23, -995338651)
+			a = md5hh(a, b, c, d, x[i + 5], 4, -378558);
+			d = md5hh(d, a, b, c, x[i + 8], 11, -2022574463);
+			c = md5hh(c, d, a, b, x[i + 11], 16, 1839030562);
+			b = md5hh(b, c, d, a, x[i + 14], 23, -35309556);
+			a = md5hh(a, b, c, d, x[i + 1], 4, -1530992060);
+			d = md5hh(d, a, b, c, x[i + 4], 11, 1272893353);
+			c = md5hh(c, d, a, b, x[i + 7], 16, -155497632);
+			b = md5hh(b, c, d, a, x[i + 10], 23, -1094730640);
+			a = md5hh(a, b, c, d, x[i + 13], 4, 681279174);
+			d = md5hh(d, a, b, c, x[i], 11, -358537222);
+			c = md5hh(c, d, a, b, x[i + 3], 16, -722521979);
+			b = md5hh(b, c, d, a, x[i + 6], 23, 76029189);
+			a = md5hh(a, b, c, d, x[i + 9], 4, -640364487);
+			d = md5hh(d, a, b, c, x[i + 12], 11, -421815835);
+			c = md5hh(c, d, a, b, x[i + 15], 16, 530742520);
+			b = md5hh(b, c, d, a, x[i + 2], 23, -995338651);
 
-      a = md5ii(a, b, c, d, x[i], 6, -198630844)
-      d = md5ii(d, a, b, c, x[i + 7], 10, 1126891415)
-      c = md5ii(c, d, a, b, x[i + 14], 15, -1416354905)
-      b = md5ii(b, c, d, a, x[i + 5], 21, -57434055)
-      a = md5ii(a, b, c, d, x[i + 12], 6, 1700485571)
-      d = md5ii(d, a, b, c, x[i + 3], 10, -1894986606)
-      c = md5ii(c, d, a, b, x[i + 10], 15, -1051523)
-      b = md5ii(b, c, d, a, x[i + 1], 21, -2054922799)
-      a = md5ii(a, b, c, d, x[i + 8], 6, 1873313359)
-      d = md5ii(d, a, b, c, x[i + 15], 10, -30611744)
-      c = md5ii(c, d, a, b, x[i + 6], 15, -1560198380)
-      b = md5ii(b, c, d, a, x[i + 13], 21, 1309151649)
-      a = md5ii(a, b, c, d, x[i + 4], 6, -145523070)
-      d = md5ii(d, a, b, c, x[i + 11], 10, -1120210379)
-      c = md5ii(c, d, a, b, x[i + 2], 15, 718787259)
-      b = md5ii(b, c, d, a, x[i + 9], 21, -343485551)
+			a = md5ii(a, b, c, d, x[i], 6, -198630844);
+			d = md5ii(d, a, b, c, x[i + 7], 10, 1126891415);
+			c = md5ii(c, d, a, b, x[i + 14], 15, -1416354905);
+			b = md5ii(b, c, d, a, x[i + 5], 21, -57434055);
+			a = md5ii(a, b, c, d, x[i + 12], 6, 1700485571);
+			d = md5ii(d, a, b, c, x[i + 3], 10, -1894986606);
+			c = md5ii(c, d, a, b, x[i + 10], 15, -1051523);
+			b = md5ii(b, c, d, a, x[i + 1], 21, -2054922799);
+			a = md5ii(a, b, c, d, x[i + 8], 6, 1873313359);
+			d = md5ii(d, a, b, c, x[i + 15], 10, -30611744);
+			c = md5ii(c, d, a, b, x[i + 6], 15, -1560198380);
+			b = md5ii(b, c, d, a, x[i + 13], 21, 1309151649);
+			a = md5ii(a, b, c, d, x[i + 4], 6, -145523070);
+			d = md5ii(d, a, b, c, x[i + 11], 10, -1120210379);
+			c = md5ii(c, d, a, b, x[i + 2], 15, 718787259);
+			b = md5ii(b, c, d, a, x[i + 9], 21, -343485551);
 
-      a = safeAdd(a, olda)
-      b = safeAdd(b, oldb)
-      c = safeAdd(c, oldc)
-      d = safeAdd(d, oldd)
-    }
-    return [a, b, c, d]
-  }
+			a = safeAdd(a, olda);
+			b = safeAdd(b, oldb);
+			c = safeAdd(c, oldc);
+			d = safeAdd(d, oldd);
+		}
+		return [a, b, c, d];
+	}
 
-  function binl2rstr(input) {
-    var i
-    var output = ''
-    var length32 = input.length * 32
-    for (i = 0; i < length32; i += 8) {
-      output += String.fromCharCode((input[i >> 5] >>> (i % 32)) & 0xff)
-    }
-    return output
-  }
+	function binl2rstr(input) {
+		var i;
+		var output = "";
+		var length32 = input.length * 32;
+		for (i = 0; i < length32; i += 8) {
+			output += String.fromCharCode((input[i >> 5] >>> (i % 32)) & 0xff);
+		}
+		return output;
+	}
 
-  function rstr2binl(input) {
-    var i
-    var output = []
-    output[(input.length >> 2) - 1] = undefined
-    for (i = 0; i < output.length; i += 1) {
-      output[i] = 0
-    }
-    var length8 = input.length * 8
-    for (i = 0; i < length8; i += 8) {
-      output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << (i % 32)
-    }
-    return output
-  }
+	function rstr2binl(input) {
+		var i;
+		var output = [];
+		output[(input.length >> 2) - 1] = undefined;
+		for (i = 0; i < output.length; i += 1) {
+			output[i] = 0;
+		}
+		var length8 = input.length * 8;
+		for (i = 0; i < length8; i += 8) {
+			output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << (i % 32);
+		}
+		return output;
+	}
 
-  function rstrMD5(s) {
-    return binl2rstr(binlMD5(rstr2binl(s), s.length * 8))
-  }
+	function rstrMD5(s) {
+		return binl2rstr(binlMD5(rstr2binl(s), s.length * 8));
+	}
 
-  function rstr2hex(input) {
-    var hexTab = '0123456789abcdef'
-    var output = ''
-    var x
-    var i
-    for (i = 0; i < input.length; i += 1) {
-      x = input.charCodeAt(i)
-      output += hexTab.charAt((x >>> 4) & 0x0f) + hexTab.charAt(x & 0x0f)
-    }
-    return output
-  }
+	function rstr2hex(input) {
+		var hexTab = "0123456789abcdef";
+		var output = "";
+		var x;
+		var i;
+		for (i = 0; i < input.length; i += 1) {
+			x = input.charCodeAt(i);
+			output += hexTab.charAt((x >>> 4) & 0x0f) + hexTab.charAt(x & 0x0f);
+		}
+		return output;
+	}
 
-  function str2rstrUTF8(input) {
-    // 使用 decodeURIComponent 替代已弃用的 unescape
-    return decodeURIComponent(encodeURIComponent(input))
-  }
+	function str2rstrUTF8(input) {
+		// 使用 decodeURIComponent 替代已弃用的 unescape
+		return decodeURIComponent(encodeURIComponent(input));
+	}
 
-  function rawMD5(s) {
-    return rstrMD5(str2rstrUTF8(s))
-  }
-  function hexMD5(s) {
-    return rstr2hex(rawMD5(s))
-  }
+	function rawMD5(s) {
+		return rstrMD5(str2rstrUTF8(s));
+	}
+	function hexMD5(s) {
+		return rstr2hex(rawMD5(s));
+	}
 
-  return hexMD5(string)
+	return hexMD5(string);
 }
 /* eslint-enable */
 // --- End MD5 Hashing Function ---
-
 
 // --- 浏览器兼容性检查 ---
 /**
@@ -207,121 +206,161 @@ function md5(string) {
  * @returns {Object} 浏览器信息对象
  */
 const getBrowserInfo = () => {
-  const ua = navigator.userAgent;
-  let browserName = detectI18n.t('unknown_browser');
-  let browserVersion = detectI18n.t('unknown_version');
-  let fullVersion = "";
+	const ua = navigator.userAgent;
+	let browserName = detectI18n.t("unknown_browser");
+	let browserVersion = detectI18n.t("unknown_version");
+	let fullVersion = "";
 
-  let tem;
-  let M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+	let tem;
+	const M =
+		ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) ||
+		[];
 
-  if (/trident/i.test(M[1])) {
-    tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-    browserName = 'Internet Explorer';
-    browserVersion = tem[1] || '';
-    fullVersion = browserVersion;
-  } else if (M[1] === 'Chrome') {
-    tem = ua.match(/\b(OPR|Edge|Edg)\/(\d+)/);
-    if (tem != null) {
-      const browserParts = tem.slice(1);
-      if (browserParts[0].startsWith('Edg')) browserParts[0] = 'Edge (Chromium)';
-      else if (browserParts[0] === 'Edge') browserParts[0] = 'Edge (Legacy)';
-      browserName = browserParts.join(' ').replace('OPR', 'Opera');
-      browserVersion = browserParts.length > 1 ? browserParts[1] : '';
-      fullVersion = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/) ? ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)[2] : browserVersion;
-    } else {
-      browserName = 'Chrome';
-      browserVersion = M[2];
-      fullVersion = ua.match(/\bChrome\/([\d.]+)/) ? ua.match(/\bChrome\/([\d.]+)/)[1] : browserVersion;
-    }
-  } else if (M[1] === 'Firefox') {
-    browserName = 'Firefox';
-    browserVersion = M[2];
-    fullVersion = ua.match(/\bFirefox\/([\d.]+)/) ? ua.match(/\bFirefox\/([\d.]+)/)[1] : browserVersion;
-  } else if (M[1] === 'Safari') {
-    tem = ua.match(/version\/(\d+)/i);
-    browserName = 'Safari';
-    browserVersion = tem ? tem[1] : M[2];
-    fullVersion = ua.match(/version\/([\d.]+)/i) ? ua.match(/version\/([\d.]+)/i)[1] : browserVersion;
-  } else if (M[1] === 'MSIE') {
-    browserName = 'Internet Explorer';
-    browserVersion = M[2];
-    fullVersion = browserVersion;
-  }
+	if (/trident/i.test(M[1])) {
+		tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+		browserName = "Internet Explorer";
+		browserVersion = tem[1] || "";
+		fullVersion = browserVersion;
+	} else if (M[1] === "Chrome") {
+		tem = ua.match(/\b(OPR|Edge|Edg)\/(\d+)/);
+		if (tem != null) {
+			const browserParts = tem.slice(1);
+			if (browserParts[0].startsWith("Edg"))
+				browserParts[0] = "Edge (Chromium)";
+			else if (browserParts[0] === "Edge") browserParts[0] = "Edge (Legacy)";
+			browserName = browserParts.join(" ").replace("OPR", "Opera");
+			browserVersion = browserParts.length > 1 ? browserParts[1] : "";
+			fullVersion = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)
+				? ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)[2]
+				: browserVersion;
+		} else {
+			browserName = "Chrome";
+			browserVersion = M[2];
+			fullVersion = ua.match(/\bChrome\/([\d.]+)/)
+				? ua.match(/\bChrome\/([\d.]+)/)[1]
+				: browserVersion;
+		}
+	} else if (M[1] === "Firefox") {
+		browserName = "Firefox";
+		browserVersion = M[2];
+		fullVersion = ua.match(/\bFirefox\/([\d.]+)/)
+			? ua.match(/\bFirefox\/([\d.]+)/)[1]
+			: browserVersion;
+	} else if (M[1] === "Safari") {
+		tem = ua.match(/version\/(\d+)/i);
+		browserName = "Safari";
+		browserVersion = tem ? tem[1] : M[2];
+		fullVersion = ua.match(/version\/([\d.]+)/i)
+			? ua.match(/version\/([\d.]+)/i)[1]
+			: browserVersion;
+	} else if (M[1] === "MSIE") {
+		browserName = "Internet Explorer";
+		browserVersion = M[2];
+		fullVersion = browserVersion;
+	}
 
-  let os = detectI18n.t('unknown_os');
-  if (ua.indexOf("Windows") !== -1) os = "Windows";
-  if (ua.indexOf("Mac") !== -1) os = "MacOS";
-  if (ua.indexOf("X11") !== -1) os = "UNIX";
-  if (ua.indexOf("Linux") !== -1) os = "Linux";
+	let os = detectI18n.t("unknown_os");
+	if (ua.indexOf("Windows") !== -1) os = "Windows";
+	if (ua.indexOf("Mac") !== -1) os = "MacOS";
+	if (ua.indexOf("X11") !== -1) os = "UNIX";
+	if (ua.indexOf("Linux") !== -1) os = "Linux";
 
-  return {
-    name: browserName,
-    version: browserVersion,
-    fullVersion: fullVersion,
-    os: os,
-    userAgent: ua
-  };
-}
+	return {
+		name: browserName,
+		version: browserVersion,
+		fullVersion: fullVersion,
+		os: os,
+		userAgent: ua,
+	};
+};
 
 /**
  * 检查API支持情况
  * @returns {Array} API支持情况列表
  */
 const checkApiSupport = () => {
-  const apis = [
-    { name: 'localStorage', supported: typeof localStorage !== 'undefined' },
-    { name: 'sessionStorage', supported: typeof sessionStorage !== 'undefined' },
-    { name: 'IndexedDB', supported: !!window.indexedDB },
-    { name: 'WebSockets', supported: 'WebSocket' in window },
-    { name: 'Promises', supported: typeof Promise !== 'undefined' && Promise.toString().indexOf('[native code]') !== -1 },
-    { name: 'fetch API', supported: typeof fetch === 'function' },
-    { name: 'Service Workers', supported: 'serviceWorker' in navigator },
-    { name: 'Intl (Internationalization)', supported: typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function' },
-    { name: 'URL API (URLSearchParams)', supported: typeof URL !== 'undefined' && typeof URLSearchParams !== 'undefined' },
-    { name: 'Beacon API', supported: 'sendBeacon' in navigator },
-    { name: 'WebRTC (RTCPeerConnection)', supported: !!window.RTCPeerConnection },
-    { name: 'WebGL', supported: (function () {
-      try {
-        const canvas = ResourceManager.createCanvasElement();
-        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-      } catch (e) {
-        return false;
-      }
-    })() }
-  ];
-  return apis;
-}
+	const apis = [
+		{ name: "localStorage", supported: typeof localStorage !== "undefined" },
+		{
+			name: "sessionStorage",
+			supported: typeof sessionStorage !== "undefined",
+		},
+		{ name: "IndexedDB", supported: !!window.indexedDB },
+		{ name: "WebSockets", supported: "WebSocket" in window },
+		{
+			name: "Promises",
+			supported:
+				typeof Promise !== "undefined" &&
+				Promise.toString().indexOf("[native code]") !== -1,
+		},
+		{ name: "fetch API", supported: typeof fetch === "function" },
+		{ name: "Service Workers", supported: "serviceWorker" in navigator },
+		{
+			name: "Intl (Internationalization)",
+			supported:
+				typeof Intl !== "undefined" &&
+				typeof Intl.DateTimeFormat === "function",
+		},
+		{
+			name: "URL API (URLSearchParams)",
+			supported:
+				typeof URL !== "undefined" && typeof URLSearchParams !== "undefined",
+		},
+		{ name: "Beacon API", supported: "sendBeacon" in navigator },
+		{
+			name: "WebRTC (RTCPeerConnection)",
+			supported: !!window.RTCPeerConnection,
+		},
+		{
+			name: "WebGL",
+			supported: (() => {
+				try {
+					const canvas = ResourceManager.createCanvasElement();
+					return !!(
+						window.WebGLRenderingContext &&
+						(canvas.getContext("webgl") ||
+							canvas.getContext("experimental-webgl"))
+					);
+				} catch (e) {
+					return false;
+				}
+			})(),
+		},
+	];
+	return apis;
+};
 
 /**
  * 执行浏览器兼容性检查
  */
 const performCompatibilityChecks = () => {
-  const browserInfoEl = document.getElementById('browserInfoDisplay');
-  const apiListEl = document.getElementById('apiCompatibilityList');
-  if (!browserInfoEl || !apiListEl) return;
+	const browserInfoEl = document.getElementById("browserInfoDisplay");
+	const apiListEl = document.getElementById("apiCompatibilityList");
+	if (!browserInfoEl || !apiListEl) return;
 
-  const browser = getBrowserInfo();
-  browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
+	const browser = getBrowserInfo();
+	browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
 
-  apiListEl.innerHTML = '';
-  const apis = checkApiSupport();
-  apis.forEach(api => {
-    const listItem = document.createElement('li');
-    listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? 'list-group-item-success' : 'list-group-item-danger'}`;
+	apiListEl.innerHTML = "";
+	const apis = checkApiSupport();
+	apis.forEach((api) => {
+		const listItem = document.createElement("li");
+		listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? "list-group-item-success" : "list-group-item-danger"}`;
 
-    const apiNameSpan = document.createElement('span');
-    apiNameSpan.textContent = api.name;
+		const apiNameSpan = document.createElement("span");
+		apiNameSpan.textContent = api.name;
 
-    const badgeSpan = document.createElement('span');
-    badgeSpan.className = `badge ${api.supported ? 'bg-success' : 'bg-danger'}`;
-    badgeSpan.textContent = api.supported ? detectI18n.t('supported') : detectI18n.t('not_supported');
+		const badgeSpan = document.createElement("span");
+		badgeSpan.className = `badge ${api.supported ? "bg-success" : "bg-danger"}`;
+		badgeSpan.textContent = api.supported
+			? detectI18n.t("supported")
+			: detectI18n.t("not_supported");
 
-    listItem.appendChild(apiNameSpan);
-    listItem.appendChild(badgeSpan);
-    apiListEl.appendChild(listItem);
-  });
-}
+		listItem.appendChild(apiNameSpan);
+		listItem.appendChild(badgeSpan);
+		apiListEl.appendChild(listItem);
+	});
+};
 // --- 兼容性检查功能结束 ---
 
 /**
@@ -329,660 +368,712 @@ const performCompatibilityChecks = () => {
  * @returns {Promise<void>}
  */
 const fetchAndDisplayHeaders = async () => {
-  const headerInfoElement = document.getElementById('headerInfo');
-  const headerLanguageInfo = document.getElementById('headerLanguageInfo');
-  if (!headerInfoElement || !headerLanguageInfo) return;
+	const headerInfoElement = document.getElementById("headerInfo");
+	const headerLanguageInfo = document.getElementById("headerLanguageInfo");
+	if (!headerInfoElement || !headerLanguageInfo) return;
 
-  headerInfoElement.textContent = detectI18n.t('fetching_headers');
-  headerLanguageInfo.textContent = detectI18n.t('detecting');
+	headerInfoElement.textContent = detectI18n.t("fetching_headers");
+	headerLanguageInfo.textContent = detectI18n.t("detecting");
 
-  try {
-    // 使用共享模块获取请求头
-    const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
-    
-    if (result.success) {
-      // 显示完整的请求头信息
-      const formattedHeaders = JSON.stringify(result.headers, null, 2);
-      headerInfoElement.textContent = formattedHeaders;
-      
-      // 移除可能存在的旧提示信息
-      const existingAlertInfoP = headerInfoElement.parentElement.querySelector('p.mt-2');
-      if (existingAlertInfoP) {
-        existingAlertInfoP.remove();
-      }
-      
-      if (result.acceptLanguage) {
-        console.log(detectI18n.t('detected_accept_language'), result.acceptLanguage);
-        headerLanguageInfo.innerHTML = '';
-        const fragment = document.createDocumentFragment();
+	try {
+		// 使用共享模块获取请求头
+		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
 
-        const titleP = document.createElement('p');
-        titleP.className = 'mb-1';
-        const strong = document.createElement('strong');
-        strong.textContent = detectI18n.t('current_value');
-        titleP.appendChild(strong);
-        fragment.appendChild(titleP);
+		if (result.success) {
+			// 显示完整的请求头信息
+			const formattedHeaders = JSON.stringify(result.headers, null, 2);
+			headerInfoElement.textContent = formattedHeaders;
 
-        const valP = document.createElement('p');
-        valP.className = 'text-success fw-bold';
-        valP.textContent = result.acceptLanguage;
-        fragment.appendChild(valP);
+			// 移除可能存在的旧提示信息
+			const existingAlertInfoP =
+				headerInfoElement.parentElement.querySelector("p.mt-2");
+			if (existingAlertInfoP) {
+				existingAlertInfoP.remove();
+			}
 
-        const footerP = document.createElement('p');
-        footerP.className = 'mb-0 mt-2 small text-muted';
-        footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('request_header_method'));
-        fragment.appendChild(footerP);
+			if (result.acceptLanguage) {
+				console.log(
+					detectI18n.t("detected_accept_language"),
+					result.acceptLanguage,
+				);
+				headerLanguageInfo.innerHTML = "";
+				const fragment = document.createDocumentFragment();
 
-        headerLanguageInfo.appendChild(fragment);
-      } else {
-        console.log(detectI18n.t('no_accept_language'));
-        headerLanguageInfo.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        
-        const warningP = document.createElement('p');
-        warningP.className = 'text-warning';
-        warningP.textContent = detectI18n.t('not_detected_accept_language');
-        fragment.appendChild(warningP);
-        
-        const linkP = document.createElement('p');
-        linkP.className = 'mt-2';
-        linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
-          prefix: detectI18n.t('external_check_prefix'),
-          or: detectI18n.t('external_check_or'),
-          suffix: detectI18n.t('external_check_suffix')
-        }));
-        fragment.appendChild(linkP);
-        
-        headerLanguageInfo.appendChild(fragment);
-      }
-    } else {
-      // 所有尝试均失败
-      throw new Error(result.error);
-    }
-  } catch (error) {
-    console.error(detectI18n.t('all_attempts_failed'), error);
-    
-    let combinedErrorMessage = detectI18n.t('fetch_failed_all_services');
-    if (error.message) {
-      combinedErrorMessage += ' ' + error.message;
-    }
-    
-    headerInfoElement.textContent = combinedErrorMessage;
-    headerLanguageInfo.innerHTML = '';
-    
-    const fragment = document.createDocumentFragment();
-    
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = detectI18n.t('detection_failed_all_services');
-    fragment.appendChild(errorP);
-    
-    const detailP = document.createElement('p');
-    detailP.className = 'small text-muted';
-    detailP.textContent = error.message || error;
-    fragment.appendChild(detailP);
-    
-    const linkP = document.createElement('p');
-    linkP.className = 'mt-2';
-    linkP.appendChild(window.HeaderCheckUtils.createExternalCheckLinks({
-      prefix: detectI18n.t('external_check_prefix'),
-      or: detectI18n.t('external_check_or'),
-      suffix: detectI18n.t('external_check_suffix')
-    }));
-    fragment.appendChild(linkP);
-    
-    headerLanguageInfo.appendChild(fragment);
-  }
-}
+				const titleP = document.createElement("p");
+				titleP.className = "mb-1";
+				const strong = document.createElement("strong");
+				strong.textContent = detectI18n.t("current_value");
+				titleP.appendChild(strong);
+				fragment.appendChild(titleP);
+
+				const valP = document.createElement("p");
+				valP.className = "text-success fw-bold";
+				valP.textContent = result.acceptLanguage;
+				fragment.appendChild(valP);
+
+				const footerP = document.createElement("p");
+				footerP.className = "mb-0 mt-2 small text-muted";
+				footerP.textContent = detectI18n
+					.t("detected_via")
+					.replace("{method}", detectI18n.t("request_header_method"));
+				fragment.appendChild(footerP);
+
+				headerLanguageInfo.appendChild(fragment);
+			} else {
+				console.log(detectI18n.t("no_accept_language"));
+				headerLanguageInfo.innerHTML = "";
+				const fragment = document.createDocumentFragment();
+
+				const warningP = document.createElement("p");
+				warningP.className = "text-warning";
+				warningP.textContent = detectI18n.t("not_detected_accept_language");
+				fragment.appendChild(warningP);
+
+				const linkP = document.createElement("p");
+				linkP.className = "mt-2";
+				linkP.appendChild(
+					window.HeaderCheckUtils.createExternalCheckLinks({
+						prefix: detectI18n.t("external_check_prefix"),
+						or: detectI18n.t("external_check_or"),
+						suffix: detectI18n.t("external_check_suffix"),
+					}),
+				);
+				fragment.appendChild(linkP);
+
+				headerLanguageInfo.appendChild(fragment);
+			}
+		} else {
+			// 所有尝试均失败
+			throw new Error(result.error);
+		}
+	} catch (error) {
+		console.error(detectI18n.t("all_attempts_failed"), error);
+
+		let combinedErrorMessage = detectI18n.t("fetch_failed_all_services");
+		if (error.message) {
+			combinedErrorMessage += " " + error.message;
+		}
+
+		headerInfoElement.textContent = combinedErrorMessage;
+		headerLanguageInfo.innerHTML = "";
+
+		const fragment = document.createDocumentFragment();
+
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = detectI18n.t("detection_failed_all_services");
+		fragment.appendChild(errorP);
+
+		const detailP = document.createElement("p");
+		detailP.className = "small text-muted";
+		detailP.textContent = error.message || error;
+		fragment.appendChild(detailP);
+
+		const linkP = document.createElement("p");
+		linkP.className = "mt-2";
+		linkP.appendChild(
+			window.HeaderCheckUtils.createExternalCheckLinks({
+				prefix: detectI18n.t("external_check_prefix"),
+				or: detectI18n.t("external_check_or"),
+				suffix: detectI18n.t("external_check_suffix"),
+			}),
+		);
+		fragment.appendChild(linkP);
+
+		headerLanguageInfo.appendChild(fragment);
+	}
+};
 
 /**
  * 检测 JavaScript 语言偏好
  */
 const detectJsLanguage = () => {
-  const jsLanguageInfoElement = document.getElementById('jsLanguageInfo');
-  if (!jsLanguageInfoElement) return;
-  
-  try {
-    const lang = navigator.language || 'N/A';
-    const langs = navigator.languages ? navigator.languages.join(', ') : 'N/A';
+	const jsLanguageInfoElement = document.getElementById("jsLanguageInfo");
+	if (!jsLanguageInfoElement) return;
 
-    jsLanguageInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+	try {
+		const lang = navigator.language || "N/A";
+		const langs = navigator.languages ? navigator.languages.join(", ") : "N/A";
 
-    const langTitleP = document.createElement('p');
-    langTitleP.className = 'mb-1';
-    const strongLang = document.createElement('strong');
-    strongLang.textContent = 'navigator.language:';
-    langTitleP.appendChild(strongLang);
-    fragment.appendChild(langTitleP);
+		jsLanguageInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-    const langValP = document.createElement('p');
-    langValP.className = 'text-info fw-bold';
-    langValP.textContent = lang;
-    fragment.appendChild(langValP);
+		const langTitleP = document.createElement("p");
+		langTitleP.className = "mb-1";
+		const strongLang = document.createElement("strong");
+		strongLang.textContent = "navigator.language:";
+		langTitleP.appendChild(strongLang);
+		fragment.appendChild(langTitleP);
 
-    const langsTitleP = document.createElement('p');
-    langsTitleP.className = 'mb-1 mt-2';
-    const strongLangs = document.createElement('strong');
-    strongLangs.textContent = 'navigator.languages:';
-    langsTitleP.appendChild(strongLangs);
-    fragment.appendChild(langsTitleP);
+		const langValP = document.createElement("p");
+		langValP.className = "text-info fw-bold";
+		langValP.textContent = lang;
+		fragment.appendChild(langValP);
 
-    const langsValP = document.createElement('p');
-    langsValP.className = 'text-info fw-bold';
-    langsValP.textContent = langs;
-    fragment.appendChild(langsValP);
+		const langsTitleP = document.createElement("p");
+		langsTitleP.className = "mb-1 mt-2";
+		const strongLangs = document.createElement("strong");
+		strongLangs.textContent = "navigator.languages:";
+		langsTitleP.appendChild(strongLangs);
+		fragment.appendChild(langsTitleP);
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('javascript_method'));
-    fragment.appendChild(footerP);
+		const langsValP = document.createElement("p");
+		langsValP.className = "text-info fw-bold";
+		langsValP.textContent = langs;
+		fragment.appendChild(langsValP);
 
-    jsLanguageInfoElement.appendChild(fragment);
-    console.log('JS Language:', { language: lang, languages: langs });
-  } catch (error) {
-    jsLanguageInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
-    jsLanguageInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('js_language_detection_failed'), error);
-  }
-}
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n
+			.t("detected_via")
+			.replace("{method}", detectI18n.t("javascript_method"));
+		fragment.appendChild(footerP);
+
+		jsLanguageInfoElement.appendChild(fragment);
+		console.log("JS Language:", { language: lang, languages: langs });
+	} catch (error) {
+		jsLanguageInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		jsLanguageInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("js_language_detection_failed"), error);
+	}
+};
 
 /**
  * 检测 Canvas 指纹
  */
 const detectCanvasFingerprint = () => {
-  const canvasInfoElement = document.getElementById('canvasFingerprintInfo');
-  if (!canvasInfoElement) return;
+	const canvasInfoElement = document.getElementById("canvasFingerprintInfo");
+	if (!canvasInfoElement) return;
 
-  try {
-    const canvas = ResourceManager.createCanvasElement();
-    const ctx = canvas.getContext('2d');
-    const txt = 'BrowserLeaks,com <canvas> 1.0';
-    ctx.textBaseline = "top";
-    ctx.font = "14px 'Arial'";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#f60";
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = "#069";
-    ctx.fillText(txt, 2, 15);
-    ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-    ctx.fillText(txt, 4, 17);
+	try {
+		const canvas = ResourceManager.createCanvasElement();
+		const ctx = canvas.getContext("2d");
+		const txt = "BrowserLeaks,com <canvas> 1.0";
+		ctx.textBaseline = "top";
+		ctx.font = "14px 'Arial'";
+		ctx.textBaseline = "alphabetic";
+		ctx.fillStyle = "#f60";
+		ctx.fillRect(125, 1, 62, 20);
+		ctx.fillStyle = "#069";
+		ctx.fillText(txt, 2, 15);
+		ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+		ctx.fillText(txt, 4, 17);
 
-    const dataUrl = canvas.toDataURL();
-    const fingerprint = md5(dataUrl);
+		const dataUrl = canvas.toDataURL();
+		const fingerprint = md5(dataUrl);
 
-    canvasInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+		canvasInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-    const hashTitleP = document.createElement('p');
-    hashTitleP.className = 'mb-1';
-    const strongHash = document.createElement('strong');
-    strongHash.textContent = 'Canvas hash:';
-    hashTitleP.appendChild(strongHash);
-    fragment.appendChild(hashTitleP);
+		const hashTitleP = document.createElement("p");
+		hashTitleP.className = "mb-1";
+		const strongHash = document.createElement("strong");
+		strongHash.textContent = "Canvas hash:";
+		hashTitleP.appendChild(strongHash);
+		fragment.appendChild(hashTitleP);
 
-    const hashValP = document.createElement('p');
-    hashValP.className = 'text-dark fw-bold small';
-    hashValP.textContent = fingerprint;
-    fragment.appendChild(hashValP);
+		const hashValP = document.createElement("p");
+		hashValP.className = "text-dark fw-bold small";
+		hashValP.textContent = fingerprint;
+		fragment.appendChild(hashValP);
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('canvas_method'));
-    fragment.appendChild(footerP);
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n
+			.t("detected_via")
+			.replace("{method}", detectI18n.t("canvas_method"));
+		fragment.appendChild(footerP);
 
-    canvasInfoElement.appendChild(fragment);
-    console.log('Canvas Fingerprint (MD5):', fingerprint);
-  } catch (error) {
-    canvasInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
-    canvasInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('canvas_fingerprint_detection_failed'), error);
-  }
-}
+		canvasInfoElement.appendChild(fragment);
+		console.log("Canvas Fingerprint (MD5):", fingerprint);
+	} catch (error) {
+		canvasInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		canvasInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("canvas_fingerprint_detection_failed"), error);
+	}
+};
 
 /**
  * 检测 WebGL 指纹
  */
 const detectWebglFingerprint = () => {
-  const webglInfoElement = document.getElementById('webglFingerprintInfo');
-  if (!webglInfoElement) return;
+	const webglInfoElement = document.getElementById("webglFingerprintInfo");
+	if (!webglInfoElement) return;
 
-  try {
-    const canvas = ResourceManager.createCanvasElement();
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!gl) {
-      webglInfoElement.innerHTML = '';
-      const warningP = document.createElement('p');
-      warningP.className = 'text-warning';
-      warningP.textContent = detectI18n.t('webgl_not_supported');
-      webglInfoElement.appendChild(warningP);
-      console.warn('WebGL not supported');
-      return;
-    }
+	try {
+		const canvas = ResourceManager.createCanvasElement();
+		const gl =
+			canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+		if (!gl) {
+			webglInfoElement.innerHTML = "";
+			const warningP = document.createElement("p");
+			warningP.className = "text-warning";
+			warningP.textContent = detectI18n.t("webgl_not_supported");
+			webglInfoElement.appendChild(warningP);
+			console.warn("WebGL not supported");
+			return;
+		}
 
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || 'N/A';
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
-    const version = gl.getParameter(gl.VERSION) || 'N/A';
-    const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || 'N/A';
+		const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+		const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "N/A";
+		const renderer =
+			gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "N/A";
+		const version = gl.getParameter(gl.VERSION) || "N/A";
+		const shadingLanguageVersion =
+			gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
 
-    const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-    const fingerprint = md5(fingerprintData);
+		const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
+		const fingerprint = md5(fingerprintData);
 
-    webglInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+		webglInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-    /**
-     * Helper to create a detail group (title + value)
-     */
-    const addDetail = (title, value, isBold = false, mt = 'mt-2') => {
-      const titleP = document.createElement('p');
-      titleP.className = `mb-1 ${mt}`;
-      const strongTitle = document.createElement('strong');
-      strongTitle.textContent = title;
-      titleP.appendChild(strongTitle);
-      fragment.appendChild(titleP);
+		/**
+		 * Helper to create a detail group (title + value)
+		 */
+		const addDetail = (title, value, isBold = false, mt = "mt-2") => {
+			const titleP = document.createElement("p");
+			titleP.className = `mb-1 ${mt}`;
+			const strongTitle = document.createElement("strong");
+			strongTitle.textContent = title;
+			titleP.appendChild(strongTitle);
+			fragment.appendChild(titleP);
 
-      const valP = document.createElement('p');
-      valP.className = `text-dark small${isBold ? ' fw-bold' : ''}`;
-      valP.textContent = value;
-      fragment.appendChild(valP);
-    };
+			const valP = document.createElement("p");
+			valP.className = `text-dark small${isBold ? " fw-bold" : ""}`;
+			valP.textContent = value;
+			fragment.appendChild(valP);
+		};
 
-    addDetail('WebGL hash:', fingerprint, true, '');
-    addDetail('WebGL unmasked vendor:', vendor);
-    addDetail('WebGL unmasked renderer:', renderer);
-    addDetail('WebGL version:', version);
-    addDetail('Shading Language Version:', shadingLanguageVersion);
+		addDetail("WebGL hash:", fingerprint, true, "");
+		addDetail("WebGL unmasked vendor:", vendor);
+		addDetail("WebGL unmasked renderer:", renderer);
+		addDetail("WebGL version:", version);
+		addDetail("Shading Language Version:", shadingLanguageVersion);
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webgl_method'));
-    fragment.appendChild(footerP);
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n
+			.t("detected_via")
+			.replace("{method}", detectI18n.t("webgl_method"));
+		fragment.appendChild(footerP);
 
-    webglInfoElement.appendChild(fragment);
-    console.log('WebGL Fingerprint (MD5):', fingerprint);
-    console.log('WebGL Details:', { vendor, renderer, version, shadingLanguageVersion });
-  } catch (error) {
-    webglInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
-    webglInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('webgl_fingerprint_detection_failed'), error);
-  }
-}
+		webglInfoElement.appendChild(fragment);
+		console.log("WebGL Fingerprint (MD5):", fingerprint);
+		console.log("WebGL Details:", {
+			vendor,
+			renderer,
+			version,
+			shadingLanguageVersion,
+		});
+	} catch (error) {
+		webglInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		webglInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("webgl_fingerprint_detection_failed"), error);
+	}
+};
 
 /**
  * 检测 AudioContext 指纹
  * @returns {Promise<void>}
  */
 const detectAudioFingerprint = async () => {
-  const audioInfoElement = document.getElementById('audioFingerprintInfo');
-  if (!audioInfoElement) return;
-  
-  audioInfoElement.innerHTML = '';
-  const loadingP = document.createElement('p');
-  loadingP.textContent = detectI18n.t('detecting');
-  audioInfoElement.appendChild(loadingP);
-  
-  try {
-    const audioCtx = window.OfflineAudioContext;
-    if (!audioCtx) {
-      audioInfoElement.innerHTML = '';
-      const warningP = document.createElement('p');
-      warningP.className = 'text-warning';
-      warningP.textContent = detectI18n.t('audio_not_supported');
-      audioInfoElement.appendChild(warningP);
-      console.warn('AudioContext not supported');
-      return;
-    }
+	const audioInfoElement = document.getElementById("audioFingerprintInfo");
+	if (!audioInfoElement) return;
 
-    // 使用OfflineAudioContext进行音频指纹检测
-    const context = ResourceManager.createOfflineAudioContext(1, 44100, 44100);
-    const oscillator = context.createOscillator();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(10000, context.currentTime);
+	audioInfoElement.innerHTML = "";
+	const loadingP = document.createElement("p");
+	loadingP.textContent = detectI18n.t("detecting");
+	audioInfoElement.appendChild(loadingP);
 
-    const compressor = context.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-50, context.currentTime);
-    compressor.knee.setValueAtTime(40, context.currentTime);
-    compressor.ratio.setValueAtTime(12, context.currentTime);
-    compressor.attack.setValueAtTime(0, context.currentTime);
-    compressor.release.setValueAtTime(0.25, context.currentTime);
+	try {
+		const audioCtx = window.OfflineAudioContext;
+		if (!audioCtx) {
+			audioInfoElement.innerHTML = "";
+			const warningP = document.createElement("p");
+			warningP.className = "text-warning";
+			warningP.textContent = detectI18n.t("audio_not_supported");
+			audioInfoElement.appendChild(warningP);
+			console.warn("AudioContext not supported");
+			return;
+		}
 
-    oscillator.connect(compressor);
-    compressor.connect(context.destination);
-    oscillator.start(0);
+		// 使用OfflineAudioContext进行音频指纹检测
+		const context = ResourceManager.createOfflineAudioContext(1, 44100, 44100);
+		const oscillator = context.createOscillator();
+		oscillator.type = "triangle";
+		oscillator.frequency.setValueAtTime(10000, context.currentTime);
 
-    const renderedBuffer = await context.startRendering();
-    const bufferData = renderedBuffer.getChannelData(0);
-    let sum = 0;
-    for (let i = 4500; i < 5000; i++) {
-      if (bufferData[i]) {
-        sum += Math.abs(bufferData[i]);
-      }
-    }
-    const fingerprintData = sum.toString();
-    const fingerprint = md5(fingerprintData);
+		const compressor = context.createDynamicsCompressor();
+		compressor.threshold.setValueAtTime(-50, context.currentTime);
+		compressor.knee.setValueAtTime(40, context.currentTime);
+		compressor.ratio.setValueAtTime(12, context.currentTime);
+		compressor.attack.setValueAtTime(0, context.currentTime);
+		compressor.release.setValueAtTime(0.25, context.currentTime);
 
-    audioInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+		oscillator.connect(compressor);
+		compressor.connect(context.destination);
+		oscillator.start(0);
 
-    const hashTitleP = document.createElement('p');
-    hashTitleP.className = 'mb-1';
-    const strongHash = document.createElement('strong');
-    strongHash.textContent = 'AudioContext hash:';
-    hashTitleP.appendChild(strongHash);
-    fragment.appendChild(hashTitleP);
+		const renderedBuffer = await context.startRendering();
+		const bufferData = renderedBuffer.getChannelData(0);
+		let sum = 0;
+		for (let i = 4500; i < 5000; i++) {
+			if (bufferData[i]) {
+				sum += Math.abs(bufferData[i]);
+			}
+		}
+		const fingerprintData = sum.toString();
+		const fingerprint = md5(fingerprintData);
 
-    const hashValP = document.createElement('p');
-    hashValP.className = 'text-dark fw-bold small';
-    hashValP.textContent = fingerprint;
-    fragment.appendChild(hashValP);
+		audioInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('audio_method'));
-    fragment.appendChild(footerP);
+		const hashTitleP = document.createElement("p");
+		hashTitleP.className = "mb-1";
+		const strongHash = document.createElement("strong");
+		strongHash.textContent = "AudioContext hash:";
+		hashTitleP.appendChild(strongHash);
+		fragment.appendChild(hashTitleP);
 
-    audioInfoElement.appendChild(fragment);
-    console.log('Audio Fingerprint (MD5):', fingerprint);
-  } catch (error) {
-    audioInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
-    audioInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('audio_fingerprint_detection_failed'), error);
-  }
-}
+		const hashValP = document.createElement("p");
+		hashValP.className = "text-dark fw-bold small";
+		hashValP.textContent = fingerprint;
+		fragment.appendChild(hashValP);
+
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n
+			.t("detected_via")
+			.replace("{method}", detectI18n.t("audio_method"));
+		fragment.appendChild(footerP);
+
+		audioInfoElement.appendChild(fragment);
+		console.log("Audio Fingerprint (MD5):", fingerprint);
+	} catch (error) {
+		audioInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		audioInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("audio_fingerprint_detection_failed"), error);
+	}
+};
 
 /**
  * 检测国际化 API
  */
 const detectIntlApi = () => {
-  const intlApiInfoElement = document.getElementById('intlApiInfo');
-  if (!intlApiInfoElement) return;
-  
-  try {
-    const dateTimeLocale = Intl.DateTimeFormat().resolvedOptions().locale || 'N/A';
-    const numberFormatLocale = Intl.NumberFormat().resolvedOptions().locale || 'N/A';
+	const intlApiInfoElement = document.getElementById("intlApiInfo");
+	if (!intlApiInfoElement) return;
 
-    intlApiInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+	try {
+		const dateTimeLocale =
+			Intl.DateTimeFormat().resolvedOptions().locale || "N/A";
+		const numberFormatLocale =
+			Intl.NumberFormat().resolvedOptions().locale || "N/A";
 
-    const dtTitleP = document.createElement('p');
-    dtTitleP.className = 'mb-1';
-    const strongDt = document.createElement('strong');
-    strongDt.textContent = 'DateTimeFormat Locale:';
-    dtTitleP.appendChild(strongDt);
-    fragment.appendChild(dtTitleP);
+		intlApiInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-    const dtValP = document.createElement('p');
-    dtValP.className = 'text-secondary fw-bold';
-    dtValP.textContent = dateTimeLocale;
-    fragment.appendChild(dtValP);
+		const dtTitleP = document.createElement("p");
+		dtTitleP.className = "mb-1";
+		const strongDt = document.createElement("strong");
+		strongDt.textContent = "DateTimeFormat Locale:";
+		dtTitleP.appendChild(strongDt);
+		fragment.appendChild(dtTitleP);
 
-    const nfTitleP = document.createElement('p');
-    nfTitleP.className = 'mb-1 mt-2';
-    const strongNf = document.createElement('strong');
-    strongNf.textContent = 'NumberFormat Locale:';
-    nfTitleP.appendChild(strongNf);
-    fragment.appendChild(nfTitleP);
+		const dtValP = document.createElement("p");
+		dtValP.className = "text-secondary fw-bold";
+		dtValP.textContent = dateTimeLocale;
+		fragment.appendChild(dtValP);
 
-    const nfValP = document.createElement('p');
-    nfValP.className = 'text-secondary fw-bold';
-    nfValP.textContent = numberFormatLocale;
-    fragment.appendChild(nfValP);
+		const nfTitleP = document.createElement("p");
+		nfTitleP.className = "mb-1 mt-2";
+		const strongNf = document.createElement("strong");
+		strongNf.textContent = "NumberFormat Locale:";
+		nfTitleP.appendChild(strongNf);
+		fragment.appendChild(nfTitleP);
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('intl_method'));
-    fragment.appendChild(footerP);
+		const nfValP = document.createElement("p");
+		nfValP.className = "text-secondary fw-bold";
+		nfValP.textContent = numberFormatLocale;
+		fragment.appendChild(nfValP);
 
-    intlApiInfoElement.appendChild(fragment);
-    console.log('Intl API Locale:', { dateTime: dateTimeLocale, numberFormat: numberFormatLocale });
-  } catch (error) {
-    intlApiInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('detection_failed')}: ${error.message}`;
-    intlApiInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('intl_api_detection_failed'), error);
-  }
-}
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n
+			.t("detected_via")
+			.replace("{method}", detectI18n.t("intl_method"));
+		fragment.appendChild(footerP);
+
+		intlApiInfoElement.appendChild(fragment);
+		console.log("Intl API Locale:", {
+			dateTime: dateTimeLocale,
+			numberFormat: numberFormatLocale,
+		});
+	} catch (error) {
+		intlApiInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		intlApiInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("intl_api_detection_failed"), error);
+	}
+};
 
 /**
  * 检测 WebRTC IP 泄露
  */
 const detectWebRtc = async () => {
-  const webRtcInfoElement = document.getElementById('webRtcInfo');
-  if (!webRtcInfoElement) return;
-  
-  webRtcInfoElement.innerHTML = '';
-  const tryingP = document.createElement('p');
-  tryingP.textContent = detectI18n.t('trying_webrtc');
-  webRtcInfoElement.appendChild(tryingP);
-  
-  try {
-    const ips = await collectWebRtcIps();
-    
-    if (ips.length > 0) {
-      webRtcInfoElement.innerHTML = '';
-      const fragment = document.createDocumentFragment();
+	const webRtcInfoElement = document.getElementById("webRtcInfo");
+	if (!webRtcInfoElement) return;
 
-      const titleP = document.createElement('p');
-      titleP.className = 'mb-1';
-      const strongTitle = document.createElement('strong');
-      strongTitle.textContent = detectI18n.t('webrtc_local_ip');
-      titleP.appendChild(strongTitle);
-      fragment.appendChild(titleP);
+	webRtcInfoElement.innerHTML = "";
+	const tryingP = document.createElement("p");
+	tryingP.textContent = detectI18n.t("trying_webrtc");
+	webRtcInfoElement.appendChild(tryingP);
 
-      const descP = document.createElement('p');
-      descP.className = 'small text-muted mb-1';
-      descP.textContent = detectI18n.t('webrtc_description');
-      fragment.appendChild(descP);
+	try {
+		const ips = await collectWebRtcIps();
 
-      const list = document.createElement('ul');
-      list.className = 'list-unstyled mb-0';
-      ips.forEach(ip => {
-        const item = document.createElement('li');
-        item.className = 'text-info fw-bold';
-        item.textContent = ip;
-        list.appendChild(item);
-      });
-      fragment.appendChild(list);
+		if (ips.length > 0) {
+			webRtcInfoElement.innerHTML = "";
+			const fragment = document.createDocumentFragment();
 
-      const footerP = document.createElement('p');
-      footerP.className = 'mb-0 mt-2 small text-muted';
-      footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'));
-      fragment.appendChild(footerP);
+			const titleP = document.createElement("p");
+			titleP.className = "mb-1";
+			const strongTitle = document.createElement("strong");
+			strongTitle.textContent = detectI18n.t("webrtc_local_ip");
+			titleP.appendChild(strongTitle);
+			fragment.appendChild(titleP);
 
-      webRtcInfoElement.appendChild(fragment);
-      console.info(detectI18n.t('webrtc_detected_local_ip'), ips);
-    } else {
-      webRtcInfoElement.innerHTML = '';
-      const fragment = document.createDocumentFragment();
+			const descP = document.createElement("p");
+			descP.className = "small text-muted mb-1";
+			descP.textContent = detectI18n.t("webrtc_description");
+			fragment.appendChild(descP);
 
-      const successP = document.createElement('p');
-      successP.className = 'text-success';
-      successP.textContent = detectI18n.t('webrtc_no_ip_detected');
-      fragment.appendChild(successP);
+			const list = document.createElement("ul");
+			list.className = "list-unstyled mb-0";
+			ips.forEach((ip) => {
+				const item = document.createElement("li");
+				item.className = "text-info fw-bold";
+				item.textContent = ip;
+				list.appendChild(item);
+			});
+			fragment.appendChild(list);
 
-      const footerP = document.createElement('p');
-      footerP.className = 'mb-0 mt-2 small text-muted';
-      footerP.textContent = detectI18n.t('detected_via').replace('{method}', detectI18n.t('webrtc_method'));
-      fragment.appendChild(footerP);
+			const footerP = document.createElement("p");
+			footerP.className = "mb-0 mt-2 small text-muted";
+			footerP.textContent = detectI18n
+				.t("detected_via")
+				.replace("{method}", detectI18n.t("webrtc_method"));
+			fragment.appendChild(footerP);
 
-      webRtcInfoElement.appendChild(fragment);
-      console.log(detectI18n.t('webrtc_no_local_ip'));
-    }
-  } catch (error) {
-    webRtcInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('webrtc_not_supported')}: ${error.message}`;
-    webRtcInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('webrtc_detection_failed'), error);
-  }
-}
+			webRtcInfoElement.appendChild(fragment);
+			console.info(detectI18n.t("webrtc_detected_local_ip"), ips);
+		} else {
+			webRtcInfoElement.innerHTML = "";
+			const fragment = document.createDocumentFragment();
+
+			const successP = document.createElement("p");
+			successP.className = "text-success";
+			successP.textContent = detectI18n.t("webrtc_no_ip_detected");
+			fragment.appendChild(successP);
+
+			const footerP = document.createElement("p");
+			footerP.className = "mb-0 mt-2 small text-muted";
+			footerP.textContent = detectI18n
+				.t("detected_via")
+				.replace("{method}", detectI18n.t("webrtc_method"));
+			fragment.appendChild(footerP);
+
+			webRtcInfoElement.appendChild(fragment);
+			console.log(detectI18n.t("webrtc_no_local_ip"));
+		}
+	} catch (error) {
+		webRtcInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("webrtc_not_supported")}: ${error.message}`;
+		webRtcInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("webrtc_detection_failed"), error);
+	}
+};
 
 /**
  * 收集WebRTC IP地址
  * @returns {Promise<Array<string>>} IP地址列表
  */
 const collectWebRtcIps = async () => {
-  return new Promise((resolve) => {
-    const ips = [];
+	return new Promise((resolve) => {
+		const ips = [];
 
-    try {
-      const pc = ResourceManager.createRTCPeerConnection({ iceServers: [] });
-      pc.createDataChannel('');
+		try {
+			const pc = ResourceManager.createRTCPeerConnection({ iceServers: [] });
+			pc.createDataChannel("");
 
-      pc.onicecandidate = (e) => {
-        if (!e || !e.candidate || !e.candidate.candidate) return;
+			pc.onicecandidate = (e) => {
+				if (!e || !e.candidate || !e.candidate.candidate) return;
 
-        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
-        const ipMatch = ipRegex.exec(e.candidate.candidate);
+				const ipRegex =
+					/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
+				const ipMatch = ipRegex.exec(e.candidate.candidate);
 
-        if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
-          ips.push(ipMatch[1]);
-        }
-      };
+				if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
+					ips.push(ipMatch[1]);
+				}
+			};
 
-      pc.createOffer()
-        .then(offer => pc.setLocalDescription(offer))
-        .catch(err => {
-          console.error(detectI18n.t('webrtc_setlocaldescription_failed'), err);
-          // 确保Promise链正确结束，避免未捕获的异常
-        });
+			pc.createOffer()
+				.then((offer) => pc.setLocalDescription(offer))
+				.catch((err) => {
+					console.error(detectI18n.t("webrtc_setlocaldescription_failed"), err);
+					// 确保Promise链正确结束，避免未捕获的异常
+				});
 
-      ResourceManager.setTimeout(() => {
-        ResourceManager.closeRTCPeerConnection(pc);
-        resolve(ips);
-      }, 1000);
-    } catch (error) {
-      console.error('WebRTC collection error:', error);
-      resolve([]);
-    }
-  });
-}
+			ResourceManager.setTimeout(() => {
+				ResourceManager.closeRTCPeerConnection(pc);
+				resolve(ips);
+			}, 1000);
+		} catch (error) {
+			console.error("WebRTC collection error:", error);
+			resolve([]);
+		}
+	});
+};
 
 /**
  * 检测部分浏览器指纹信息
  */
 const detectFingerprint = () => {
-  const fingerprintInfoElement = document.getElementById('fingerprintInfo');
-  if (!fingerprintInfoElement) return;
-  
-  try {
-    const ua = navigator.userAgent || 'N/A';
-    const screenRes = `${screen.width}x${screen.height}x${screen.colorDepth}` || 'N/A';
-    const timezoneOffset = new Date().getTimezoneOffset();
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A';
+	const fingerprintInfoElement = document.getElementById("fingerprintInfo");
+	if (!fingerprintInfoElement) return;
 
-    fingerprintInfoElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+	try {
+		const ua = navigator.userAgent || "N/A";
+		const screenRes =
+			`${screen.width}x${screen.height}x${screen.colorDepth}` || "N/A";
+		const timezoneOffset = new Date().getTimezoneOffset();
+		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A";
 
-    /**
-     * Helper to add a fingerprint detail
-     */
-    const addDetail = (title, value, isBold = false, mt = 'mt-2', isSmall = false) => {
-      const titleP = document.createElement('p');
-      titleP.className = `mb-1 ${mt}`;
-      const strongTitle = document.createElement('strong');
-      strongTitle.textContent = title;
-      titleP.appendChild(strongTitle);
-      fragment.appendChild(titleP);
+		fingerprintInfoElement.innerHTML = "";
+		const fragment = document.createDocumentFragment();
 
-      const valP = document.createElement('p');
-      valP.className = `text-success${isBold ? ' fw-bold' : ''}${isSmall ? ' small' : ''}`;
-      valP.textContent = value;
-      fragment.appendChild(valP);
-    };
+		/**
+		 * Helper to add a fingerprint detail
+		 */
+		const addDetail = (
+			title,
+			value,
+			isBold = false,
+			mt = "mt-2",
+			isSmall = false,
+		) => {
+			const titleP = document.createElement("p");
+			titleP.className = `mb-1 ${mt}`;
+			const strongTitle = document.createElement("strong");
+			strongTitle.textContent = title;
+			titleP.appendChild(strongTitle);
+			fragment.appendChild(titleP);
 
-    addDetail('User Agent:', ua, false, '', true);
-    addDetail('Screen information:', screenRes, true);
-    addDetail('Timezone:', `${timezone} (Offset: ${timezoneOffset})`, true);
+			const valP = document.createElement("p");
+			valP.className = `text-success${isBold ? " fw-bold" : ""}${isSmall ? " small" : ""}`;
+			valP.textContent = value;
+			fragment.appendChild(valP);
+		};
 
-    const footerP = document.createElement('p');
-    footerP.className = 'mb-0 mt-2 small text-muted';
-    footerP.textContent = detectI18n.t('partial_fingerprint');
-    fragment.appendChild(footerP);
+		addDetail("User Agent:", ua, false, "", true);
+		addDetail("Screen information:", screenRes, true);
+		addDetail("Timezone:", `${timezone} (Offset: ${timezoneOffset})`, true);
 
-    fingerprintInfoElement.appendChild(fragment);
-    console.log('Fingerprint Info:', { ua, screenRes, timezone, timezoneOffset });
-  } catch (error) {
-    fingerprintInfoElement.innerHTML = '';
-    const errorP = document.createElement('p');
-    errorP.className = 'text-danger';
-    errorP.textContent = `${detectI18n.t('fingerprint')}${detectI18n.t('detection_failed')}: ${error.message}`;
-    fingerprintInfoElement.appendChild(errorP);
-    console.error(detectI18n.t('fingerprint_detection_failed'), error);
-  }
-}
+		const footerP = document.createElement("p");
+		footerP.className = "mb-0 mt-2 small text-muted";
+		footerP.textContent = detectI18n.t("partial_fingerprint");
+		fragment.appendChild(footerP);
+
+		fingerprintInfoElement.appendChild(fragment);
+		console.log("Fingerprint Info:", {
+			ua,
+			screenRes,
+			timezone,
+			timezoneOffset,
+		});
+	} catch (error) {
+		fingerprintInfoElement.innerHTML = "";
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${detectI18n.t("fingerprint")}${detectI18n.t("detection_failed")}: ${error.message}`;
+		fingerprintInfoElement.appendChild(errorP);
+		console.error(detectI18n.t("fingerprint_detection_failed"), error);
+	}
+};
 
 /**
  * 添加刷新按钮
  */
 const addRefreshButton = () => {
-  const refreshButton = document.createElement('button');
-  refreshButton.className = 'btn btn-primary mt-3';
-  refreshButton.textContent = detectI18n.t('Refresh detection');
-  refreshButton.onclick = runAllDetections;
+	const refreshButton = document.createElement("button");
+	refreshButton.className = "btn btn-primary mt-3";
+	refreshButton.textContent = detectI18n.t("Refresh detection");
+	refreshButton.onclick = runAllDetections;
 
-  // 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
-  const headerInfoDiv = document.querySelector('.header-info.mt-4');
-  if (headerInfoDiv) {
-    headerInfoDiv.appendChild(refreshButton);
-    return;
-  }
-  
-  // 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
-  const container = document.querySelector('.container');
-  if (container) {
-    const allHeaderInfoDivs = container.querySelectorAll('.header-info');
-    if (allHeaderInfoDivs.length > 0) {
-      allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
-      return;
-    }
-    
-    // 如果还是找不到，就直接附加到 container 的末尾
-    container.appendChild(refreshButton);
-    console.warn(detectI18n.t('button_add_failed_container'));
-    return;
-  }
-  
-  console.error(detectI18n.t('button_add_failed_no_container'));
-}
+	// 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
+	const headerInfoDiv = document.querySelector(".header-info.mt-4");
+	if (headerInfoDiv) {
+		headerInfoDiv.appendChild(refreshButton);
+		return;
+	}
+
+	// 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
+	const container = document.querySelector(".container");
+	if (container) {
+		const allHeaderInfoDivs = container.querySelectorAll(".header-info");
+		if (allHeaderInfoDivs.length > 0) {
+			allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(
+				refreshButton,
+			);
+			return;
+		}
+
+		// 如果还是找不到，就直接附加到 container 的末尾
+		container.appendChild(refreshButton);
+		console.warn(detectI18n.t("button_add_failed_container"));
+		return;
+	}
+
+	console.error(detectI18n.t("button_add_failed_no_container"));
+};
 
 /**
  * 运行所有检测
  */
 const runAllDetections = () => {
-  fetchAndDisplayHeaders();
-  detectJsLanguage();
-  detectIntlApi();
-  detectWebRtc();
-  detectFingerprint();
-  detectCanvasFingerprint();
-  detectWebglFingerprint();
-  detectAudioFingerprint();
-  performCompatibilityChecks();
-}
+	fetchAndDisplayHeaders();
+	detectJsLanguage();
+	detectIntlApi();
+	detectWebRtc();
+	detectFingerprint();
+	detectCanvasFingerprint();
+	detectWebglFingerprint();
+	detectAudioFingerprint();
+	performCompatibilityChecks();
+};
 
 // 页面加载完成后获取请求头和执行其他检测
-ResourceManager.addEventListener(window, 'DOMContentLoaded', function() {
-  // 延迟执行，确保扩展规则已应用
-  ResourceManager.setTimeout(runAllDetections, 1000);
+ResourceManager.addEventListener(window, "DOMContentLoaded", () => {
+	// 延迟执行，确保扩展规则已应用
+	ResourceManager.setTimeout(runAllDetections, 1000);
 
-  // 添加刷新按钮
-  addRefreshButton();
+	// 添加刷新按钮
+	addRefreshButton();
 });

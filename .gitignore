@@ -15,3 +15,15 @@
 # Log files
 # -------------------------------
 *.log
+
+# Node.js / Package Manager
+# -------------------------------  
+node_modules/
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Biome (local use only)
+# -------------------------------  
+biome.json

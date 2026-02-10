@@ -4,50 +4,51 @@
  */
 
 const requestBackground = async (type, payload = {}) => {
-  // 统一与后台通信的入口：将各种历史响应格式收敛为“成功返回数据 / 失败抛错”
-  if (!type) {
-    throw new Error('Message type is required');
-  }
-  if (!chrome?.runtime?.sendMessage) {
-    throw new Error('Chrome runtime API is not available');
-  }
+	// 统一与后台通信的入口：将各种历史响应格式收敛为“成功返回数据 / 失败抛错”
+	if (!type) {
+		throw new Error("Message type is required");
+	}
+	if (!chrome?.runtime?.sendMessage) {
+		throw new Error("Chrome runtime API is not available");
+	}
 
-  let response;
-  try {
-    response = await chrome.runtime.sendMessage({ type, ...payload });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(message);
-  }
+	let response;
+	try {
+		response = await chrome.runtime.sendMessage({ type, ...payload });
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new Error(message);
+	}
 
-  if (!response) {
-    throw new Error('No response from background script');
-  }
+	if (!response) {
+		throw new Error("No response from background script");
+	}
 
-  // 新协议：{ ok: true, data } / { ok: false, error }
-  if (response.ok === true) {
-    return response.data;
-  }
-  if (response.ok === false) {
-    const message = response?.error?.message || response?.message || 'Background error';
-    const err = new Error(message);
-    if (response?.error && typeof response.error === 'object') {
-      Object.assign(err, response.error);
-    }
-    throw err;
-  }
+	// 新协议：{ ok: true, data } / { ok: false, error }
+	if (response.ok === true) {
+		return response.data;
+	}
+	if (response.ok === false) {
+		const message =
+			response?.error?.message || response?.message || "Background error";
+		const err = new Error(message);
+		if (response?.error && typeof response.error === "object") {
+			Object.assign(err, response.error);
+		}
+		throw err;
+	}
 
-  // 兼容旧协议：status/success 字段混用，统一转换为返回或抛错
-  if (response?.status === 'success') return response;
-  if (response?.status === 'error') {
-    throw new Error(response?.message || 'Background error');
-  }
-  if (response?.success === true) return response;
-  if (response?.success === false) {
-    throw new Error(response?.error || 'Background error');
-  }
+	// 兼容旧协议：status/success 字段混用，统一转换为返回或抛错
+	if (response?.status === "success") return response;
+	if (response?.status === "error") {
+		throw new Error(response?.message || "Background error");
+	}
+	if (response?.success === true) return response;
+	if (response?.success === false) {
+		throw new Error(response?.error || "Background error");
+	}
 
-  return response;
+	return response;
 };
 
 /**
@@ -57,19 +58,18 @@ const requestBackground = async (type, payload = {}) => {
  * @throws {Error} 当消息发送失败或后台脚本返回错误状态时抛出错误
  */
 const resetAcceptLanguage = async () => {
-  try {
-    const response = await requestBackground('RESET_ACCEPT_LANGUAGE');
-    if (typeof sendDebugLog === 'function') {
-      sendDebugLog('Accept-Language settings reset successfully', 'success');
-    }
-    return response;
-
-  } catch (error) {
-    // 集中化错误处理和日志记录
-    const errorMsg = `Failed to reset Accept-Language: ${error.message}`;
-    if (typeof sendDebugLog === 'function') {
-      sendDebugLog(errorMsg, 'error');
-    }
-    throw new Error(errorMsg);
-  }
+	try {
+		const response = await requestBackground("RESET_ACCEPT_LANGUAGE");
+		if (typeof sendDebugLog === "function") {
+			sendDebugLog("Accept-Language settings reset successfully", "success");
+		}
+		return response;
+	} catch (error) {
+		// 集中化错误处理和日志记录
+		const errorMsg = `Failed to reset Accept-Language: ${error.message}`;
+		if (typeof sendDebugLog === "function") {
+			sendDebugLog(errorMsg, "error");
+		}
+		throw new Error(errorMsg);
+	}
 };

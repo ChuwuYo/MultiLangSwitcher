@@ -4,9 +4,9 @@
  * 注意：BaseI18n类应该在background.js中已经通过importScripts加载
  */
 class DomainManagerI18n extends BaseI18n {
-  constructor() {
-    super('domain-manager', true); // 标记为Service Worker环境
-  }
+	constructor() {
+		super("domain-manager", true); // 标记为Service Worker环境
+	}
 }
 
 // 创建实例，但不立即初始化
