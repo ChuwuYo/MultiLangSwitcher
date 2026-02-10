@@ -34,11 +34,12 @@ const sendDebugLog = (message, logType = "info") => {
  * 检测浏览器界面语言
  * @returns {string} 返回 'zh' 或 'en'
  */
+// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const detectBrowserLanguage = () => {
 	try {
 		const browserLang = chrome.i18n.getUILanguage().toLowerCase();
 		return browserLang.startsWith("zh") ? "zh" : "en";
-	} catch (error) {
+	} catch (_error) {
 		// API不可用时默认返回英文
 		return "en";
 	}
@@ -79,9 +80,7 @@ const getUpdateTranslation = (key, params = {}, context = "popup") => {
 			typeof detectI18n !== "undefined" ? detectI18n : undefined,
 		].filter(
 			(instance) =>
-				instance &&
-				instance.isReady &&
-				!availableI18nInstances.includes(instance),
+				instance?.isReady && !availableI18nInstances.includes(instance),
 		);
 
 		availableI18nInstances.push(...otherInstances);
@@ -93,7 +92,7 @@ const getUpdateTranslation = (key, params = {}, context = "popup") => {
 				if (translation && translation !== key) {
 					return translation;
 				}
-			} catch (error) {}
+			} catch (_error) {}
 		}
 
 		// 所有i18n实例都失败，使用简化的fallback
@@ -205,7 +204,7 @@ const getFallbackTranslation = (key, params = {}) => {
 
 	// 简化的翻译查找和格式化
 	const translations =
-		fallbackTranslations[currentLang] || fallbackTranslations["en"];
+		fallbackTranslations[currentLang] || fallbackTranslations.en;
 	let text = translations[key] || key;
 
 	// 参数替换 - 与BaseI18n._formatString保持一致
@@ -224,6 +223,7 @@ const getFallbackTranslation = (key, params = {}) => {
  * @param {Object} params - 参数对象
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
+// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const sendLocalizedUpdateLog = (key, params = {}, logType = "info") => {
 	try {
 		const message = getUpdateTranslation(key, params, "background");

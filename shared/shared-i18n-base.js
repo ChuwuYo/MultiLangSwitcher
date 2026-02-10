@@ -2,6 +2,7 @@
  * 基础国际化类
  * 提供通用的翻译功能和语言检测，统一了浏览器和Service Worker环境的加载逻辑。
  */
+// biome-ignore lint/correctness/noUnusedVariables: 该类用于外部继承
 class BaseI18n {
 	/**
 	 * 构造函数

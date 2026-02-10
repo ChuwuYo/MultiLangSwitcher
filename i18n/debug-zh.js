@@ -71,7 +71,6 @@ if (typeof debugZh === "undefined") {
 		click_test_header: "点击按钮测试请求头...",
 		select_fix_option: "选择修复选项...",
 		click_view_diagnostics: "点击按钮查看诊断信息...",
-		click_view_domain_rules: "点击按钮查看域名映射规则...",
 
 		// 重置功能
 		attempt_reset_accept_language:

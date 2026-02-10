@@ -256,7 +256,7 @@ class UpdateChecker {
 				const curr = currentParts[i] || 0; // 补 0 处理 1.2 vs 1.2.3
 				const lat = latestParts[i] || 0;
 
-				if (isNaN(curr) || isNaN(lat)) {
+				if (Number.isNaN(curr) || Number.isNaN(lat)) {
 					return false;
 				}
 				if (lat > curr) {
@@ -286,9 +286,9 @@ class UpdateChecker {
 			const result = await chrome.storage.local.get([this.cacheKey]);
 			const cache = result[this.cacheKey];
 
-			if (cache && cache.expiry && Date.now() < cache.expiry) {
+			if (cache?.expiry && Date.now() < cache.expiry) {
 				// 增加版本号校验：如果缓存中的版本与当前扩展版本不符，则缓存无效
-				if (cache.data && cache.data.currentVersion === this.currentVersion) {
+				if (cache.data?.currentVersion === this.currentVersion) {
 					return cache.data;
 				}
 			}

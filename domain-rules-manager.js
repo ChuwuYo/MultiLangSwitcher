@@ -52,7 +52,7 @@ class DomainRulesManager {
 			const data = await response.json();
 			this.rules = data.domainLanguageRules || {};
 			return this.rules;
-		} catch (error) {
+		} catch (_error) {
 			this.rules = {};
 			return this.rules;
 		}
@@ -245,7 +245,7 @@ class DomainRulesManager {
 		try {
 			const result = await chrome.storage.local.get(["customDomainRules"]);
 			return result.customDomainRules || {};
-		} catch (error) {
+		} catch (_error) {
 			return {};
 		}
 	}
@@ -277,4 +277,5 @@ class DomainRulesManager {
 }
 
 // 导出单例实例
+// biome-ignore lint/correctness/noUnusedVariables: 该变量用于外部脚本引用
 const domainRulesManager = new DomainRulesManager();

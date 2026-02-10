@@ -321,7 +321,7 @@ const checkApiSupport = () => {
 						(canvas.getContext("webgl") ||
 							canvas.getContext("experimental-webgl"))
 					);
-				} catch (e) {
+				} catch (_e) {
 					return false;
 				}
 			})(),

@@ -118,6 +118,7 @@ const generateLanguageOptions = (selectedValue = null) => {
  * @param {HTMLSelectElement} selectElement - 要填充的select元素
  * @param {string|null} selectedValue - 要选中的语言值
  */
+// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const populateLanguageSelect = (selectElement, selectedValue = null) => {
 	// 验证必需参数和类型
 	if (!selectElement || !(selectElement instanceof HTMLElement)) return;

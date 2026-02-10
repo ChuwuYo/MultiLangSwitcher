@@ -178,11 +178,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					matchedTitle.textContent = debugI18n.t("recent_matched_rules");
 					fragment.appendChild(matchedTitle);
 
-					if (
-						matchedRules &&
-						matchedRules.rulesMatchedInfo &&
-						matchedRules.rulesMatchedInfo.length > 0
-					) {
+					if (matchedRules?.rulesMatchedInfo?.length > 0) {
 						const ul = document.createElement("ul");
 						// 去重处理，避免显示重复的规则
 						const uniqueRules = new Map();
@@ -1030,7 +1026,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 						"info",
 					);
 
-					if (response && response.domainRules) {
+					if (response?.domainRules) {
 						const rules = response.domainRules;
 						resultElement.innerHTML = "";
 						const fragment = document.createDocumentFragment();
@@ -1264,7 +1260,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	);
 
 	// 监听来自 background.js 的消息
-	ResourceManager.addMessageListener((request, sender, sendResponse) => {
+	ResourceManager.addMessageListener((request, _sender, sendResponse) => {
 		if (request.type === "AUTO_SWITCH_UI_UPDATE") {
 			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
 			if (autoSwitchToggle) {

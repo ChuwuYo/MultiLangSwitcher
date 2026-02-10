@@ -36,12 +36,12 @@ const createResourceManager = () => {
 		if (!controller || typeof controller.abort !== "function") {
 			return;
 		}
-		if (controller.signal && controller.signal.aborted) {
+		if (controller.signal?.aborted) {
 			return;
 		}
 		try {
 			controller.abort();
-		} catch (error) {
+		} catch (_error) {
 			// 静默处理
 		}
 		trackedControllers.delete(controller);
@@ -83,7 +83,7 @@ const createResourceManager = () => {
 		if (peerConnection && typeof peerConnection.close === "function") {
 			try {
 				peerConnection.close();
-			} catch (error) {
+			} catch (_error) {
 				// 静默处理
 			}
 			trackedPeerConnections.delete(peerConnection);
@@ -131,7 +131,7 @@ const createResourceManager = () => {
 			) {
 				try {
 					controller.abort();
-				} catch (error) {
+				} catch (_error) {
 					// 静默处理已abort的控制器
 				}
 			}
@@ -143,7 +143,7 @@ const createResourceManager = () => {
 			if (typeof peerConnection.close === "function") {
 				try {
 					peerConnection.close();
-				} catch (error) {
+				} catch (_error2) {
 					// 静默处理
 				}
 			}

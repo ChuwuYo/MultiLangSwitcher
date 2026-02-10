@@ -24,6 +24,7 @@ importScripts("shared/shared-resource-manager.js");
 // 常量定义
 const RULE_ID = 1;
 // 统一并简化语言常量
+// biome-ignore lint/correctness/noUnusedVariables: 保留常量供将来使用
 const DEFAULT_LANG_ZH = "zh-CN"; // 为中文用户设置的默认语言
 const DEFAULT_LANG_EN = "en-US"; // 为英文用户设置的默认语言，也用作自动切换的回退语言
 
@@ -123,7 +124,7 @@ const createContextMenusOnce = async () => {
 			) {
 				try {
 					existingMenus = await chrome.contextMenus.query({});
-				} catch (error) {
+				} catch (_error) {
 					existingMenus = null;
 				}
 			}
@@ -204,7 +205,7 @@ const createContextMenusOnce = async () => {
 	return contextMenuPromise;
 };
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener((info, _tab) => {
 	if (info.menuItemId === "open-detect-page") {
 		chrome.tabs.create({ url: chrome.runtime.getURL("detect.html") });
 	} else if (info.menuItemId === "open-debug-page") {
@@ -863,15 +864,11 @@ const handleTestDomainCacheRequest = async (request) => {
 				const rules = await chrome.declarativeNetRequest.getDynamicRules();
 				const currentRule = rules.find((rule) => rule.id === RULE_ID);
 
-				if (
-					currentRule &&
-					currentRule.action &&
-					currentRule.action.requestHeaders
-				) {
+				if (currentRule?.action?.requestHeaders) {
 					const acceptLangHeader = currentRule.action.requestHeaders.find(
 						(h) => h.header === "Accept-Language",
 					);
-					if (acceptLangHeader && acceptLangHeader.value) {
+					if (acceptLangHeader?.value) {
 						language = acceptLangHeader.value;
 					}
 				}
@@ -1052,7 +1049,7 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 });
 
 // 监听标签页更新以实现自动切换 (Manifest V3 compatible)
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 	try {
 		await ensureInitialized();
 	} catch (error) {

@@ -37,7 +37,7 @@ const HEADER_CHECK_ENDPOINTS = [
  *   - attemptedEndpoints: Array - 尝试过的所有端点
  */
 const fetchHeadersFromEndpoints = async (timeout = 10000) => {
-	const timestamp = new Date().getTime();
+	const timestamp = Date.now();
 	const attemptedEndpoints = [];
 	const errors = [];
 

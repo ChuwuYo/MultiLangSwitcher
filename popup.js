@@ -975,6 +975,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	// 获取DOM元素
 	const languageSelect = getEl("languageSelect");
 	const applyButton = getEl("applyButton");
+	// biome-ignore lint/correctness/noUnusedVariables: 保留元素引用供将来使用
 	const currentLanguageSpan = getEl("currentLanguage");
 	const checkHeaderBtn = getEl("checkHeaderBtn");
 	const autoSwitchToggle = getEl("autoSwitchToggle");

@@ -57,6 +57,7 @@ const requestBackground = async (type, payload = {}) => {
  * @returns {Promise<Object>} 返回后台脚本的成功响应对象
  * @throws {Error} 当消息发送失败或后台脚本返回错误状态时抛出错误
  */
+// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const resetAcceptLanguage = async () => {
 	try {
 		const response = await requestBackground("RESET_ACCEPT_LANGUAGE");
