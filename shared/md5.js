@@ -184,7 +184,7 @@ function md5(string) {
 	}
 
 	function str2rstrUTF8(input) {
-		// ä½¿ç”¨ decodeURIComponent æ›¿ä»£å·²å¼ƒç”¨çš„ unescape
+        // ä½¿ç”¨ decodeURIComponent æ›¿ä»£å·²å¼ƒç”¨çš„ unescape
 		return decodeURIComponent(encodeURIComponent(input));
 	}
 
@@ -196,8 +196,8 @@ function md5(string) {
 	}
 
 	return hexMD5(string);
-} 
-/* eslint-enable */  
-  
-// µ¼³öµ½ window ¶ÔÏóÒÔ±ãÈ«¾Ö·ÃÎÊ  
-window.md5 = md5; 
+}
+/* eslint-enable */
+
+// å¯¼å‡ºåˆ° window å¯¹è±¡ä»¥ä¾¿å…¨å±€è®¿é—®
+window.md5 = md5;

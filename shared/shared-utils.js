@@ -29,7 +29,10 @@ const detectCurrentLanguage = () => {
  */
 const switchLanguageAndReload = (lang) => {
 	try {
-		if (typeof localStorage === "undefined" || typeof location === "undefined") {
+		if (
+			typeof localStorage === "undefined" ||
+			typeof location === "undefined"
+		) {
 			console.warn("Language switch not supported in this environment");
 			return false;
 		}
