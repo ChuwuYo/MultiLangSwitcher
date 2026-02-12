@@ -4,6 +4,55 @@
  */
 
 /**
+ * 检测当前语言设置
+ * @returns {string} 语言代码 ('zh' 或 'en')
+ */
+const detectCurrentLanguage = () => {
+	// 优先从 localStorage 获取
+	if (typeof localStorage !== "undefined") {
+		const saved = localStorage.getItem("app-lang");
+		if (saved) return saved;
+	}
+	// 其次使用浏览器语言
+	if (typeof navigator !== "undefined") {
+		return navigator.language.startsWith("zh") ? "zh" : "en";
+	}
+	// 默认返回英文
+	return "en";
+};
+
+/**
+ * 切换语言设置（浏览器环境专用）
+ * 保存语言设置到 localStorage 并刷新页面
+ * @param {string} lang - 目标语言代码
+ * @returns {boolean} 是否成功切换
+ */
+const switchLanguageAndReload = (lang) => {
+	try {
+		if (typeof localStorage === "undefined" || typeof location === "undefined") {
+			console.warn("Language switch not supported in this environment");
+			return false;
+		}
+
+		const currentLang = detectCurrentLanguage();
+		if (lang === currentLang) return false;
+
+		localStorage.setItem("app-lang", lang);
+		location.reload();
+		return true;
+	} catch (error) {
+		console.error("Error switching language:", error);
+		return false;
+	}
+};
+
+// 导出为全局函数（供 toggle.js 等 module 脚本使用）
+if (typeof window !== "undefined") {
+	window.detectCurrentLanguage = detectCurrentLanguage;
+	window.switchLanguageAndReload = switchLanguageAndReload;
+}
+
+/**
  * 发送调试日志消息到后台脚本
  * @param {string} message - 日志消息内容
  * @param {string} logType - 日志类型 (info, warning, error, success)
@@ -30,20 +79,6 @@ const sendDebugLog = (message, logType = "info") => {
 	}
 };
 
-/**
- * 检测浏览器界面语言
- * @returns {string} 返回 'zh' 或 'en'
- */
-// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
-const detectBrowserLanguage = () => {
-	try {
-		const browserLang = chrome.i18n.getUILanguage().toLowerCase();
-		return browserLang.startsWith("zh") ? "zh" : "en";
-	} catch (_error) {
-		// API不可用时默认返回英文
-		return "en";
-	}
-};
 /**
  * 获取更新相关的本地化翻译
  * @param {string} key - 翻译键

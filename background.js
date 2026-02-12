@@ -1,7 +1,7 @@
 // 后台脚本，确保扩展在浏览器启动时就能应用语言设置
 
 // 按正确顺序导入依赖
-// 1. 首先导入共享工具（包含 detectBrowserLanguage 函数）
+// 1. 首先导入共享工具
 importScripts("shared/shared-utils.js");
 // 2. 然后导入基础国际化类
 importScripts("shared/shared-i18n-base.js");
@@ -23,9 +23,6 @@ importScripts("shared/shared-resource-manager.js");
 
 // 常量定义
 const RULE_ID = 1;
-// 统一并简化语言常量
-// biome-ignore lint/correctness/noUnusedVariables: 保留常量供将来使用
-const DEFAULT_LANG_ZH = "zh-CN"; // 为中文用户设置的默认语言
 const DEFAULT_LANG_EN = "en-US"; // 为英文用户设置的默认语言，也用作自动切换的回退语言
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀

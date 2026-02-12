@@ -214,18 +214,19 @@ class BaseI18n {
 
 	/**
 	 * 切换语言并重新加载页面（仅限浏览器环境）。
+	 * 复用共享工具函数实现。
 	 * @param {string} lang - 目标语言代码。
 	 */
 	switchLanguage(lang) {
-		if (lang === this.currentLang || this.isServiceWorker) {
+		if (this.isServiceWorker) {
 			return;
 		}
-
-		if (typeof localStorage !== "undefined") {
-			localStorage.setItem("app-lang", lang);
+		if (lang === this.currentLang) {
+			return;
 		}
-		if (typeof location !== "undefined") {
-			location.reload();
+		// 使用共享函数切换语言
+		if (typeof switchLanguageAndReload === "function") {
+			switchLanguageAndReload(lang);
 		}
 	}
 }

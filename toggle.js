@@ -1,34 +1,21 @@
 // toggle.js - 通用切换按钮功能
 
-// 语言切换功能
+// 语言切换功能（复用共享工具函数）
 class LanguageToggle {
 	constructor() {
-		this.currentLang = this.detectLanguage();
+		// 通过 window 对象访问全局函数（因为 toggle.js 是 module）
+		this.currentLang = window.detectCurrentLanguage();
 	}
 
 	/**
-	 * 检测当前语言设置
-	 * @returns {string} 语言代码
-	 */
-	detectLanguage() {
-		const saved = localStorage.getItem("app-lang");
-		if (saved) return saved;
-		return navigator.language.startsWith("zh") ? "zh" : "en";
-	}
-
-	/**
-	 * 切换语言设置
+	 * 切换语言设置（复用共享函数）
 	 * @param {string} lang - 目标语言代码
 	 */
 	switchLanguage(lang) {
-		try {
-			if (lang === this.currentLang) return;
-
+		// 通过 window 对象访问全局函数
+		const switched = window.switchLanguageAndReload(lang);
+		if (switched) {
 			this.currentLang = lang;
-			localStorage.setItem("app-lang", lang);
-			location.reload();
-		} catch (error) {
-			console.error("Error switching language:", error);
 		}
 	}
 
