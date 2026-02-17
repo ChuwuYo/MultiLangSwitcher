@@ -184,7 +184,7 @@ function md5(string) {
 	}
 
 	function str2rstrUTF8(input) {
-        // 使用 decodeURIComponent 替代已弃用的 unescape
+		// 使用 decodeURIComponent 替代已弃用的 unescape
 		return decodeURIComponent(encodeURIComponent(input));
 	}
 

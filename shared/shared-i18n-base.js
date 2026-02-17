@@ -201,15 +201,10 @@ class BaseI18n {
 
 	/**
 	 * 允许外部代码等待翻译系统准备就绪。
-	 * @param {Function} [callback] - (可选) 准备就绪后执行的回调函数。
 	 * @returns {Promise<void>}
 	 */
-	ready(callback) {
-		const promise = this._initPromise || this.init();
-		if (typeof callback === "function") {
-			promise.then(callback);
-		}
-		return promise;
+	ready() {
+		return this._initPromise || this.init();
 	}
 
 	/**

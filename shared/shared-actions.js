@@ -38,16 +38,8 @@ const requestBackground = async (type, payload = {}) => {
 		throw err;
 	}
 
-	// 兼容旧协议：status/success 字段混用，统一转换为返回或抛错
-	if (response?.status === "success") return response;
-	if (response?.status === "error") {
-		throw new Error(response?.message || "Background error");
-	}
-	if (response?.success === true) return response;
-	if (response?.success === false) {
-		throw new Error(response?.error || "Background error");
-	}
-
+	// 协议格式不符：返回原始响应但记警告
+	console.warn("requestBackground: unexpected response format", response);
 	return response;
 };
 

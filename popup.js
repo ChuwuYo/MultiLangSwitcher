@@ -964,13 +964,9 @@ const debouncedUIUpdate = (updateFn, delay = 16) => {
 // --- 扩展初始化 ---
 document.addEventListener("DOMContentLoaded", async () => {
 	// 等待翻译系统加载完成
-	await new Promise((resolve) => {
-		if (popupI18n.isReady) {
-			resolve();
-		} else {
-			popupI18n.ready(resolve);
-		}
-	});
+	if (!popupI18n.isReady) {
+		await popupI18n.ready();
+	}
 
 	// 获取DOM元素
 	const languageSelect = getEl("languageSelect");

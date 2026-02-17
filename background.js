@@ -319,7 +319,7 @@ const updateHeaderRulesInternal = async (
 				? backgroundI18n.t("auto_switch_skip_duplicate", { language })
 				: backgroundI18n.t("language_already_set", { language });
 			sendBackgroundLog(logMessage, "info");
-			return { status: "unchanged", language };
+			return { changed: false, language };
 		}
 
 		sendBackgroundLog(
@@ -375,7 +375,7 @@ const updateHeaderRulesInternal = async (
 			`${backgroundI18n.t("rules_updated_successfully", { language })}${isAutoSwitch ? ` (${backgroundI18n.t("auto_switch")})` : ""} (${duration}ms)`,
 			"success",
 		);
-		return { status: "success", language };
+		return { changed: true, language };
 	} catch (error) {
 		sendBackgroundLog(
 			`${backgroundI18n.t("update_rules_failed")}: ${error.message}`,
@@ -591,17 +591,17 @@ const handleUpdateRulesRequest = async (request) => {
 
 		const result = await updateHeaderRules(language);
 		sendBackgroundLog(
-			`${backgroundI18n.t("rules_update_completed")}: ${result.status}`,
+			`${backgroundI18n.t("rules_update_completed")}: ${result.changed ? "changed" : "unchanged"}`,
 			"info",
 		);
 
 		await chrome.storage.local.set({ currentLanguage: language });
 
 		// 只在状态发生变化时才通知UI更新
-		if (result.status === "success") {
+		if (result.changed) {
 			notifyPopupUIUpdate(autoSwitchEnabled, result.language);
 		}
-		return { status: result.status, language: result.language };
+		return { changed: result.changed, language: result.language };
 	} catch (error) {
 		// 记录错误日志并重新抛出，让上层统一处理
 		const errorMessage = error?.message || String(error);
@@ -1079,7 +1079,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 					"info",
 				);
 				const result = await updateHeaderRules(targetLanguage, 0, true);
-				if (result.status === "success") {
+				if (result.changed) {
 					notifyPopupUIUpdate(true, targetLanguage);
 				}
 			} else {
@@ -1100,7 +1100,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 						"info",
 					);
 					const result = await updateHeaderRules(fallbackLanguage, 0, true);
-					if (result.status === "success") {
+					if (result.changed) {
 						notifyPopupUIUpdate(true, fallbackLanguage);
 					}
 				}

@@ -3,8 +3,10 @@
 // 语言切换功能（复用共享工具函数）
 class LanguageToggle {
 	constructor() {
-		// 通过 window 对象访问全局函数（因为 toggle.js 是 module）
-		this.currentLang = window.detectCurrentLanguage();
+		// 语言状态从 localStorage (app-lang) 读取，与 BaseI18n 共享同一数据源
+		this.currentLang =
+			localStorage.getItem("app-lang") ||
+			(navigator.language.startsWith("zh") ? "zh" : "en");
 	}
 
 	/**

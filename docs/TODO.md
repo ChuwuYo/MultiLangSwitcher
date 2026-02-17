@@ -1,8 +1,8 @@
 ## 🔧 TODO
 
-#### 性能优化
+### 性能优化
 
-## 1. 全局变量耦合严重
+## [] 1. 全局变量耦合严重
 **文件**: `shared-i18n-base.js`, `domain-rules-manager.js`, `popup.js` 等
 
 组件通过全局变量通信（如 `domainManagerI18n`, `popupI18n`, `sendDebugLog`），而不是通过依赖注入或参数传递：
@@ -16,14 +16,18 @@ ensureI18n() {
 }
 ```
 
-## 2. 重复的语言状态管理
+**验证结果**: ✅ 问题存在于 [`domain-rules-manager.js:22`](domain-rules-manager.js:22)，使用全局变量 `domainManagerI18n`
+
+## [x] 2. 重复的语言状态管理
 **文件**: `toggle.js` 和 `shared-i18n-base.js`
 
 两个独立的语言管理逻辑：
 - `LanguageToggle` 类自己管理 `currentLang` 和 localStorage
 - `BaseI18n` 也管理 `currentLang` 和 localStorage
 
-## 3. 环境判断方式过时
+**验证结果**: ✅ 问题存在于 [`toggle.js:7`](toggle.js:7) 和 [`shared-i18n-base.js:23`](shared/shared-i18n-base.js:23)，两者都管理 `currentLang`
+
+## [] 3. 环境判断方式过时
 **文件**: `shared-i18n-base.js`
 
 ```73:91:shared-i18n-base.js
@@ -36,7 +40,9 @@ _detectLanguage() {
 
 现代做法应该分离 Service Worker 和浏览器环境的代码，而不是用标志位判断。
 
-## 4. 动态脚本加载方式过时
+**验证结果**: ✅ 问题存在于 [`shared-i18n-base.js:75`](shared/shared-i18n-base.js:75)
+
+## [] 4. 动态脚本加载方式过时
 **文件**: `shared-i18n-base.js`
 
 ```138:160:shared-i18n-base.js
@@ -52,7 +58,9 @@ _loadScriptForBrowser(src) {
 
 应该使用 ES Module 动态导入 `import()` 替代创建 script 标签。
 
-## 5. 协议兼容层说明历史债务
+**验证结果**: ✅ 问题存在于 [`shared-i18n-base.js:138-160`](shared/shared-i18n-base.js:138)
+
+## [x] 5. 协议兼容层说明历史债务
 **文件**: `shared-actions.js`
 
 ```27:51:shared-actions.js
@@ -65,7 +73,9 @@ if (response?.status === "success") return response;
 if (response?.success === true) return response;
 ```
 
-## 6. i18n 回调风格设计过时
+**验证结果**: ✅ 问题存在于 [`shared-actions.js:27-51`](shared/shared-actions.js:27)
+
+## [x] 6. i18n 回调风格设计过时
 **文件**: `shared-i18n-base.js`
 
 ```207:213:shared-i18n-base.js
@@ -80,7 +90,9 @@ ready(callback) {
 
 现代 JS 直接使用 Promise，不需要回调风格。
 
-## 7. 单例模式过度使用
+**验证结果**: ✅ 问题存在于 [`shared-i18n-base.js:207-213`](shared/shared-i18n-base.js:207)
+
+## [] 7. 单例模式过度使用
 **文件**: `domain-rules-manager.js`, `background.js`
 
 ```279:281:domain-rules-manager.js
@@ -89,7 +101,9 @@ const domainRulesManager = new DomainRulesManager();
 
 单例难以测试，且导出的是实例而非类，限制了灵活性。
 
-## 8. 状态分散管理
+**验证结果**: ✅ 问题存在于 [`domain-rules-manager.js:281`](domain-rules-manager.js:281)
+
+## [] 8. 状态分散管理
 全局状态分散在各处：
 - `background.js`: `autoSwitchEnabled`, `isInitialized`
 - `popup.js`: `updateCheckInProgress`, `updateCheckController`
@@ -97,7 +111,12 @@ const domainRulesManager = new DomainRulesManager();
 
 没有统一的状态管理方案。
 
-#### i18n 系统重构（待完成）
+**验证结果**: ✅ 问题存在于:
+- [`background.js:69-70`](background.js:69) - `autoSwitchEnabled`, `isInitialized`
+- [`popup.js:9-10`](popup.js:9) - `updateCheckInProgress`, `updateCheckController`
+- [`domain-rules-manager.js:10`](domain-rules-manager.js:10) - `domainCache`
+
+### i18n 系统重构（待完成）
 - [ ] **统一 i18n 实例命名**：将 `debugI18n`/`popupI18n`/`detectI18n`/`backgroundI18n` 统一为 `appI18n`
   - **原因**：简化 `getFallbackTranslation` 中的实例检测逻辑，去除多层 typeof 判断
   - **涉及文件**：
