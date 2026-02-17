@@ -19,6 +19,7 @@ MultiLangSwitcher/
 │   ├── shared-language-options.js   - 共享语言选项列表
 │   ├── header-check-utils.js        - 请求头检查工具函数
 │   ├── shared-resource-manager.js   - 共享资源管理器
+│   ├── md5.js                        - MD5加密算法
 │   └── theme-init.js                - 主题初始化脚本
 ├── fonts/                           - 字体资源目录
 ├── i18n/                            - 国际化文本资源目录
