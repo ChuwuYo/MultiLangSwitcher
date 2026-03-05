@@ -82,6 +82,7 @@ Features
   - Internationalization API (Intl) information
   - WebRTC local IP leakage
   - Canvas, WebGL, and AudioContext fingerprinting information
+  - AI Diagnosis panel with OpenAI-compatible providers, multi-turn chat, per-provider local config, Markdown export, and message copy actions
 * **Debugging Tools**: `debug.html` provides debugging and diagnostic features, including:
   - View `declarativeNetRequest` dynamic rule details
   - Multi-endpoint request header testing
@@ -130,6 +131,18 @@ Usage
 2.  **Select Preferred Language**: In the popup dropdown menu, select the language you want the browser to simulate.
 3.  **Apply Settings**: Click the "Apply Changes" button at the bottom of the interface. Your settings will be saved and immediately applied to new network requests.
 4.  **Verification and Debugging**: Click the "Detection Page" or "Debugging Tools" links provided in the popup to verify if the language settings are effective, or to diagnose issues when they occur.
+
+### AI Diagnosis Notes
+
+The `detect.html` page now includes an AI diagnosis panel. It sends the current structured detection snapshot to an OpenAI-compatible model and turns the raw data into user-friendly explanations.
+
+Current implementation notes:
+
+* AI configuration is stored locally in `chrome.storage.local`, grouped by provider so different services do not share the same API key
+* The built-in prompt is designed for a diagnostic page, not a real production website context
+* The model is instructed to distinguish normal signals, suspicious signals, and clear risks instead of assuming everything is a privacy issue
+* Replies follow the current detect page language by default
+* Visible chat can be exported as Markdown without including the hidden system prompt or hidden snapshot injection
 
 ***
 
