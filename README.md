@@ -138,11 +138,9 @@ The `detect.html` page now includes an AI diagnosis panel. It sends the current 
 
 Current implementation notes:
 
-* AI configuration is stored locally in `chrome.storage.local`, grouped by provider so different services do not share the same API key
-* The built-in prompt is designed for a diagnostic page, not a real production website context
-* The model is instructed to distinguish normal signals, suspicious signals, and clear risks instead of assuming everything is a privacy issue
+* AI configuration is stored locally in `chrome.storage.local`, grouped by provider
 * Replies follow the current detect page language by default
-* Visible chat can be exported as Markdown without including the hidden system prompt or hidden snapshot injection
+* Exported Markdown only contains visible conversation, excluding hidden system prompt and initial detection snapshot injection messages
 
 ***
 
