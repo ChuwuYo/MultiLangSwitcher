@@ -1,12 +1,21 @@
-// --- 浏览器兼容性检查 ---
-/**
- * 获取浏览器信息
- * @returns {Object} 浏览器信息对象
- */
+let latestDetectionSnapshot = null;
+let latestSnapshotVersion = "";
+let detectionRunInFlight = null;
+
+window.latestDetectionSnapshot = latestDetectionSnapshot;
+
+const getUiLanguage = () => (detectI18n?.currentLang === "zh" ? "zh" : "en");
+
+const translateDetect = (key, params = {}) =>
+	detectI18n?.t ? detectI18n.t(key, params) : key;
+
+const createMessageId = () =>
+	`msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 const getBrowserInfo = () => {
 	const ua = navigator.userAgent;
-	let browserName = detectI18n.t("unknown_browser");
-	let browserVersion = detectI18n.t("unknown_version");
+	let browserName = translateDetect("unknown_browser");
+	let browserVersion = translateDetect("unknown_version");
 	let fullVersion = "";
 
 	let tem;
@@ -23,9 +32,11 @@ const getBrowserInfo = () => {
 		tem = ua.match(/\b(OPR|Edge|Edg)\/(\d+)/);
 		if (tem != null) {
 			const browserParts = tem.slice(1);
-			if (browserParts[0].startsWith("Edg"))
+			if (browserParts[0].startsWith("Edg")) {
 				browserParts[0] = "Edge (Chromium)";
-			else if (browserParts[0] === "Edge") browserParts[0] = "Edge (Legacy)";
+			} else if (browserParts[0] === "Edge") {
+				browserParts[0] = "Edge (Legacy)";
+			}
 			browserName = browserParts.join(" ").replace("OPR", "Opera");
 			browserVersion = browserParts.length > 1 ? browserParts[1] : "";
 			fullVersion = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)
@@ -57,7 +68,7 @@ const getBrowserInfo = () => {
 		fullVersion = browserVersion;
 	}
 
-	let os = detectI18n.t("unknown_os");
+	let os = translateDetect("unknown_os");
 	if (ua.indexOf("Windows") !== -1) os = "Windows";
 	if (ua.indexOf("Mac") !== -1) os = "MacOS";
 	if (ua.indexOf("X11") !== -1) os = "UNIX";
@@ -66,430 +77,463 @@ const getBrowserInfo = () => {
 	return {
 		name: browserName,
 		version: browserVersion,
-		fullVersion: fullVersion,
-		os: os,
+		fullVersion,
+		os,
 		userAgent: ua,
 	};
 };
 
-/**
- * 检查API支持情况
- * @returns {Array} API支持情况列表
- */
-const checkApiSupport = () => {
-	const apis = [
-		{ name: "localStorage", supported: typeof localStorage !== "undefined" },
-		{
-			name: "sessionStorage",
-			supported: typeof sessionStorage !== "undefined",
-		},
-		{ name: "IndexedDB", supported: !!window.indexedDB },
-		{ name: "WebSockets", supported: "WebSocket" in window },
-		{
-			name: "Promises",
-			supported:
-				typeof Promise !== "undefined" &&
-				Promise.toString().indexOf("[native code]") !== -1,
-		},
-		{ name: "fetch API", supported: typeof fetch === "function" },
-		{ name: "Service Workers", supported: "serviceWorker" in navigator },
-		{
-			name: "Intl (Internationalization)",
-			supported:
-				typeof Intl !== "undefined" &&
-				typeof Intl.DateTimeFormat === "function",
-		},
-		{
-			name: "URL API (URLSearchParams)",
-			supported:
-				typeof URL !== "undefined" && typeof URLSearchParams !== "undefined",
-		},
-		{ name: "Beacon API", supported: "sendBeacon" in navigator },
-		{
-			name: "WebRTC (RTCPeerConnection)",
-			supported: !!window.RTCPeerConnection,
-		},
-		{
-			name: "WebGL",
-			supported: (() => {
-				try {
-					const canvas = ResourceManager.createCanvasElement();
-					return !!(
-						window.WebGLRenderingContext &&
-						(canvas.getContext("webgl") ||
-							canvas.getContext("experimental-webgl"))
-					);
-				} catch (_e) {
-					return false;
-				}
-			})(),
-		},
-	];
-	return apis;
+const checkApiSupport = () => [
+	{ name: "localStorage", supported: typeof localStorage !== "undefined" },
+	{
+		name: "sessionStorage",
+		supported: typeof sessionStorage !== "undefined",
+	},
+	{ name: "IndexedDB", supported: !!window.indexedDB },
+	{ name: "WebSockets", supported: "WebSocket" in window },
+	{
+		name: "Promises",
+		supported:
+			typeof Promise !== "undefined" &&
+			Promise.toString().indexOf("[native code]") !== -1,
+	},
+	{ name: "fetch API", supported: typeof fetch === "function" },
+	{ name: "Service Workers", supported: "serviceWorker" in navigator },
+	{
+		name: "Intl (Internationalization)",
+		supported:
+			typeof Intl !== "undefined" &&
+			typeof Intl.DateTimeFormat === "function",
+	},
+	{
+		name: "URL API (URLSearchParams)",
+		supported:
+			typeof URL !== "undefined" && typeof URLSearchParams !== "undefined",
+	},
+	{ name: "Beacon API", supported: "sendBeacon" in navigator },
+	{
+		name: "WebRTC (RTCPeerConnection)",
+		supported: !!window.RTCPeerConnection,
+	},
+	{
+		name: "WebGL",
+		supported: (() => {
+			try {
+				const canvas = ResourceManager.createCanvasElement();
+				return !!(
+					window.WebGLRenderingContext &&
+					(canvas.getContext("webgl") ||
+						canvas.getContext("experimental-webgl"))
+				);
+			} catch (_error) {
+				return false;
+			}
+		})(),
+	},
+];
+
+const collectHeaderInfo = async () => {
+	try {
+		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+		if (!result.success) {
+			return {
+				status: "error",
+				endpoint: "",
+				acceptLanguage: null,
+				headers: {},
+				error: result.error || translateDetect("detection_failed_all_services"),
+				attemptedEndpoints: result.attemptedEndpoints || [],
+			};
+		}
+
+		return {
+			status: "ok",
+			endpoint: result.endpoint || "",
+			acceptLanguage: result.acceptLanguage || null,
+			headers: result.headers || {},
+			error: "",
+			attemptedEndpoints: result.attemptedEndpoints || [],
+		};
+	} catch (error) {
+		console.error(translateDetect("all_attempts_failed"), error);
+		return {
+			status: "error",
+			endpoint: "",
+			acceptLanguage: null,
+			headers: {},
+			error: error?.message || String(error),
+			attemptedEndpoints: [],
+		};
+	}
 };
 
-/**
- * 执行浏览器兼容性检查
- */
-const performCompatibilityChecks = () => {
-	const browserInfoEl = document.getElementById("browserInfoDisplay");
-	const apiListEl = document.getElementById("apiCompatibilityList");
-	if (!browserInfoEl || !apiListEl) return;
-
-	const browser = getBrowserInfo();
-	browserInfoEl.textContent = `${browser.name} ${browser.fullVersion} on ${browser.os}`;
-
-	apiListEl.innerHTML = "";
-	const apis = checkApiSupport();
-	apis.forEach((api) => {
-		const listItem = document.createElement("li");
-		listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? "list-group-item-success" : "list-group-item-danger"}`;
-
-		const apiNameSpan = document.createElement("span");
-		apiNameSpan.textContent = api.name;
-
-		const badgeSpan = document.createElement("span");
-		badgeSpan.className = `badge ${api.supported ? "bg-success" : "bg-danger"}`;
-		badgeSpan.textContent = api.supported
-			? detectI18n.t("supported")
-			: detectI18n.t("not_supported");
-
-		listItem.appendChild(apiNameSpan);
-		listItem.appendChild(badgeSpan);
-		apiListEl.appendChild(listItem);
-	});
-};
-// --- 兼容性检查功能结束 ---
-
-/**
- * 获取并显示当前请求头
- * @returns {Promise<void>}
- */
-const fetchAndDisplayHeaders = async () => {
+const renderHeaderInfo = (headerInfo) => {
 	const headerInfoElement = document.getElementById("headerInfo");
 	const headerLanguageInfo = document.getElementById("headerLanguageInfo");
 	if (!headerInfoElement || !headerLanguageInfo) return;
 
-	headerInfoElement.textContent = detectI18n.t("fetching_headers");
-	headerLanguageInfo.textContent = detectI18n.t("detecting");
-
-	try {
-		// 使用共享模块获取请求头
-		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
-
-		if (result.success) {
-			// 显示完整的请求头信息
-			const formattedHeaders = JSON.stringify(result.headers, null, 2);
-			headerInfoElement.textContent = formattedHeaders;
-
-			// 移除可能存在的旧提示信息
-			const existingAlertInfoP =
-				headerInfoElement.parentElement.querySelector("p.mt-2");
-			if (existingAlertInfoP) {
-				existingAlertInfoP.remove();
-			}
-
-			if (result.acceptLanguage) {
-				headerLanguageInfo.innerHTML = "";
-				const fragment = document.createDocumentFragment();
-
-				const titleP = document.createElement("p");
-				titleP.className = "mb-1";
-				const strong = document.createElement("strong");
-				strong.textContent = detectI18n.t("current_value");
-				titleP.appendChild(strong);
-				fragment.appendChild(titleP);
-
-				const valP = document.createElement("p");
-				valP.className = "text-success fw-bold";
-				valP.textContent = result.acceptLanguage;
-				fragment.appendChild(valP);
-
-				const footerP = document.createElement("p");
-				footerP.className = "mb-0 mt-2 small text-muted";
-				footerP.textContent = detectI18n
-					.t("detected_via")
-					.replace("{method}", detectI18n.t("request_header_method"));
-				fragment.appendChild(footerP);
-
-				headerLanguageInfo.appendChild(fragment);
-			} else {
-				headerLanguageInfo.innerHTML = "";
-				const fragment = document.createDocumentFragment();
-
-				const warningP = document.createElement("p");
-				warningP.className = "text-warning";
-				warningP.textContent = detectI18n.t("not_detected_accept_language");
-				fragment.appendChild(warningP);
-
-				const linkP = document.createElement("p");
-				linkP.className = "mt-2";
-				linkP.appendChild(
-					window.HeaderCheckUtils.createExternalCheckLinks({
-						prefix: detectI18n.t("external_check_prefix"),
-						or: detectI18n.t("external_check_or"),
-						suffix: detectI18n.t("external_check_suffix"),
-					}),
-				);
-				fragment.appendChild(linkP);
-
-				headerLanguageInfo.appendChild(fragment);
-			}
-		} else {
-			// 所有尝试均失败
-			throw new Error(result.error);
-		}
-	} catch (error) {
-		console.error(detectI18n.t("all_attempts_failed"), error);
-
-		let combinedErrorMessage = detectI18n.t("fetch_failed_all_services");
-		if (error.message) {
-			combinedErrorMessage += " " + error.message;
+	if (headerInfo.status === "ok") {
+		headerInfoElement.textContent = JSON.stringify(headerInfo.headers, null, 2);
+		const existingAlertInfoP =
+			headerInfoElement.parentElement.querySelector("p.mt-2");
+		if (existingAlertInfoP) {
+			existingAlertInfoP.remove();
 		}
 
-		headerInfoElement.textContent = combinedErrorMessage;
 		headerLanguageInfo.innerHTML = "";
-
 		const fragment = document.createDocumentFragment();
 
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = detectI18n.t("detection_failed_all_services");
-		fragment.appendChild(errorP);
+		if (headerInfo.acceptLanguage) {
+			const titleP = document.createElement("p");
+			titleP.className = "mb-1";
+			const strong = document.createElement("strong");
+			strong.textContent = translateDetect("current_value");
+			titleP.appendChild(strong);
+			fragment.appendChild(titleP);
 
-		const detailP = document.createElement("p");
-		detailP.className = "small text-muted";
-		detailP.textContent = error.message || error;
-		fragment.appendChild(detailP);
+			const valP = document.createElement("p");
+			valP.className = "text-success fw-bold";
+			valP.textContent = headerInfo.acceptLanguage;
+			fragment.appendChild(valP);
 
-		const linkP = document.createElement("p");
-		linkP.className = "mt-2";
-		linkP.appendChild(
-			window.HeaderCheckUtils.createExternalCheckLinks({
-				prefix: detectI18n.t("external_check_prefix"),
-				or: detectI18n.t("external_check_or"),
-				suffix: detectI18n.t("external_check_suffix"),
-			}),
-		);
-		fragment.appendChild(linkP);
+			if (headerInfo.endpoint) {
+				const endpointP = document.createElement("p");
+				endpointP.className = "small text-muted mb-0";
+				endpointP.textContent = headerInfo.endpoint;
+				fragment.appendChild(endpointP);
+			}
+
+			const footerP = document.createElement("p");
+			footerP.className = "mb-0 mt-2 small text-muted";
+			footerP.textContent = translateDetect("detected_via").replace(
+				"{method}",
+				translateDetect("request_header_method"),
+			);
+			fragment.appendChild(footerP);
+		} else {
+			const warningP = document.createElement("p");
+			warningP.className = "text-warning";
+			warningP.textContent = translateDetect("not_detected_accept_language");
+			fragment.appendChild(warningP);
+
+			const linkP = document.createElement("p");
+			linkP.className = "mt-2";
+			linkP.appendChild(
+				window.HeaderCheckUtils.createExternalCheckLinks({
+					prefix: translateDetect("external_check_prefix"),
+					or: translateDetect("external_check_or"),
+					suffix: translateDetect("external_check_suffix"),
+				}),
+			);
+			fragment.appendChild(linkP);
+		}
 
 		headerLanguageInfo.appendChild(fragment);
+		return;
+	}
+
+	let combinedErrorMessage = translateDetect("fetch_failed_all_services");
+	if (headerInfo.error) {
+		combinedErrorMessage += ` ${headerInfo.error}`;
+	}
+
+	headerInfoElement.textContent = combinedErrorMessage;
+	headerLanguageInfo.innerHTML = "";
+
+	const fragment = document.createDocumentFragment();
+	const errorP = document.createElement("p");
+	errorP.className = "text-danger";
+	errorP.textContent = translateDetect("detection_failed_all_services");
+	fragment.appendChild(errorP);
+
+	const detailP = document.createElement("p");
+	detailP.className = "small text-muted";
+	detailP.textContent = headerInfo.error || combinedErrorMessage;
+	fragment.appendChild(detailP);
+
+	const linkP = document.createElement("p");
+	linkP.className = "mt-2";
+	linkP.appendChild(
+		window.HeaderCheckUtils.createExternalCheckLinks({
+			prefix: translateDetect("external_check_prefix"),
+			or: translateDetect("external_check_or"),
+			suffix: translateDetect("external_check_suffix"),
+		}),
+	);
+	fragment.appendChild(linkP);
+
+	headerLanguageInfo.appendChild(fragment);
+};
+
+const collectJsLanguageInfo = () => {
+	try {
+		return {
+			status: "ok",
+			language: navigator.language || "N/A",
+			languages: Array.isArray(navigator.languages)
+				? navigator.languages
+				: navigator.languages
+					? [navigator.languages]
+					: [],
+			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A",
+			timezoneOffset: new Date().getTimezoneOffset(),
+			error: "",
+		};
+	} catch (error) {
+		console.error(translateDetect("js_language_detection_failed"), error);
+		return {
+			status: "error",
+			language: "N/A",
+			languages: [],
+			timezone: "N/A",
+			timezoneOffset: 0,
+			error: error?.message || String(error),
+		};
 	}
 };
 
-/**
- * 检测 JavaScript 语言偏好
- */
-const detectJsLanguage = () => {
+const renderJsLanguageInfo = (jsLanguageInfo) => {
 	const jsLanguageInfoElement = document.getElementById("jsLanguageInfo");
 	if (!jsLanguageInfoElement) return;
 
-	try {
-		const lang = navigator.language || "N/A";
-		const langs = navigator.languages ? navigator.languages.join(", ") : "N/A";
-
-		jsLanguageInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		const langTitleP = document.createElement("p");
-		langTitleP.className = "mb-1";
-		const strongLang = document.createElement("strong");
-		strongLang.textContent = "navigator.language:";
-		langTitleP.appendChild(strongLang);
-		fragment.appendChild(langTitleP);
-
-		const langValP = document.createElement("p");
-		langValP.className = "text-info fw-bold";
-		langValP.textContent = lang;
-		fragment.appendChild(langValP);
-
-		const langsTitleP = document.createElement("p");
-		langsTitleP.className = "mb-1 mt-2";
-		const strongLangs = document.createElement("strong");
-		strongLangs.textContent = "navigator.languages:";
-		langsTitleP.appendChild(strongLangs);
-		fragment.appendChild(langsTitleP);
-
-		const langsValP = document.createElement("p");
-		langsValP.className = "text-info fw-bold";
-		langsValP.textContent = langs;
-		fragment.appendChild(langsValP);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n
-			.t("detected_via")
-			.replace("{method}", detectI18n.t("javascript_method"));
-		fragment.appendChild(footerP);
-
-		jsLanguageInfoElement.appendChild(fragment);
-	} catch (error) {
-		jsLanguageInfoElement.innerHTML = "";
+	jsLanguageInfoElement.innerHTML = "";
+	if (jsLanguageInfo.status !== "ok") {
 		const errorP = document.createElement("p");
 		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		errorP.textContent = `${translateDetect("detection_failed")}: ${jsLanguageInfo.error}`;
 		jsLanguageInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("js_language_detection_failed"), error);
+		return;
 	}
+
+	const fragment = document.createDocumentFragment();
+
+	const langTitleP = document.createElement("p");
+	langTitleP.className = "mb-1";
+	const strongLang = document.createElement("strong");
+	strongLang.textContent = "navigator.language:";
+	langTitleP.appendChild(strongLang);
+	fragment.appendChild(langTitleP);
+
+	const langValP = document.createElement("p");
+	langValP.className = "text-info fw-bold";
+	langValP.textContent = jsLanguageInfo.language;
+	fragment.appendChild(langValP);
+
+	const langsTitleP = document.createElement("p");
+	langsTitleP.className = "mb-1 mt-2";
+	const strongLangs = document.createElement("strong");
+	strongLangs.textContent = "navigator.languages:";
+	langsTitleP.appendChild(strongLangs);
+	fragment.appendChild(langsTitleP);
+
+	const langsValP = document.createElement("p");
+	langsValP.className = "text-info fw-bold";
+	langsValP.textContent =
+		jsLanguageInfo.languages.length > 0
+			? jsLanguageInfo.languages.join(", ")
+			: "N/A";
+	fragment.appendChild(langsValP);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("javascript_method"),
+	);
+	fragment.appendChild(footerP);
+
+jsLanguageInfoElement.appendChild(fragment);
 };
 
-/**
- * 检测 Canvas 指纹
- */
-const detectCanvasFingerprint = () => {
-	const canvasInfoElement = document.getElementById("canvasFingerprintInfo");
-	if (!canvasInfoElement) return;
-
+const collectCanvasFingerprintInfo = () => {
 	try {
 		const canvas = ResourceManager.createCanvasElement();
 		const ctx = canvas.getContext("2d");
-		const txt = "BrowserLeaks,com <canvas> 1.0";
+		const text = "BrowserLeaks,com <canvas> 1.0";
 		ctx.textBaseline = "top";
 		ctx.font = "14px 'Arial'";
 		ctx.textBaseline = "alphabetic";
 		ctx.fillStyle = "#f60";
 		ctx.fillRect(125, 1, 62, 20);
 		ctx.fillStyle = "#069";
-		ctx.fillText(txt, 2, 15);
+		ctx.fillText(text, 2, 15);
 		ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-		ctx.fillText(txt, 4, 17);
+		ctx.fillText(text, 4, 17);
 
 		const dataUrl = canvas.toDataURL();
-		const fingerprint = md5(dataUrl);
-
-		canvasInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		const hashTitleP = document.createElement("p");
-		hashTitleP.className = "mb-1";
-		const strongHash = document.createElement("strong");
-		strongHash.textContent = "Canvas hash:";
-		hashTitleP.appendChild(strongHash);
-		fragment.appendChild(hashTitleP);
-
-		const hashValP = document.createElement("p");
-		hashValP.className = "text-dark fw-bold small";
-		hashValP.textContent = fingerprint;
-		fragment.appendChild(hashValP);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n
-			.t("detected_via")
-			.replace("{method}", detectI18n.t("canvas_method"));
-		fragment.appendChild(footerP);
-
-		canvasInfoElement.appendChild(fragment);
+		return {
+			status: "ok",
+			hash: md5(dataUrl),
+			error: "",
+		};
 	} catch (error) {
-		canvasInfoElement.innerHTML = "";
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
-		canvasInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("canvas_fingerprint_detection_failed"), error);
+		console.error(translateDetect("canvas_fingerprint_detection_failed"), error);
+		return {
+			status: "error",
+			hash: "",
+			error: error?.message || String(error),
+		};
 	}
 };
 
-/**
- * 检测 WebGL 指纹
- */
-const detectWebglFingerprint = () => {
-	const webglInfoElement = document.getElementById("webglFingerprintInfo");
-	if (!webglInfoElement) return;
+const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
+	const canvasInfoElement = document.getElementById("canvasFingerprintInfo");
+	if (!canvasInfoElement) return;
 
+	canvasInfoElement.innerHTML = "";
+	if (canvasFingerprintInfo.status !== "ok") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("detection_failed")}: ${canvasFingerprintInfo.error}`;
+		canvasInfoElement.appendChild(errorP);
+		return;
+	}
+
+	const fragment = document.createDocumentFragment();
+	const hashTitleP = document.createElement("p");
+	hashTitleP.className = "mb-1";
+	const strongHash = document.createElement("strong");
+	strongHash.textContent = "Canvas hash:";
+	hashTitleP.appendChild(strongHash);
+	fragment.appendChild(hashTitleP);
+
+	const hashValP = document.createElement("p");
+	hashValP.className = "text-dark fw-bold small";
+	hashValP.textContent = canvasFingerprintInfo.hash;
+	fragment.appendChild(hashValP);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("canvas_method"),
+	);
+	fragment.appendChild(footerP);
+
+	canvasInfoElement.appendChild(fragment);
+};
+
+const collectWebglFingerprintInfo = () => {
 	try {
 		const canvas = ResourceManager.createCanvasElement();
 		const gl =
 			canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 		if (!gl) {
-			webglInfoElement.innerHTML = "";
-			const warningP = document.createElement("p");
-			warningP.className = "text-warning";
-			warningP.textContent = detectI18n.t("webgl_not_supported");
-			webglInfoElement.appendChild(warningP);
-			return;
+			return {
+				status: "unsupported",
+				hash: "",
+				vendor: "",
+				renderer: "",
+				version: "",
+				shadingLanguageVersion: "",
+				error: translateDetect("webgl_not_supported"),
+			};
 		}
 
 		const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-		const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "N/A";
-		const renderer =
-			gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "N/A";
+		const vendor = debugInfo
+			? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "N/A"
+			: "N/A";
+		const renderer = debugInfo
+			? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "N/A"
+			: "N/A";
 		const version = gl.getParameter(gl.VERSION) || "N/A";
 		const shadingLanguageVersion =
 			gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
 
 		const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
-		const fingerprint = md5(fingerprintData);
-
-		webglInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		/**
-		 * Helper to create a detail group (title + value)
-		 */
-		const addDetail = (title, value, isBold = false, mt = "mt-2") => {
-			const titleP = document.createElement("p");
-			titleP.className = `mb-1 ${mt}`;
-			const strongTitle = document.createElement("strong");
-			strongTitle.textContent = title;
-			titleP.appendChild(strongTitle);
-			fragment.appendChild(titleP);
-
-			const valP = document.createElement("p");
-			valP.className = `text-dark small${isBold ? " fw-bold" : ""}`;
-			valP.textContent = value;
-			fragment.appendChild(valP);
+		return {
+			status: "ok",
+			hash: md5(fingerprintData),
+			vendor,
+			renderer,
+			version,
+			shadingLanguageVersion,
+			error: "",
 		};
-
-		addDetail("WebGL hash:", fingerprint, true, "");
-		addDetail("WebGL unmasked vendor:", vendor);
-		addDetail("WebGL unmasked renderer:", renderer);
-		addDetail("WebGL version:", version);
-		addDetail("Shading Language Version:", shadingLanguageVersion);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n
-			.t("detected_via")
-			.replace("{method}", detectI18n.t("webgl_method"));
-		fragment.appendChild(footerP);
-
-		webglInfoElement.appendChild(fragment);
 	} catch (error) {
-		webglInfoElement.innerHTML = "";
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
-		webglInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("webgl_fingerprint_detection_failed"), error);
+		console.error(translateDetect("webgl_fingerprint_detection_failed"), error);
+		return {
+			status: "error",
+			hash: "",
+			vendor: "",
+			renderer: "",
+			version: "",
+			shadingLanguageVersion: "",
+			error: error?.message || String(error),
+		};
 	}
 };
 
-/**
- * 检测 AudioContext 指纹
- * @returns {Promise<void>}
- */
-const detectAudioFingerprint = async () => {
-	const audioInfoElement = document.getElementById("audioFingerprintInfo");
-	if (!audioInfoElement) return;
+const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
+	const webglInfoElement = document.getElementById("webglFingerprintInfo");
+	if (!webglInfoElement) return;
 
-	audioInfoElement.innerHTML = "";
-	const loadingP = document.createElement("p");
-	loadingP.textContent = detectI18n.t("detecting");
-	audioInfoElement.appendChild(loadingP);
+	webglInfoElement.innerHTML = "";
+	if (webglFingerprintInfo.status === "unsupported") {
+		const warningP = document.createElement("p");
+		warningP.className = "text-warning";
+		warningP.textContent = translateDetect("webgl_not_supported");
+		webglInfoElement.appendChild(warningP);
+		return;
+	}
 
+	if (webglFingerprintInfo.status !== "ok") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("detection_failed")}: ${webglFingerprintInfo.error}`;
+		webglInfoElement.appendChild(errorP);
+		return;
+	}
+
+	const fragment = document.createDocumentFragment();
+	const addDetail = (title, value, isBold = false, mt = "mt-2") => {
+		const titleP = document.createElement("p");
+		titleP.className = `mb-1 ${mt}`;
+		const strongTitle = document.createElement("strong");
+		strongTitle.textContent = title;
+		titleP.appendChild(strongTitle);
+		fragment.appendChild(titleP);
+
+		const valP = document.createElement("p");
+		valP.className = `text-dark small${isBold ? " fw-bold" : ""}`;
+		valP.textContent = value;
+		fragment.appendChild(valP);
+	};
+
+	addDetail("WebGL hash:", webglFingerprintInfo.hash, true, "");
+	addDetail("WebGL unmasked vendor:", webglFingerprintInfo.vendor);
+	addDetail("WebGL unmasked renderer:", webglFingerprintInfo.renderer);
+	addDetail("WebGL version:", webglFingerprintInfo.version);
+	addDetail(
+		"Shading Language Version:",
+		webglFingerprintInfo.shadingLanguageVersion,
+	);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("webgl_method"),
+	);
+	fragment.appendChild(footerP);
+
+	webglInfoElement.appendChild(fragment);
+};
+
+const collectAudioFingerprintInfo = async () => {
 	try {
-		const audioCtx = window.OfflineAudioContext;
-		if (!audioCtx) {
-			audioInfoElement.innerHTML = "";
-			const warningP = document.createElement("p");
-			warningP.className = "text-warning";
-			warningP.textContent = detectI18n.t("audio_not_supported");
-			audioInfoElement.appendChild(warningP);
-			return;
+		if (
+			typeof window === "undefined" ||
+			(!window.OfflineAudioContext && !window.webkitOfflineAudioContext)
+		) {
+			return {
+				status: "unsupported",
+				hash: "",
+				error: translateDetect("audio_not_supported"),
+			};
 		}
 
-		// 使用OfflineAudioContext进行音频指纹检测
 		const context = ResourceManager.createOfflineAudioContext(1, 44100, 44100);
 		const oscillator = context.createOscillator();
 		oscillator.type = "triangle";
@@ -514,206 +558,163 @@ const detectAudioFingerprint = async () => {
 				sum += Math.abs(bufferData[i]);
 			}
 		}
-		const fingerprintData = sum.toString();
-		const fingerprint = md5(fingerprintData);
 
-		audioInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		const hashTitleP = document.createElement("p");
-		hashTitleP.className = "mb-1";
-		const strongHash = document.createElement("strong");
-		strongHash.textContent = "AudioContext hash:";
-		hashTitleP.appendChild(strongHash);
-		fragment.appendChild(hashTitleP);
-
-		const hashValP = document.createElement("p");
-		hashValP.className = "text-dark fw-bold small";
-		hashValP.textContent = fingerprint;
-		fragment.appendChild(hashValP);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n
-			.t("detected_via")
-			.replace("{method}", detectI18n.t("audio_method"));
-		fragment.appendChild(footerP);
-
-		audioInfoElement.appendChild(fragment);
+		return {
+			status: "ok",
+			hash: md5(sum.toString()),
+			error: "",
+		};
 	} catch (error) {
-		audioInfoElement.innerHTML = "";
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
-		audioInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("audio_fingerprint_detection_failed"), error);
+		console.error(translateDetect("audio_fingerprint_detection_failed"), error);
+		return {
+			status: "error",
+			hash: "",
+			error: error?.message || String(error),
+		};
 	}
 };
 
-/**
- * 检测国际化 API
- */
-const detectIntlApi = () => {
+const renderAudioFingerprintInfo = (audioFingerprintInfo) => {
+	const audioInfoElement = document.getElementById("audioFingerprintInfo");
+	if (!audioInfoElement) return;
+
+	audioInfoElement.innerHTML = "";
+	if (audioFingerprintInfo.status === "unsupported") {
+		const warningP = document.createElement("p");
+		warningP.className = "text-warning";
+		warningP.textContent = translateDetect("audio_not_supported");
+		audioInfoElement.appendChild(warningP);
+		return;
+	}
+
+	if (audioFingerprintInfo.status !== "ok") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("detection_failed")}: ${audioFingerprintInfo.error}`;
+		audioInfoElement.appendChild(errorP);
+		return;
+	}
+
+	const fragment = document.createDocumentFragment();
+	const hashTitleP = document.createElement("p");
+	hashTitleP.className = "mb-1";
+	const strongHash = document.createElement("strong");
+	strongHash.textContent = "AudioContext hash:";
+	hashTitleP.appendChild(strongHash);
+	fragment.appendChild(hashTitleP);
+
+	const hashValP = document.createElement("p");
+	hashValP.className = "text-dark fw-bold small";
+	hashValP.textContent = audioFingerprintInfo.hash;
+	fragment.appendChild(hashValP);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("audio_method"),
+	);
+	fragment.appendChild(footerP);
+
+	audioInfoElement.appendChild(fragment);
+};
+
+const collectIntlInfo = () => {
+	try {
+		return {
+			status: "ok",
+			dateTimeLocale: Intl.DateTimeFormat().resolvedOptions().locale || "N/A",
+			numberFormatLocale: Intl.NumberFormat().resolvedOptions().locale || "N/A",
+			error: "",
+		};
+	} catch (error) {
+		console.error(translateDetect("intl_api_detection_failed"), error);
+		return {
+			status: "error",
+			dateTimeLocale: "N/A",
+			numberFormatLocale: "N/A",
+			error: error?.message || String(error),
+		};
+	}
+};
+
+const renderIntlInfo = (intlInfo) => {
 	const intlApiInfoElement = document.getElementById("intlApiInfo");
 	if (!intlApiInfoElement) return;
 
-	try {
-		const dateTimeLocale =
-			Intl.DateTimeFormat().resolvedOptions().locale || "N/A";
-		const numberFormatLocale =
-			Intl.NumberFormat().resolvedOptions().locale || "N/A";
-
-		intlApiInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		const dtTitleP = document.createElement("p");
-		dtTitleP.className = "mb-1";
-		const strongDt = document.createElement("strong");
-		strongDt.textContent = "DateTimeFormat Locale:";
-		dtTitleP.appendChild(strongDt);
-		fragment.appendChild(dtTitleP);
-
-		const dtValP = document.createElement("p");
-		dtValP.className = "text-secondary fw-bold";
-		dtValP.textContent = dateTimeLocale;
-		fragment.appendChild(dtValP);
-
-		const nfTitleP = document.createElement("p");
-		nfTitleP.className = "mb-1 mt-2";
-		const strongNf = document.createElement("strong");
-		strongNf.textContent = "NumberFormat Locale:";
-		nfTitleP.appendChild(strongNf);
-		fragment.appendChild(nfTitleP);
-
-		const nfValP = document.createElement("p");
-		nfValP.className = "text-secondary fw-bold";
-		nfValP.textContent = numberFormatLocale;
-		fragment.appendChild(nfValP);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n
-			.t("detected_via")
-			.replace("{method}", detectI18n.t("intl_method"));
-		fragment.appendChild(footerP);
-
-		intlApiInfoElement.appendChild(fragment);
-	} catch (error) {
-		intlApiInfoElement.innerHTML = "";
+	intlApiInfoElement.innerHTML = "";
+	if (intlInfo.status !== "ok") {
 		const errorP = document.createElement("p");
 		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("detection_failed")}: ${error.message}`;
+		errorP.textContent = `${translateDetect("detection_failed")}: ${intlInfo.error}`;
 		intlApiInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("intl_api_detection_failed"), error);
+		return;
 	}
+
+	const fragment = document.createDocumentFragment();
+
+	const dtTitleP = document.createElement("p");
+	dtTitleP.className = "mb-1";
+	const strongDt = document.createElement("strong");
+	strongDt.textContent = "DateTimeFormat Locale:";
+	dtTitleP.appendChild(strongDt);
+	fragment.appendChild(dtTitleP);
+
+	const dtValP = document.createElement("p");
+	dtValP.className = "text-secondary fw-bold";
+	dtValP.textContent = intlInfo.dateTimeLocale;
+	fragment.appendChild(dtValP);
+
+	const nfTitleP = document.createElement("p");
+	nfTitleP.className = "mb-1 mt-2";
+	const strongNf = document.createElement("strong");
+	strongNf.textContent = "NumberFormat Locale:";
+	nfTitleP.appendChild(strongNf);
+	fragment.appendChild(nfTitleP);
+
+	const nfValP = document.createElement("p");
+	nfValP.className = "text-secondary fw-bold";
+	nfValP.textContent = intlInfo.numberFormatLocale;
+	fragment.appendChild(nfValP);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("intl_method"),
+	);
+	fragment.appendChild(footerP);
+
+	intlApiInfoElement.appendChild(fragment);
 };
 
-/**
- * 检测 WebRTC IP 泄露
- */
-const detectWebRtc = async () => {
-	const webRtcInfoElement = document.getElementById("webRtcInfo");
-	if (!webRtcInfoElement) return;
-
-	webRtcInfoElement.innerHTML = "";
-	const tryingP = document.createElement("p");
-	tryingP.textContent = detectI18n.t("trying_webrtc");
-	webRtcInfoElement.appendChild(tryingP);
-
-	try {
-		const ips = await collectWebRtcIps();
-
-		if (ips.length > 0) {
-			webRtcInfoElement.innerHTML = "";
-			const fragment = document.createDocumentFragment();
-
-			const titleP = document.createElement("p");
-			titleP.className = "mb-1";
-			const strongTitle = document.createElement("strong");
-			strongTitle.textContent = detectI18n.t("webrtc_local_ip");
-			titleP.appendChild(strongTitle);
-			fragment.appendChild(titleP);
-
-			const descP = document.createElement("p");
-			descP.className = "small text-muted mb-1";
-			descP.textContent = detectI18n.t("webrtc_description");
-			fragment.appendChild(descP);
-
-			const list = document.createElement("ul");
-			list.className = "list-unstyled mb-0";
-			ips.forEach((ip) => {
-				const item = document.createElement("li");
-				item.className = "text-info fw-bold";
-				item.textContent = ip;
-				list.appendChild(item);
-			});
-			fragment.appendChild(list);
-
-			const footerP = document.createElement("p");
-			footerP.className = "mb-0 mt-2 small text-muted";
-			footerP.textContent = detectI18n
-				.t("detected_via")
-				.replace("{method}", detectI18n.t("webrtc_method"));
-			fragment.appendChild(footerP);
-
-			webRtcInfoElement.appendChild(fragment);
-		} else {
-			webRtcInfoElement.innerHTML = "";
-			const fragment = document.createDocumentFragment();
-
-			const successP = document.createElement("p");
-			successP.className = "text-success";
-			successP.textContent = detectI18n.t("webrtc_no_ip_detected");
-			fragment.appendChild(successP);
-
-			const footerP = document.createElement("p");
-			footerP.className = "mb-0 mt-2 small text-muted";
-			footerP.textContent = detectI18n
-				.t("detected_via")
-				.replace("{method}", detectI18n.t("webrtc_method"));
-			fragment.appendChild(footerP);
-
-			webRtcInfoElement.appendChild(fragment);
-		}
-	} catch (error) {
-		webRtcInfoElement.innerHTML = "";
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("webrtc_not_supported")}: ${error.message}`;
-		webRtcInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("webrtc_detection_failed"), error);
-	}
-};
-
-/**
- * 收集WebRTC IP地址
- * @returns {Promise<Array<string>>} IP地址列表
- */
-const collectWebRtcIps = async () => {
-	return new Promise((resolve) => {
+const collectWebRtcIps = async () =>
+	new Promise((resolve) => {
 		const ips = [];
 
 		try {
 			const pc = ResourceManager.createRTCPeerConnection({ iceServers: [] });
 			pc.createDataChannel("");
 
-			pc.onicecandidate = (e) => {
-				if (!e || !e.candidate || !e.candidate.candidate) return;
+			pc.onicecandidate = (event) => {
+				if (!event?.candidate?.candidate) return;
 
 				const ipRegex =
 					/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
-				const ipMatch = ipRegex.exec(e.candidate.candidate);
+				const ipMatch = ipRegex.exec(event.candidate.candidate);
 
-				if (ipMatch && ips.indexOf(ipMatch[1]) === -1) {
+				if (ipMatch && !ips.includes(ipMatch[1])) {
 					ips.push(ipMatch[1]);
 				}
 			};
 
 			pc.createOffer()
 				.then((offer) => pc.setLocalDescription(offer))
-				.catch((err) => {
-					console.error(detectI18n.t("webrtc_setlocaldescription_failed"), err);
-					// 确保Promise链正确结束，避免未捕获的异常
+				.catch((error) => {
+					console.error(
+						translateDetect("webrtc_setlocaldescription_failed"),
+						error,
+					);
 				});
 
 			ResourceManager.setTimeout(() => {
@@ -725,85 +726,326 @@ const collectWebRtcIps = async () => {
 			resolve([]);
 		}
 	});
-};
 
-/**
- * 检测部分浏览器指纹信息
- */
-const detectFingerprint = () => {
-	const fingerprintInfoElement = document.getElementById("fingerprintInfo");
-	if (!fingerprintInfoElement) return;
-
+const collectWebRtcInfo = async () => {
 	try {
-		const ua = navigator.userAgent || "N/A";
-		const screenRes =
-			`${screen.width}x${screen.height}x${screen.colorDepth}` || "N/A";
-		const timezoneOffset = new Date().getTimezoneOffset();
-		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A";
-
-		fingerprintInfoElement.innerHTML = "";
-		const fragment = document.createDocumentFragment();
-
-		/**
-		 * Helper to add a fingerprint detail
-		 */
-		const addDetail = (
-			title,
-			value,
-			isBold = false,
-			mt = "mt-2",
-			isSmall = false,
-		) => {
-			const titleP = document.createElement("p");
-			titleP.className = `mb-1 ${mt}`;
-			const strongTitle = document.createElement("strong");
-			strongTitle.textContent = title;
-			titleP.appendChild(strongTitle);
-			fragment.appendChild(titleP);
-
-			const valP = document.createElement("p");
-			valP.className = `text-success${isBold ? " fw-bold" : ""}${isSmall ? " small" : ""}`;
-			valP.textContent = value;
-			fragment.appendChild(valP);
+		const ips = await collectWebRtcIps();
+		return {
+			status: ips.length > 0 ? "ok" : "none",
+			ips,
+			ipLeakDetected: ips.length > 0,
+			error: "",
 		};
-
-		addDetail("User Agent:", ua, false, "", true);
-		addDetail("Screen information:", screenRes, true);
-		addDetail("Timezone:", `${timezone} (Offset: ${timezoneOffset})`, true);
-
-		const footerP = document.createElement("p");
-		footerP.className = "mb-0 mt-2 small text-muted";
-		footerP.textContent = detectI18n.t("partial_fingerprint");
-		fragment.appendChild(footerP);
-
-		fingerprintInfoElement.appendChild(fragment);
 	} catch (error) {
-		fingerprintInfoElement.innerHTML = "";
-		const errorP = document.createElement("p");
-		errorP.className = "text-danger";
-		errorP.textContent = `${detectI18n.t("fingerprint")}${detectI18n.t("detection_failed")}: ${error.message}`;
-		fingerprintInfoElement.appendChild(errorP);
-		console.error(detectI18n.t("fingerprint_detection_failed"), error);
+		console.error(translateDetect("webrtc_detection_failed"), error);
+		return {
+			status: "error",
+			ips: [],
+			ipLeakDetected: false,
+			error: error?.message || String(error),
+		};
 	}
 };
 
-/**
- * 添加刷新按钮
- */
-const addRefreshButton = () => {
-	const refreshButton = document.createElement("button");
-	refreshButton.className = "btn btn-primary mt-3";
-	refreshButton.textContent = detectI18n.t("Refresh detection");
-	refreshButton.onclick = runAllDetections;
+const renderWebRtcInfo = (webRtcInfo) => {
+	const webRtcInfoElement = document.getElementById("webRtcInfo");
+	if (!webRtcInfoElement) return;
 
-	// 尝试将刷新按钮添加到特定的 .header-info.mt-4 div
+	webRtcInfoElement.innerHTML = "";
+	const fragment = document.createDocumentFragment();
+
+	if (webRtcInfo.status === "error") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("webrtc_not_supported")}: ${webRtcInfo.error}`;
+		webRtcInfoElement.appendChild(errorP);
+		return;
+	}
+
+	if (webRtcInfo.ips.length > 0) {
+		const titleP = document.createElement("p");
+		titleP.className = "mb-1";
+		const strongTitle = document.createElement("strong");
+		strongTitle.textContent = translateDetect("webrtc_local_ip");
+		titleP.appendChild(strongTitle);
+		fragment.appendChild(titleP);
+
+		const descP = document.createElement("p");
+		descP.className = "small text-muted mb-1";
+		descP.textContent = translateDetect("webrtc_description");
+		fragment.appendChild(descP);
+
+		const list = document.createElement("ul");
+		list.className = "list-unstyled mb-0";
+		webRtcInfo.ips.forEach((ip) => {
+			const item = document.createElement("li");
+			item.className = "text-info fw-bold";
+			item.textContent = ip;
+			list.appendChild(item);
+		});
+		fragment.appendChild(list);
+	} else {
+		const successP = document.createElement("p");
+		successP.className = "text-success";
+		successP.textContent = translateDetect("webrtc_no_ip_detected");
+		fragment.appendChild(successP);
+	}
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("detected_via").replace(
+		"{method}",
+		translateDetect("webrtc_method"),
+	);
+	fragment.appendChild(footerP);
+
+	webRtcInfoElement.appendChild(fragment);
+};
+
+const collectFingerprintInfo = () => {
+	try {
+		const screenInfo = {
+			width: screen.width || 0,
+			height: screen.height || 0,
+			colorDepth: screen.colorDepth || 0,
+		};
+
+		return {
+			status: "ok",
+			userAgent: navigator.userAgent || "N/A",
+			screen: screenInfo,
+			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A",
+			timezoneOffset: new Date().getTimezoneOffset(),
+			error: "",
+		};
+	} catch (error) {
+		console.error(translateDetect("fingerprint_detection_failed"), error);
+		return {
+			status: "error",
+			userAgent: "N/A",
+			screen: { width: 0, height: 0, colorDepth: 0 },
+			timezone: "N/A",
+			timezoneOffset: 0,
+			error: error?.message || String(error),
+		};
+	}
+};
+
+const renderFingerprintInfo = (fingerprintInfo) => {
+	const fingerprintInfoElement = document.getElementById("fingerprintInfo");
+	if (!fingerprintInfoElement) return;
+
+	fingerprintInfoElement.innerHTML = "";
+	if (fingerprintInfo.status !== "ok") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("browser_fingerprint")} ${translateDetect("detection_failed")}: ${fingerprintInfo.error}`;
+		fingerprintInfoElement.appendChild(errorP);
+		return;
+	}
+
+	const fragment = document.createDocumentFragment();
+	const addDetail = (
+		title,
+		value,
+		isBold = false,
+		mt = "mt-2",
+		isSmall = false,
+	) => {
+		const titleP = document.createElement("p");
+		titleP.className = `mb-1 ${mt}`;
+		const strongTitle = document.createElement("strong");
+		strongTitle.textContent = title;
+		titleP.appendChild(strongTitle);
+		fragment.appendChild(titleP);
+
+		const valP = document.createElement("p");
+		valP.className = `text-success${isBold ? " fw-bold" : ""}${isSmall ? " small" : ""}`;
+		valP.textContent = value;
+		fragment.appendChild(valP);
+	};
+
+	addDetail("User Agent:", fingerprintInfo.userAgent, false, "", true);
+	addDetail(
+		"Screen information:",
+		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}`,
+		true,
+	);
+	addDetail(
+		"Timezone:",
+		`${fingerprintInfo.timezone} (Offset: ${fingerprintInfo.timezoneOffset})`,
+		true,
+	);
+
+	const footerP = document.createElement("p");
+	footerP.className = "mb-0 mt-2 small text-muted";
+	footerP.textContent = translateDetect("partial_fingerprint");
+	fragment.appendChild(footerP);
+
+	fingerprintInfoElement.appendChild(fragment);
+};
+
+const collectCompatibilityInfo = () => ({
+	status: "ok",
+	browser: getBrowserInfo(),
+	apiSupport: checkApiSupport(),
+});
+
+const renderCompatibilityInfo = (compatibilityInfo) => {
+	const browserInfoEl = document.getElementById("browserInfoDisplay");
+	const apiListEl = document.getElementById("apiCompatibilityList");
+	if (!browserInfoEl || !apiListEl) return;
+
+	browserInfoEl.textContent = `${compatibilityInfo.browser.name} ${compatibilityInfo.browser.fullVersion} on ${compatibilityInfo.browser.os}`;
+	apiListEl.innerHTML = "";
+
+	compatibilityInfo.apiSupport.forEach((api) => {
+		const listItem = document.createElement("li");
+		listItem.className = `list-group-item d-flex justify-content-between align-items-center ${api.supported ? "list-group-item-success" : "list-group-item-danger"}`;
+
+		const apiNameSpan = document.createElement("span");
+		apiNameSpan.textContent = api.name;
+
+		const badgeSpan = document.createElement("span");
+		badgeSpan.className = `badge ${api.supported ? "bg-success" : "bg-danger"}`;
+		badgeSpan.textContent = api.supported
+			? translateDetect("supported")
+			: translateDetect("not_supported");
+
+		listItem.appendChild(apiNameSpan);
+		listItem.appendChild(badgeSpan);
+		apiListEl.appendChild(listItem);
+	});
+};
+
+const collectExtensionContext = async () => {
+	let currentLanguage = "";
+	let autoSwitchEnabled = false;
+
+	try {
+		if (chrome?.storage?.local?.get) {
+			const result = await chrome.storage.local.get([
+				"currentLanguage",
+				"autoSwitchEnabled",
+			]);
+			currentLanguage = result.currentLanguage || "";
+			autoSwitchEnabled = !!result.autoSwitchEnabled;
+		}
+	} catch (error) {
+		console.warn("Failed to read extension context:", error);
+	}
+
+	let extensionVersion = "unknown";
+	try {
+		extensionVersion = chrome?.runtime?.getManifest?.().version || "unknown";
+	} catch (_error) {}
+
+	return {
+		currentLanguage,
+		autoSwitchEnabled,
+		extensionVersion,
+	};
+};
+
+const buildDetectionSnapshot = (results) => {
+	const snapshotVersion = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+	return {
+		meta: {
+			generatedAt: new Date().toISOString(),
+			snapshotVersion,
+			uiLanguage: getUiLanguage(),
+			extensionVersion: results.extensionContext.extensionVersion,
+		},
+		extension: {
+			currentLanguage: results.extensionContext.currentLanguage,
+			autoSwitchEnabled: results.extensionContext.autoSwitchEnabled,
+		},
+		http: {
+			status: results.headerInfo.status,
+			endpoint: results.headerInfo.endpoint,
+			acceptLanguage: results.headerInfo.acceptLanguage,
+			headers: results.headerInfo.headers,
+			error: results.headerInfo.error,
+		},
+		jsEnv: {
+			language: results.jsLanguageInfo.language,
+			languages: results.jsLanguageInfo.languages,
+			timezone: results.jsLanguageInfo.timezone,
+			timezoneOffset: results.jsLanguageInfo.timezoneOffset,
+		},
+		intl: {
+			dateTimeLocale: results.intlInfo.dateTimeLocale,
+			numberFormatLocale: results.intlInfo.numberFormatLocale,
+		},
+		webrtc: {
+			status: results.webRtcInfo.status,
+			ips: results.webRtcInfo.ips,
+			ipLeakDetected: results.webRtcInfo.ipLeakDetected,
+			error: results.webRtcInfo.error,
+		},
+		browserFingerprint: {
+			userAgent: results.fingerprintInfo.userAgent,
+			screen: results.fingerprintInfo.screen,
+			timezone: results.fingerprintInfo.timezone,
+			timezoneOffset: results.fingerprintInfo.timezoneOffset,
+		},
+		hardwareFingerprint: {
+			canvas: {
+				status: results.canvasFingerprintInfo.status,
+				hash: results.canvasFingerprintInfo.hash,
+				error: results.canvasFingerprintInfo.error,
+			},
+			webgl: {
+				status: results.webglFingerprintInfo.status,
+				hash: results.webglFingerprintInfo.hash,
+				vendor: results.webglFingerprintInfo.vendor,
+				renderer: results.webglFingerprintInfo.renderer,
+				version: results.webglFingerprintInfo.version,
+				shadingLanguageVersion:
+					results.webglFingerprintInfo.shadingLanguageVersion,
+				error: results.webglFingerprintInfo.error,
+			},
+			audio: {
+				status: results.audioFingerprintInfo.status,
+				hash: results.audioFingerprintInfo.hash,
+				error: results.audioFingerprintInfo.error,
+			},
+		},
+		compatibility: {
+			browser: results.compatibilityInfo.browser,
+			apiSupport: results.compatibilityInfo.apiSupport,
+		},
+	};
+};
+
+window.DetectPageContext = {
+	getUiLanguage,
+	translate: translateDetect,
+	createMessageId,
+	getLatestSnapshot: () => latestDetectionSnapshot,
+	getLatestSnapshotVersion: () => latestSnapshotVersion,
+	isDetectionRunning: () => !!detectionRunInFlight,
+	runAllDetections: () => runAllDetections(),
+};
+
+const addRefreshButton = () => {
+	if (document.getElementById("detectRefreshButton")) return;
+
+	const refreshButton = document.createElement("button");
+	refreshButton.id = "detectRefreshButton";
+	refreshButton.className = "btn btn-primary mt-3";
+	refreshButton.textContent = translateDetect("Refresh detection");
+	refreshButton.onclick = () => {
+		runAllDetections();
+	};
+
 	const headerInfoDiv = document.querySelector(".header-info.mt-4");
 	if (headerInfoDiv) {
 		headerInfoDiv.appendChild(refreshButton);
 		return;
 	}
 
-	// 如果特定的div找不到，尝试添加到 class 为 container 的元素内最后一个 class 为 header-info 的元素
 	const container = document.querySelector(".container");
 	if (container) {
 		const allHeaderInfoDivs = container.querySelectorAll(".header-info");
@@ -814,32 +1056,87 @@ const addRefreshButton = () => {
 			return;
 		}
 
-		// 如果还是找不到，就直接附加到 container 的末尾
 		container.appendChild(refreshButton);
-		return;
 	}
 };
 
-/**
- * 运行所有检测
- */
-const runAllDetections = () => {
-	fetchAndDisplayHeaders();
-	detectJsLanguage();
-	detectIntlApi();
-	detectWebRtc();
-	detectFingerprint();
-	detectCanvasFingerprint();
-	detectWebglFingerprint();
-	detectAudioFingerprint();
-	performCompatibilityChecks();
+const runAllDetections = async () => {
+	if (detectionRunInFlight) {
+		return detectionRunInFlight;
+	}
+
+	detectionRunInFlight = (async () => {
+		const extensionContextPromise = collectExtensionContext();
+		const headerInfoPromise = collectHeaderInfo();
+		const webRtcInfoPromise = collectWebRtcInfo();
+		const audioFingerprintInfoPromise = collectAudioFingerprintInfo();
+
+		const jsLanguageInfo = collectJsLanguageInfo();
+		const intlInfo = collectIntlInfo();
+		const fingerprintInfo = collectFingerprintInfo();
+		const canvasFingerprintInfo = collectCanvasFingerprintInfo();
+		const webglFingerprintInfo = collectWebglFingerprintInfo();
+		const compatibilityInfo = collectCompatibilityInfo();
+
+		const [
+			extensionContext,
+			headerInfo,
+			webRtcInfo,
+			audioFingerprintInfo,
+		] = await Promise.all([
+			extensionContextPromise,
+			headerInfoPromise,
+			webRtcInfoPromise,
+			audioFingerprintInfoPromise,
+		]);
+
+		renderHeaderInfo(headerInfo);
+		renderJsLanguageInfo(jsLanguageInfo);
+		renderIntlInfo(intlInfo);
+		renderWebRtcInfo(webRtcInfo);
+		renderFingerprintInfo(fingerprintInfo);
+		renderCanvasFingerprintInfo(canvasFingerprintInfo);
+		renderWebglFingerprintInfo(webglFingerprintInfo);
+		renderAudioFingerprintInfo(audioFingerprintInfo);
+		renderCompatibilityInfo(compatibilityInfo);
+
+		const snapshot = buildDetectionSnapshot({
+			extensionContext,
+			headerInfo,
+			jsLanguageInfo,
+			intlInfo,
+			webRtcInfo,
+			fingerprintInfo,
+			canvasFingerprintInfo,
+			webglFingerprintInfo,
+			audioFingerprintInfo,
+			compatibilityInfo,
+		});
+
+		latestDetectionSnapshot = snapshot;
+		latestSnapshotVersion = snapshot.meta.snapshotVersion;
+		window.latestDetectionSnapshot = latestDetectionSnapshot;
+
+		if (window.DetectAIContext?.isChatContextStale?.()) {
+			window.DetectAIContext.setAIStatus?.("ai_session_expired", "warning");
+		}
+
+		window.DetectAIContext?.updateAIControls?.();
+		return snapshot;
+	})()
+		.catch((error) => {
+			console.error("Detection run failed:", error);
+			throw error;
+		})
+		.finally(() => {
+			detectionRunInFlight = null;
+			window.DetectAIContext?.updateAIControls?.();
+		});
+
+	return detectionRunInFlight;
 };
 
-// 页面加载完成后获取请求头和执行其他检测
 ResourceManager.addEventListener(window, "DOMContentLoaded", () => {
-	// 延迟执行，确保扩展规则已应用
-	ResourceManager.setTimeout(runAllDetections, 1000);
-
-	// 添加刷新按钮
 	addRefreshButton();
+	ResourceManager.setTimeout(runAllDetections, 1000);
 });

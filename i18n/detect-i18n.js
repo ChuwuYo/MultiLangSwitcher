@@ -136,6 +136,108 @@ class DetectI18n extends BaseI18n {
 			completeHeadersTitle.textContent = this.t("complete_headers");
 		}
 
+		const aiDiagnosisTitle = document.querySelector("#aiDiagnosisTitle");
+		if (aiDiagnosisTitle) {
+			aiDiagnosisTitle.textContent = this.t("ai_diagnosis_title");
+		}
+
+		const aiDiagnosisSubtitle = document.querySelector("#aiDiagnosisSubtitle");
+		if (aiDiagnosisSubtitle) {
+			aiDiagnosisSubtitle.textContent = "";
+			aiDiagnosisSubtitle.style.display = "none";
+		}
+
+		const aiConfigSummary = document.querySelector("#aiConfigSummary");
+		if (aiConfigSummary) {
+			aiConfigSummary.textContent = this.t("ai_config_summary");
+		}
+
+		const aiProviderLabel = document.querySelector("#aiProviderLabel");
+		if (aiProviderLabel) {
+			aiProviderLabel.textContent = this.t("ai_provider_label");
+		}
+
+		const aiProviderSelect = document.querySelector("#aiProviderSelect");
+		if (aiProviderSelect) {
+			const providerKeys =
+				window.AIProviderPresetOrder || Object.keys(window.AIProviderPresets || {});
+			aiProviderSelect.innerHTML = "";
+			providerKeys.forEach((providerKey) => {
+				const option = document.createElement("option");
+				option.value = providerKey;
+				const preset = window.AIProviderPresets?.[providerKey];
+				option.textContent = preset?.labelKey
+					? this.t(preset.labelKey)
+					: this.t(`ai_provider_${providerKey}`);
+				aiProviderSelect.appendChild(option);
+			});
+		}
+
+		const aiProviderDescription = document.querySelector(
+			"#aiProviderDescription",
+		);
+		if (aiProviderDescription && !aiProviderDescription.dataset.initialized) {
+			const providerKey = aiProviderSelect?.value || "openrouter";
+			aiProviderDescription.textContent = this.t(
+				`ai_provider_${providerKey}_desc`,
+			);
+		}
+
+		const aiBaseUrlLabel = document.querySelector("#aiBaseUrlLabel");
+		if (aiBaseUrlLabel) {
+			aiBaseUrlLabel.textContent = this.t("ai_base_url_label");
+		}
+
+		const aiApiKeyLabel = document.querySelector("#aiApiKeyLabel");
+		if (aiApiKeyLabel) {
+			aiApiKeyLabel.textContent = this.t("ai_api_key_label");
+		}
+
+		const aiModelLabel = document.querySelector("#aiModelLabel");
+		if (aiModelLabel) {
+			aiModelLabel.textContent = this.t("ai_model_label");
+		}
+
+		const aiApiKeyToggle = document.querySelector("#aiApiKeyToggle");
+		if (aiApiKeyToggle) {
+			aiApiKeyToggle.textContent = this.t("ai_api_key_toggle_show");
+		}
+
+		const aiPrivacyHint = document.querySelector("#aiPrivacyHint");
+		if (aiPrivacyHint) {
+			aiPrivacyHint.textContent = this.t("ai_privacy_hint");
+		}
+
+		const aiStartButton = document.querySelector("#aiStartButton");
+		if (aiStartButton) {
+			aiStartButton.textContent = this.t("ai_start");
+		}
+
+		const aiStopButton = document.querySelector("#aiStopButton");
+		if (aiStopButton) {
+			aiStopButton.textContent = this.t("ai_stop");
+		}
+
+		const aiClearButton = document.querySelector("#aiClearButton");
+		if (aiClearButton) {
+			aiClearButton.textContent = this.t("ai_clear");
+		}
+
+		const aiSendButton = document.querySelector("#aiSendButton");
+		if (aiSendButton) {
+			aiSendButton.textContent = this.t("ai_send");
+		}
+
+		const aiExportButton = document.querySelector("#aiExportButton");
+		if (aiExportButton) {
+			aiExportButton.textContent = this.t("ai_export");
+		}
+
+		const aiUserInput = document.querySelector("#aiUserInput");
+		if (aiUserInput) {
+			aiUserInput.placeholder = this.t("ai_user_input_placeholder");
+		}
+
 		// 处理所有检测中文本
 		const infoElements = [
 			"#headerLanguageInfo",
@@ -166,6 +268,21 @@ class DetectI18n extends BaseI18n {
 		const headerInfo = document.querySelector("#headerInfo");
 		if (headerInfo) {
 			headerInfo.textContent = this.t("loading");
+		}
+
+		const aiChatMessages = document.querySelector("#aiChatMessages");
+		if (aiChatMessages && !aiChatMessages.dataset.initialized) {
+			aiChatMessages.textContent = this.t("ai_chat_placeholder");
+		}
+
+		const aiChatStatus = document.querySelector("#aiChatStatus");
+		if (aiChatStatus && !aiChatStatus.dataset.initialized) {
+			aiChatStatus.textContent = this.t("ai_config_incomplete");
+		}
+
+		const aiConfigHint = document.querySelector("#aiConfigHint");
+		if (aiConfigHint && !aiConfigHint.dataset.initialized) {
+			aiConfigHint.textContent = this.t("ai_config_incomplete");
 		}
 	}
 }

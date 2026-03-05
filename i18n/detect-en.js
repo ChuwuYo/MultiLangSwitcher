@@ -78,5 +78,84 @@ if (typeof detectEn === "undefined") {
 			"Could not precisely find .header-info for adding refresh button, button has been added to the end of .container.",
 		button_add_failed_no_container:
 			"Could not find .container for adding refresh button.",
+		ai_diagnosis_title: "AI Diagnosis",
+		ai_config_summary: "AI Service Configuration",
+		ai_provider_label: "Preset Provider",
+		ai_provider_openai: "OpenAI",
+		ai_provider_openrouter: "OpenRouter",
+		ai_provider_deepseek: "DeepSeek",
+		ai_provider_gemini: "Gemini",
+		ai_provider_qwen: "DashScope / Qwen",
+		ai_provider_siliconflow: "SiliconFlow",
+		ai_provider_glm: "GLM / Zhipu",
+		ai_provider_kimi: "Kimi / Moonshot",
+		ai_provider_minimax: "MiniMax",
+		ai_provider_custom: "Custom Compatible API",
+		ai_provider_openai_desc:
+			"Official OpenAI endpoint with default Base URL https://api.openai.com/v1. Default model is gpt-5-mini.",
+		ai_provider_openrouter_desc:
+			"Good for routing across many models, with default Base URL https://openrouter.ai/api/v1. Default model is openrouter/free.",
+		ai_provider_deepseek_desc:
+			"Official DeepSeek endpoint with default Base URL https://api.deepseek.com. Default model is deepseek-chat, which DeepSeek documents as the non-thinking V3.2 chat alias.",
+		ai_provider_gemini_desc:
+			"Google's OpenAI-compatible Gemini endpoint uses https://generativelanguage.googleapis.com/v1beta/openai. Default model is gemini-2.5-flash.",
+		ai_provider_qwen_desc:
+			"DashScope OpenAI-compatible endpoint. Default preset uses the Beijing region at https://dashscope.aliyuncs.com/compatible-mode/v1. Default model is qwen3.5-plus. Official docs also list Singapore and Virginia region variants.",
+		ai_provider_siliconflow_desc:
+			"SiliconFlow OpenAI-compatible endpoint with default Base URL https://api.siliconflow.com/v1. Default model is Qwen/Qwen3.5-27B.",
+		ai_provider_glm_desc:
+			"Zhipu GLM's OpenAI-compatible endpoint uses https://open.bigmodel.cn/api/paas/v4. Default model is glm-4.7.",
+		ai_provider_kimi_desc:
+			"Moonshot Kimi's OpenAI-compatible endpoint uses https://api.moonshot.cn/v1. Default model is kimi-k2-0905.",
+		ai_provider_minimax_desc:
+			"MiniMax's OpenAI-compatible endpoint uses https://api.minimax.io/v1 for the international platform, and MiniMax docs note https://api.minimaxi.com/v1 for users in China. Default model is MiniMax-M2.5.",
+		ai_provider_custom_desc:
+			"Keep manual values for any OpenAI-compatible service.",
+		ai_base_url_label: "API Base URL",
+		ai_api_key_label: "API Key",
+		ai_model_label: "Model Name",
+		ai_api_key_toggle_show: "Show",
+		ai_api_key_toggle_hide: "Hide",
+		ai_privacy_hint:
+			"Your API key is stored only in chrome.storage.local. The extension does not upload or sync this setting, and chat history is kept only for this page session.",
+		ai_config_ready: "AI configuration saved. You can start a diagnosis now.",
+		ai_config_incomplete:
+			"Please provide Base URL, API key, and model name to enable AI diagnosis.",
+		ai_config_replace_template:
+			"Replace the template resource name in the endpoint before starting AI diagnosis.",
+		ai_chat_placeholder:
+			"Start AI diagnosis to turn the current detection snapshot into actionable privacy guidance.",
+		ai_user_input_placeholder:
+			"Ask a follow-up, for example: Why does a language/timezone mismatch increase fingerprint risk?",
+		ai_start: "Start AI Diagnosis",
+		ai_stop: "Stop",
+		ai_clear: "Clear Session",
+		ai_send: "Send",
+		ai_export: "Export Markdown",
+		ai_export_empty: "There is no visible chat content to export yet.",
+		ai_export_success: "Chat exported as Markdown.",
+		ai_copy_failed: "Copy failed. Please try again.",
+		ai_role_user: "User",
+		ai_role_assistant: "Assistant",
+		ai_detection_pending:
+			"Detection is still running. Wait for the current environment check to finish before starting AI diagnosis.",
+		ai_session_expired:
+			"The detection snapshot has been refreshed, so the current chat context is stale. Start a new AI diagnosis.",
+		ai_request_in_progress: "AI is generating the diagnosis...",
+		ai_request_stopped: "Generation stopped.",
+		ai_request_failed: "AI request failed: {error}",
+		ai_render_fallback:
+			"Markdown rendering is unavailable, so the response was shown as plain text.",
+		ai_chat_cleared: "Session cleared.",
+		ai_starting:
+			"Starting AI diagnosis from the current detection snapshot...",
+		ai_ready_for_followup:
+			"You can keep asking follow-up questions with the same detection context.",
+		ai_config_missing_runtime:
+			"AI client is unavailable in the current page context. Refresh and try again.",
+		ai_waiting_for_question: "Enter a follow-up question first.",
+		ai_restart_required:
+			"The detection snapshot changed, so the old context is no longer reliable. Start AI diagnosis again.",
+		ai_empty_reply: "The AI service returned no usable content.",
 	};
 } // 结束 if (typeof detectEn === 'undefined') 检查
