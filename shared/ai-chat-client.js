@@ -82,16 +82,10 @@
 			const decoder = new TextDecoder("utf-8");
 			let content = "";
 			let buffer = "";
-
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) {
-					break;
-				}
-
-				buffer += decoder.decode(value, { stream: true });
+			const processBuffer = (chunk, flush = false) => {
+				buffer += chunk;
 				const lines = buffer.split(/\r?\n/);
-				buffer = lines.pop() || "";
+				buffer = flush ? "" : lines.pop() || "";
 
 				for (const rawLine of lines) {
 					const line = rawLine.trim();
@@ -105,7 +99,7 @@
 					}
 
 					if (data === "[DONE]") {
-						return { content, streamed: true };
+						return true;
 					}
 
 					try {
@@ -120,6 +114,22 @@
 					} catch (_error) {
 						// Ignore malformed chunks from providers that mix non-JSON SSE lines.
 					}
+				}
+
+				return false;
+			};
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) {
+					if (processBuffer(decoder.decode(), true)) {
+						return { content, streamed: true };
+					}
+					break;
+				}
+
+				if (processBuffer(decoder.decode(value, { stream: true }))) {
+					return { content, streamed: true };
 				}
 			}
 

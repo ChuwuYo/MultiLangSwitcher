@@ -159,18 +159,10 @@ class DetectI18n extends BaseI18n {
 
 		const aiProviderSelect = document.querySelector("#aiProviderSelect");
 		if (aiProviderSelect) {
-			const providerKeys =
-				window.AIProviderPresetOrder || Object.keys(window.AIProviderPresets || {});
-			aiProviderSelect.innerHTML = "";
-			providerKeys.forEach((providerKey) => {
-				const option = document.createElement("option");
-				option.value = providerKey;
-				const preset = window.AIProviderPresets?.[providerKey];
-				option.textContent = preset?.labelKey
-					? this.t(preset.labelKey)
-					: this.t(`ai_provider_${providerKey}`);
-				aiProviderSelect.appendChild(option);
-			});
+			window.AIProviderPresetUtils?.populateSelectOptions?.(
+				aiProviderSelect,
+				(key) => this.t(key),
+			);
 		}
 
 		const aiProviderDescription = document.querySelector(

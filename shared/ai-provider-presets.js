@@ -85,4 +85,33 @@
 		"minimax",
 		"custom",
 	];
+
+	window.AIProviderPresetUtils = {
+		populateSelectOptions(selectElement, translate) {
+			if (!selectElement) {
+				return;
+			}
+
+			const selectedValue = selectElement.value;
+			selectElement.innerHTML = "";
+
+			window.AIProviderPresetOrder.forEach((providerKey) => {
+				const option = document.createElement("option");
+				const preset = window.AIProviderPresets?.[providerKey];
+				option.value = providerKey;
+				option.textContent =
+					typeof translate === "function" && preset?.labelKey
+						? translate(preset.labelKey)
+						: preset?.labelKey || providerKey;
+				selectElement.appendChild(option);
+			});
+
+			if (
+				selectedValue &&
+				window.AIProviderPresetOrder.includes(selectedValue)
+			) {
+				selectElement.value = selectedValue;
+			}
+		},
+	};
 })();

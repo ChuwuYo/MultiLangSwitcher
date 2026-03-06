@@ -37,15 +37,10 @@
 			return;
 		}
 
-		AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
-			const preset = getProviderPreset(providerKey);
-			const option = document.createElement("option");
-			option.value = providerKey;
-			option.textContent = preset.labelKey
-				? translate(preset.labelKey)
-				: providerKey;
-			providerSelect.appendChild(option);
-		});
+		window.AIProviderPresetUtils?.populateSelectOptions?.(
+			providerSelect,
+			translate,
+		);
 	};
 
 	const getAiElements = () => ({
@@ -911,7 +906,7 @@
 			await copyTextToClipboard(message.content);
 			if (button) {
 				window.CopyButton?.setCopiedState(button, true);
-				window.setTimeout(() => {
+				ResourceManager.setTimeout(() => {
 					window.CopyButton?.setCopiedState(button, false);
 				}, 1200);
 			}
@@ -932,7 +927,6 @@
 			}
 
 			input.addEventListener("change", persistAIConfig);
-			input.addEventListener("blur", persistAIConfig);
 		});
 	};
 
