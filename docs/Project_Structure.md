@@ -1,5 +1,3 @@
-# 项目结构
-
 ```
 MultiLangSwitcher/
 ├── LICENSE                          - 许可证文件
@@ -12,6 +10,10 @@ MultiLangSwitcher/
 │   ├── Project_Structure.md         - 项目结构文档（完整的文件结构说明）
 │   └── TODO.md                      - 待完成功能和改进项目
 ├── shared/                          - 共享资源目录
+│   ├── ai-chat-client.js            - OpenAI 兼容聊天客户端与流式输出解析
+│   ├── ai-provider-presets.js       - AI 服务商预设列表与默认模型配置
+│   ├── copy-button.css              - 共享复制按钮组件样式
+│   ├── copy-button.js               - 共享复制按钮组件
 │   ├── shared-actions.js            - 共享常量定义
 │   ├── shared-utils.js              - 共享工具函数
 │   ├── shared-i18n-base.js          - 基础国际化类
@@ -19,7 +21,11 @@ MultiLangSwitcher/
 │   ├── shared-language-options.js   - 共享语言选项列表
 │   ├── header-check-utils.js        - 请求头检查工具函数
 │   ├── shared-resource-manager.js   - 共享资源管理器
-│   └── theme-init.js                - 主题初始化脚本
+│   ├── md5.js                       - MD5 哈希函数
+│   ├── theme-init.js                - 主题初始化脚本
+│   └── vendor/                      - 第三方前端库
+│       ├── marked.umd.min.js        - Markdown 渲染库
+│       └── purify.min.js            - HTML 净化库（DOMPurify）
 ├── fonts/                           - 字体资源目录
 ├── i18n/                            - 国际化文本资源目录
 │   ├── background-en.js             - 后台页面英文文本
@@ -41,8 +47,9 @@ MultiLangSwitcher/
 ├── manifest.json                    - 扩展配置清单文件
 ├── popup.html                       - 扩展弹窗页面
 ├── popup.js                         - 弹窗交互逻辑脚本
-├── detect.html                      - 请求头测试页面
-├── detect.js                        - 请求头测试脚本
+├── detect.html                      - 环境检测与 AI 诊断页面
+├── detect.js                        - detect 页面环境采集、结果渲染与快照生成
+├── detect-ai.js                     - detect 页面 AI 配置、聊天、导出与 Prompt 逻辑
 ├── toggle.css                       - 切换按钮样式文件
 ├── toggle.js                        - 切换按钮交互脚本
 ├── domain-rules-manager.js          - 域名规则管理模块

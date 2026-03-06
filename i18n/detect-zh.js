@@ -28,6 +28,22 @@ if (typeof detectZh === "undefined") {
 		partial_fingerprint: "部分浏览器指纹信息",
 		supported: "支持",
 		not_supported: "不支持",
+		navigator_language_label: "navigator.language:",
+		navigator_languages_label: "navigator.languages:",
+		canvas_hash_label: "Canvas hash:",
+		webgl_hash_label: "WebGL hash:",
+		webgl_unmasked_vendor_label: "WebGL unmasked vendor:",
+		webgl_unmasked_renderer_label: "WebGL unmasked renderer:",
+		webgl_version_label: "WebGL 版本:",
+		webgl_shading_language_version_label: "Shading Language Version:",
+		audio_context_hash_label: "AudioContext hash:",
+		datetime_format_locale_label: "DateTimeFormat 区域设置:",
+		number_format_locale_label: "NumberFormat 区域设置:",
+		user_agent_label: "User Agent:",
+		screen_information_label: "屏幕信息:",
+		timezone_label: "时区:",
+		offset_label: "偏移:",
+		on_connector: "运行于",
 		"Refresh detection": "刷新检测信息",
 		request_header_method: "请求头",
 		javascript_method: "JavaScript",
@@ -73,5 +89,80 @@ if (typeof detectZh === "undefined") {
 		button_add_failed_container:
 			"未能精确找到 .header-info 用于附加刷新按钮，按钮已附加到 .container 末尾。",
 		button_add_failed_no_container: "未能找到 .container 用于附加刷新按钮。",
+		ai_diagnosis_title: "AI 诊断",
+		ai_config_summary: "AI 服务配置",
+		ai_provider_label: "预设平台",
+		ai_provider_openai: "OpenAI",
+		ai_provider_openrouter: "OpenRouter",
+		ai_provider_deepseek: "DeepSeek",
+		ai_provider_gemini: "Gemini",
+		ai_provider_qwen: "阿里云百炼 / Qwen",
+		ai_provider_siliconflow: "SiliconFlow",
+		ai_provider_glm: "GLM / 智谱",
+		ai_provider_kimi: "Kimi / Moonshot",
+		ai_provider_minimax: "MiniMax",
+		ai_provider_custom: "自定义兼容接口",
+		ai_provider_openai_desc:
+			"官方 OpenAI 接口，默认 Base URL 为 https://api.openai.com/v1，默认模型为 gpt-5-mini。",
+		ai_provider_openrouter_desc:
+			"适合统一接入多家模型，默认 Base URL 为 https://openrouter.ai/api/v1，默认模型为 openrouter/free。",
+		ai_provider_deepseek_desc:
+			"DeepSeek 官方接口当前文档主地址为 https://api.deepseek.com；默认模型为 deepseek-chat，官方将其说明为 V3.2 的非思考聊天别名。",
+		ai_provider_gemini_desc:
+			"Google Gemini 的 OpenAI 兼容入口为 https://generativelanguage.googleapis.com/v1beta/openai，默认模型为 gemini-2.5-flash。",
+		ai_provider_qwen_desc:
+			"阿里云百炼 OpenAI 兼容接口。默认预设为北京地域 https://dashscope.aliyuncs.com/compatible-mode/v1，默认模型为 qwen3.5-plus，官方还提供新加坡和美国（弗吉尼亚）地域变体。",
+		ai_provider_siliconflow_desc:
+			"SiliconFlow OpenAI 兼容接口当前文档地址为 https://api.siliconflow.com/v1，默认模型为 Qwen/Qwen3.5-27B。",
+		ai_provider_glm_desc:
+			"智谱 GLM 的 OpenAI 兼容入口为 https://open.bigmodel.cn/api/paas/v4，默认模型为 glm-4.7。",
+		ai_provider_kimi_desc:
+			"Moonshot Kimi 的 OpenAI 兼容入口为 https://api.moonshot.cn/v1，默认模型为 kimi-k2-0905。",
+		ai_provider_minimax_desc:
+			"MiniMax 的 OpenAI 兼容入口国际站为 https://api.minimax.io/v1；官方也说明中国区可使用 https://api.minimaxi.com/v1。默认模型为 MiniMax-M2.5。",
+		ai_provider_custom_desc:
+			"保持手动填写，适用于任意 OpenAI 兼容服务。",
+		ai_base_url_label: "API Base URL",
+		ai_api_key_label: "API Key",
+		ai_model_label: "模型名称",
+		ai_api_key_toggle_show: "显示",
+		ai_api_key_toggle_hide: "隐藏",
+		ai_privacy_hint:
+			"您的 API Key 仅保存在 chrome.storage.local，本扩展不会上传或同步该配置；聊天记录只保留在当前页面。",
+		ai_config_ready: "AI 配置已保存，可开始诊断。",
+		ai_config_incomplete: "请填写完整的 Base URL、API Key 和模型名称。",
+		ai_config_replace_template:
+			"请先把地址中的模板资源名替换成您自己的实际资源名，再开始 AI 诊断。",
+		ai_chat_placeholder:
+			"点击“开始 AI 诊断”后，AI 会基于当前检测快照给出风险分析。",
+		ai_user_input_placeholder: "继续追问，例如：为什么语言和时区不一致会增加指纹风险？",
+		ai_start: "开始 AI 诊断",
+		ai_stop: "停止生成",
+		ai_clear: "清空会话",
+		ai_send: "发送",
+		ai_export: "导出 Markdown",
+		ai_user_input_label: "追问内容",
+		ai_export_empty: "当前还没有可导出的可见对话内容。",
+		ai_export_success: "对话已导出为 Markdown。",
+		ai_copy_failed: "复制失败，请重试。",
+		ai_role_user: "用户",
+		ai_role_assistant: "助手",
+		ai_detection_pending: "检测尚未完成，请等待当前环境检测结束后再开始 AI 诊断。",
+		ai_session_expired:
+			"检测结果已刷新，当前会话上下文已过期。请重新点击“开始 AI 诊断”。",
+		ai_request_in_progress: "AI 正在生成诊断结果...",
+		ai_request_stopped: "已停止生成。",
+		ai_request_failed: "AI 请求失败：{error}",
+		ai_render_fallback:
+			"Markdown 渲染库不可用，已回退为纯文本显示。",
+		ai_chat_cleared: "会话已清空。",
+		ai_starting: "正在基于当前检测快照启动 AI 诊断...",
+		ai_ready_for_followup: "可以继续追问，AI 会沿用本次检测上下文。",
+		ai_config_missing_runtime:
+			"当前环境无法访问 AI 客户端，请刷新页面后重试。",
+		ai_waiting_for_question: "请输入追问内容。",
+		ai_restart_required:
+			"检测快照已变化，旧上下文不再可靠。请重新开始 AI 诊断。",
+		ai_empty_reply: "AI 没有返回有效内容。",
 	};
 } // 结束 if (typeof detectZh === 'undefined') 检查

@@ -1,0 +1,97 @@
+.ai-chat-message-copy {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	opacity: 0.72;
+	z-index: 2;
+}
+
+.copy {
+	--button-bg: rgba(53, 52, 52, 0.38);
+	--button-hover-bg: rgba(70, 70, 70, 0.62);
+	--button-text-color: rgba(255, 255, 255, 0.86);
+	--button-hover-text-color: #8bb9fe;
+	--button-border-radius: 7px;
+	--button-diameter: 24px;
+	--button-outline-width: 1px;
+	--button-outline-color: rgba(141, 141, 141, 0.7);
+	--tooltip-bg: #f4f3f3;
+	--toolptip-border-radius: 4px;
+	--tooltip-font-family: Menlo, Roboto Mono, monospace;
+	--tooltip-font-size: 11px;
+	--tootip-text-color: rgb(50, 50, 50);
+	--tooltip-padding-x: 6px;
+	--tooltip-padding-y: 6px;
+	--tooltip-offset: 8px;
+	box-sizing: border-box;
+	width: var(--button-diameter);
+	height: var(--button-diameter);
+	border-radius: var(--button-border-radius);
+	background-color: var(--button-bg);
+	color: var(--button-text-color);
+	border: none;
+	cursor: pointer;
+	outline: none;
+	backdrop-filter: blur(4px);
+}
+
+.copy[disabled] {
+	cursor: default;
+	opacity: 0.55;
+}
+
+.copy .tooltip {
+	display: none;
+}
+
+.copy svg {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.copy .clipboard {
+	width: 14px;
+	height: 14px;
+}
+
+.copy .checkmark {
+	display: none;
+	width: 13px;
+	height: 13px;
+}
+
+.copy.is-copied .clipboard {
+	display: none;
+}
+
+.copy.is-copied .checkmark {
+	display: block;
+}
+
+.copy:hover:not([disabled]),
+.copy:focus-visible:not([disabled]),
+.copy.is-copied {
+	background-color: var(--button-hover-bg);
+}
+
+.copy:active:not([disabled]) {
+	outline: var(--button-outline-width) solid var(--button-outline-color);
+}
+
+.copy:hover:not([disabled]) svg,
+.copy:focus-visible:not([disabled]) svg,
+.copy.is-copied svg {
+	color: var(--button-hover-text-color);
+}
+
+html[data-bs-theme="dark"] .copy {
+	--button-bg: rgba(32, 37, 43, 0.52);
+	--button-hover-bg: rgba(42, 49, 57, 0.7);
+	--button-text-color: rgba(233, 239, 245, 0.9);
+	--button-hover-text-color: #93c5fd;
+	--button-outline-color: rgba(99, 112, 126, 0.72);
+	--tooltip-bg: #f3f4f6;
+	--tootip-text-color: rgb(31, 41, 55);
+}
