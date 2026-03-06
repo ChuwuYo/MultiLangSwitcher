@@ -310,7 +310,7 @@ const renderJsLanguageInfo = (jsLanguageInfo) => {
 	const langTitleP = document.createElement("p");
 	langTitleP.className = "mb-1";
 	const strongLang = document.createElement("strong");
-	strongLang.textContent = "navigator.language:";
+	strongLang.textContent = translateDetect("navigator_language_label");
 	langTitleP.appendChild(strongLang);
 	fragment.appendChild(langTitleP);
 
@@ -322,7 +322,7 @@ const renderJsLanguageInfo = (jsLanguageInfo) => {
 	const langsTitleP = document.createElement("p");
 	langsTitleP.className = "mb-1 mt-2";
 	const strongLangs = document.createElement("strong");
-	strongLangs.textContent = "navigator.languages:";
+	strongLangs.textContent = translateDetect("navigator_languages_label");
 	langsTitleP.appendChild(strongLangs);
 	fragment.appendChild(langsTitleP);
 
@@ -393,7 +393,7 @@ const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
 	const hashTitleP = document.createElement("p");
 	hashTitleP.className = "mb-1";
 	const strongHash = document.createElement("strong");
-	strongHash.textContent = "Canvas hash:";
+	strongHash.textContent = translateDetect("canvas_hash_label");
 	hashTitleP.appendChild(strongHash);
 	fragment.appendChild(hashTitleP);
 
@@ -501,12 +501,18 @@ const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 		fragment.appendChild(valP);
 	};
 
-	addDetail("WebGL hash:", webglFingerprintInfo.hash, true, "");
-	addDetail("WebGL unmasked vendor:", webglFingerprintInfo.vendor);
-	addDetail("WebGL unmasked renderer:", webglFingerprintInfo.renderer);
-	addDetail("WebGL version:", webglFingerprintInfo.version);
+	addDetail(translateDetect("webgl_hash_label"), webglFingerprintInfo.hash, true, "");
 	addDetail(
-		"Shading Language Version:",
+		translateDetect("webgl_unmasked_vendor_label"),
+		webglFingerprintInfo.vendor,
+	);
+	addDetail(
+		translateDetect("webgl_unmasked_renderer_label"),
+		webglFingerprintInfo.renderer,
+	);
+	addDetail(translateDetect("webgl_version_label"), webglFingerprintInfo.version);
+	addDetail(
+		translateDetect("webgl_shading_language_version_label"),
 		webglFingerprintInfo.shadingLanguageVersion,
 	);
 
@@ -599,7 +605,7 @@ const renderAudioFingerprintInfo = (audioFingerprintInfo) => {
 	const hashTitleP = document.createElement("p");
 	hashTitleP.className = "mb-1";
 	const strongHash = document.createElement("strong");
-	strongHash.textContent = "AudioContext hash:";
+	strongHash.textContent = translateDetect("audio_context_hash_label");
 	hashTitleP.appendChild(strongHash);
 	fragment.appendChild(hashTitleP);
 
@@ -656,7 +662,7 @@ const renderIntlInfo = (intlInfo) => {
 	const dtTitleP = document.createElement("p");
 	dtTitleP.className = "mb-1";
 	const strongDt = document.createElement("strong");
-	strongDt.textContent = "DateTimeFormat Locale:";
+	strongDt.textContent = translateDetect("datetime_format_locale_label");
 	dtTitleP.appendChild(strongDt);
 	fragment.appendChild(dtTitleP);
 
@@ -668,7 +674,7 @@ const renderIntlInfo = (intlInfo) => {
 	const nfTitleP = document.createElement("p");
 	nfTitleP.className = "mb-1 mt-2";
 	const strongNf = document.createElement("strong");
-	strongNf.textContent = "NumberFormat Locale:";
+	strongNf.textContent = translateDetect("number_format_locale_label");
 	nfTitleP.appendChild(strongNf);
 	fragment.appendChild(nfTitleP);
 
@@ -693,7 +699,23 @@ const collectWebRtcIps = async () =>
 		const ips = [];
 
 		try {
+			if (typeof ResourceManager.createRTCPeerConnection !== "function") {
+				resolve({
+					unsupported: true,
+					error: translateDetect("webrtc_not_supported"),
+				});
+				return;
+			}
+
 			const pc = ResourceManager.createRTCPeerConnection({ iceServers: [] });
+			if (!pc) {
+				resolve({
+					unsupported: true,
+					error: translateDetect("webrtc_not_supported"),
+				});
+				return;
+			}
+
 			pc.createDataChannel("");
 
 			pc.onicecandidate = (event) => {
@@ -719,17 +741,30 @@ const collectWebRtcIps = async () =>
 
 			ResourceManager.setTimeout(() => {
 				ResourceManager.closeRTCPeerConnection(pc);
-				resolve(ips);
+				resolve({ ips, unsupported: false, error: "" });
 			}, 1000);
 		} catch (error) {
 			console.error("WebRTC collection error:", error);
-			resolve([]);
+			resolve({
+				unsupported: true,
+				error: error?.message || String(error),
+			});
 		}
 	});
 
 const collectWebRtcInfo = async () => {
 	try {
-		const ips = await collectWebRtcIps();
+		const result = await collectWebRtcIps();
+		if (result?.unsupported) {
+			return {
+				status: "unsupported",
+				ips: [],
+				ipLeakDetected: false,
+				error: result.error || translateDetect("webrtc_not_supported"),
+			};
+		}
+
+		const ips = result?.ips || [];
 		return {
 			status: ips.length > 0 ? "ok" : "none",
 			ips,
@@ -754,7 +789,7 @@ const renderWebRtcInfo = (webRtcInfo) => {
 	webRtcInfoElement.innerHTML = "";
 	const fragment = document.createDocumentFragment();
 
-	if (webRtcInfo.status === "error") {
+	if (webRtcInfo.status === "error" || webRtcInfo.status === "unsupported") {
 		const errorP = document.createElement("p");
 		errorP.className = "text-danger";
 		errorP.textContent = `${translateDetect("webrtc_not_supported")}: ${webRtcInfo.error}`;
@@ -865,15 +900,15 @@ const renderFingerprintInfo = (fingerprintInfo) => {
 		fragment.appendChild(valP);
 	};
 
-	addDetail("User Agent:", fingerprintInfo.userAgent, false, "", true);
+	addDetail(translateDetect("user_agent_label"), fingerprintInfo.userAgent, false, "", true);
 	addDetail(
-		"Screen information:",
+		translateDetect("screen_information_label"),
 		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}`,
 		true,
 	);
 	addDetail(
-		"Timezone:",
-		`${fingerprintInfo.timezone} (Offset: ${fingerprintInfo.timezoneOffset})`,
+		translateDetect("timezone_label"),
+		`${fingerprintInfo.timezone} (${translateDetect("offset_label")} ${fingerprintInfo.timezoneOffset})`,
 		true,
 	);
 
@@ -896,7 +931,7 @@ const renderCompatibilityInfo = (compatibilityInfo) => {
 	const apiListEl = document.getElementById("apiCompatibilityList");
 	if (!browserInfoEl || !apiListEl) return;
 
-	browserInfoEl.textContent = `${compatibilityInfo.browser.name} ${compatibilityInfo.browser.fullVersion} on ${compatibilityInfo.browser.os}`;
+	browserInfoEl.textContent = `${compatibilityInfo.browser.name} ${compatibilityInfo.browser.fullVersion} ${translateDetect("on_connector")} ${compatibilityInfo.browser.os}`;
 	apiListEl.innerHTML = "";
 
 	compatibilityInfo.apiSupport.forEach((api) => {

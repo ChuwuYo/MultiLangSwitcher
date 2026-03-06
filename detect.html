@@ -146,8 +146,12 @@
       flex-wrap: wrap;
     }
 
-    .ai-chat-composer textarea {
+    .ai-chat-composer-main {
       flex: 1 1 420px;
+    }
+
+    .ai-chat-composer textarea {
+      width: 100%;
       min-height: 96px;
       resize: vertical;
     }
@@ -227,11 +231,14 @@
               <button class="btn btn-outline-secondary" type="button" id="aiClearButton"></button>
             </div>
 
-            <div class="ai-chat-messages mb-3" id="aiChatMessages" aria-live="polite"></div>
-            <div class="small text-muted mb-3" id="aiChatStatus"></div>
+            <div class="ai-chat-messages mb-3" id="aiChatMessages"></div>
+            <div class="small text-muted mb-3" id="aiChatStatus" aria-live="polite" role="status"></div>
 
             <div class="ai-chat-composer">
-              <textarea class="form-control" id="aiUserInput"></textarea>
+              <div class="ai-chat-composer-main">
+                <label class="visually-hidden" for="aiUserInput" id="aiUserInputLabel"></label>
+                <textarea class="form-control" id="aiUserInput"></textarea>
+              </div>
               <div class="ai-chat-composer-actions">
                 <button class="btn btn-success" type="button" id="aiSendButton"></button>
                 <button class="btn btn-outline-secondary" type="button" id="aiExportButton"></button>

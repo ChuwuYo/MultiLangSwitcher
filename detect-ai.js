@@ -65,6 +65,47 @@
 	const getVisibleChatMessages = () =>
 		aiSessionState.messages.filter((message) => message.visible !== false);
 
+	const sanitizeSnapshotForAI = (snapshot) => {
+		if (!snapshot) {
+			return snapshot;
+		}
+
+		const sanitized = JSON.parse(JSON.stringify(snapshot));
+
+		if (sanitized.http) {
+			sanitized.http.headers = {
+				redacted: true,
+				headerNames: Object.keys(snapshot.http?.headers || {}),
+			};
+		}
+
+		if (sanitized.webrtc) {
+			sanitized.webrtc.ips = Array.isArray(snapshot.webrtc?.ips)
+				? snapshot.webrtc.ips.map(() => "[redacted]")
+				: [];
+		}
+
+		if (sanitized.browserFingerprint) {
+			sanitized.browserFingerprint.userAgent = "[redacted]";
+		}
+
+		if (sanitized.hardwareFingerprint?.canvas) {
+			sanitized.hardwareFingerprint.canvas.hash = "[redacted]";
+		}
+
+		if (sanitized.hardwareFingerprint?.webgl) {
+			sanitized.hardwareFingerprint.webgl.hash = "[redacted]";
+			sanitized.hardwareFingerprint.webgl.vendor = "[redacted]";
+			sanitized.hardwareFingerprint.webgl.renderer = "[redacted]";
+		}
+
+		if (sanitized.hardwareFingerprint?.audio) {
+			sanitized.hardwareFingerprint.audio.hash = "[redacted]";
+		}
+
+		return sanitized;
+	};
+
 	const setStatusToneClass = (element, tone) => {
 		if (!element) {
 			return;
@@ -602,6 +643,8 @@
 	};
 
 	const buildInitialPrompt = (snapshot) => {
+		const sanitizedSnapshot = sanitizeSnapshotForAI(snapshot);
+
 		if (getUiLanguage() === "zh") {
 			return [
 				"请基于下面这份浏览器环境检测快照做一次中性的结果解读。",
@@ -610,7 +653,7 @@
 				"如果某些信号在检测页里属于常见现象，请明确写出“这是常见现象，不代表真实网站一定存在问题”。",
 				"不要重复整段 JSON，只提炼真正重要的点。",
 				"",
-				JSON.stringify(snapshot, null, 2),
+				JSON.stringify(sanitizedSnapshot, null, 2),
 			].join("\n");
 		}
 
@@ -621,7 +664,7 @@
 			"If a signal is common on a detect page, explicitly say it is common and does not automatically mean a real website problem.",
 			"Do not repeat the full JSON; extract only the important points.",
 			"",
-			JSON.stringify(snapshot, null, 2),
+			JSON.stringify(sanitizedSnapshot, null, 2),
 		].join("\n");
 	};
 

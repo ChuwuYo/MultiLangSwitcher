@@ -40,7 +40,24 @@
 			return;
 		}
 
+		if (!button.dataset.originalAriaLabel) {
+			button.dataset.originalAriaLabel =
+				button.getAttribute("aria-label") || "Copy";
+		}
+
+		if (!button.dataset.copiedAriaLabel) {
+			const tooltip = button.querySelector(".tooltip");
+			button.dataset.copiedAriaLabel =
+				tooltip?.dataset?.textEnd || button.dataset.originalAriaLabel;
+		}
+
 		button.classList.toggle("is-copied", !!isCopied);
+		button.setAttribute(
+			"aria-label",
+			isCopied
+				? button.dataset.copiedAriaLabel
+				: button.dataset.originalAriaLabel,
+		);
 	};
 
 	const setDisabled = (button, disabled) => {

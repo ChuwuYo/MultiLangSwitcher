@@ -170,9 +170,10 @@ class DetectI18n extends BaseI18n {
 		);
 		if (aiProviderDescription && !aiProviderDescription.dataset.initialized) {
 			const providerKey = aiProviderSelect?.value || "openrouter";
-			aiProviderDescription.textContent = this.t(
-				`ai_provider_${providerKey}_desc`,
-			);
+			const preset = window.AIProviderPresets?.[providerKey];
+			aiProviderDescription.textContent = preset?.descriptionKey
+				? this.t(preset.descriptionKey)
+				: "";
 		}
 
 		const aiBaseUrlLabel = document.querySelector("#aiBaseUrlLabel");
@@ -226,8 +227,13 @@ class DetectI18n extends BaseI18n {
 		}
 
 		const aiUserInput = document.querySelector("#aiUserInput");
+		const aiUserInputLabel = document.querySelector("#aiUserInputLabel");
+		if (aiUserInputLabel) {
+			aiUserInputLabel.textContent = this.t("ai_user_input_label");
+		}
 		if (aiUserInput) {
 			aiUserInput.placeholder = this.t("ai_user_input_placeholder");
+			aiUserInput.setAttribute("aria-label", this.t("ai_user_input_label"));
 		}
 
 		// 处理所有检测中文本
@@ -269,12 +275,12 @@ class DetectI18n extends BaseI18n {
 
 		const aiChatStatus = document.querySelector("#aiChatStatus");
 		if (aiChatStatus && !aiChatStatus.dataset.initialized) {
-			aiChatStatus.textContent = this.t("ai_config_incomplete");
+			aiChatStatus.textContent = "";
 		}
 
 		const aiConfigHint = document.querySelector("#aiConfigHint");
 		if (aiConfigHint && !aiConfigHint.dataset.initialized) {
-			aiConfigHint.textContent = this.t("ai_config_incomplete");
+			aiConfigHint.textContent = "";
 		}
 	}
 }
