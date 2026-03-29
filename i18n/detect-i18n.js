@@ -216,6 +216,13 @@ class DetectI18n extends BaseI18n {
 			aiClearButton.textContent = this.t("ai_clear");
 		}
 
+		const aiExportStructuredButton = document.querySelector(
+			"#aiExportStructuredButton",
+		);
+		if (aiExportStructuredButton) {
+			aiExportStructuredButton.textContent = this.t("ai_export_structured");
+		}
+
 		const aiSendButton = document.querySelector("#aiSendButton");
 		if (aiSendButton) {
 			aiSendButton.textContent = this.t("ai_send");

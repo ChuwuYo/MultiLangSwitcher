@@ -55,6 +55,9 @@
 		startButton: document.getElementById("aiStartButton"),
 		stopButton: document.getElementById("aiStopButton"),
 		clearButton: document.getElementById("aiClearButton"),
+		exportStructuredButton: document.getElementById(
+			"aiExportStructuredButton",
+		),
 		messagesContainer: document.getElementById("aiChatMessages"),
 		status: document.getElementById("aiChatStatus"),
 		userInput: document.getElementById("aiUserInput"),
@@ -533,6 +536,257 @@
 			.join("\n\n");
 	};
 
+	const formatMarkdownValue = (value) => {
+		if (value === null || value === undefined || value === "") {
+			return "N/A";
+		}
+
+		if (Array.isArray(value)) {
+			if (value.length === 0) {
+				return "N/A";
+			}
+
+			const hasObjectItem = value.some(
+				(item) => item && typeof item === "object",
+			);
+			if (hasObjectItem) {
+				return {
+					block: `\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``,
+				};
+			}
+
+			return value.join(", ");
+		}
+
+		if (typeof value === "boolean") {
+			return value ? "true" : "false";
+		}
+
+		if (typeof value === "object") {
+			return {
+				block: `\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``,
+			};
+		}
+
+		return String(value);
+	};
+
+	const buildMarkdownEntry = (label, value) => {
+		const formattedValue = formatMarkdownValue(value);
+		if (formattedValue && typeof formattedValue === "object") {
+			return `- ${label}:\n\n${formattedValue.block}`;
+		}
+
+		return `- ${label}: ${formattedValue}`;
+	};
+
+	const getStructuredExportLabels = () => {
+		if (getUiLanguage() === "zh") {
+			return {
+				title: translate("ai_export_structured"),
+				generatedAt: "生成时间",
+				snapshotVersion: "快照版本",
+				uiLanguage: "界面语言",
+				extensionVersion: "扩展版本",
+				extension: "扩展状态",
+				currentLanguage: "当前语言",
+				autoSwitchEnabled: "自动切换已启用",
+				http: "HTTP",
+				status: "状态",
+				endpoint: "接口地址",
+				acceptLanguage: "Accept-Language",
+				error: "错误",
+				headers: "请求头",
+				jsEnv: "JavaScript 环境",
+				navigatorLanguage: "navigator.language",
+				navigatorLanguages: "navigator.languages",
+				timezone: "时区",
+				timezoneOffset: "时区偏移",
+				intl: "Intl",
+				dateTimeLocale: "DateTimeFormat 区域设置",
+				numberFormatLocale: "NumberFormat 区域设置",
+				webrtc: "WebRTC",
+				ipLeakDetected: "检测到 IP 泄露",
+				ips: "IP 列表",
+				browserFingerprint: "浏览器指纹",
+				userAgent: "User Agent",
+				screen: "屏幕信息",
+				hardwareFingerprint: "硬件指纹",
+				canvas: "Canvas",
+				webgl: "WebGL",
+				audio: "Audio",
+				compatibility: "兼容性",
+				browser: "浏览器",
+				apiSupport: "API 支持",
+			};
+		}
+
+		return {
+			title: translate("ai_export_structured"),
+			generatedAt: "Generated At",
+			snapshotVersion: "Snapshot Version",
+			uiLanguage: "UI Language",
+			extensionVersion: "Extension Version",
+			extension: "Extension",
+			currentLanguage: "Current Language",
+			autoSwitchEnabled: "Auto Switch Enabled",
+			http: "HTTP",
+			status: "Status",
+			endpoint: "Endpoint",
+			acceptLanguage: "Accept-Language",
+			error: "Error",
+			headers: "Headers",
+			jsEnv: "JavaScript Environment",
+			navigatorLanguage: "navigator.language",
+			navigatorLanguages: "navigator.languages",
+			timezone: "Timezone",
+			timezoneOffset: "Timezone Offset",
+			intl: "Intl",
+			dateTimeLocale: "DateTimeFormat Locale",
+			numberFormatLocale: "NumberFormat Locale",
+			webrtc: "WebRTC",
+			ipLeakDetected: "IP Leak Detected",
+			ips: "IPs",
+			browserFingerprint: "Browser Fingerprint",
+			userAgent: "User Agent",
+			screen: "Screen",
+			hardwareFingerprint: "Hardware Fingerprint",
+			canvas: "Canvas",
+			webgl: "WebGL",
+			audio: "Audio",
+			compatibility: "Compatibility",
+			browser: "Browser",
+			apiSupport: "API Support",
+		};
+	};
+
+	const buildStructuredSnapshotMarkdown = (snapshot) => {
+		const sanitizedSnapshot = sanitizeSnapshotForAI(snapshot);
+		if (!sanitizedSnapshot) {
+			return "";
+		}
+
+		const labels = getStructuredExportLabels();
+
+		const sections = [
+			`# ${labels.title}`,
+			"",
+			buildMarkdownEntry(labels.generatedAt, sanitizedSnapshot.meta?.generatedAt),
+			buildMarkdownEntry(
+				labels.snapshotVersion,
+				sanitizedSnapshot.meta?.snapshotVersion,
+			),
+			buildMarkdownEntry(labels.uiLanguage, sanitizedSnapshot.meta?.uiLanguage),
+			buildMarkdownEntry(
+				labels.extensionVersion,
+				sanitizedSnapshot.meta?.extensionVersion,
+			),
+			"",
+			`## ${labels.extension}`,
+			"",
+			buildMarkdownEntry(
+				labels.currentLanguage,
+				sanitizedSnapshot.extension?.currentLanguage,
+			),
+			buildMarkdownEntry(
+				labels.autoSwitchEnabled,
+				sanitizedSnapshot.extension?.autoSwitchEnabled,
+			),
+			"",
+			`## ${labels.http}`,
+			"",
+			buildMarkdownEntry(labels.status, sanitizedSnapshot.http?.status),
+			buildMarkdownEntry(labels.endpoint, sanitizedSnapshot.http?.endpoint),
+			buildMarkdownEntry(
+				labels.acceptLanguage,
+				sanitizedSnapshot.http?.acceptLanguage,
+			),
+			buildMarkdownEntry(labels.error, sanitizedSnapshot.http?.error),
+			buildMarkdownEntry(labels.headers, sanitizedSnapshot.http?.headers),
+			"",
+			`## ${labels.jsEnv}`,
+			"",
+			buildMarkdownEntry(
+				labels.navigatorLanguage,
+				sanitizedSnapshot.jsEnv?.language,
+			),
+			buildMarkdownEntry(
+				labels.navigatorLanguages,
+				sanitizedSnapshot.jsEnv?.languages,
+			),
+			buildMarkdownEntry(labels.timezone, sanitizedSnapshot.jsEnv?.timezone),
+			buildMarkdownEntry(
+				labels.timezoneOffset,
+				sanitizedSnapshot.jsEnv?.timezoneOffset,
+			),
+			"",
+			`## ${labels.intl}`,
+			"",
+			buildMarkdownEntry(
+				labels.dateTimeLocale,
+				sanitizedSnapshot.intl?.dateTimeLocale,
+			),
+			buildMarkdownEntry(
+				labels.numberFormatLocale,
+				sanitizedSnapshot.intl?.numberFormatLocale,
+			),
+			"",
+			`## ${labels.webrtc}`,
+			"",
+			buildMarkdownEntry(labels.status, sanitizedSnapshot.webrtc?.status),
+			buildMarkdownEntry(
+				labels.ipLeakDetected,
+				sanitizedSnapshot.webrtc?.ipLeakDetected,
+			),
+			buildMarkdownEntry(labels.ips, sanitizedSnapshot.webrtc?.ips),
+			buildMarkdownEntry(labels.error, sanitizedSnapshot.webrtc?.error),
+			"",
+			`## ${labels.browserFingerprint}`,
+			"",
+			buildMarkdownEntry(
+				labels.userAgent,
+				sanitizedSnapshot.browserFingerprint?.userAgent,
+			),
+			buildMarkdownEntry(
+				labels.screen,
+				sanitizedSnapshot.browserFingerprint?.screen,
+			),
+			buildMarkdownEntry(
+				labels.timezone,
+				sanitizedSnapshot.browserFingerprint?.timezone,
+			),
+			buildMarkdownEntry(
+				labels.timezoneOffset,
+				sanitizedSnapshot.browserFingerprint?.timezoneOffset,
+			),
+			"",
+			`## ${labels.hardwareFingerprint}`,
+			"",
+			buildMarkdownEntry(
+				labels.canvas,
+				sanitizedSnapshot.hardwareFingerprint?.canvas,
+			),
+			buildMarkdownEntry(
+				labels.webgl,
+				sanitizedSnapshot.hardwareFingerprint?.webgl,
+			),
+			buildMarkdownEntry(
+				labels.audio,
+				sanitizedSnapshot.hardwareFingerprint?.audio,
+			),
+			"",
+			`## ${labels.compatibility}`,
+			"",
+			buildMarkdownEntry(labels.browser, sanitizedSnapshot.compatibility?.browser),
+			buildMarkdownEntry(
+				labels.apiSupport,
+				sanitizedSnapshot.compatibility?.apiSupport,
+			),
+		];
+
+		return sections.join("\n");
+	};
+
 	const exportChatAsMarkdown = () => {
 		const markdown = buildExportMarkdown();
 		if (!markdown) {
@@ -551,6 +805,27 @@
 		document.body.removeChild(anchor);
 		URL.revokeObjectURL(downloadUrl);
 		setAIStatus("ai_export_success", "success");
+	};
+
+	const exportStructuredSnapshotAsMarkdown = () => {
+		const snapshot = window.DetectPageContext?.getLatestSnapshot?.();
+		const markdown = buildStructuredSnapshotMarkdown(snapshot);
+		if (!markdown) {
+			setAIStatus("ai_export_structured_empty", "warning");
+			return;
+		}
+
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+		const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+		const downloadUrl = URL.createObjectURL(blob);
+		const anchor = document.createElement("a");
+		anchor.href = downloadUrl;
+		anchor.download = `detect-structured-${timestamp}.md`;
+		document.body.appendChild(anchor);
+		anchor.click();
+		document.body.removeChild(anchor);
+		URL.revokeObjectURL(downloadUrl);
+		setAIStatus("ai_export_structured_success", "success");
 	};
 
 	const removeMessageById = (messageId) => {
@@ -602,6 +877,10 @@
 		}
 		if (elements.clearButton) {
 			elements.clearButton.disabled = aiSessionState.isRequestInFlight;
+		}
+		if (elements.exportStructuredButton) {
+			elements.exportStructuredButton.disabled =
+				aiSessionState.isRequestInFlight || !hasSnapshot;
 		}
 		if (elements.sendButton) {
 			elements.sendButton.disabled = !canFollowUp;
@@ -985,6 +1264,10 @@
 		elements.startButton?.addEventListener("click", startAIDiagnosis);
 		elements.stopButton?.addEventListener("click", stopAIRequest);
 		elements.clearButton?.addEventListener("click", () => resetAISession());
+		elements.exportStructuredButton?.addEventListener(
+			"click",
+			exportStructuredSnapshotAsMarkdown,
+		);
 		elements.sendButton?.addEventListener("click", sendFollowupMessage);
 		elements.exportButton?.addEventListener("click", exportChatAsMarkdown);
 		elements.userInput?.addEventListener("keydown", (event) => {
