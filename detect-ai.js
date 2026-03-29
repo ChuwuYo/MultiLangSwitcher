@@ -581,82 +581,42 @@
 	};
 
 	const getStructuredExportLabels = () => {
-		if (getUiLanguage() === "zh") {
-			return {
-				title: translate("ai_export_structured"),
-				generatedAt: "生成时间",
-				snapshotVersion: "快照版本",
-				uiLanguage: "界面语言",
-				extensionVersion: "扩展版本",
-				extension: "扩展状态",
-				currentLanguage: "当前语言",
-				autoSwitchEnabled: "自动切换已启用",
-				http: "HTTP",
-				status: "状态",
-				endpoint: "接口地址",
-				acceptLanguage: "Accept-Language",
-				error: "错误",
-				headers: "请求头",
-				jsEnv: "JavaScript 环境",
-				navigatorLanguage: "navigator.language",
-				navigatorLanguages: "navigator.languages",
-				timezone: "时区",
-				timezoneOffset: "时区偏移",
-				intl: "Intl",
-				dateTimeLocale: "DateTimeFormat 区域设置",
-				numberFormatLocale: "NumberFormat 区域设置",
-				webrtc: "WebRTC",
-				ipLeakDetected: "检测到 IP 泄露",
-				ips: "IP 列表",
-				browserFingerprint: "浏览器指纹",
-				userAgent: "User Agent",
-				screen: "屏幕信息",
-				hardwareFingerprint: "硬件指纹",
-				canvas: "Canvas",
-				webgl: "WebGL",
-				audio: "Audio",
-				compatibility: "兼容性",
-				browser: "浏览器",
-				apiSupport: "API 支持",
-			};
-		}
-
 		return {
 			title: translate("ai_export_structured"),
-			generatedAt: "Generated At",
-			snapshotVersion: "Snapshot Version",
-			uiLanguage: "UI Language",
-			extensionVersion: "Extension Version",
-			extension: "Extension",
-			currentLanguage: "Current Language",
-			autoSwitchEnabled: "Auto Switch Enabled",
-			http: "HTTP",
-			status: "Status",
-			endpoint: "Endpoint",
-			acceptLanguage: "Accept-Language",
-			error: "Error",
-			headers: "Headers",
-			jsEnv: "JavaScript Environment",
-			navigatorLanguage: "navigator.language",
-			navigatorLanguages: "navigator.languages",
-			timezone: "Timezone",
-			timezoneOffset: "Timezone Offset",
-			intl: "Intl",
-			dateTimeLocale: "DateTimeFormat Locale",
-			numberFormatLocale: "NumberFormat Locale",
-			webrtc: "WebRTC",
-			ipLeakDetected: "IP Leak Detected",
-			ips: "IPs",
-			browserFingerprint: "Browser Fingerprint",
-			userAgent: "User Agent",
-			screen: "Screen",
-			hardwareFingerprint: "Hardware Fingerprint",
-			canvas: "Canvas",
-			webgl: "WebGL",
-			audio: "Audio",
-			compatibility: "Compatibility",
-			browser: "Browser",
-			apiSupport: "API Support",
+			generatedAt: translate("ai_export_label_generated_at"),
+			snapshotVersion: translate("ai_export_label_snapshot_version"),
+			uiLanguage: translate("ai_export_label_ui_language"),
+			extensionVersion: translate("ai_export_label_extension_version"),
+			extension: translate("ai_export_section_extension"),
+			currentLanguage: translate("ai_export_label_current_language"),
+			autoSwitchEnabled: translate("ai_export_label_auto_switch_enabled"),
+			http: translate("ai_export_section_http"),
+			status: translate("ai_export_label_status"),
+			endpoint: translate("ai_export_label_endpoint"),
+			acceptLanguage: translate("ai_export_label_accept_language"),
+			error: translate("ai_export_label_error"),
+			headers: translate("ai_export_label_headers"),
+			jsEnv: translate("ai_export_section_js_env"),
+			navigatorLanguage: translate("ai_export_label_navigator_language"),
+			navigatorLanguages: translate("ai_export_label_navigator_languages"),
+			timezone: translate("ai_export_label_timezone"),
+			timezoneOffset: translate("ai_export_label_timezone_offset"),
+			intl: translate("ai_export_section_intl"),
+			dateTimeLocale: translate("ai_export_label_datetime_locale"),
+			numberFormatLocale: translate("ai_export_label_number_locale"),
+			webrtc: translate("ai_export_section_webrtc"),
+			ipLeakDetected: translate("ai_export_label_ip_leak_detected"),
+			ips: translate("ai_export_label_ips"),
+			browserFingerprint: translate("ai_export_section_browser_fingerprint"),
+			userAgent: translate("ai_export_label_user_agent"),
+			screen: translate("ai_export_label_screen"),
+			hardwareFingerprint: translate("ai_export_section_hardware_fingerprint"),
+			canvas: translate("ai_export_label_canvas"),
+			webgl: translate("ai_export_label_webgl"),
+			audio: translate("ai_export_label_audio"),
+			compatibility: translate("ai_export_section_compatibility"),
+			browser: translate("ai_export_label_browser"),
+			apiSupport: translate("ai_export_label_api_support"),
 		};
 	};
 
@@ -670,6 +630,8 @@
 
 		const sections = [
 			`# ${labels.title}`,
+			"",
+			translate("ai_export_structured_notice"),
 			"",
 			buildMarkdownEntry(labels.generatedAt, sanitizedSnapshot.meta?.generatedAt),
 			buildMarkdownEntry(
@@ -787,6 +749,19 @@
 		return sections.join("\n");
 	};
 
+	const downloadMarkdownFile = (markdown, filenamePrefix) => {
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+		const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+		const downloadUrl = URL.createObjectURL(blob);
+		const anchor = document.createElement("a");
+		anchor.href = downloadUrl;
+		anchor.download = `${filenamePrefix}-${timestamp}.md`;
+		document.body.appendChild(anchor);
+		anchor.click();
+		document.body.removeChild(anchor);
+		URL.revokeObjectURL(downloadUrl);
+	};
+
 	const exportChatAsMarkdown = () => {
 		const markdown = buildExportMarkdown();
 		if (!markdown) {
@@ -794,16 +769,7 @@
 			return;
 		}
 
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-		const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
-		const downloadUrl = URL.createObjectURL(blob);
-		const anchor = document.createElement("a");
-		anchor.href = downloadUrl;
-		anchor.download = `detect-ai-chat-${timestamp}.md`;
-		document.body.appendChild(anchor);
-		anchor.click();
-		document.body.removeChild(anchor);
-		URL.revokeObjectURL(downloadUrl);
+		downloadMarkdownFile(markdown, "detect-ai-chat");
 		setAIStatus("ai_export_success", "success");
 	};
 
@@ -815,16 +781,7 @@
 			return;
 		}
 
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-		const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
-		const downloadUrl = URL.createObjectURL(blob);
-		const anchor = document.createElement("a");
-		anchor.href = downloadUrl;
-		anchor.download = `detect-structured-${timestamp}.md`;
-		document.body.appendChild(anchor);
-		anchor.click();
-		document.body.removeChild(anchor);
-		URL.revokeObjectURL(downloadUrl);
+		downloadMarkdownFile(markdown, "detect-structured");
 		setAIStatus("ai_export_structured_success", "success");
 	};
 
