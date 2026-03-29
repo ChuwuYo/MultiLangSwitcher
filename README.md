@@ -136,12 +136,12 @@ Usage
 
 The `detect.html` page now includes an AI diagnosis panel. It sends the current structured detection snapshot to an OpenAI-compatible model and turns the raw data into user-friendly explanations.
 
-Current implementation notes:
+Tips:
 
 * Querying an external AI provider sends a structured detection snapshot to that provider. This can include fingerprint-related signals such as language settings, locale and timezone data, partial browser fingerprint fields, and redacted WebRTC or header-derived context. Treat AI diagnosis as third-party data sharing and only use providers you trust.
 * AI configuration is stored locally in `chrome.storage.local`, grouped by provider
 * Replies follow the current detect page language by default
-* Exported Markdown only contains visible conversation, excluding the hidden system prompt and hidden initial detection snapshot injection messages
+* Exported Markdown only contains visible conversation; for detection data, please select 'Export Structured Text'
 
 ***
 
