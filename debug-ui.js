@@ -33,6 +33,7 @@ const createSafeMessageElement = (message, className = "") => {
 
 /**
  * 安全地设置元素内容，支持单个消息或多个消息
+ * 后置条件：写入前会先清空元素现有内容，调用方无需预先清空
  * @param {HTMLElement} element - 目标元素
  * @param {string|Array} content - 消息内容或消息数组
  * @param {string} className - CSS类名
@@ -73,6 +74,24 @@ const setSafeErrorMessage = (element, message) => {
  */
 const setSafeSuccessMessage = (element, message) => {
 	setSafeContent(element, message, "success");
+};
+
+/**
+ * 向文档片段追加外部检查链接区块
+ * @param {DocumentFragment} fragment - 目标文档片段
+ * @param {string} [leadingText] - 链接前的引导文案；提供时用 <p> 包裹并显示文案，否则用 <div> 包裹
+ */
+const appendExternalCheckLinks = (fragment, leadingText) => {
+	const wrapper = createSafeElement(leadingText ? "p" : "div");
+	if (leadingText) {
+		wrapper.textContent = leadingText;
+	}
+	wrapper.appendChild(
+		window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) =>
+			debugI18n.t(key),
+		),
+	);
+	fragment.appendChild(wrapper);
 };
 
 ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
@@ -264,18 +283,24 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		});
 	};
 
+	// 过滤器复选框为静态元素，缓存引用避免每次渲染日志时重复查询 DOM
+	const logFilterCheckboxes = {
+		info: document.getElementById("filterInfo"),
+		warning: document.getElementById("filterWarning"),
+		error: document.getElementById("filterError"),
+		success: document.getElementById("filterSuccess"),
+	};
+
 	/**
 	 * 获取当前选中的日志类型过滤器
 	 * @returns {string[]} - 激活的日志类型数组
 	 */
 	const getActiveFilters = () => {
 		const filters = [];
-		if (document.getElementById("filterInfo").checked) filters.push("info");
-		if (document.getElementById("filterWarning").checked)
-			filters.push("warning");
-		if (document.getElementById("filterError").checked) filters.push("error");
-		if (document.getElementById("filterSuccess").checked)
-			filters.push("success");
+		if (logFilterCheckboxes.info.checked) filters.push("info");
+		if (logFilterCheckboxes.warning.checked) filters.push("warning");
+		if (logFilterCheckboxes.error.checked) filters.push("error");
+		if (logFilterCheckboxes.success.checked) filters.push("success");
 		return filters;
 	};
 
@@ -298,12 +323,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		renderLogs(); // 渲染空日志列表
 	});
 
-	// 监听过滤器变化
-	document
-		.querySelectorAll('.form-check-input[id^="filter"]')
-		.forEach((checkbox) => {
-			ResourceManager.addEventListener(checkbox, "change", renderLogs);
-		});
+	// 监听过滤器变化（与 getActiveFilters 共用同一组缓存引用，保证两处覆盖的复选框一致）
+	Object.values(logFilterCheckboxes).forEach((checkbox) => {
+		ResourceManager.addEventListener(checkbox, "change", renderLogs);
+	});
 
 	// 使用通用 fallback 翻译系统，避免依赖异步加载的 debugI18n
 	addLogMessage(getFallbackTranslation("debug_log_started"), "info");
@@ -410,15 +433,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 								}),
 							);
 
-							const linksDiv = createSafeElement("div");
-							linksDiv.appendChild(
-								window.HeaderCheckUtils.createExternalCheckLinks({
-									prefix: debugI18n.t("external_check_prefix"),
-									or: debugI18n.t("external_check_or"),
-									suffix: debugI18n.t("external_check_suffix"),
-								}),
-							);
-							fragment.appendChild(linksDiv);
+							appendExternalCheckLinks(fragment);
 
 							addLogMessage(
 								`${debugI18n.t("header_test_failed_not_expected")} ${expectedLanguage}, ${debugI18n.t("actual")} ${acceptLanguageValue}`,
@@ -433,15 +448,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 							}),
 						);
 
-						const linksDiv = createSafeElement("div");
-						linksDiv.appendChild(
-							window.HeaderCheckUtils.createExternalCheckLinks({
-								prefix: debugI18n.t("external_check_prefix"),
-								or: debugI18n.t("external_check_or"),
-								suffix: debugI18n.t("external_check_suffix"),
-							}),
-						);
-						fragment.appendChild(linksDiv);
+						appendExternalCheckLinks(fragment);
 
 						addLogMessage(debugI18n.t("header_test_failed_no_header"), "error");
 					}
@@ -460,16 +467,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 						}),
 					);
 
-					const linkP = createSafeElement("p");
-					linkP.textContent = debugI18n.t("check_network_connection") + " ";
-					linkP.appendChild(
-						window.HeaderCheckUtils.createExternalCheckLinks({
-							prefix: debugI18n.t("external_check_prefix"),
-							or: debugI18n.t("external_check_or"),
-							suffix: debugI18n.t("external_check_suffix"),
-						}),
+					appendExternalCheckLinks(
+						fragment,
+						debugI18n.t("check_network_connection") + " ",
 					);
-					fragment.appendChild(linkP);
 
 					addLogMessage(
 						debugI18n.t("header_test_failed_all_endpoints"),
@@ -495,16 +496,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					}),
 				);
 
-				const linkP = createSafeElement("p");
-				linkP.textContent = debugI18n.t("check_network_connection") + " ";
-				linkP.appendChild(
-					window.HeaderCheckUtils.createExternalCheckLinks({
-						prefix: debugI18n.t("external_check_prefix"),
-						or: debugI18n.t("external_check_or"),
-						suffix: debugI18n.t("external_check_suffix"),
-					}),
+				appendExternalCheckLinks(
+					fragment,
+					debugI18n.t("check_network_connection") + " ",
 				);
-				fragment.appendChild(linkP);
 
 				resultElement.appendChild(fragment);
 
@@ -688,7 +683,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 			const customLangResult = document.getElementById("customLangResult");
 			const languageString = customLangInput.value.trim();
 
-			customLangResult.innerHTML = ""; // 清除旧结果
+			// 无需预先清空：后续两条路径均通过 setSafeContent 清空并写入新内容
 
 			if (!languageString) {
 				setSafeErrorMessage(
@@ -1280,16 +1275,6 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 			if (sendResponse) {
 				sendResponse({ status: "Debug UI updated" });
-			}
-		} else if (request.type === "AUTO_SWITCH_STATE_CHANGED") {
-			// 同步自动切换状态
-			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
-			if (autoSwitchToggle) {
-				autoSwitchToggle.checked = request.enabled;
-				addLogMessage(
-					`${request.enabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
-					"info",
-				);
 			}
 		}
 		return true;

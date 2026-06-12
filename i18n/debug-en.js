@@ -286,8 +286,6 @@ if (typeof debugEn === "undefined") {
 			"Failed to get domain mapping rules or rules are empty. Response content:",
 		received_auto_switch_update: "Received auto switch status update:",
 		current_language_colon: "current language:",
-		auto_switch_status_sync: "Auto switch status synchronized",
-		status_sync_received: "Status sync received: auto switch",
 		reset_accept_language_success:
 			"Accept-Language has been successfully reset.",
 		reset_accept_language_failed: "Reset failed: {message}",

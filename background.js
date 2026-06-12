@@ -644,7 +644,6 @@ const handleAutoSwitchToggleRequest = async (request) => {
  */
 const applyLanguageRulesBasedOnState = async (storedLanguage) => {
 	let languageToApply;
-	const isAuto = autoSwitchEnabled;
 
 	if (autoSwitchEnabled) {
 		languageToApply = DEFAULT_LANG_EN;
@@ -664,22 +663,29 @@ const applyLanguageRulesBasedOnState = async (storedLanguage) => {
 		);
 	}
 
-	await updateHeaderRules(languageToApply, 0, isAuto);
+	await updateHeaderRules(languageToApply, 0, autoSwitchEnabled);
+};
+
+/**
+ * 获取当前动态规则中实际生效的 Accept-Language 头的值
+ * @returns {Promise<string|undefined>} 当前规则中的语言值，无规则时为 undefined
+ */
+const getCurrentAcceptLanguageHeader = async () => {
+	const rules = await chrome.declarativeNetRequest.getDynamicRules();
+	const currentRule = rules.find((rule) => rule.id === RULE_ID);
+	return currentRule?.action?.requestHeaders?.find(
+		(h) => h.header === "Accept-Language",
+	)?.value;
 };
 
 /**
  * 处理获取当前语言请求
  */
 const handleGetCurrentLangRequest = async () => {
-	const rules = await chrome.declarativeNetRequest.getDynamicRules();
-	const currentRule = rules.find((rule) => rule.id === RULE_ID);
-	const actualCurrentLang = currentRule?.action?.requestHeaders?.find(
-		(h) => h.header === "Accept-Language",
-	)?.value;
-
-	const result = await chrome.storage.local.get([
-		"currentLanguage",
-		"autoSwitchEnabled",
+	// 两个读取无数据依赖，并行执行避免串行等待两次 IPC 往返
+	const [actualCurrentLang, result] = await Promise.all([
+		getCurrentAcceptLanguageHeader(),
+		chrome.storage.local.get(["currentLanguage", "autoSwitchEnabled"]),
 	]);
 	return {
 		currentLanguage: actualCurrentLang || result.currentLanguage,
@@ -787,23 +793,25 @@ const handleUpdateCheckRequest = async () => {
 };
 
 /**
+ * 获取并合并域名规则管理器的缓存统计信息和规则统计信息
+ * @returns {Object} 合并后的统计信息
+ */
+const getCombinedDomainStats = () => {
+	const cacheStats = domainRulesManager.getCacheStats();
+	const rulesStats = domainRulesManager.getRulesStats();
+	return { ...cacheStats, ...rulesStats };
+};
+
+/**
  * 处理获取缓存统计请求
- * @param {Function} sendResponse - 响应函数
  */
 const handleGetCacheStatsRequest = async () => {
 	try {
 		// 确保域名规则管理器已加载
 		await domainRulesManager.loadRules();
 
-		// 获取缓存统计信息和规则统计信息
-		const cacheStats = domainRulesManager.getCacheStats();
-		const rulesStats = domainRulesManager.getRulesStats();
-
-		// 合并统计信息
-		const combinedStats = {
-			...cacheStats,
-			...rulesStats,
-		};
+		// 获取并合并缓存统计信息和规则统计信息
+		const combinedStats = getCombinedDomainStats();
 
 		sendBackgroundLog(
 			`${backgroundI18n.t("cache_stats_requested")}: ${JSON.stringify(combinedStats)}`,
@@ -858,16 +866,9 @@ const handleTestDomainCacheRequest = async (request) => {
 
 			// 策略1: 检查当前活动的规则
 			try {
-				const rules = await chrome.declarativeNetRequest.getDynamicRules();
-				const currentRule = rules.find((rule) => rule.id === RULE_ID);
-
-				if (currentRule?.action?.requestHeaders) {
-					const acceptLangHeader = currentRule.action.requestHeaders.find(
-						(h) => h.header === "Accept-Language",
-					);
-					if (acceptLangHeader?.value) {
-						language = acceptLangHeader.value;
-					}
+				const currentLang = await getCurrentAcceptLanguageHeader();
+				if (currentLang) {
+					language = currentLang;
 				}
 			} catch (error) {
 				sendBackgroundLog(
@@ -899,14 +900,7 @@ const handleTestDomainCacheRequest = async (request) => {
 		}
 
 		// 获取更新后的缓存统计
-		const cacheStats = domainRulesManager.getCacheStats();
-		const rulesStats = domainRulesManager.getRulesStats();
-
-		// 合并统计信息
-		const combinedStats = {
-			...cacheStats,
-			...rulesStats,
-		};
+		const combinedStats = getCombinedDomainStats();
 
 		const cacheStatus = fromCache
 			? backgroundI18n.t("cached")
@@ -949,9 +943,7 @@ const handleCacheOperation = async (operation, logMessages) => {
 		await operation();
 
 		// 获取更新后的统计信息
-		const cacheStats = domainRulesManager.getCacheStats();
-		const rulesStats = domainRulesManager.getRulesStats();
-		const combinedStats = { ...cacheStats, ...rulesStats };
+		const combinedStats = getCombinedDomainStats();
 
 		sendBackgroundLog(logMessages.success, "success");
 		return { stats: combinedStats };
@@ -1085,11 +1077,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 			} else {
 				// 否则，确保应用了默认的回退语言
 				const fallbackLanguage = DEFAULT_LANG_EN;
-				const rules = await chrome.declarativeNetRequest.getDynamicRules();
-				const currentRule = rules.find((rule) => rule.id === RULE_ID);
-				const currentLang = currentRule?.action?.requestHeaders?.find(
-					(h) => h.header === "Accept-Language",
-				)?.value;
+				const currentLang = await getCurrentAcceptLanguageHeader();
 
 				if (currentLang !== fallbackLanguage) {
 					sendBackgroundLog(

@@ -29,39 +29,37 @@ const getBrowserInfo = () => {
 		browserVersion = tem[1] || "";
 		fullVersion = browserVersion;
 	} else if (M[1] === "Chrome") {
-		tem = ua.match(/\b(OPR|Edge|Edg)\/(\d+)/);
+		// 单次匹配完整版本号，主版本号取第一段，避免维护两条仅捕获模式不同的孪生正则
+		tem = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/);
 		if (tem != null) {
-			const browserParts = tem.slice(1);
-			if (browserParts[0].startsWith("Edg")) {
-				browserParts[0] = "Edge (Chromium)";
-			} else if (browserParts[0] === "Edge") {
+			const browserParts = [tem[1], tem[2].split(".")[0]];
+			// 先精确匹配 "Edge"（EdgeHTML），再用前缀匹配兜住 "Edg"（Chromium）；
+			// 顺序不能反："Edge".startsWith("Edg") 为 true，会吞掉 Legacy 分支
+			if (browserParts[0] === "Edge") {
 				browserParts[0] = "Edge (Legacy)";
+			} else if (browserParts[0].startsWith("Edg")) {
+				browserParts[0] = "Edge (Chromium)";
 			}
 			browserName = browserParts.join(" ").replace("OPR", "Opera");
-			browserVersion = browserParts.length > 1 ? browserParts[1] : "";
-			fullVersion = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)
-				? ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/)[2]
-				: browserVersion;
+			browserVersion = browserParts[1];
+			fullVersion = tem[2];
 		} else {
 			browserName = "Chrome";
 			browserVersion = M[2];
-			fullVersion = ua.match(/\bChrome\/([\d.]+)/)
-				? ua.match(/\bChrome\/([\d.]+)/)[1]
-				: browserVersion;
+			const fullMatch = ua.match(/\bChrome\/([\d.]+)/);
+			fullVersion = fullMatch ? fullMatch[1] : browserVersion;
 		}
 	} else if (M[1] === "Firefox") {
 		browserName = "Firefox";
 		browserVersion = M[2];
-		fullVersion = ua.match(/\bFirefox\/([\d.]+)/)
-			? ua.match(/\bFirefox\/([\d.]+)/)[1]
-			: browserVersion;
+		const fullMatch = ua.match(/\bFirefox\/([\d.]+)/);
+		fullVersion = fullMatch ? fullMatch[1] : browserVersion;
 	} else if (M[1] === "Safari") {
-		tem = ua.match(/version\/(\d+)/i);
+		// 同上：单次匹配完整版本号，主版本号取第一段
+		tem = ua.match(/version\/([\d.]+)/i);
 		browserName = "Safari";
-		browserVersion = tem ? tem[1] : M[2];
-		fullVersion = ua.match(/version\/([\d.]+)/i)
-			? ua.match(/version\/([\d.]+)/i)[1]
-			: browserVersion;
+		browserVersion = tem ? tem[1].split(".")[0] : M[2];
+		fullVersion = tem ? tem[1] : browserVersion;
 	} else if (M[1] === "MSIE") {
 		browserName = "Internet Explorer";
 		browserVersion = M[2];
@@ -219,11 +217,9 @@ const renderHeaderInfo = (headerInfo) => {
 			const linkP = document.createElement("p");
 			linkP.className = "mt-2";
 			linkP.appendChild(
-				window.HeaderCheckUtils.createExternalCheckLinks({
-					prefix: translateDetect("external_check_prefix"),
-					or: translateDetect("external_check_or"),
-					suffix: translateDetect("external_check_suffix"),
-				}),
+				window.HeaderCheckUtils.createLocalizedExternalCheckLinks(
+					translateDetect,
+				),
 			);
 			fragment.appendChild(linkP);
 		}
@@ -254,11 +250,7 @@ const renderHeaderInfo = (headerInfo) => {
 	const linkP = document.createElement("p");
 	linkP.className = "mt-2";
 	linkP.appendChild(
-		window.HeaderCheckUtils.createExternalCheckLinks({
-			prefix: translateDetect("external_check_prefix"),
-			or: translateDetect("external_check_or"),
-			suffix: translateDetect("external_check_suffix"),
-		}),
+		window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect),
 	);
 	fragment.appendChild(linkP);
 

@@ -257,8 +257,6 @@ if (typeof debugZh === "undefined") {
 			"未能获取域名映射规则或规则为空。响应内容：",
 		received_auto_switch_update: "收到自动切换状态更新：",
 		current_language_colon: "当前语言：",
-		auto_switch_status_sync: "自动切换状态已同步",
-		status_sync_received: "收到状态同步: 自动切换",
 		reset_accept_language_success: "Accept-Language 已成功重置。",
 		reset_accept_language_failed: "重置失败：{message}",
 

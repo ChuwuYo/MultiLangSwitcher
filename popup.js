@@ -17,6 +17,7 @@ const getEl = (id) => document.getElementById(id);
 
 /**
  * 更新自动切换UI状态
+ * 后置条件：会将 autoSwitchToggle.checked 同步为 enabled，调用方无需预先设置
  * @param {boolean} enabled - 是否启用自动切换
  * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
  * @param {HTMLElement} languageSelect - 语言选择元素
@@ -127,11 +128,9 @@ const displayHeaderCheckError = (element, messageKey) => {
 	fragment.appendChild(document.createTextNode(popupI18n.t(messageKey)));
 	fragment.appendChild(document.createElement("br"));
 	fragment.appendChild(
-		window.HeaderCheckUtils.createExternalCheckLinks({
-			prefix: popupI18n.t("external_check_prefix"),
-			or: popupI18n.t("external_check_or"),
-			suffix: popupI18n.t("external_check_suffix"),
-		}),
+		window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) =>
+			popupI18n.t(key),
+		),
 	);
 	element.appendChild(fragment);
 };
@@ -1241,9 +1240,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 			const autoSwitchEnabled = request.autoSwitchEnabled;
 
 			if (typeof autoSwitchEnabled === "boolean") {
-				if (autoSwitchToggle) {
-					autoSwitchToggle.checked = autoSwitchEnabled;
-				}
 				updateAutoSwitchUI(
 					autoSwitchEnabled,
 					autoSwitchToggle,
@@ -1303,48 +1299,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		);
 	};
 
-	/**
-	 * 处理自动切换状态变更消息
-	 * @param {Object} request - 消息请求对象
-	 * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
-	 * @param {HTMLElement} languageSelect - 语言选择元素
-	 * @param {HTMLElement} applyButton - 应用按钮元素
-	 */
-	const handleAutoSwitchStateChanged = (
-		request,
-		autoSwitchToggle,
-		languageSelect,
-		applyButton,
-	) => {
-		// 检查必要元素
-		if (!autoSwitchToggle) return;
-
-		const enabled = !!request.enabled;
-
-		// 若状态未变化则跳过，避免冗余 DOM 更新
-		if (autoSwitchToggle.checked === enabled) {
-			const statusTextSkipped = enabled
-				? popupI18n.t("enabled")
-				: popupI18n.t("disabled");
-			sendDebugLog(
-				popupI18n.t("received_status_sync", { status: statusTextSkipped }),
-				"info",
-			);
-			return;
-		}
-
-		autoSwitchToggle.checked = enabled;
-		updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
-
-		const statusText = enabled
-			? popupI18n.t("enabled")
-			: popupI18n.t("disabled");
-		sendDebugLog(
-			popupI18n.t("received_status_sync", { status: statusText }),
-			"info",
-		);
-	};
-
 	// 监听来自 background.js 的消息
 	chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 		// 处理 AUTO_SWITCH_UI_UPDATE
@@ -1356,17 +1310,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 				applyButton,
 			);
 			sendResponse({ status: "UI updated" });
-			return true;
-		}
-
-		// 处理 AUTO_SWITCH_STATE_CHANGED
-		if (request.type === "AUTO_SWITCH_STATE_CHANGED") {
-			handleAutoSwitchStateChanged(
-				request,
-				autoSwitchToggle,
-				languageSelect,
-				applyButton,
-			);
 			return true;
 		}
 

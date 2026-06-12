@@ -183,11 +183,8 @@ class BaseI18n {
 	 * @private
 	 */
 	_formatString(str, params) {
-		if (
-			!params ||
-			typeof params !== "object" ||
-			Object.keys(params).length === 0
-		) {
+		// 空对象无需特判：Object.entries 为空时循环零次，直接返回原串
+		if (!params || typeof params !== "object") {
 			return str;
 		}
 

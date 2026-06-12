@@ -164,11 +164,26 @@ const createExternalCheckLinks = (texts = {}) => {
 	return fragment;
 };
 
+/**
+ * 使用统一翻译键构建本地化的外部检查链接
+ * popup/debug/detect 三个页面共用同一组翻译键，由此避免各页面重复拼装文本对象
+ *
+ * @param {Function} translate - 翻译函数，接收翻译键返回对应文案
+ * @returns {DocumentFragment} 包含链接的文档片段
+ */
+const createLocalizedExternalCheckLinks = (translate) =>
+	createExternalCheckLinks({
+		prefix: translate("external_check_prefix"),
+		or: translate("external_check_or"),
+		suffix: translate("external_check_suffix"),
+	});
+
 // 导出为全局对象（用于非模块环境）
 if (typeof window !== "undefined") {
 	window.HeaderCheckUtils = {
 		HEADER_CHECK_ENDPOINTS,
 		fetchHeadersFromEndpoints,
 		createExternalCheckLinks,
+		createLocalizedExternalCheckLinks,
 	};
 }

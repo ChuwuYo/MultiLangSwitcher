@@ -43,27 +43,34 @@
 		);
 	};
 
-	const getAiElements = () => ({
-		configDetails: document.getElementById("aiConfigDetails"),
-		providerSelect: document.getElementById("aiProviderSelect"),
-		providerDescription: document.getElementById("aiProviderDescription"),
-		baseUrlInput: document.getElementById("aiBaseUrlInput"),
-		apiKeyInput: document.getElementById("aiApiKeyInput"),
-		apiKeyToggle: document.getElementById("aiApiKeyToggle"),
-		modelInput: document.getElementById("aiModelInput"),
-		configHint: document.getElementById("aiConfigHint"),
-		startButton: document.getElementById("aiStartButton"),
-		stopButton: document.getElementById("aiStopButton"),
-		clearButton: document.getElementById("aiClearButton"),
-		exportStructuredButton: document.getElementById(
-			"aiExportStructuredButton",
-		),
-		messagesContainer: document.getElementById("aiChatMessages"),
-		status: document.getElementById("aiChatStatus"),
-		userInput: document.getElementById("aiUserInput"),
-		sendButton: document.getElementById("aiSendButton"),
-		exportButton: document.getElementById("aiExportButton"),
-	});
+	// AI 面板元素均为静态 DOM 且脚本在 body 末尾加载，首次查询后缓存引用，避免重复 getElementById
+	let cachedAiElements = null;
+	const getAiElements = () => {
+		if (!cachedAiElements) {
+			cachedAiElements = {
+				configDetails: document.getElementById("aiConfigDetails"),
+				providerSelect: document.getElementById("aiProviderSelect"),
+				providerDescription: document.getElementById("aiProviderDescription"),
+				baseUrlInput: document.getElementById("aiBaseUrlInput"),
+				apiKeyInput: document.getElementById("aiApiKeyInput"),
+				apiKeyToggle: document.getElementById("aiApiKeyToggle"),
+				modelInput: document.getElementById("aiModelInput"),
+				configHint: document.getElementById("aiConfigHint"),
+				startButton: document.getElementById("aiStartButton"),
+				stopButton: document.getElementById("aiStopButton"),
+				clearButton: document.getElementById("aiClearButton"),
+				exportStructuredButton: document.getElementById(
+					"aiExportStructuredButton",
+				),
+				messagesContainer: document.getElementById("aiChatMessages"),
+				status: document.getElementById("aiChatStatus"),
+				userInput: document.getElementById("aiUserInput"),
+				sendButton: document.getElementById("aiSendButton"),
+				exportButton: document.getElementById("aiExportButton"),
+			};
+		}
+		return cachedAiElements;
+	};
 
 	const getVisibleChatMessages = () =>
 		aiSessionState.messages.filter((message) => message.visible !== false);
