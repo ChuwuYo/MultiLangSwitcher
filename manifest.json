@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "MultiLangSwitcher",
 	"version": "2.1.1",
-	"minimum_chrome_version": "88.0",
+	"minimum_chrome_version": "120.0",
 	"description": "__MSG_extension_description__",
 	"default_locale": "zh",
 	"homepage_url": "https://github.com/ChuwuYo/MultiLangSwitcher",
@@ -28,7 +28,6 @@
 		"declarativeNetRequest",
 		"declarativeNetRequestFeedback",
 		"tabs",
-		"webRequest",
 		"contextMenus"
 	],
 	"host_permissions": ["<all_urls>"],
@@ -44,7 +43,8 @@
 	"web_accessible_resources": [
 		{
 			"resources": ["images/*", "domain-rules.json", "fonts/*"],
-			"matches": ["<all_urls>"]
+			"matches": ["<all_urls>"],
+			"use_dynamic_url": true
 		}
 	],
 	"content_security_policy": {
