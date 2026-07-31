@@ -12,7 +12,7 @@ const getBrowserInfo = () => {
 	let browserVersion = "";
 	let fullVersion = "";
 
-	const chromeMatch = ua.match(/\bChrome\/([\d.]+)/);
+	const chromeMatch = ua.match(/(?:^|\W)(?:Headless)?Chrome\/([\d.]+)/);
 	if (chromeMatch) {
 		fullVersion = chromeMatch[1];
 		browserVersion = fullVersion.split(".")[0];

@@ -82,6 +82,7 @@ export const buildDetectionSnapshot = (results) => {
 		},
 		compatibility: {
 			browser: results.compatibilityInfo.browser,
+			uaData: results.compatibilityInfo.uaData,
 			apiSupport: results.compatibilityInfo.apiSupport,
 		},
 	};

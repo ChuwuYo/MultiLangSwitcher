@@ -414,10 +414,7 @@ export const renderCompatibilityInfo = (compatibilityInfo) => {
 	browserInfoEl.textContent = `${compatibilityInfo.browser.name} ${compatibilityInfo.browser.fullVersion} ${translateDetect("on_connector")} ${compatibilityInfo.browser.os}`;
 
 	// UA-CH 高熵值对照（userAgentData 可用时展示，便于比对 UA 解析与 Client Hints 差异）
-	const existingUaData = document.getElementById("uaDataDisplay");
-	if (existingUaData) {
-		existingUaData.remove();
-	}
+	// 注：上方 textContent 赋值已清空子节点，无需手动移除旧的 #uaDataDisplay
 	if (compatibilityInfo.uaData) {
 		const uaData = compatibilityInfo.uaData;
 		const container = document.createElement("div");
