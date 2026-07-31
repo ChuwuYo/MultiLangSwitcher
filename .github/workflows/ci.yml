@@ -31,6 +31,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx biome ci .
+      - run: npx tsc
       - run: node scripts/check-syntax.mjs
       - run: node scripts/validate-manifest.mjs
       - run: npm test

@@ -73,7 +73,7 @@ export const testHeaderChange = async (language) => {
 };
 
 // 导出函数供控制台使用
-window.debugHeaders = {
+/** @type {any} */ (window).debugHeaders = {
 	showRules: showCurrentRules,
 	testHeader: testHeaderChange,
 };

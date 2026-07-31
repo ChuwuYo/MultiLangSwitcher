@@ -151,7 +151,7 @@ export class UpdateChecker {
 			});
 
 			if (!response.ok) {
-				const error = new Error(`GitHub API error: ${response.status}`);
+				const error = /** @type {Error & { status?: number }} */ (new Error(`GitHub API error: ${response.status}`));
 				error.status = response.status;
 				throw error;
 			}
@@ -249,7 +249,7 @@ export class UpdateChecker {
 	async loadCache() {
 		try {
 			const result = await chrome.storage.local.get([this.cacheKey]);
-			const cache = result[this.cacheKey];
+			const cache = /** @type {{ expiry?: number, data?: any }} */ (result[this.cacheKey]);
 
 			if (cache?.expiry && Date.now() < cache.expiry) {
 				// 增加版本号校验：如果缓存中的版本与当前扩展版本不符，则缓存无效

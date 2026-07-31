@@ -128,10 +128,10 @@ export const fetchHeadersFromEndpoints = async (timeout = 10000) => {
  * 创建外部检查链接的 DOM 片段
  * 用于在检测失败时提供手动检查的选项
  *
- * @param {Object} texts - 文本对象,包含国际化文本
- * @param {string} texts.prefix - 链接前缀文本 (如: "请访问" / "Please visit")
- * @param {string} texts.or - "或"的翻译 (如: "或" / "or")
- * @param {string} texts.suffix - "进行查看"的翻译 (如: "进行查看" / "to view")
+ * @param {{ prefix?: string, or?: string, suffix?: string }} [texts] - 文本对象,包含国际化文本
+ *   - prefix: 链接前缀文本 (如: "请访问" / "Please visit")
+ *   - or: "或"的翻译 (如: "或" / "or")
+ *   - suffix: "进行查看"的翻译 (如: "进行查看" / "to view")
  * @returns {DocumentFragment} 包含链接的文档片段
  */
 export const createExternalCheckLinks = (texts = {}) => {

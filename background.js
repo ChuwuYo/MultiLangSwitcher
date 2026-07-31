@@ -2,7 +2,7 @@
 
 import { MessageTypes } from "./shared/message-types.js";
 import { STORAGE_KEYS } from "./shared/storage-keys.js";
-import { sendDebugLog } from "./shared/shared-utils.js";
+import { registerI18nInstance, sendDebugLog } from "./shared/shared-utils.js";
 import { backgroundI18n, backgroundI18nReady } from "./i18n/background-i18n.js";
 import { domainManagerI18nReady } from "./i18n/domain-manager-i18n.js";
 import { domainRulesManager } from "./domain-rules-manager.js";
@@ -11,6 +11,7 @@ import { ResourceManager } from "./shared/shared-resource-manager.js";
 
 // 将所有i18n模块的初始化Promise聚合到一个地方
 const i18nReady = Promise.all([backgroundI18nReady, domainManagerI18nReady]);
+registerI18nInstance("background", backgroundI18n);
 
 // 常量定义
 const RULE_ID = 1;
@@ -102,9 +103,10 @@ const createContextMenusOnce = async () => {
 
 			// 先查询现有菜单（部分浏览器不支持 query）
 			let existingMenus = null;
-			if (chrome.contextMenus && typeof chrome.contextMenus.query === "function") {
+			const contextMenusApi = /** @type {any} */ (chrome.contextMenus);
+			if (chrome.contextMenus && typeof contextMenusApi.query === "function") {
 				try {
-					existingMenus = await chrome.contextMenus.query({});
+					existingMenus = await contextMenusApi.query({});
 				} catch (_error) {
 					existingMenus = null;
 				}
@@ -131,19 +133,21 @@ const createContextMenusOnce = async () => {
 
 			// 创建菜单项 - 使用国际化标题
 			const createContextMenu = (options) => {
-				return new Promise((resolve, reject) => {
-					try {
-						chrome.contextMenus.create(options, () => {
-							if (chrome.runtime.lastError) {
-								reject(new Error(chrome.runtime.lastError.message));
-							} else {
-								resolve();
-							}
-						});
-					} catch (error) {
-						reject(error);
-					}
-				});
+				return /** @type {Promise<void>} */ (
+					new Promise((resolve, reject) => {
+						try {
+							chrome.contextMenus.create(options, () => {
+								if (chrome.runtime.lastError) {
+									reject(new Error(chrome.runtime.lastError.message));
+								} else {
+									resolve();
+								}
+							});
+						} catch (error) {
+							reject(error);
+						}
+					})
+				);
 			};
 
 			await createContextMenu({
@@ -273,7 +277,7 @@ const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => 
 
 		// 批量处理：仅当存在时才移除具有 RULE_ID 的旧规则，然后添加新规则
 		const removeRuleIds = currentRules.some((rule) => rule.id === RULE_ID) ? [RULE_ID] : [];
-		const newRule = {
+		const newRule = /** @type {chrome.declarativeNetRequest.Rule} */ ({
 			id: RULE_ID,
 			priority: 100,
 			action: {
@@ -290,7 +294,7 @@ const updateHeaderRulesInternal = async (language, retryCount, isAutoSwitch) => 
 				urlFilter: "*",
 				resourceTypes: ["main_frame", "sub_frame", "xmlhttprequest", "script"],
 			},
-		};
+		});
 
 		// 单次批量更新：移除旧规则（如果存在）并添加新规则
 		await chrome.declarativeNetRequest.updateDynamicRules({
@@ -365,8 +369,8 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 		}
 	} else {
 		// 超过重试次数或不可重试的错误
-		const finalError = new Error(
-			`${backgroundI18n.t("update_rules_failed_with_type", { type: errorType })}: ${error.message}`,
+		const finalError = /** @type {Error & { originalError?: any, type?: string, retryCount?: number }} */ (
+			new Error(`${backgroundI18n.t("update_rules_failed_with_type", { type: errorType })}: ${error.message}`)
 		);
 		finalError.originalError = error;
 		finalError.type = errorType;
@@ -393,7 +397,9 @@ const performInitialization = async (reason) => {
 		sendBackgroundLog(backgroundI18n.t("domain_rules_loaded"), "info");
 
 		// 2. 从存储中获取设置
-		const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
+		const result = /** @type {Record<string, any>} */ (
+			await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED])
+		);
 		autoSwitchEnabled = result.autoSwitchEnabled !== false; // 默认为 true
 		sendBackgroundLog(`${backgroundI18n.t("loaded_auto_switch_status")}: ${autoSwitchEnabled}`, "info");
 
@@ -519,7 +525,9 @@ const handleAutoSwitchToggleRequest = async (request) => {
 
 	await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: autoSwitchEnabled });
 
-	const { currentLanguage: storedLanguage } = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
+	const { currentLanguage: storedLanguage } = /** @type {Record<string, any>} */ (
+		await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE])
+	);
 	await applyLanguageRulesBasedOnState(storedLanguage);
 
 	const currentEffectiveLanguage = autoSwitchEnabled ? DEFAULT_LANG_EN : storedLanguage || DEFAULT_LANG_EN;
@@ -601,7 +609,7 @@ const handleResetAcceptLanguageRequest = async () => {
 
 /**
  * 处理获取域名规则请求
- * @param {Function} sendResponse - 响应函数
+ * @returns {Promise<Object>} 域名规则及统计信息
  */
 const handleGetDomainRulesRequest = async () => {
 	sendBackgroundLog(backgroundI18n.t("received_domain_rules_request"), "info");
@@ -621,7 +629,7 @@ const handleGetDomainRulesRequest = async () => {
 
 /**
  * 处理更新检查请求
- * @param {Function} sendResponse - 响应函数
+ * @returns {Promise<Object>} 更新信息
  */
 const handleUpdateCheckRequest = async () => {
 	try {
@@ -701,7 +709,7 @@ const handleGetCacheStatsRequest = async () => {
 /**
  * 处理域名缓存测试请求
  * @param {Object} request - 请求对象
- * @param {Function} sendResponse - 响应函数
+ * @param {string} request.domain - 要测试的域名
  */
 const handleTestDomainCacheRequest = async (request) => {
 	try {
@@ -745,7 +753,9 @@ const handleTestDomainCacheRequest = async (request) => {
 			// 策略2: 如果还没有找到，检查存储的当前语言设置
 			if (!language) {
 				try {
-					const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
+					const result = /** @type {Record<string, any>} */ (
+						await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE])
+					);
 
 					if (result.currentLanguage) {
 						language = result.currentLanguage;

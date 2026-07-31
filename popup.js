@@ -1,13 +1,15 @@
 // --- 导入共享模块 ---
 import { MessageTypes } from "./shared/message-types.js";
 import { STORAGE_KEYS } from "./shared/storage-keys.js";
-import { sendDebugLog } from "./shared/shared-utils.js";
+import { registerI18nInstance, sendDebugLog } from "./shared/shared-utils.js";
 import { requestBackground, resetAcceptLanguage } from "./shared/shared-actions.js";
 import { UpdateChecker } from "./shared/shared-update-checker.js";
 import { populateLanguageSelect } from "./shared/shared-language-options.js";
 import { fetchHeadersFromEndpoints, createLocalizedExternalCheckLinks } from "./shared/header-check-utils.js";
 import { ResourceManager } from "./shared/shared-resource-manager.js";
 import { popupI18n } from "./i18n/popup-i18n.js";
+
+registerI18nInstance("popup", popupI18n);
 import "./toggle.js";
 
 // --- 全局常量和配置 ---
@@ -28,9 +30,9 @@ const getEl = (id) => document.getElementById(id);
  * 更新自动切换UI状态
  * 后置条件：会将 autoSwitchToggle.checked 同步为 enabled，调用方无需预先设置
  * @param {boolean} enabled - 是否启用自动切换
- * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
- * @param {HTMLElement} languageSelect - 语言选择元素
- * @param {HTMLElement} applyButton - 应用按钮元素
+ * @param {HTMLInputElement} autoSwitchToggle - 自动切换开关元素
+ * @param {HTMLSelectElement} languageSelect - 语言选择元素
+ * @param {HTMLButtonElement} applyButton - 应用按钮元素
  */
 const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, applyButton) => {
 	// 检查必要元素
@@ -138,7 +140,7 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
 
 	// 直接获取DOM元素
 	const currentLanguageSpan = getEl("currentLanguage");
-	const languageSelect = getEl("languageSelect");
+	const languageSelect = /** @type {HTMLSelectElement} */ (getEl("languageSelect"));
 
 	// 如果当前值与目标语言一致，避免不必要的 DOM 写入
 	if (currentLanguageSpan && currentLanguageSpan.textContent === language && !showSuccess) {
@@ -277,7 +279,9 @@ const getLanguageFromBackground = async () => {
  */
 const getLanguageFromStorage = async () => {
 	try {
-		const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
+		const result = /** @type {Record<string, string>} */ (
+			await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE])
+		);
 
 		if (result?.[STORAGE_KEYS.CURRENT_LANGUAGE]) {
 			sendDebugLog(`${popupI18n.t("loaded_stored_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}.`, "info");
@@ -296,7 +300,7 @@ const getLanguageFromStorage = async () => {
  * @returns {string} 默认语言代码
  */
 const getDefaultLanguage = () => {
-	const languageSelect = document.getElementById("languageSelect");
+	const languageSelect = /** @type {HTMLSelectElement} */ (document.getElementById("languageSelect"));
 	const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t("not_set");
 	sendDebugLog(`${popupI18n.t("no_stored_language")} ${defaultLanguage}.`, "warning");
 	return defaultLanguage;
@@ -657,7 +661,7 @@ const showUpdateNotification = (updateInfo) => {
  */
 const updateCheckButtonState = (isChecking) => {
 	// 直接获取DOM元素
-	const updateCheckBtn = getEl("updateCheckBtn");
+	const updateCheckBtn = /** @type {HTMLButtonElement} */ (getEl("updateCheckBtn"));
 	const updateCheckText = getEl("updateCheckText");
 	const updateCheckSpinner = getEl("updateCheckSpinner");
 
@@ -864,10 +868,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	}
 
 	// 获取DOM元素
-	const languageSelect = getEl("languageSelect");
-	const applyButton = getEl("applyButton");
+	const languageSelect = /** @type {HTMLSelectElement} */ (getEl("languageSelect"));
+	const applyButton = /** @type {HTMLButtonElement} */ (getEl("applyButton"));
 	const checkHeaderBtn = getEl("checkHeaderBtn");
-	const autoSwitchToggle = getEl("autoSwitchToggle");
+	const autoSwitchToggle = /** @type {HTMLInputElement} */ (getEl("autoSwitchToggle"));
 	const resetBtn = getEl("resetBtn");
 
 	// 初始化语言选项下拉列表
@@ -1074,9 +1078,9 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	 * 处理 background 发布的 UI 状态变化
 	 * 状态持久化由 background 单点负责，本页只更新展示，不回写存储
 	 * @param {Object} uiState - UI 状态对象 { autoSwitchEnabled, currentLanguage }
-	 * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
-	 * @param {HTMLElement} languageSelect - 语言选择元素
-	 * @param {HTMLElement} applyButton - 应用按钮元素
+	 * @param {HTMLInputElement} autoSwitchToggle - 自动切换开关元素
+	 * @param {HTMLSelectElement} languageSelect - 语言选择元素
+	 * @param {HTMLButtonElement} applyButton - 应用按钮元素
 	 */
 	const handleAutoSwitchUIUpdate = (uiState, autoSwitchToggle, languageSelect, applyButton) => {
 		// 来自 background 的状态同步可能在短时间内多次触发，使用 debouncedUIUpdate 合并
@@ -1096,7 +1100,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	/**
 	 * 更新当前语言信息显示
 	 * @param {string} currentLanguage - 当前语言
-	 * @param {HTMLElement} languageSelect - 语言选择元素
+	 * @param {HTMLSelectElement} languageSelect - 语言选择元素
 	 */
 	const updateCurrentLanguageInfo = (currentLanguage, languageSelect) => {
 		updateLanguageDisplay(currentLanguage);

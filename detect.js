@@ -1,4 +1,7 @@
+import { registerI18nInstance } from "./shared/shared-utils.js";
 import { detectI18n } from "./i18n/detect-i18n.js";
+
+registerI18nInstance("detect", detectI18n);
 import { createLocalizedExternalCheckLinks, fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
 import { md5 } from "./shared/md5.js";
 import { ResourceManager } from "./shared/shared-resource-manager.js";
@@ -386,7 +389,9 @@ const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
 const collectWebglFingerprintInfo = () => {
 	try {
 		const canvas = ResourceManager.createCanvasElement();
-		const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+		const gl = /** @type {WebGLRenderingContext | null} */ (
+			canvas.getContext("webgl") || canvas.getContext("experimental-webgl")
+		);
 		if (!gl) {
 			return {
 				status: "unsupported",
@@ -481,7 +486,10 @@ const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 
 const collectAudioFingerprintInfo = async () => {
 	try {
-		if (typeof window === "undefined" || (!window.OfflineAudioContext && !window.webkitOfflineAudioContext)) {
+		if (
+			typeof window === "undefined" ||
+			(!window.OfflineAudioContext && !(/** @type {any} */ (window).webkitOfflineAudioContext))
+		) {
 			return {
 				status: "unsupported",
 				hash: "",
@@ -887,7 +895,9 @@ const collectExtensionContext = async () => {
 
 	try {
 		if (chrome?.storage?.local?.get) {
-			const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
+			const result = /** @type {{ currentLanguage?: string, autoSwitchEnabled?: boolean }} */ (
+				await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED])
+			);
 			currentLanguage = result.currentLanguage || "";
 			autoSwitchEnabled = !!result.autoSwitchEnabled;
 		}

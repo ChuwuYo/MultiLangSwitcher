@@ -351,7 +351,8 @@ const isChatContextStale = () =>
 	);
 
 const canRenderMarkdown = () =>
-	typeof window.marked?.parse === "function" && typeof window.DOMPurify?.sanitize === "function";
+	typeof (/** @type {any} */ (window).marked?.parse) === "function" &&
+	typeof (/** @type {any} */ (window).DOMPurify?.sanitize) === "function";
 
 const escapeHtml = (value) =>
 	String(value || "")
@@ -445,8 +446,8 @@ const updateChatMessageElement = (message, options = {}) => {
 	}
 
 	if (message.role === "assistant" && options.finalize && canRenderMarkdown()) {
-		const rawHtml = window.marked.parse(message.content || "");
-		contentElement.innerHTML = window.DOMPurify.sanitize(rawHtml);
+		const rawHtml = /** @type {any} */ (window).marked.parse(message.content || "");
+		contentElement.innerHTML = /** @type {any} */ (window).DOMPurify.sanitize(rawHtml);
 	} else {
 		contentElement.textContent = message.content || "";
 	}

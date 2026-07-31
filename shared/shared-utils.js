@@ -82,28 +82,26 @@ const sendDebugLog = (message, logType = "info") => {
  * @param {string} context - 上下文 ('popup' 或 'background')
  * @returns {string} 本地化的文本
  */
+/** @type {Map<string, import("./shared-i18n-base.js").BaseI18n>} */
+const i18nRegistry = new Map();
+
+/**
+ * 注册 i18n 实例（各页面/后台在创建实例后调用），取代全局变量嗅探
+ * @param {string} context - 上下文名称（"popup" / "debug" / "detect" / "background" / "domain-manager"）
+ * @param {import("./shared-i18n-base.js").BaseI18n} instance - i18n 实例
+ */
+const registerI18nInstance = (context, instance) => {
+	i18nRegistry.set(context, instance);
+};
+
 const getUpdateTranslation = (key, params = {}, context = "popup") => {
 	try {
-		// 统一的i18n实例查找逻辑
-		const availableI18nInstances = [];
-
-		// 根据上下文优先级添加实例
-		if (context === "background" && typeof backgroundI18n !== "undefined" && backgroundI18n.isReady) {
-			availableI18nInstances.push(backgroundI18n);
-		}
-		if (context === "popup" && typeof popupI18n !== "undefined" && popupI18n.isReady) {
-			availableI18nInstances.push(popupI18n);
-		}
-
-		// 添加其他可能的实例作为备用
-		const otherInstances = [
-			typeof backgroundI18n !== "undefined" ? backgroundI18n : undefined,
-			typeof popupI18n !== "undefined" ? popupI18n : undefined,
-			typeof debugI18n !== "undefined" ? debugI18n : undefined,
-			typeof detectI18n !== "undefined" ? detectI18n : undefined,
-		].filter((instance) => instance?.isReady && !availableI18nInstances.includes(instance));
-
-		availableI18nInstances.push(...otherInstances);
+		// 统一的i18n实例查找逻辑：上下文优先，其余实例兜底
+		const preferred = i18nRegistry.get(context);
+		const availableI18nInstances = [
+			...(preferred ? [preferred] : []),
+			...[...i18nRegistry.values()].filter((instance) => instance !== preferred),
+		].filter((instance) => instance?.isReady);
 
 		// 尝试从找到的i18n实例获取翻译
 		for (const i18nInstance of availableI18nInstances) {
@@ -130,17 +128,8 @@ const getUpdateTranslation = (key, params = {}, context = "popup") => {
  * @returns {string} fallback翻译文本
  */
 const getFallbackTranslation = (key, params = {}) => {
-	// 从主i18n实例获取当前语言，确保实时同步
-	const mainI18n =
-		typeof debugI18n !== "undefined"
-			? debugI18n
-			: typeof popupI18n !== "undefined"
-				? popupI18n
-				: typeof detectI18n !== "undefined"
-					? detectI18n
-					: typeof backgroundI18n !== "undefined"
-						? backgroundI18n
-						: null;
+	// 从已注册的i18n实例获取当前语言，确保实时同步
+	const mainI18n = i18nRegistry.values().next().value ?? null;
 
 	const currentLang = mainI18n?.currentLang || "en";
 
@@ -238,7 +227,6 @@ const getFallbackTranslation = (key, params = {}) => {
  * @param {Object} params - 参数对象
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
-// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const sendLocalizedUpdateLog = (key, params = {}, logType = "info") => {
 	try {
 		const message = getUpdateTranslation(key, params, "background");
@@ -255,6 +243,7 @@ export {
 	detectCurrentLanguage,
 	switchLanguageAndReload,
 	sendDebugLog,
+	registerI18nInstance,
 	getUpdateTranslation,
 	getFallbackTranslation,
 	sendLocalizedUpdateLog,

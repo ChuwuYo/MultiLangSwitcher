@@ -28,7 +28,7 @@ class DetectI18n extends BaseI18n {
 		document.title = this.t("title");
 
 		// 主题切换按钮
-		const themeToggleBtn = document.querySelector("#themeToggleBtn");
+		const themeToggleBtn = /** @type {HTMLElement} */ (document.querySelector("#themeToggleBtn"));
 		if (themeToggleBtn) {
 			themeToggleBtn.title = this.t("theme_toggle");
 		}
@@ -128,7 +128,7 @@ class DetectI18n extends BaseI18n {
 			aiDiagnosisTitle.textContent = this.t("ai_diagnosis_title");
 		}
 
-		const aiDiagnosisSubtitle = document.querySelector("#aiDiagnosisSubtitle");
+		const aiDiagnosisSubtitle = /** @type {HTMLElement} */ (document.querySelector("#aiDiagnosisSubtitle"));
 		if (aiDiagnosisSubtitle) {
 			aiDiagnosisSubtitle.textContent = "";
 			aiDiagnosisSubtitle.style.display = "none";
@@ -144,12 +144,12 @@ class DetectI18n extends BaseI18n {
 			aiProviderLabel.textContent = this.t("ai_provider_label");
 		}
 
-		const aiProviderSelect = document.querySelector("#aiProviderSelect");
+		const aiProviderSelect = /** @type {HTMLSelectElement} */ (document.querySelector("#aiProviderSelect"));
 		if (aiProviderSelect) {
 			AIProviderPresetUtils.populateSelectOptions(aiProviderSelect, (key) => this.t(key));
 		}
 
-		const aiProviderDescription = document.querySelector("#aiProviderDescription");
+		const aiProviderDescription = /** @type {HTMLElement} */ (document.querySelector("#aiProviderDescription"));
 		if (aiProviderDescription && !aiProviderDescription.dataset.initialized) {
 			const providerKey = aiProviderSelect?.value || "openrouter";
 			const preset = AIProviderPresets?.[providerKey];
@@ -211,7 +211,7 @@ class DetectI18n extends BaseI18n {
 			aiExportButton.textContent = this.t("ai_export");
 		}
 
-		const aiUserInput = document.querySelector("#aiUserInput");
+		const aiUserInput = /** @type {HTMLInputElement} */ (document.querySelector("#aiUserInput"));
 		const aiUserInputLabel = document.querySelector("#aiUserInputLabel");
 		if (aiUserInputLabel) {
 			aiUserInputLabel.textContent = this.t("ai_user_input_label");
@@ -253,17 +253,17 @@ class DetectI18n extends BaseI18n {
 			headerInfo.textContent = this.t("loading");
 		}
 
-		const aiChatMessages = document.querySelector("#aiChatMessages");
+		const aiChatMessages = /** @type {HTMLElement} */ (document.querySelector("#aiChatMessages"));
 		if (aiChatMessages && !aiChatMessages.dataset.initialized) {
 			aiChatMessages.textContent = this.t("ai_chat_placeholder");
 		}
 
-		const aiChatStatus = document.querySelector("#aiChatStatus");
+		const aiChatStatus = /** @type {HTMLElement} */ (document.querySelector("#aiChatStatus"));
 		if (aiChatStatus && !aiChatStatus.dataset.initialized) {
 			aiChatStatus.textContent = "";
 		}
 
-		const aiConfigHint = document.querySelector("#aiConfigHint");
+		const aiConfigHint = /** @type {HTMLElement} */ (document.querySelector("#aiConfigHint"));
 		if (aiConfigHint && !aiConfigHint.dataset.initialized) {
 			aiConfigHint.textContent = "";
 		}

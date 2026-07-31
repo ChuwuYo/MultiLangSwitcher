@@ -51,8 +51,9 @@ const createResourceManager = () => {
 		if (typeof RTCPeerConnection !== "undefined") {
 			return RTCPeerConnection;
 		}
-		if (typeof webkitRTCPeerConnection !== "undefined") {
-			return webkitRTCPeerConnection;
+		const webkitRTCPeerConnectionClass = /** @type {any} */ (globalThis).webkitRTCPeerConnection;
+		if (typeof webkitRTCPeerConnectionClass !== "undefined") {
+			return webkitRTCPeerConnectionClass;
 		}
 		return null;
 	};
@@ -102,7 +103,7 @@ const createResourceManager = () => {
 		if (typeof window === "undefined") {
 			throw new Error("OfflineAudioContext not supported");
 		}
-		const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+		const OfflineAudioContext = window.OfflineAudioContext || /** @type {any} */ (window).webkitOfflineAudioContext;
 		if (!OfflineAudioContext) {
 			throw new Error("OfflineAudioContext not supported");
 		}

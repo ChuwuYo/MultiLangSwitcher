@@ -9,11 +9,14 @@
 		"format": "biome format --write .",
 		"check": "biome ci .",
 		"check:syntax": "node scripts/check-syntax.mjs",
+		"check:types": "tsc",
 		"test": "vitest run --passWithNoTests",
-		"verify": "biome ci . && node scripts/check-syntax.mjs && node scripts/validate-manifest.mjs"
+		"verify": "biome ci . && tsc && node scripts/check-syntax.mjs && node scripts/validate-manifest.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@types/chrome": "^0.2.2",
+		"typescript": "^7.0.2",
 		"vitest": "^2.1.9"
 	}
 }

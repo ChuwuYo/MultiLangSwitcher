@@ -27,7 +27,7 @@ class DebugI18n extends BaseI18n {
 		document.title = this.t("title");
 
 		// 主题切换按钮
-		const themeToggleBtn = document.querySelector("#themeToggleBtn");
+		const themeToggleBtn = /** @type {HTMLElement} */ (document.querySelector("#themeToggleBtn"));
 		if (themeToggleBtn) {
 			themeToggleBtn.title = this.t("theme_toggle");
 		}
@@ -194,7 +194,7 @@ class DebugI18n extends BaseI18n {
 		}
 
 		// 处理占位符文本
-		const customLanguageInput = document.querySelector("#customLanguageInput");
+		const customLanguageInput = /** @type {HTMLInputElement} */ (document.querySelector("#customLanguageInput"));
 		if (customLanguageInput) {
 			customLanguageInput.placeholder = this.t("custom_language_placeholder");
 		}
@@ -271,12 +271,12 @@ class DebugI18n extends BaseI18n {
 		}
 
 		// 重置按钮
-		const resetCustomLangBtn = document.querySelector("#resetCustomLangBtn");
+		const resetCustomLangBtn = /** @type {HTMLElement} */ (document.querySelector("#resetCustomLangBtn"));
 		if (resetCustomLangBtn) {
 			resetCustomLangBtn.title = this.t("reset_accept_language_tooltip");
 		}
 
-		const resetBtnImg = document.querySelector("#resetBtnImg");
+		const resetBtnImg = /** @type {HTMLImageElement} */ (document.querySelector("#resetBtnImg"));
 		if (resetBtnImg) {
 			resetBtnImg.alt = this.t("reset_accept_language_tooltip");
 		}

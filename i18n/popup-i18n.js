@@ -27,17 +27,17 @@ class PopupI18n extends BaseI18n {
 		document.title = this.t("extension_name");
 
 		// 主题按钮和重置按钮
-		const themeToggleBtn = document.querySelector("#themeToggleBtn");
+		const themeToggleBtn = /** @type {HTMLElement} */ (document.querySelector("#themeToggleBtn"));
 		if (themeToggleBtn) {
 			themeToggleBtn.title = this.t("theme_toggle");
 		}
 
-		const resetBtn = document.querySelector("#resetBtn");
+		const resetBtn = /** @type {HTMLElement} */ (document.querySelector("#resetBtn"));
 		if (resetBtn) {
 			resetBtn.title = this.t("reset_accept_language_tooltip");
 		}
 
-		const resetBtnImg = document.querySelector("#resetBtnImg");
+		const resetBtnImg = /** @type {HTMLImageElement} */ (document.querySelector("#resetBtnImg"));
 		if (resetBtnImg) {
 			resetBtnImg.alt = this.t("reset_accept_language_tooltip");
 		}

@@ -1,12 +1,14 @@
 // debug-ui.js - 调试页面UI交互脚本
 
 import { debugI18n } from "./i18n/debug-i18n.js";
+
+registerI18nInstance("debug", debugI18n);
 import { createLocalizedExternalCheckLinks, fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
 import { MessageTypes } from "./shared/message-types.js";
 import { requestBackground, resetAcceptLanguage } from "./shared/shared-actions.js";
 import { populateLanguageSelect } from "./shared/shared-language-options.js";
 import { ResourceManager } from "./shared/shared-resource-manager.js";
-import { getFallbackTranslation } from "./shared/shared-utils.js";
+import { getFallbackTranslation, registerI18nInstance } from "./shared/shared-utils.js";
 import { STORAGE_KEYS } from "./shared/storage-keys.js";
 import "./toggle.js";
 import "./debug-headers.js";
@@ -15,8 +17,8 @@ import "./debug-headers.js";
  * 安全地创建HTML元素并设置属性
  * @param {string} tag - HTML标签名
  * @param {Object} options - 配置选项
- * @param {string} options.className - CSS类名
- * @param {string} options.textContent - 文本内容
+ * @param {string} [options.className] - CSS类名
+ * @param {string} [options.textContent] - 文本内容
  * @returns {HTMLElement} 创建的元素
  */
 const createSafeElement = (tag, options = {}) => {
@@ -99,7 +101,7 @@ const appendExternalCheckLinks = (fragment, leadingText) => {
 
 ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	// 初始化语言选项
-	const testLanguageSelect = document.getElementById("testLanguage");
+	const testLanguageSelect = /** @type {HTMLSelectElement} */ (document.getElementById("testLanguage"));
 	if (testLanguageSelect) {
 		populateLanguageSelect(testLanguageSelect);
 	}
@@ -277,10 +279,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 	// 过滤器复选框为静态元素，缓存引用避免每次渲染日志时重复查询 DOM
 	const logFilterCheckboxes = {
-		info: document.getElementById("filterInfo"),
-		warning: document.getElementById("filterWarning"),
-		error: document.getElementById("filterError"),
-		success: document.getElementById("filterSuccess"),
+		info: /** @type {HTMLInputElement} */ (document.getElementById("filterInfo")),
+		warning: /** @type {HTMLInputElement} */ (document.getElementById("filterWarning")),
+		error: /** @type {HTMLInputElement} */ (document.getElementById("filterError")),
+		success: /** @type {HTMLInputElement} */ (document.getElementById("filterSuccess")),
 	};
 
 	/**
@@ -327,7 +329,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		try {
 			const result = await chrome.storage.local.get([STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
 
-			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
+			const autoSwitchToggle = /** @type {HTMLInputElement} */ (document.getElementById("autoSwitchToggle"));
 			if (!autoSwitchToggle) return;
 
 			autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
@@ -352,7 +354,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 	// 测试请求头
 	ResourceManager.addEventListener(document.getElementById("testHeaderBtn"), "click", async () => {
-		const language = document.getElementById("testLanguage").value;
+		const language = /** @type {HTMLSelectElement} */ (document.getElementById("testLanguage")).value;
 		const resultElement = document.getElementById("headerTestResult");
 		setSafeContent(
 			resultElement,
@@ -604,7 +606,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 	// 应用自定义语言设置
 	ResourceManager.addEventListener(document.getElementById("applyCustomLangBtn"), "click", () => {
-		const customLangInput = document.getElementById("customLanguageInput");
+		const customLangInput = /** @type {HTMLInputElement} */ (document.getElementById("customLanguageInput"));
 		const customLangResult = document.getElementById("customLangResult");
 		const languageString = customLangInput.value.trim();
 
@@ -661,7 +663,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	// 重置自定义语言设置
 	ResourceManager.addEventListener(document.getElementById("resetCustomLangBtn"), "click", async () => {
 		const customLangResult = document.getElementById("customLangResult");
-		const customLangInput = document.getElementById("customLanguageInput");
+		const customLangInput = /** @type {HTMLInputElement} */ (document.getElementById("customLanguageInput"));
 
 		addLogMessage(debugI18n.t("attempt_reset_accept_language"), "info");
 
@@ -807,7 +809,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					addLogMessage(debugI18n.t("diagnostics_complete"), "info");
 
 					// 同步更新自动切换开关状态
-					const autoSwitchToggle = document.getElementById("autoSwitchToggle");
+					const autoSwitchToggle = /** @type {HTMLInputElement} */ (document.getElementById("autoSwitchToggle"));
 					if (autoSwitchToggle) {
 						autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 					}
@@ -1024,8 +1026,9 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
 			return;
 		}
-		const { autoSwitchEnabled, currentLanguage } = changes[STORAGE_KEYS.UI_STATE].newValue;
-		const autoSwitchToggle = document.getElementById("autoSwitchToggle");
+		const { autoSwitchEnabled, currentLanguage } =
+			/** @type {{ autoSwitchEnabled: boolean, currentLanguage: string }} */ (changes[STORAGE_KEYS.UI_STATE].newValue);
+		const autoSwitchToggle = /** @type {HTMLInputElement} */ (document.getElementById("autoSwitchToggle"));
 		if (autoSwitchToggle) {
 			autoSwitchToggle.checked = !!autoSwitchEnabled;
 		}
@@ -1101,7 +1104,7 @@ const initializeCacheManagement = () => {
  * 测试域名缓存功能
  */
 const testDomainCache = async () => {
-	const testDomainInput = document.getElementById("testDomainInput");
+	const testDomainInput = /** @type {HTMLInputElement} */ (document.getElementById("testDomainInput"));
 	const resultElement = document.getElementById("cacheOperationResult");
 	const domain = testDomainInput.value.trim();
 
