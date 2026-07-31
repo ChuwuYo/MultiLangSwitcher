@@ -1,6 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
-import { domainManagerEn } from "./domain-manager-en.js";
-import { domainManagerZh } from "./domain-manager-zh.js";
+import { domainManagerEn, domainManagerZh } from "./domain-manager-dict.js";
 
 /**
  * 域名管理器国际化类

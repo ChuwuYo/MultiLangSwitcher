@@ -1,6 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
-import { debugEn } from "./debug-en.js";
-import { debugZh } from "./debug-zh.js";
+import { debugEn, debugZh } from "./debug-dict.js";
 
 /**
  * 调试页面国际化类

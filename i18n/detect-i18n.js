@@ -1,7 +1,6 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
 import { AIProviderPresets, AIProviderPresetUtils } from "../shared/ai-provider-presets.js";
-import { detectEn } from "./detect-en.js";
-import { detectZh } from "./detect-zh.js";
+import { detectEn, detectZh } from "./detect-dict.js";
 
 /**
  * 检测页面国际化类

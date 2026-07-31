@@ -1,6 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
-import { backgroundEn } from "./background-en.js";
-import { backgroundZh } from "./background-zh.js";
+import { backgroundEn, backgroundZh } from "./background-dict.js";
 
 /**
  * 后台脚本国际化类

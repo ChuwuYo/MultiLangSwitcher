@@ -1,6 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
-import { popupEn } from "./popup-en.js";
-import { popupZh } from "./popup-zh.js";
+import { popupEn, popupZh } from "./popup-dict.js";
 
 /**
  * 弹窗页面国际化类
