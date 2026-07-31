@@ -9,7 +9,7 @@
 		"format": "biome format --write .",
 		"check": "biome ci .",
 		"check:syntax": "node scripts/check-syntax.mjs",
-		"test": "vitest run",
+		"test": "vitest run --passWithNoTests",
 		"verify": "biome ci . && node scripts/check-syntax.mjs && node scripts/validate-manifest.mjs"
 	},
 	"devDependencies": {

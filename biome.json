@@ -5,8 +5,7 @@
 		"enabled": true,
 		"indentStyle": "tab",
 		"indentWidth": 2,
-		"lineWidth": 120,
-		"ignore": ["bootstrap.min.css", "shared/vendor/**"]
+		"lineWidth": 120
 	},
 	"javascript": {
 		"formatter": {
@@ -36,8 +35,7 @@
 				"useConst": "warn",
 				"useTemplate": "warn"
 			}
-		},
-		"ignore": ["bootstrap.min.css", "shared/vendor/**", ".codegraph/**"]
+		}
 	},
 	"files": {
 		"ignore": ["bootstrap.min.css", "shared/vendor/**", ".codegraph/**", "coverage/**"]
