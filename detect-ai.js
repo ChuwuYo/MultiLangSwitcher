@@ -2,8 +2,7 @@
 	const AI_CONFIG_STORAGE_KEY = "aiDiagnosisConfig";
 	const DEFAULT_PROVIDER_KEY = "openrouter";
 	const AI_PROVIDER_PRESETS = window.AIProviderPresets || {};
-	const AI_PROVIDER_PRESET_ORDER =
-		window.AIProviderPresetOrder || Object.keys(AI_PROVIDER_PRESETS);
+	const AI_PROVIDER_PRESET_ORDER = window.AIProviderPresetOrder || Object.keys(AI_PROVIDER_PRESETS);
 	let aiConfigStore = {
 		selectedProvider: DEFAULT_PROVIDER_KEY,
 		providers: {},
@@ -20,27 +19,19 @@
 	window.aiSessionState = aiSessionState;
 
 	const translate = (key, params = {}) =>
-		window.DetectPageContext?.translate
-			? window.DetectPageContext.translate(key, params)
-			: key;
+		window.DetectPageContext?.translate ? window.DetectPageContext.translate(key, params) : key;
 
-	const getUiLanguage = () =>
-		window.DetectPageContext?.getUiLanguage?.() === "zh" ? "zh" : "en";
+	const getUiLanguage = () => (window.DetectPageContext?.getUiLanguage?.() === "zh" ? "zh" : "en");
 
 	const getProviderPreset = (providerKey) =>
-		AI_PROVIDER_PRESETS[providerKey] ||
-		AI_PROVIDER_PRESETS[DEFAULT_PROVIDER_KEY] ||
-		{};
+		AI_PROVIDER_PRESETS[providerKey] || AI_PROVIDER_PRESETS[DEFAULT_PROVIDER_KEY] || {};
 
 	const ensureProviderOptions = (providerSelect) => {
 		if (!providerSelect || providerSelect.options.length > 0) {
 			return;
 		}
 
-		window.AIProviderPresetUtils?.populateSelectOptions?.(
-			providerSelect,
-			translate,
-		);
+		window.AIProviderPresetUtils?.populateSelectOptions?.(providerSelect, translate);
 	};
 
 	// AI 面板元素均为静态 DOM 且脚本在 body 末尾加载，首次查询后缓存引用，避免重复 getElementById
@@ -59,9 +50,7 @@
 				startButton: document.getElementById("aiStartButton"),
 				stopButton: document.getElementById("aiStopButton"),
 				clearButton: document.getElementById("aiClearButton"),
-				exportStructuredButton: document.getElementById(
-					"aiExportStructuredButton",
-				),
+				exportStructuredButton: document.getElementById("aiExportStructuredButton"),
 				messagesContainer: document.getElementById("aiChatMessages"),
 				status: document.getElementById("aiChatStatus"),
 				userInput: document.getElementById("aiUserInput"),
@@ -72,8 +61,7 @@
 		return cachedAiElements;
 	};
 
-	const getVisibleChatMessages = () =>
-		aiSessionState.messages.filter((message) => message.visible !== false);
+	const getVisibleChatMessages = () => aiSessionState.messages.filter((message) => message.visible !== false);
 
 	const sanitizeSnapshotForAI = (snapshot) => {
 		if (!snapshot) {
@@ -90,9 +78,7 @@
 		}
 
 		if (sanitized.webrtc) {
-			sanitized.webrtc.ips = Array.isArray(snapshot.webrtc?.ips)
-				? snapshot.webrtc.ips.map(() => "[redacted]")
-				: [];
+			sanitized.webrtc.ips = Array.isArray(snapshot.webrtc?.ips) ? snapshot.webrtc.ips.map(() => "[redacted]") : [];
 		}
 
 		if (sanitized.browserFingerprint) {
@@ -121,13 +107,7 @@
 			return;
 		}
 
-		element.classList.remove(
-			"text-muted",
-			"text-success",
-			"text-warning",
-			"text-danger",
-			"text-info",
-		);
+		element.classList.remove("text-muted", "text-success", "text-warning", "text-danger", "text-info");
 		element.classList.add(
 			tone === "success"
 				? "text-success"
@@ -162,25 +142,15 @@
 	};
 
 	const normalizeConfig = (config = {}) => {
-		const provider = AI_PROVIDER_PRESETS[config.provider]
-			? config.provider
-			: DEFAULT_PROVIDER_KEY;
+		const provider = AI_PROVIDER_PRESETS[config.provider] ? config.provider : DEFAULT_PROVIDER_KEY;
 		const preset = getProviderPreset(provider);
 
 		return {
 			provider,
 			baseUrl:
-				typeof config.baseUrl === "string" && config.baseUrl.trim()
-					? config.baseUrl.trim()
-					: preset.baseUrl || "",
-			apiKey:
-				typeof config.apiKey === "string" && config.apiKey.trim()
-					? config.apiKey.trim()
-					: "",
-			model:
-				typeof config.model === "string" && config.model.trim()
-					? config.model.trim()
-					: preset.model || "",
+				typeof config.baseUrl === "string" && config.baseUrl.trim() ? config.baseUrl.trim() : preset.baseUrl || "",
+			apiKey: typeof config.apiKey === "string" && config.apiKey.trim() ? config.apiKey.trim() : "",
+			model: typeof config.model === "string" && config.model.trim() ? config.model.trim() : preset.model || "",
 			authHeader:
 				typeof config.authHeader === "string" && config.authHeader.trim()
 					? config.authHeader.trim()
@@ -208,9 +178,7 @@
 					...(storedConfig.providers[providerKey] || {}),
 				});
 			});
-			normalizedStore.selectedProvider = AI_PROVIDER_PRESETS[
-				storedConfig.selectedProvider
-			]
+			normalizedStore.selectedProvider = AI_PROVIDER_PRESETS[storedConfig.selectedProvider]
 				? storedConfig.selectedProvider
 				: DEFAULT_PROVIDER_KEY;
 			return normalizedStore;
@@ -229,8 +197,7 @@
 	};
 
 	const getStoredProviderConfig = (providerKey) =>
-		aiConfigStore.providers[providerKey] ||
-		normalizeConfig({ provider: providerKey });
+		aiConfigStore.providers[providerKey] || normalizeConfig({ provider: providerKey });
 
 	const serializeConfigStore = () => {
 		const providers = {};
@@ -254,10 +221,7 @@
 
 	const readAIConfigFromInputs = (providerOverride = "") => {
 		const elements = getAiElements();
-		const provider =
-			providerOverride ||
-			elements.providerSelect?.value ||
-			DEFAULT_PROVIDER_KEY;
+		const provider = providerOverride || elements.providerSelect?.value || DEFAULT_PROVIDER_KEY;
 		const preset = getProviderPreset(provider);
 
 		return normalizeConfig({
@@ -302,13 +266,13 @@
 		}
 
 		const preset = getProviderPreset(providerKey);
-		providerDescription.textContent = preset.descriptionKey
-			? translate(preset.descriptionKey)
-			: "";
+		providerDescription.textContent = preset.descriptionKey ? translate(preset.descriptionKey) : "";
 	};
 
 	const guessProviderFromConfig = (config = {}) => {
-		const baseUrl = String(config.baseUrl || "").trim().toLowerCase();
+		const baseUrl = String(config.baseUrl || "")
+			.trim()
+			.toLowerCase();
 		if (!baseUrl) {
 			return DEFAULT_PROVIDER_KEY;
 		}
@@ -352,10 +316,7 @@
 			console.warn("Failed to persist AI config:", error);
 		}
 
-		setAIConfigHint(
-			validation.messageKey,
-			validation.valid ? "success" : "warning",
-		);
+		setAIConfigHint(validation.messageKey, validation.valid ? "success" : "warning");
 		updateAIControls();
 		return config;
 	};
@@ -374,10 +335,7 @@
 
 		fillAIConfigInputs(normalized);
 		const validation = validateAIConfig(normalized);
-		setAIConfigHint(
-			validation.messageKey,
-			validation.valid ? "success" : "warning",
-		);
+		setAIConfigHint(validation.messageKey, validation.valid ? "success" : "warning");
 		return normalized;
 	};
 
@@ -386,13 +344,11 @@
 			aiSessionState.hasStarted &&
 			aiSessionState.activeSnapshotVersion &&
 			window.DetectPageContext?.getLatestSnapshotVersion?.() &&
-			aiSessionState.activeSnapshotVersion !==
-				window.DetectPageContext.getLatestSnapshotVersion()
+			aiSessionState.activeSnapshotVersion !== window.DetectPageContext.getLatestSnapshotVersion()
 		);
 
 	const canRenderMarkdown = () =>
-		typeof window.marked?.parse === "function" &&
-		typeof window.DOMPurify?.sanitize === "function";
+		typeof window.marked?.parse === "function" && typeof window.DOMPurify?.sanitize === "function";
 
 	const escapeHtml = (value) =>
 		String(value || "")
@@ -408,9 +364,7 @@
 			return;
 		}
 
-		messagesContainer.innerHTML = `<div class="text-muted small">${escapeHtml(
-			translate("ai_chat_placeholder"),
-		)}</div>`;
+		messagesContainer.innerHTML = `<div class="text-muted small">${escapeHtml(translate("ai_chat_placeholder"))}</div>`;
 	};
 
 	const copyTextToClipboard = async (text) => {
@@ -430,8 +384,7 @@
 		document.body.removeChild(tempTextArea);
 	};
 
-	const getMessageById = (messageId) =>
-		aiSessionState.messages.find((message) => message.id === messageId) || null;
+	const getMessageById = (messageId) => aiSessionState.messages.find((message) => message.id === messageId) || null;
 
 	const createChatMessageElement = (message) => {
 		const element = document.createElement("div");
@@ -440,10 +393,7 @@
 
 		const roleLabel = document.createElement("div");
 		roleLabel.className = "small text-muted mb-2";
-		roleLabel.textContent =
-			message.role === "user"
-				? translate("ai_role_user")
-				: translate("ai_role_assistant");
+		roleLabel.textContent = message.role === "user" ? translate("ai_role_user") : translate("ai_role_assistant");
 		element.appendChild(roleLabel);
 
 		const copyButton = window.CopyButton?.create({
@@ -470,14 +420,9 @@
 			return;
 		}
 
-		let messageElement = messagesContainer.querySelector(
-			`[data-message-id="${message.id}"]`,
-		);
+		let messageElement = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
 		if (!messageElement) {
-			if (
-				messagesContainer.children.length === 1 &&
-				!messagesContainer.firstElementChild?.dataset?.messageId
-			) {
+			if (messagesContainer.children.length === 1 && !messagesContainer.firstElementChild?.dataset?.messageId) {
 				messagesContainer.innerHTML = "";
 			}
 
@@ -534,10 +479,7 @@
 
 		return visibleMessages
 			.map((message) => {
-				const roleLabel =
-					message.role === "user"
-						? translate("ai_role_user")
-						: translate("ai_role_assistant");
+				const roleLabel = message.role === "user" ? translate("ai_role_user") : translate("ai_role_assistant");
 				return `## ${roleLabel}\n\n${message.content || ""}`.trim();
 			})
 			.join("\n\n");
@@ -553,9 +495,7 @@
 				return "N/A";
 			}
 
-			const hasObjectItem = value.some(
-				(item) => item && typeof item === "object",
-			);
+			const hasObjectItem = value.some((item) => item && typeof item === "object");
 			if (hasObjectItem) {
 				return {
 					block: `\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``,
@@ -641,116 +581,59 @@
 			translate("ai_export_structured_notice"),
 			"",
 			buildMarkdownEntry(labels.generatedAt, sanitizedSnapshot.meta?.generatedAt),
-			buildMarkdownEntry(
-				labels.snapshotVersion,
-				sanitizedSnapshot.meta?.snapshotVersion,
-			),
+			buildMarkdownEntry(labels.snapshotVersion, sanitizedSnapshot.meta?.snapshotVersion),
 			buildMarkdownEntry(labels.uiLanguage, sanitizedSnapshot.meta?.uiLanguage),
-			buildMarkdownEntry(
-				labels.extensionVersion,
-				sanitizedSnapshot.meta?.extensionVersion,
-			),
+			buildMarkdownEntry(labels.extensionVersion, sanitizedSnapshot.meta?.extensionVersion),
 			"",
 			`## ${labels.extension}`,
 			"",
-			buildMarkdownEntry(
-				labels.currentLanguage,
-				sanitizedSnapshot.extension?.currentLanguage,
-			),
-			buildMarkdownEntry(
-				labels.autoSwitchEnabled,
-				sanitizedSnapshot.extension?.autoSwitchEnabled,
-			),
+			buildMarkdownEntry(labels.currentLanguage, sanitizedSnapshot.extension?.currentLanguage),
+			buildMarkdownEntry(labels.autoSwitchEnabled, sanitizedSnapshot.extension?.autoSwitchEnabled),
 			"",
 			`## ${labels.http}`,
 			"",
 			buildMarkdownEntry(labels.status, sanitizedSnapshot.http?.status),
 			buildMarkdownEntry(labels.endpoint, sanitizedSnapshot.http?.endpoint),
-			buildMarkdownEntry(
-				labels.acceptLanguage,
-				sanitizedSnapshot.http?.acceptLanguage,
-			),
+			buildMarkdownEntry(labels.acceptLanguage, sanitizedSnapshot.http?.acceptLanguage),
 			buildMarkdownEntry(labels.error, sanitizedSnapshot.http?.error),
 			buildMarkdownEntry(labels.headers, sanitizedSnapshot.http?.headers),
 			"",
 			`## ${labels.jsEnv}`,
 			"",
-			buildMarkdownEntry(
-				labels.navigatorLanguage,
-				sanitizedSnapshot.jsEnv?.language,
-			),
-			buildMarkdownEntry(
-				labels.navigatorLanguages,
-				sanitizedSnapshot.jsEnv?.languages,
-			),
+			buildMarkdownEntry(labels.navigatorLanguage, sanitizedSnapshot.jsEnv?.language),
+			buildMarkdownEntry(labels.navigatorLanguages, sanitizedSnapshot.jsEnv?.languages),
 			buildMarkdownEntry(labels.timezone, sanitizedSnapshot.jsEnv?.timezone),
-			buildMarkdownEntry(
-				labels.timezoneOffset,
-				sanitizedSnapshot.jsEnv?.timezoneOffset,
-			),
+			buildMarkdownEntry(labels.timezoneOffset, sanitizedSnapshot.jsEnv?.timezoneOffset),
 			"",
 			`## ${labels.intl}`,
 			"",
-			buildMarkdownEntry(
-				labels.dateTimeLocale,
-				sanitizedSnapshot.intl?.dateTimeLocale,
-			),
-			buildMarkdownEntry(
-				labels.numberFormatLocale,
-				sanitizedSnapshot.intl?.numberFormatLocale,
-			),
+			buildMarkdownEntry(labels.dateTimeLocale, sanitizedSnapshot.intl?.dateTimeLocale),
+			buildMarkdownEntry(labels.numberFormatLocale, sanitizedSnapshot.intl?.numberFormatLocale),
 			"",
 			`## ${labels.webrtc}`,
 			"",
 			buildMarkdownEntry(labels.status, sanitizedSnapshot.webrtc?.status),
-			buildMarkdownEntry(
-				labels.ipLeakDetected,
-				sanitizedSnapshot.webrtc?.ipLeakDetected,
-			),
+			buildMarkdownEntry(labels.ipLeakDetected, sanitizedSnapshot.webrtc?.ipLeakDetected),
 			buildMarkdownEntry(labels.ips, sanitizedSnapshot.webrtc?.ips),
 			buildMarkdownEntry(labels.error, sanitizedSnapshot.webrtc?.error),
 			"",
 			`## ${labels.browserFingerprint}`,
 			"",
-			buildMarkdownEntry(
-				labels.userAgent,
-				sanitizedSnapshot.browserFingerprint?.userAgent,
-			),
-			buildMarkdownEntry(
-				labels.screen,
-				sanitizedSnapshot.browserFingerprint?.screen,
-			),
-			buildMarkdownEntry(
-				labels.timezone,
-				sanitizedSnapshot.browserFingerprint?.timezone,
-			),
-			buildMarkdownEntry(
-				labels.timezoneOffset,
-				sanitizedSnapshot.browserFingerprint?.timezoneOffset,
-			),
+			buildMarkdownEntry(labels.userAgent, sanitizedSnapshot.browserFingerprint?.userAgent),
+			buildMarkdownEntry(labels.screen, sanitizedSnapshot.browserFingerprint?.screen),
+			buildMarkdownEntry(labels.timezone, sanitizedSnapshot.browserFingerprint?.timezone),
+			buildMarkdownEntry(labels.timezoneOffset, sanitizedSnapshot.browserFingerprint?.timezoneOffset),
 			"",
 			`## ${labels.hardwareFingerprint}`,
 			"",
-			buildMarkdownEntry(
-				labels.canvas,
-				sanitizedSnapshot.hardwareFingerprint?.canvas,
-			),
-			buildMarkdownEntry(
-				labels.webgl,
-				sanitizedSnapshot.hardwareFingerprint?.webgl,
-			),
-			buildMarkdownEntry(
-				labels.audio,
-				sanitizedSnapshot.hardwareFingerprint?.audio,
-			),
+			buildMarkdownEntry(labels.canvas, sanitizedSnapshot.hardwareFingerprint?.canvas),
+			buildMarkdownEntry(labels.webgl, sanitizedSnapshot.hardwareFingerprint?.webgl),
+			buildMarkdownEntry(labels.audio, sanitizedSnapshot.hardwareFingerprint?.audio),
 			"",
 			`## ${labels.compatibility}`,
 			"",
 			buildMarkdownEntry(labels.browser, sanitizedSnapshot.compatibility?.browser),
-			buildMarkdownEntry(
-				labels.apiSupport,
-				sanitizedSnapshot.compatibility?.apiSupport,
-			),
+			buildMarkdownEntry(labels.apiSupport, sanitizedSnapshot.compatibility?.apiSupport),
 		];
 
 		return sections.join("\n");
@@ -793,9 +676,7 @@
 	};
 
 	const removeMessageById = (messageId) => {
-		aiSessionState.messages = aiSessionState.messages.filter(
-			(message) => message.id !== messageId,
-		);
+		aiSessionState.messages = aiSessionState.messages.filter((message) => message.id !== messageId);
 		renderVisibleChatMessages();
 	};
 
@@ -826,15 +707,10 @@
 		const hasSnapshot = !!window.DetectPageContext?.getLatestSnapshot?.();
 		const stale = isChatContextStale();
 		const canFollowUp =
-			aiSessionState.hasStarted &&
-			!stale &&
-			!aiSessionState.isRequestInFlight &&
-			validation.valid &&
-			hasSnapshot;
+			aiSessionState.hasStarted && !stale && !aiSessionState.isRequestInFlight && validation.valid && hasSnapshot;
 
 		if (elements.startButton) {
-			elements.startButton.disabled =
-				aiSessionState.isRequestInFlight || !validation.valid || !hasSnapshot;
+			elements.startButton.disabled = aiSessionState.isRequestInFlight || !validation.valid || !hasSnapshot;
 		}
 		if (elements.stopButton) {
 			elements.stopButton.disabled = !aiSessionState.isRequestInFlight;
@@ -843,8 +719,7 @@
 			elements.clearButton.disabled = aiSessionState.isRequestInFlight;
 		}
 		if (elements.exportStructuredButton) {
-			elements.exportStructuredButton.disabled =
-				aiSessionState.isRequestInFlight || !hasSnapshot;
+			elements.exportStructuredButton.disabled = aiSessionState.isRequestInFlight || !hasSnapshot;
 		}
 		if (elements.sendButton) {
 			elements.sendButton.disabled = !canFollowUp;
@@ -938,8 +813,7 @@
 
 	const handleProviderChange = async () => {
 		const elements = getAiElements();
-		const previousProvider =
-			aiConfigStore.selectedProvider || DEFAULT_PROVIDER_KEY;
+		const previousProvider = aiConfigStore.selectedProvider || DEFAULT_PROVIDER_KEY;
 		const nextProvider = elements.providerSelect?.value || DEFAULT_PROVIDER_KEY;
 
 		aiConfigStore.providers[previousProvider] = {
@@ -950,10 +824,7 @@
 
 		fillAIConfigInputs(getStoredProviderConfig(nextProvider));
 		const validation = validateAIConfig(getStoredProviderConfig(nextProvider));
-		setAIConfigHint(
-			validation.messageKey,
-			validation.valid ? "success" : "warning",
-		);
+		setAIConfigHint(validation.messageKey, validation.valid ? "success" : "warning");
 
 		try {
 			await chrome.storage.local.set({
@@ -1078,9 +949,7 @@
 			finalizeAssistantMessage(assistantMessage.id);
 			setAIStatus("ai_ready_for_followup", "success");
 		} catch (error) {
-			const aborted =
-				error?.name === "AbortError" ||
-				/cancel|abort/i.test(String(error?.message || ""));
+			const aborted = error?.name === "AbortError" || /cancel|abort/i.test(String(error?.message || ""));
 			if (!assistantMessage.content) {
 				removeMessageById(assistantMessage.id);
 			} else {
@@ -1172,9 +1041,7 @@
 
 		const nextVisible = apiKeyInput.type === "password";
 		apiKeyInput.type = nextVisible ? "text" : "password";
-		apiKeyToggle.textContent = translate(
-			nextVisible ? "ai_api_key_toggle_hide" : "ai_api_key_toggle_show",
-		);
+		apiKeyToggle.textContent = translate(nextVisible ? "ai_api_key_toggle_hide" : "ai_api_key_toggle_show");
 	};
 
 	const handleCopyMessage = async (messageId) => {
@@ -1184,9 +1051,7 @@
 		}
 
 		const { messagesContainer } = getAiElements();
-		const button = messagesContainer?.querySelector(
-			`.ai-chat-message-copy[data-message-id="${messageId}"]`,
-		);
+		const button = messagesContainer?.querySelector(`.ai-chat-message-copy[data-message-id="${messageId}"]`);
 
 		try {
 			await copyTextToClipboard(message.content);
@@ -1203,11 +1068,7 @@
 
 	const bindConfigPersistence = () => {
 		const elements = getAiElements();
-		[
-			elements.baseUrlInput,
-			elements.apiKeyInput,
-			elements.modelInput,
-		].forEach((input) => {
+		[elements.baseUrlInput, elements.apiKeyInput, elements.modelInput].forEach((input) => {
 			ResourceManager.addEventListener(input, "change", persistAIConfig);
 		});
 	};
@@ -1219,44 +1080,14 @@
 		await loadAIConfig();
 		updateAIControls();
 
-		ResourceManager.addEventListener(
-			elements.providerSelect,
-			"change",
-			handleProviderChange,
-		);
-		ResourceManager.addEventListener(
-			elements.apiKeyToggle,
-			"click",
-			handleApiKeyToggle,
-		);
-		ResourceManager.addEventListener(
-			elements.startButton,
-			"click",
-			startAIDiagnosis,
-		);
-		ResourceManager.addEventListener(
-			elements.stopButton,
-			"click",
-			stopAIRequest,
-		);
-		ResourceManager.addEventListener(elements.clearButton, "click", () =>
-			resetAISession(),
-		);
-		ResourceManager.addEventListener(
-			elements.exportStructuredButton,
-			"click",
-			exportStructuredSnapshotAsMarkdown,
-		);
-		ResourceManager.addEventListener(
-			elements.sendButton,
-			"click",
-			sendFollowupMessage,
-		);
-		ResourceManager.addEventListener(
-			elements.exportButton,
-			"click",
-			exportChatAsMarkdown,
-		);
+		ResourceManager.addEventListener(elements.providerSelect, "change", handleProviderChange);
+		ResourceManager.addEventListener(elements.apiKeyToggle, "click", handleApiKeyToggle);
+		ResourceManager.addEventListener(elements.startButton, "click", startAIDiagnosis);
+		ResourceManager.addEventListener(elements.stopButton, "click", stopAIRequest);
+		ResourceManager.addEventListener(elements.clearButton, "click", () => resetAISession());
+		ResourceManager.addEventListener(elements.exportStructuredButton, "click", exportStructuredSnapshotAsMarkdown);
+		ResourceManager.addEventListener(elements.sendButton, "click", sendFollowupMessage);
+		ResourceManager.addEventListener(elements.exportButton, "click", exportChatAsMarkdown);
 		ResourceManager.addEventListener(elements.userInput, "keydown", (event) => {
 			if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
 				event.preventDefault();

@@ -64,20 +64,12 @@ class UpdateChecker {
 
 			if (error?.status >= 400) {
 				errorType = "SERVICE_ISSUE";
-			} else if (
-				message.includes("failed to fetch") ||
-				message.includes("network") ||
-				message.includes("timeout")
-			) {
+			} else if (message.includes("failed to fetch") || message.includes("network") || message.includes("timeout")) {
 				errorType = "NETWORK_ISSUE";
 			}
 
 			error.type = errorType;
-			sendLocalizedUpdateLog(
-				"update_check_failed",
-				{ error: error.message },
-				"error",
-			);
+			sendLocalizedUpdateLog("update_check_failed", { error: error.message }, "error");
 			throw error;
 		}
 	}
@@ -103,18 +95,12 @@ class UpdateChecker {
 			}
 
 			const data = await response.json();
-			if (
-				!data ||
-				!Array.isArray(data.versions) ||
-				data.versions.length === 0
-			) {
+			if (!data || !Array.isArray(data.versions) || data.versions.length === 0) {
 				throw new Error("No versions found in jsDelivr response");
 			}
 
 			// 过滤出稳定版本（排除预发布版本）
-			const stableVersions = data.versions.filter(
-				(v) => !/-beta|-rc|-alpha|-dev|-pre|-snapshot/i.test(v.version),
-			);
+			const stableVersions = data.versions.filter((v) => !/-beta|-rc|-alpha|-dev|-pre|-snapshot/i.test(v.version));
 
 			if (stableVersions.length === 0) {
 				throw new Error("No stable versions found in jsDelivr response");
@@ -189,21 +175,13 @@ class UpdateChecker {
 			}
 
 			// GitHub API 失败，尝试 jsDelivr 作为回退
-			sendLocalizedUpdateLog(
-				"github_api_failed_trying_fallback",
-				{ error: error.message },
-				"warning",
-			);
+			sendLocalizedUpdateLog("github_api_failed_trying_fallback", { error: error.message }, "warning");
 
 			try {
 				return await this.fetchLatestVersionFromJsDelivr();
 			} catch (fallbackError) {
 				// 回退也失败了，记录后抛出原始错误以保留根因
-				sendLocalizedUpdateLog(
-					"jsdelivr_fallback_failed",
-					{ error: fallbackError.message },
-					"error",
-				);
+				sendLocalizedUpdateLog("jsdelivr_fallback_failed", { error: fallbackError.message }, "error");
 				throw error;
 			}
 		} finally {
@@ -225,9 +203,7 @@ class UpdateChecker {
 			currentVersion: this.currentVersion,
 			latestVersion: latestVersion,
 			releaseUrl: releaseData.html_url,
-			releaseNotes: releaseData.body
-				? releaseData.body.substring(0, 200)
-				: getLocalizedText("no_release_notes"),
+			releaseNotes: releaseData.body ? releaseData.body.substring(0, 200) : getLocalizedText("no_release_notes"),
 			publishedAt: releaseData.published_at,
 		};
 	}
@@ -241,8 +217,7 @@ class UpdateChecker {
 	isNewerVersion(current, latest) {
 		try {
 			// 清理版本号：移除 'v' 前缀、预发布标签和构建元数据
-			const cleanVersion = (ver) =>
-				(ver || "").trim().replace(/^v/, "").split(/[-+]/)[0];
+			const cleanVersion = (ver) => (ver || "").trim().replace(/^v/, "").split(/[-+]/)[0];
 
 			const currentClean = cleanVersion(current);
 			const latestClean = cleanVersion(latest);
@@ -268,11 +243,7 @@ class UpdateChecker {
 			}
 			return false; // 版本相同
 		} catch (error) {
-			sendLocalizedUpdateLog(
-				"version_comparison_failed",
-				{ error: error.message },
-				"warning",
-			);
+			sendLocalizedUpdateLog("version_comparison_failed", { error: error.message }, "warning");
 			return false;
 		}
 	}
@@ -294,11 +265,7 @@ class UpdateChecker {
 			}
 			return null;
 		} catch (error) {
-			sendLocalizedUpdateLog(
-				"failed_load_persistent_cache",
-				{ error: error.message },
-				"warning",
-			);
+			sendLocalizedUpdateLog("failed_load_persistent_cache", { error: error.message }, "warning");
 			return null;
 		}
 	}
@@ -315,11 +282,7 @@ class UpdateChecker {
 			};
 			await chrome.storage.local.set({ [this.cacheKey]: cacheData });
 		} catch (error) {
-			sendLocalizedUpdateLog(
-				"failed_cache_update_info",
-				{ error: error.message },
-				"warning",
-			);
+			sendLocalizedUpdateLog("failed_cache_update_info", { error: error.message }, "warning");
 		}
 	}
 
@@ -330,11 +293,7 @@ class UpdateChecker {
 		try {
 			await chrome.storage.local.remove([this.cacheKey]);
 		} catch (error) {
-			sendLocalizedUpdateLog(
-				"failed_clear_persistent_cache",
-				{ error: error.message },
-				"warning",
-			);
+			sendLocalizedUpdateLog("failed_clear_persistent_cache", { error: error.message }, "warning");
 		}
 	}
 }

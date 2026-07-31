@@ -68,10 +68,7 @@ const createResourceManager = () => {
 
 		// 添加自动清理
 		peerConnection.addEventListener("connectionstatechange", () => {
-			if (
-				peerConnection.connectionState === "closed" ||
-				peerConnection.connectionState === "failed"
-			) {
+			if (peerConnection.connectionState === "closed" || peerConnection.connectionState === "failed") {
 				trackedPeerConnections.delete(peerConnection);
 			}
 		});
@@ -105,8 +102,7 @@ const createResourceManager = () => {
 		if (typeof window === "undefined") {
 			throw new Error("OfflineAudioContext not supported");
 		}
-		const OfflineAudioContext =
-			window.OfflineAudioContext || window.webkitOfflineAudioContext;
+		const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
 		if (!OfflineAudioContext) {
 			throw new Error("OfflineAudioContext not supported");
 		}
@@ -125,10 +121,7 @@ const createResourceManager = () => {
 
 		// 清理控制器
 		trackedControllers.forEach((controller) => {
-			if (
-				typeof controller.abort === "function" &&
-				(!controller.signal || !controller.signal.aborted)
-			) {
+			if (typeof controller.abort === "function" && (!controller.signal || !controller.signal.aborted)) {
 				try {
 					controller.abort();
 				} catch (_error) {
@@ -153,10 +146,8 @@ const createResourceManager = () => {
 
 	return {
 		// 定时器管理 - 跟踪需要手动清理的定时器
-		setTimeout: (callback, delay, ...args) =>
-			trackTimer(setTimeout(callback, delay, ...args)),
-		setInterval: (callback, delay, ...args) =>
-			trackTimer(setInterval(callback, delay, ...args)),
+		setTimeout: (callback, delay, ...args) => trackTimer(setTimeout(callback, delay, ...args)),
+		setInterval: (callback, delay, ...args) => trackTimer(setInterval(callback, delay, ...args)),
 		clearTimeout: (id) => clearTimer(id),
 		clearInterval: (id) => clearTimer(id),
 
@@ -182,11 +173,7 @@ const createResourceManager = () => {
 
 		// 消息监听器管理 - 依赖浏览器自动清理，仅提供兼容性接口
 		addMessageListener: (callback) => {
-			if (
-				typeof chrome !== "undefined" &&
-				chrome.runtime &&
-				chrome.runtime.onMessage
-			) {
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
 				chrome.runtime.onMessage.addListener(callback);
 				return { type: "messageListener", callback, addedAt: Date.now() };
 			}

@@ -65,7 +65,7 @@ if (typeof backgroundZh === "undefined") {
 		// Domain cache test related keys
 		domain_cache_test_failed: "域名缓存测试失败: {error}",
 		cached: "缓存",
-		"new": "新查询",
+		new: "新查询",
 		fallback: ", 回退",
 		domain_required_error: "域名是必需的",
 	};

@@ -20,11 +20,7 @@
 	const extractErrorMessage = async (response) => {
 		try {
 			const payload = await response.json();
-			return (
-				payload?.error?.message ||
-				payload?.message ||
-				`${response.status} ${response.statusText}`.trim()
-			);
+			return payload?.error?.message || payload?.message || `${response.status} ${response.statusText}`.trim();
 		} catch (_error) {
 			return `${response.status} ${response.statusText}`.trim();
 		}
@@ -72,10 +68,7 @@
 		}
 
 		const contentType = response.headers.get("content-type") || "";
-		const isSse =
-			stream &&
-			contentType.toLowerCase().includes("text/event-stream") &&
-			response.body;
+		const isSse = stream && contentType.toLowerCase().includes("text/event-stream") && response.body;
 
 		if (isSse) {
 			const reader = response.body.getReader();
@@ -137,10 +130,7 @@
 		}
 
 		const payload = await response.json();
-		const content =
-			payload?.choices?.[0]?.message?.content ||
-			payload?.choices?.[0]?.text ||
-			"";
+		const content = payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text || "";
 
 		return { content, streamed: false };
 	};

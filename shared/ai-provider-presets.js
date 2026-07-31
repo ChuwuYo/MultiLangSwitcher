@@ -106,10 +106,7 @@
 				selectElement.appendChild(option);
 			});
 
-			if (
-				selectedValue &&
-				window.AIProviderPresetOrder.includes(selectedValue)
-			) {
+			if (selectedValue && window.AIProviderPresetOrder.includes(selectedValue)) {
 				selectElement.value = selectedValue;
 			}
 		},

@@ -84,9 +84,7 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 				} else {
 					// 如果都没找到，在所有键中查找（完全不区分大小写）
 					const headerKeys = Object.keys(headers);
-					const languageKey = headerKeys.find(
-						(key) => key.toLowerCase() === "accept-language",
-					);
+					const languageKey = headerKeys.find((key) => key.toLowerCase() === "accept-language");
 					if (languageKey) {
 						acceptLanguage = headers[languageKey];
 					}

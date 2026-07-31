@@ -29,8 +29,7 @@ const requestBackground = async (type, payload = {}) => {
 		return response.data;
 	}
 	if (response.ok === false) {
-		const message =
-			response?.error?.message || response?.message || "Background error";
+		const message = response?.error?.message || response?.message || "Background error";
 		const err = new Error(message);
 		if (response?.error && typeof response.error === "object") {
 			Object.assign(err, response.error);

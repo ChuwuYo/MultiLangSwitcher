@@ -105,10 +105,7 @@ class DomainRulesManager {
 			const result = this._findMatchingRule(domain, customRules);
 			return result ? result.language : null;
 		} catch (error) {
-			console.error(
-				`[DomainRulesManager] Error getting language for domain "${domain}":`,
-				error,
-			);
+			console.error(`[DomainRulesManager] Error getting language for domain "${domain}":`, error);
 			return null;
 		}
 	}
@@ -284,8 +281,7 @@ class DomainRulesManager {
 
 		Object.values(rules).forEach((lang) => {
 			if (lang) {
-				stats.languageDistribution[lang] =
-					(stats.languageDistribution[lang] || 0) + 1;
+				stats.languageDistribution[lang] = (stats.languageDistribution[lang] || 0) + 1;
 			}
 		});
 

@@ -3,8 +3,7 @@ if (typeof detectEn === "undefined") {
 	var detectEn = {
 		title: "MultiLangSwitcher Detection Page",
 		heading: "MultiLangSwitcher Detection Page",
-		subtitle:
-			"This page is used to verify the effect of MultiLangSwitcher extension settings",
+		subtitle: "This page is used to verify the effect of MultiLangSwitcher extension settings",
 		tip: "Pay special attention to the value of the Accept-Language request header, which should match the language you set in the extension.",
 		request_header: "Accept-Language",
 		js_language: "JS Language Preference",
@@ -69,19 +68,16 @@ if (typeof detectEn === "undefined") {
 		external_check_or: "or",
 		external_check_suffix: "to view",
 		all_attempts_failed: "All attempts to fetch request headers failed:",
-		fetch_failed_all_services:
-			"Failed to fetch request header information (all services failed or timed out).",
+		fetch_failed_all_services: "Failed to fetch request header information (all services failed or timed out).",
 		detailed_error: "Detailed error:",
-		detection_failed_all_services:
-			"Detection failed (all services failed or timed out).",
+		detection_failed_all_services: "Detection failed (all services failed or timed out).",
 		http_error_status: "HTTP error! Status:",
 		from: "from",
 		request_timeout: "Request {url} timeout ({timeout}ms)",
 		js_language_detection_failed: "JS language detection failed:",
 		canvas_fingerprint_detection_failed: "Canvas fingerprint detection failed:",
 		webgl_fingerprint_detection_failed: "WebGL fingerprint detection failed:",
-		audio_fingerprint_detection_failed:
-			"AudioContext fingerprint detection failed:",
+		audio_fingerprint_detection_failed: "AudioContext fingerprint detection failed:",
 		intl_api_detection_failed: "Intl API detection failed:",
 		webrtc_detection_failed: "WebRTC detection failed:",
 		webrtc_setlocaldescription_failed: "WebRTC setLocalDescription failed:",
@@ -92,8 +88,7 @@ if (typeof detectEn === "undefined") {
 		restricted: "(restricted)",
 		button_add_failed_container:
 			"Could not precisely find .header-info for adding refresh button, button has been added to the end of .container.",
-		button_add_failed_no_container:
-			"Could not find .container for adding refresh button.",
+		button_add_failed_no_container: "Could not find .container for adding refresh button.",
 		ai_diagnosis_title: "AI Diagnosis",
 		ai_config_summary: "AI Service Configuration",
 		ai_provider_label: "Preset Provider",
@@ -125,8 +120,7 @@ if (typeof detectEn === "undefined") {
 			"Moonshot Kimi's OpenAI-compatible endpoint uses https://api.moonshot.cn/v1. Default model is kimi-k2-0905.",
 		ai_provider_minimax_desc:
 			"MiniMax's OpenAI-compatible endpoint uses https://api.minimax.io/v1 for the international platform, and MiniMax docs note https://api.minimaxi.com/v1 for users in China. Default model is MiniMax-M2.5.",
-		ai_provider_custom_desc:
-			"Keep manual values for any OpenAI-compatible service.",
+		ai_provider_custom_desc: "Keep manual values for any OpenAI-compatible service.",
 		ai_base_url_label: "API Base URL",
 		ai_api_key_label: "API Key",
 		ai_model_label: "Model Name",
@@ -135,12 +129,9 @@ if (typeof detectEn === "undefined") {
 		ai_privacy_hint:
 			"Your API key is stored only in chrome.storage.local. The extension does not upload or sync this setting, and chat history is kept only for this page session.",
 		ai_config_ready: "AI configuration saved. You can start a diagnosis now.",
-		ai_config_incomplete:
-			"Please provide Base URL, API key, and model name to enable AI diagnosis.",
-		ai_config_replace_template:
-			"Replace the template resource name in the endpoint before starting AI diagnosis.",
-		ai_chat_placeholder:
-			"Start AI diagnosis to turn the current detection snapshot into actionable privacy guidance.",
+		ai_config_incomplete: "Please provide Base URL, API key, and model name to enable AI diagnosis.",
+		ai_config_replace_template: "Replace the template resource name in the endpoint before starting AI diagnosis.",
+		ai_chat_placeholder: "Start AI diagnosis to turn the current detection snapshot into actionable privacy guidance.",
 		ai_user_input_placeholder:
 			"Ask a follow-up, for example: Why does a language/timezone mismatch increase fingerprint risk?",
 		ai_start: "Start AI Diagnosis",
@@ -200,15 +191,11 @@ if (typeof detectEn === "undefined") {
 		ai_request_in_progress: "AI is generating the diagnosis...",
 		ai_request_stopped: "Generation stopped.",
 		ai_request_failed: "AI request failed: {error}",
-		ai_render_fallback:
-			"Markdown rendering is unavailable, so the response was shown as plain text.",
+		ai_render_fallback: "Markdown rendering is unavailable, so the response was shown as plain text.",
 		ai_chat_cleared: "Session cleared.",
-		ai_starting:
-			"Starting AI diagnosis from the current detection snapshot...",
-		ai_ready_for_followup:
-			"You can keep asking follow-up questions with the same detection context.",
-		ai_config_missing_runtime:
-			"AI client is unavailable in the current page context. Refresh and try again.",
+		ai_starting: "Starting AI diagnosis from the current detection snapshot...",
+		ai_ready_for_followup: "You can keep asking follow-up questions with the same detection context.",
+		ai_config_missing_runtime: "AI client is unavailable in the current page context. Refresh and try again.",
 		ai_waiting_for_question: "Enter a follow-up question first.",
 		ai_restart_required:
 			"The detection snapshot changed, so the old context is no longer reliable. Start AI diagnosis again.",

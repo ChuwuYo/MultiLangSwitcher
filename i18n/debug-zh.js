@@ -12,11 +12,9 @@ if (typeof debugZh === "undefined") {
 		current_rules: "当前规则信息",
 		current_rules_desc: "显示扩展当前生效的动态规则和最近匹配规则的详细信息。",
 		header_test: "请求头测试",
-		header_test_desc:
-			"向测试地址发送请求，检查 Accept-Language 头是否按预期设置。",
+		header_test_desc: "向测试地址发送请求，检查 Accept-Language 头是否按预期设置。",
 		custom_language: "自定义语言偏好",
-		custom_language_desc:
-			'输入完整的 Accept-Language 字符串，如 "en-US,en;q=0.9,fr;q=0.8"。',
+		custom_language_desc: '输入完整的 Accept-Language 字符串，如 "en-US,en;q=0.9,fr;q=0.8"。',
 		format_explanation: "Accept-Language 格式说明",
 		format_explanation_desc: "了解 Accept-Language 请求头的结构。",
 		live_logs: "运行日志",
@@ -73,8 +71,7 @@ if (typeof debugZh === "undefined") {
 		click_view_diagnostics: "点击按钮查看诊断信息...",
 
 		// 重置功能
-		attempt_reset_accept_language:
-			"正在通过调试页面尝试重置 Accept-Language 设置。",
+		attempt_reset_accept_language: "正在通过调试页面尝试重置 Accept-Language 设置。",
 		click_view_domain_rules: "点击按钮查看域名映射规则...",
 
 		// 修复选项
@@ -92,8 +89,7 @@ if (typeof debugZh === "undefined") {
 		optional: "可选",
 		examples: "示例：",
 		language_code_required: "如 en（英语）、zh（中文）。使用 ISO 639-1 标准。",
-		region_code_optional:
-			"如 US（美国）、CN（中国大陆）、HK（香港）。使用 ISO 3166-1 Alpha 2 标准。",
+		region_code_optional: "如 US（美国）、CN（中国大陆）、HK（香港）。使用 ISO 3166-1 Alpha 2 标准。",
 		quality_value_optional: "范围 0 到 1，表示优先级，默认为 1。",
 		example_complex: "优先美国英语，其次是通用英语，然后是简体中文。",
 		format_note: "请在上面的输入框中遵循此格式设置自定义语言。",
@@ -117,8 +113,7 @@ if (typeof debugZh === "undefined") {
 		ruleset_id: "规则集ID：",
 		matched_url: "匹配的 URL：",
 		resource_type: "资源类型：",
-		recent_match_note:
-			"注意：这里显示的是最近一次或几次页面加载中匹配到的规则，不一定是全部规则匹配历史。",
+		recent_match_note: "注意：这里显示的是最近一次或几次页面加载中匹配到的规则，不一定是全部规则匹配历史。",
 		no_recent_matches: "最近没有匹配到规则",
 		debug_log_started: "调试日志已启动",
 
@@ -128,25 +123,20 @@ if (typeof debugZh === "undefined") {
 		start_header_test: "开始测试请求头，语言：",
 		request_failed: "请求",
 		failed: "失败：",
-		recent_successful_headers:
-			"最近一次成功收到的请求头（来自首个成功响应的检测点）：",
+		recent_successful_headers: "最近一次成功收到的请求头（来自首个成功响应的检测点）：",
 		header_changed_success: "✓ 请求头已成功更改！检测到的值：",
 		header_test_success: "请求头测试成功：Accept-Language 为",
 		header_not_changed: "✗ 请求头未成功更改！",
 		expected_contains: "预期包含：",
 		actually_detected: "实际检测到：",
-		header_test_failed_not_expected:
-			"请求头测试失败：Accept-Language 未按预期设置。预期包含：",
+		header_test_failed_not_expected: "请求头测试失败：Accept-Language 未按预期设置。预期包含：",
 		actual: "实际：",
-		no_accept_language_any_endpoint:
-			"✗ 未在任何检测点检测到Accept-Language请求头！",
-		header_test_failed_no_header:
-			"请求头测试失败：未检测到 Accept-Language 请求头。",
+		no_accept_language_any_endpoint: "✗ 未在任何检测点检测到Accept-Language请求头！",
+		header_test_failed_no_header: "请求头测试失败：未检测到 Accept-Language 请求头。",
 		all_test_requests_failed: "✗ 所有测试请求均失败。",
 		last_error: "最后一次错误：",
 		check_network_connection: "请检查您的网络连接，或尝试",
-		header_test_failed_all_endpoints:
-			"请求头测试失败：所有检测点均未能成功获取请求头。",
+		header_test_failed_all_endpoints: "请求头测试失败：所有检测点均未能成功获取请求头。",
 		http_error_status_from: "HTTP错误！状态：",
 		from: "从",
 
@@ -200,8 +190,7 @@ if (typeof debugZh === "undefined") {
 		reason: "原因（Reason）：",
 		no_ruleset_found: "未找到规则集。",
 		declarative_permission_found: "✓ 已找到 declarativeNetRequest 权限",
-		declarative_feedback_permission_found:
-			"✓ 已找到 declarativeNetRequestFeedback 权限",
+		declarative_feedback_permission_found: "✓ 已找到 declarativeNetRequestFeedback 权限",
 		declarative_permission_missing: "✗ 缺少 declarativeNetRequest 权限",
 		using_dynamic_rules: "此扩展使用动态规则（推荐方式）",
 		storage_failed: "获取存储失败：",
@@ -252,8 +241,7 @@ if (typeof debugZh === "undefined") {
 		successfully_got_displayed_rules: "成功获取并显示",
 		domain_mapping_rules: "条域名映射规则",
 		failed_get_domain_rules_empty: "未能获取域名映射规则或规则为空",
-		failed_get_domain_rules_response:
-			"未能获取域名映射规则或规则为空。响应内容：",
+		failed_get_domain_rules_response: "未能获取域名映射规则或规则为空。响应内容：",
 		received_auto_switch_update: "收到自动切换状态更新：",
 		current_language_colon: "当前语言：",
 		reset_accept_language_success: "Accept-Language 已成功重置。",
@@ -265,8 +253,7 @@ if (typeof debugZh === "undefined") {
 		network_check_suggestion: "建议: 检查网络连接或尝试使用其他测试服务",
 
 		// Accept-Language 格式验证
-		accept_language_format_warning:
-			"您自定义的 Accept-Language 格式可能有误，请您自行检查验证。",
+		accept_language_format_warning: "您自定义的 Accept-Language 格式可能有误，请您自行检查验证。",
 
 		// 新增的缓存相关翻译
 		cache_status: "缓存状态",

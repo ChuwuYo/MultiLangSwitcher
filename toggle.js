@@ -4,9 +4,7 @@
 class LanguageToggle {
 	constructor() {
 		// 语言状态从 localStorage (app-lang) 读取，与 BaseI18n 共享同一数据源
-		this.currentLang =
-			localStorage.getItem("app-lang") ||
-			(navigator.language.startsWith("zh") ? "zh" : "en");
+		this.currentLang = localStorage.getItem("app-lang") || (navigator.language.startsWith("zh") ? "zh" : "en");
 	}
 
 	/**
@@ -102,8 +100,7 @@ class ThemeManager {
 		// 主题切换按钮监听器
 		if (this.themeToggleBtn) {
 			ResourceManager.addEventListener(this.themeToggleBtn, "click", () => {
-				const currentTheme =
-					document.documentElement.getAttribute("data-bs-theme");
+				const currentTheme = document.documentElement.getAttribute("data-bs-theme");
 				const newTheme = currentTheme === "dark" ? "light" : "dark";
 				this.applyTheme(newTheme);
 			});

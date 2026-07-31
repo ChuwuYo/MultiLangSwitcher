@@ -67,10 +67,7 @@ class PopupI18n extends BaseI18n {
 		// 状态
 		const currentLangSpan = document.querySelector("#currentLanguage");
 		const currentLangText = currentLangSpan ? currentLangSpan.textContent : "";
-		const shouldKeepCurrent =
-			currentLangText &&
-			currentLangText !== "未设置" &&
-			currentLangText !== "Not Set";
+		const shouldKeepCurrent = currentLangText && currentLangText !== "未设置" && currentLangText !== "Not Set";
 
 		const statusText = document.querySelector("#statusText");
 		if (statusText) {
@@ -78,9 +75,7 @@ class PopupI18n extends BaseI18n {
 			statusText.textContent = this.t("current_language");
 			const span = document.createElement("span");
 			span.id = "currentLanguage";
-			span.textContent = shouldKeepCurrent
-				? currentLangText
-				: this.t("not_set");
+			span.textContent = shouldKeepCurrent ? currentLangText : this.t("not_set");
 			statusText.appendChild(span);
 		}
 
@@ -107,9 +102,7 @@ class PopupI18n extends BaseI18n {
 		}
 
 		// Header check result section
-		const headerCheckResultTitle = document.querySelector(
-			"#headerCheckResultTitle",
-		);
+		const headerCheckResultTitle = document.querySelector("#headerCheckResultTitle");
 		if (headerCheckResultTitle) {
 			headerCheckResultTitle.textContent = this.t("header_check_result");
 		}

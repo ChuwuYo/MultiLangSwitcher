@@ -75,44 +75,32 @@ class DetectI18n extends BaseI18n {
 			webRtcTitle.textContent = this.t("webrtc_detection");
 		}
 
-		const browserFingerprintTitle = document.querySelector(
-			"#browserFingerprintTitle",
-		);
+		const browserFingerprintTitle = document.querySelector("#browserFingerprintTitle");
 		if (browserFingerprintTitle) {
 			browserFingerprintTitle.textContent = this.t("browser_fingerprint");
 		}
 
-		const browserCompatibilityTitle = document.querySelector(
-			"#browserCompatibilityTitle",
-		);
+		const browserCompatibilityTitle = document.querySelector("#browserCompatibilityTitle");
 		if (browserCompatibilityTitle) {
 			browserCompatibilityTitle.textContent = this.t("browser_compatibility");
 		}
 
-		const hardwareFingerprintTitle = document.querySelector(
-			"#hardwareFingerprintTitle",
-		);
+		const hardwareFingerprintTitle = document.querySelector("#hardwareFingerprintTitle");
 		if (hardwareFingerprintTitle) {
 			hardwareFingerprintTitle.textContent = this.t("hardware_fingerprint");
 		}
 
-		const canvasFingerprintTitle = document.querySelector(
-			"#canvasFingerprintTitle",
-		);
+		const canvasFingerprintTitle = document.querySelector("#canvasFingerprintTitle");
 		if (canvasFingerprintTitle) {
 			canvasFingerprintTitle.textContent = this.t("canvas_fingerprint");
 		}
 
-		const webglFingerprintTitle = document.querySelector(
-			"#webglFingerprintTitle",
-		);
+		const webglFingerprintTitle = document.querySelector("#webglFingerprintTitle");
 		if (webglFingerprintTitle) {
 			webglFingerprintTitle.textContent = this.t("webgl_fingerprint");
 		}
 
-		const audioFingerprintTitle = document.querySelector(
-			"#audioFingerprintTitle",
-		);
+		const audioFingerprintTitle = document.querySelector("#audioFingerprintTitle");
 		if (audioFingerprintTitle) {
 			audioFingerprintTitle.textContent = this.t("audio_fingerprint");
 		}
@@ -129,9 +117,7 @@ class DetectI18n extends BaseI18n {
 		}
 
 		// 完整请求头信息
-		const completeHeadersTitle = document.querySelector(
-			"#completeHeadersTitle",
-		);
+		const completeHeadersTitle = document.querySelector("#completeHeadersTitle");
 		if (completeHeadersTitle) {
 			completeHeadersTitle.textContent = this.t("complete_headers");
 		}
@@ -159,21 +145,14 @@ class DetectI18n extends BaseI18n {
 
 		const aiProviderSelect = document.querySelector("#aiProviderSelect");
 		if (aiProviderSelect) {
-			window.AIProviderPresetUtils?.populateSelectOptions?.(
-				aiProviderSelect,
-				(key) => this.t(key),
-			);
+			window.AIProviderPresetUtils?.populateSelectOptions?.(aiProviderSelect, (key) => this.t(key));
 		}
 
-		const aiProviderDescription = document.querySelector(
-			"#aiProviderDescription",
-		);
+		const aiProviderDescription = document.querySelector("#aiProviderDescription");
 		if (aiProviderDescription && !aiProviderDescription.dataset.initialized) {
 			const providerKey = aiProviderSelect?.value || "openrouter";
 			const preset = window.AIProviderPresets?.[providerKey];
-			aiProviderDescription.textContent = preset?.descriptionKey
-				? this.t(preset.descriptionKey)
-				: "";
+			aiProviderDescription.textContent = preset?.descriptionKey ? this.t(preset.descriptionKey) : "";
 		}
 
 		const aiBaseUrlLabel = document.querySelector("#aiBaseUrlLabel");
@@ -216,9 +195,7 @@ class DetectI18n extends BaseI18n {
 			aiClearButton.textContent = this.t("ai_clear");
 		}
 
-		const aiExportStructuredButton = document.querySelector(
-			"#aiExportStructuredButton",
-		);
+		const aiExportStructuredButton = document.querySelector("#aiExportStructuredButton");
 		if (aiExportStructuredButton) {
 			aiExportStructuredButton.textContent = this.t("ai_export_structured");
 		}

@@ -88,16 +88,12 @@ class DebugI18n extends BaseI18n {
 		}
 
 		// Accept-Language 格式说明部分
-		const formatExplanationTitle = document.querySelector(
-			"#formatExplanationTitle",
-		);
+		const formatExplanationTitle = document.querySelector("#formatExplanationTitle");
 		if (formatExplanationTitle) {
 			formatExplanationTitle.textContent = this.t("format_explanation");
 		}
 
-		const formatExplanationDesc = document.querySelector(
-			"#formatExplanationDesc",
-		);
+		const formatExplanationDesc = document.querySelector("#formatExplanationDesc");
 		if (formatExplanationDesc) {
 			formatExplanationDesc.textContent = this.t("format_explanation_desc");
 		}
@@ -167,9 +163,7 @@ class DebugI18n extends BaseI18n {
 			testLanguageLabel.textContent = this.t("test_language_label");
 		}
 
-		const customLangInputLabel = document.querySelector(
-			"#customLangInputLabel",
-		);
+		const customLangInputLabel = document.querySelector("#customLangInputLabel");
 		if (customLangInputLabel) {
 			customLangInputLabel.textContent = this.t("custom_language_label");
 		}
@@ -194,9 +188,7 @@ class DebugI18n extends BaseI18n {
 			successLabel.textContent = this.t("success");
 		}
 
-		const enableAutoSwitchLabel = document.querySelector(
-			"#enableAutoSwitchLabel",
-		);
+		const enableAutoSwitchLabel = document.querySelector("#enableAutoSwitchLabel");
 		if (enableAutoSwitchLabel) {
 			enableAutoSwitchLabel.textContent = this.t("enable_auto_switch");
 		}

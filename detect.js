@@ -6,11 +6,9 @@ window.latestDetectionSnapshot = latestDetectionSnapshot;
 
 const getUiLanguage = () => (detectI18n?.currentLang === "zh" ? "zh" : "en");
 
-const translateDetect = (key, params = {}) =>
-	detectI18n?.t ? detectI18n.t(key, params) : key;
+const translateDetect = (key, params = {}) => (detectI18n?.t ? detectI18n.t(key, params) : key);
 
-const createMessageId = () =>
-	`msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const createMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const getBrowserInfo = () => {
 	const ua = navigator.userAgent;
@@ -19,9 +17,7 @@ const getBrowserInfo = () => {
 	let fullVersion = "";
 
 	let tem;
-	const M =
-		ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) ||
-		[];
+	const M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
 
 	if (/trident/i.test(M[1])) {
 		tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
@@ -91,22 +87,17 @@ const checkApiSupport = () => [
 	{ name: "WebSockets", supported: "WebSocket" in window },
 	{
 		name: "Promises",
-		supported:
-			typeof Promise !== "undefined" &&
-			Promise.toString().indexOf("[native code]") !== -1,
+		supported: typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1,
 	},
 	{ name: "fetch API", supported: typeof fetch === "function" },
 	{ name: "Service Workers", supported: "serviceWorker" in navigator },
 	{
 		name: "Intl (Internationalization)",
-		supported:
-			typeof Intl !== "undefined" &&
-			typeof Intl.DateTimeFormat === "function",
+		supported: typeof Intl !== "undefined" && typeof Intl.DateTimeFormat === "function",
 	},
 	{
 		name: "URL API (URLSearchParams)",
-		supported:
-			typeof URL !== "undefined" && typeof URLSearchParams !== "undefined",
+		supported: typeof URL !== "undefined" && typeof URLSearchParams !== "undefined",
 	},
 	{ name: "Beacon API", supported: "sendBeacon" in navigator },
 	{
@@ -120,8 +111,7 @@ const checkApiSupport = () => [
 				const canvas = ResourceManager.createCanvasElement();
 				return !!(
 					window.WebGLRenderingContext &&
-					(canvas.getContext("webgl") ||
-						canvas.getContext("experimental-webgl"))
+					(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
 				);
 			} catch (_error) {
 				return false;
@@ -172,8 +162,7 @@ const renderHeaderInfo = (headerInfo) => {
 
 	if (headerInfo.status === "ok") {
 		headerInfoElement.textContent = JSON.stringify(headerInfo.headers, null, 2);
-		const existingAlertInfoP =
-			headerInfoElement.parentElement.querySelector("p.mt-2");
+		const existingAlertInfoP = headerInfoElement.parentElement.querySelector("p.mt-2");
 		if (existingAlertInfoP) {
 			existingAlertInfoP.remove();
 		}
@@ -216,11 +205,7 @@ const renderHeaderInfo = (headerInfo) => {
 
 			const linkP = document.createElement("p");
 			linkP.className = "mt-2";
-			linkP.appendChild(
-				window.HeaderCheckUtils.createLocalizedExternalCheckLinks(
-					translateDetect,
-				),
-			);
+			linkP.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect));
 			fragment.appendChild(linkP);
 		}
 
@@ -249,9 +234,7 @@ const renderHeaderInfo = (headerInfo) => {
 
 	const linkP = document.createElement("p");
 	linkP.className = "mt-2";
-	linkP.appendChild(
-		window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect),
-	);
+	linkP.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect));
 	fragment.appendChild(linkP);
 
 	headerLanguageInfo.appendChild(fragment);
@@ -320,21 +303,15 @@ const renderJsLanguageInfo = (jsLanguageInfo) => {
 
 	const langsValP = document.createElement("p");
 	langsValP.className = "text-info fw-bold";
-	langsValP.textContent =
-		jsLanguageInfo.languages.length > 0
-			? jsLanguageInfo.languages.join(", ")
-			: "N/A";
+	langsValP.textContent = jsLanguageInfo.languages.length > 0 ? jsLanguageInfo.languages.join(", ") : "N/A";
 	fragment.appendChild(langsValP);
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("javascript_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("javascript_method"));
 	fragment.appendChild(footerP);
 
-jsLanguageInfoElement.appendChild(fragment);
+	jsLanguageInfoElement.appendChild(fragment);
 };
 
 const collectCanvasFingerprintInfo = () => {
@@ -396,10 +373,7 @@ const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("canvas_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("canvas_method"));
 	fragment.appendChild(footerP);
 
 	canvasInfoElement.appendChild(fragment);
@@ -408,8 +382,7 @@ const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
 const collectWebglFingerprintInfo = () => {
 	try {
 		const canvas = ResourceManager.createCanvasElement();
-		const gl =
-			canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+		const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 		if (!gl) {
 			return {
 				status: "unsupported",
@@ -423,15 +396,10 @@ const collectWebglFingerprintInfo = () => {
 		}
 
 		const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-		const vendor = debugInfo
-			? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "N/A"
-			: "N/A";
-		const renderer = debugInfo
-			? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "N/A"
-			: "N/A";
+		const vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "N/A" : "N/A";
+		const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "N/A" : "N/A";
 		const version = gl.getParameter(gl.VERSION) || "N/A";
-		const shadingLanguageVersion =
-			gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
+		const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
 
 		const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
 		return {
@@ -494,26 +462,14 @@ const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 	};
 
 	addDetail(translateDetect("webgl_hash_label"), webglFingerprintInfo.hash, true, "");
-	addDetail(
-		translateDetect("webgl_unmasked_vendor_label"),
-		webglFingerprintInfo.vendor,
-	);
-	addDetail(
-		translateDetect("webgl_unmasked_renderer_label"),
-		webglFingerprintInfo.renderer,
-	);
+	addDetail(translateDetect("webgl_unmasked_vendor_label"), webglFingerprintInfo.vendor);
+	addDetail(translateDetect("webgl_unmasked_renderer_label"), webglFingerprintInfo.renderer);
 	addDetail(translateDetect("webgl_version_label"), webglFingerprintInfo.version);
-	addDetail(
-		translateDetect("webgl_shading_language_version_label"),
-		webglFingerprintInfo.shadingLanguageVersion,
-	);
+	addDetail(translateDetect("webgl_shading_language_version_label"), webglFingerprintInfo.shadingLanguageVersion);
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("webgl_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("webgl_method"));
 	fragment.appendChild(footerP);
 
 	webglInfoElement.appendChild(fragment);
@@ -521,10 +477,7 @@ const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 
 const collectAudioFingerprintInfo = async () => {
 	try {
-		if (
-			typeof window === "undefined" ||
-			(!window.OfflineAudioContext && !window.webkitOfflineAudioContext)
-		) {
+		if (typeof window === "undefined" || (!window.OfflineAudioContext && !window.webkitOfflineAudioContext)) {
 			return {
 				status: "unsupported",
 				hash: "",
@@ -608,10 +561,7 @@ const renderAudioFingerprintInfo = (audioFingerprintInfo) => {
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("audio_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("audio_method"));
 	fragment.appendChild(footerP);
 
 	audioInfoElement.appendChild(fragment);
@@ -677,10 +627,7 @@ const renderIntlInfo = (intlInfo) => {
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("intl_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("intl_method"));
 	fragment.appendChild(footerP);
 
 	intlApiInfoElement.appendChild(fragment);
@@ -713,8 +660,7 @@ const collectWebRtcIps = async () =>
 			pc.onicecandidate = (event) => {
 				if (!event?.candidate?.candidate) return;
 
-				const ipRegex =
-					/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
+				const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
 				const ipMatch = ipRegex.exec(event.candidate.candidate);
 
 				if (ipMatch && !ips.includes(ipMatch[1])) {
@@ -725,10 +671,7 @@ const collectWebRtcIps = async () =>
 			pc.createOffer()
 				.then((offer) => pc.setLocalDescription(offer))
 				.catch((error) => {
-					console.error(
-						translateDetect("webrtc_setlocaldescription_failed"),
-						error,
-					);
+					console.error(translateDetect("webrtc_setlocaldescription_failed"), error);
 				});
 
 			ResourceManager.setTimeout(() => {
@@ -820,10 +763,7 @@ const renderWebRtcInfo = (webRtcInfo) => {
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
-	footerP.textContent = translateDetect("detected_via").replace(
-		"{method}",
-		translateDetect("webrtc_method"),
-	);
+	footerP.textContent = translateDetect("detected_via").replace("{method}", translateDetect("webrtc_method"));
 	fragment.appendChild(footerP);
 
 	webRtcInfoElement.appendChild(fragment);
@@ -872,13 +812,7 @@ const renderFingerprintInfo = (fingerprintInfo) => {
 	}
 
 	const fragment = document.createDocumentFragment();
-	const addDetail = (
-		title,
-		value,
-		isBold = false,
-		mt = "mt-2",
-		isSmall = false,
-	) => {
+	const addDetail = (title, value, isBold = false, mt = "mt-2", isSmall = false) => {
 		const titleP = document.createElement("p");
 		titleP.className = `mb-1 ${mt}`;
 		const strongTitle = document.createElement("strong");
@@ -935,9 +869,7 @@ const renderCompatibilityInfo = (compatibilityInfo) => {
 
 		const badgeSpan = document.createElement("span");
 		badgeSpan.className = `badge ${api.supported ? "bg-success" : "bg-danger"}`;
-		badgeSpan.textContent = api.supported
-			? translateDetect("supported")
-			: translateDetect("not_supported");
+		badgeSpan.textContent = api.supported ? translateDetect("supported") : translateDetect("not_supported");
 
 		listItem.appendChild(apiNameSpan);
 		listItem.appendChild(badgeSpan);
@@ -951,10 +883,7 @@ const collectExtensionContext = async () => {
 
 	try {
 		if (chrome?.storage?.local?.get) {
-			const result = await chrome.storage.local.get([
-				"currentLanguage",
-				"autoSwitchEnabled",
-			]);
+			const result = await chrome.storage.local.get(["currentLanguage", "autoSwitchEnabled"]);
 			currentLanguage = result.currentLanguage || "";
 			autoSwitchEnabled = !!result.autoSwitchEnabled;
 		}
@@ -1029,8 +958,7 @@ const buildDetectionSnapshot = (results) => {
 				vendor: results.webglFingerprintInfo.vendor,
 				renderer: results.webglFingerprintInfo.renderer,
 				version: results.webglFingerprintInfo.version,
-				shadingLanguageVersion:
-					results.webglFingerprintInfo.shadingLanguageVersion,
+				shadingLanguageVersion: results.webglFingerprintInfo.shadingLanguageVersion,
 				error: results.webglFingerprintInfo.error,
 			},
 			audio: {
@@ -1077,9 +1005,7 @@ const addRefreshButton = () => {
 	if (container) {
 		const allHeaderInfoDivs = container.querySelectorAll(".header-info");
 		if (allHeaderInfoDivs.length > 0) {
-			allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(
-				refreshButton,
-			);
+			allHeaderInfoDivs[allHeaderInfoDivs.length - 1].appendChild(refreshButton);
 			return;
 		}
 
@@ -1105,12 +1031,7 @@ const runAllDetections = async () => {
 		const webglFingerprintInfo = collectWebglFingerprintInfo();
 		const compatibilityInfo = collectCompatibilityInfo();
 
-		const [
-			extensionContext,
-			headerInfo,
-			webRtcInfo,
-			audioFingerprintInfo,
-		] = await Promise.all([
+		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo] = await Promise.all([
 			extensionContextPromise,
 			headerInfoPromise,
 			webRtcInfoPromise,

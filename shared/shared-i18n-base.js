@@ -11,9 +11,7 @@ class BaseI18n {
 	 */
 	constructor(componentName, isServiceWorker = false) {
 		if (!componentName || typeof componentName !== "string") {
-			const error = new Error(
-				"Component name is required and must be a string.",
-			);
+			const error = new Error("Component name is required and must be a string.");
 			console.error("BaseI18n constructor error:", error.message);
 			throw error;
 		}
@@ -49,10 +47,7 @@ class BaseI18n {
 						await this._loadLanguageFile("en");
 						this.currentLang = "en"; // 更新当前语言为回退语言
 					} catch (fallbackError) {
-						console.error(
-							`Failed to load fallback 'en' translation for ${this.componentName}.`,
-							fallbackError,
-						);
+						console.error(`Failed to load fallback 'en' translation for ${this.componentName}.`, fallbackError);
 						this.translations = {}; // 最终回退为空对象
 					}
 				} else {
@@ -82,8 +77,7 @@ class BaseI18n {
 
 		// 其次使用Chrome扩展API或浏览器API
 		const langSource =
-			(typeof chrome?.i18n?.getUILanguage === "function" &&
-				chrome.i18n.getUILanguage()) ||
+			(typeof chrome?.i18n?.getUILanguage === "function" && chrome.i18n.getUILanguage()) ||
 			(typeof navigator?.language === "string" && navigator.language) ||
 			"en";
 
@@ -97,10 +91,7 @@ class BaseI18n {
 	 * @private
 	 */
 	async _loadLanguageFile(lang) {
-		const translationVarName = this.componentName.replace(
-			/-([a-z])/g,
-			(_, letter) => letter.toUpperCase(),
-		);
+		const translationVarName = this.componentName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 		const langSuffix = lang === "zh" ? "Zh" : "En";
 		const expectedVar = `${translationVarName}${langSuffix}`;
 		const globalScope = globalThis;
@@ -123,9 +114,7 @@ class BaseI18n {
 		if (globalScope[expectedVar]) {
 			this.translations = globalScope[expectedVar];
 		} else {
-			throw new Error(
-				`Translation variable '${expectedVar}' not found after loading script.`,
-			);
+			throw new Error(`Translation variable '${expectedVar}' not found after loading script.`);
 		}
 	}
 

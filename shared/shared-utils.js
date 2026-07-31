@@ -29,10 +29,7 @@ const detectCurrentLanguage = () => {
  */
 const switchLanguageAndReload = (lang) => {
 	try {
-		if (
-			typeof localStorage === "undefined" ||
-			typeof location === "undefined"
-		) {
+		if (typeof localStorage === "undefined" || typeof location === "undefined") {
 			console.warn("Language switch not supported in this environment");
 			return false;
 		}
@@ -95,18 +92,10 @@ const getUpdateTranslation = (key, params = {}, context = "popup") => {
 		const availableI18nInstances = [];
 
 		// 根据上下文优先级添加实例
-		if (
-			context === "background" &&
-			typeof backgroundI18n !== "undefined" &&
-			backgroundI18n.isReady
-		) {
+		if (context === "background" && typeof backgroundI18n !== "undefined" && backgroundI18n.isReady) {
 			availableI18nInstances.push(backgroundI18n);
 		}
-		if (
-			context === "popup" &&
-			typeof popupI18n !== "undefined" &&
-			popupI18n.isReady
-		) {
+		if (context === "popup" && typeof popupI18n !== "undefined" && popupI18n.isReady) {
 			availableI18nInstances.push(popupI18n);
 		}
 
@@ -116,10 +105,7 @@ const getUpdateTranslation = (key, params = {}, context = "popup") => {
 			typeof popupI18n !== "undefined" ? popupI18n : undefined,
 			typeof debugI18n !== "undefined" ? debugI18n : undefined,
 			typeof detectI18n !== "undefined" ? detectI18n : undefined,
-		].filter(
-			(instance) =>
-				instance?.isReady && !availableI18nInstances.includes(instance),
-		);
+		].filter((instance) => instance?.isReady && !availableI18nInstances.includes(instance));
 
 		availableI18nInstances.push(...otherInstances);
 
@@ -186,12 +172,9 @@ const getFallbackTranslation = (key, params = {}) => {
 			update_check_attempt: "Update check attempt {attempt}/{maxAttempts}",
 			version_comparison_failed: "Version comparison failed: {error}",
 			failed_load_persistent_cache: "Failed to load persistent cache: {error}",
-			failed_cache_update_info:
-				"Failed to cache update info persistently: {error}",
-			failed_clear_persistent_cache:
-				"Failed to clear persistent cache: {error}",
-			github_api_failed_trying_fallback:
-				"GitHub API failed ({error}), trying jsDelivr fallback...",
+			failed_cache_update_info: "Failed to cache update info persistently: {error}",
+			failed_clear_persistent_cache: "Failed to clear persistent cache: {error}",
+			github_api_failed_trying_fallback: "GitHub API failed ({error}), trying jsDelivr fallback...",
 			jsdelivr_fallback_failed: "jsDelivr fallback also failed: {error}",
 
 			// Simplified Error Messages
@@ -226,8 +209,7 @@ const getFallbackTranslation = (key, params = {}) => {
 			failed_load_persistent_cache: "加载持久化缓存失败: {error}",
 			failed_cache_update_info: "持久化缓存更新信息失败: {error}",
 			failed_clear_persistent_cache: "清除持久化缓存失败: {error}",
-			github_api_failed_trying_fallback:
-				"GitHub API 失败（{error}），正在尝试 jsDelivr 备用源...",
+			github_api_failed_trying_fallback: "GitHub API 失败（{error}），正在尝试 jsDelivr 备用源...",
 			jsdelivr_fallback_failed: "jsDelivr 备用源也失败了：{error}",
 
 			// 简化后的错误信息
@@ -241,8 +223,7 @@ const getFallbackTranslation = (key, params = {}) => {
 	};
 
 	// 简化的翻译查找和格式化
-	const translations =
-		fallbackTranslations[currentLang] || fallbackTranslations.en;
+	const translations = fallbackTranslations[currentLang] || fallbackTranslations.en;
 	let text = translations[key] || key;
 
 	// 参数替换 - 与BaseI18n._formatString保持一致

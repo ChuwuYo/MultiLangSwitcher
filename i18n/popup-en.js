@@ -23,32 +23,25 @@ if (typeof popupEn === "undefined") {
 		trying_to_update_rules: "Trying to update request header rules, language:",
 		auto_check: "Auto check:",
 		found_rules: "Found",
-		existing_dynamic_rules:
-			"existing dynamic rules, preparing to remove and add new rules.",
+		existing_dynamic_rules: "existing dynamic rules, preparing to remove and add new rules.",
 		update_rules_failed: "Failed to update declarativeNetRequest rules:",
 		update_request_header_failed: "Failed to update request header rules:",
-		rules_updated_successfully:
-			"DeclarativeNetRequest rules successfully updated to:",
+		rules_updated_successfully: "DeclarativeNetRequest rules successfully updated to:",
 		applied: "(Applied)",
 		auto_trigger_quick_check: "Auto trigger quick check after rules update.",
 		popup_script_loaded: "Popup script loaded.",
 		auto_switch_status_saved: "Auto switch function status saved:",
 		popup_cleanup_completed: "Popup resource cleanup completed",
-		language_select_focus:
-			"Language select box gained focus, expanding dropdown.",
+		language_select_focus: "Language select box gained focus, expanding dropdown.",
 		get_current_language_from_rules: "Got current language from dynamic rules:",
-		no_language_from_rules:
-			"No language obtained from dynamic rules, trying to load from storage.",
+		no_language_from_rules: "No language obtained from dynamic rules, trying to load from storage.",
 		loaded_stored_language: "Loaded stored language settings:",
-		no_stored_language:
-			"No stored language settings found. Using default value:",
+		no_stored_language: "No stored language settings found. Using default value:",
 		clicked_apply_button: "Clicked apply changes button. Selected language:",
 		language_settings_saved: "Language settings saved:",
-		auto_switch_enabled_ignored:
-			"Auto switch is enabled, manual apply changes button ignored.",
+		auto_switch_enabled_ignored: "Auto switch is enabled, manual apply changes button ignored.",
 		collapse_language_select: "Collapse language selection dropdown.",
-		clicked_quick_check:
-			"Clicked quick check button. Getting request headers...",
+		clicked_quick_check: "Clicked quick check button. Getting request headers...",
 		trying_to_get_headers_from: "Trying to get headers from",
 		get_request_headers: "get request headers...",
 		quick_check_request_failed: "Quick check request failed:",
@@ -56,59 +49,44 @@ if (typeof popupEn === "undefined") {
 		from: "from",
 		successfully_got_headers_from: "Successfully got request headers from",
 		displaying_results: ", displaying results.",
-		quick_check_detected_accept_language:
-			"Quick check detected Accept-Language:",
-		apply_debounced:
-			"Apply button clicked too quickly, ignoring duplicate request.",
+		quick_check_detected_accept_language: "Quick check detected Accept-Language:",
+		apply_debounced: "Apply button clicked too quickly, ignoring duplicate request.",
 		apply_language_failed: "Failed to apply language {language}: {error}",
-		apply_language_failed_user:
-			"Failed to apply language {language}. Please try again.",
+		apply_language_failed_user: "Failed to apply language {language}. Please try again.",
 		unknown_error: "Unknown error",
-		unexpected_response_format:
-			"Unexpected response format from background script",
-		error_getting_auto_switch_status:
-			"Error getting auto switch status: {message}",
+		unexpected_response_format: "Unexpected response format from background script",
+		error_getting_auto_switch_status: "Error getting auto switch status: {message}",
 		error_accessing_storage: "Error accessing storage: {message}",
-		popup_hidden_cancelled_update:
-			"Popup hidden, cancelled ongoing update check",
+		popup_hidden_cancelled_update: "Popup hidden, cancelled ongoing update check",
 		dom_cache_initialized: "DOM cache initialized for all elements",
-		update_checker_initialized:
-			"Update checker initialized with version {version}",
+		update_checker_initialized: "Update checker initialized with version {version}",
 		update_checker_cache_optimized: "Update checker cache optimized",
 		extension_is_up_to_date: "Extension is up to date",
 		starting_update_check: "Starting update check...",
 		update_check_starting: "Update check starting immediately",
 		clicked_update_check_button: "Clicked update check button",
 		update_check_was_cancelled: "Update check was cancelled",
-		update_check_in_progress:
-			"Update check already in progress, ignoring request",
+		update_check_in_progress: "Update check already in progress, ignoring request",
 		update_check_failed_with_message: "Update check failed: {message}",
 		showing_fallback_notification: "Showing fallback update notification",
 		dom_update_error: "DOM update error: {message}",
 		update_check_cancelled: "Update check request cancelled",
-		update_check_rate_limited:
-			"Update check rate limited. Please wait {seconds} seconds",
-		quick_check_no_accept_language:
-			"Quick check: No Accept-Language request header detected at",
+		update_check_rate_limited: "Update check rate limited. Please wait {seconds} seconds",
+		quick_check_no_accept_language: "Quick check: No Accept-Language request header detected at",
 		detected_accept_language_header: "detected Accept-Language request header.",
 		no_accept_language_header: "No Accept-Language request header detected.",
 		error_getting_headers_from: "Error getting request headers from",
-		all_detection_points_failed:
-			"All detection points failed to get request headers:",
-		quick_check_failed_all_points:
-			"Quick check failed to get request headers (all detection points):",
-		all_detection_points_failed_info:
-			"All detection points failed to get request header information:",
+		all_detection_points_failed: "All detection points failed to get request headers:",
+		quick_check_failed_all_points: "Quick check failed to get request headers (all detection points):",
+		all_detection_points_failed_info: "All detection points failed to get request header information:",
 		external_check_prefix: "Please visit",
 		external_check_or: "or",
 		external_check_suffix: "to view",
-		received_background_message:
-			"Received background message: Current language updated to",
+		received_background_message: "Received background message: Current language updated to",
 		update_ui: ", updating UI.",
 		send_update_request_failed: "Send update request failed: {message}",
 		get_background_status_failed: "Get background status failed: {message}",
-		get_current_language_from_background:
-			"Get current language from background: {language}",
+		get_current_language_from_background: "Get current language from background: {language}",
 		update_storage_status_failed: "Update storage status failed: {message}",
 		clicked_reset_button: "Clicked reset button",
 		reset_request_failed: "Reset request failed: {message}",
@@ -134,19 +112,15 @@ if (typeof popupEn === "undefined") {
 
 		// --- Simplified Error Messages ---
 		update_check_network_issue: "Network Issue",
-		update_check_network_issue_fallback:
-			"Please check your internet connection and try again.",
+		update_check_network_issue_fallback: "Please check your internet connection and try again.",
 		update_check_service_issue: "Service Issue",
-		update_check_service_issue_fallback:
-			"The update service may be temporarily unavailable. Please try again later.",
+		update_check_service_issue_fallback: "The update service may be temporarily unavailable. Please try again later.",
 		update_check_unexpected_error: "An unexpected error occurred.",
-		manual_check_fallback:
-			"Visit the project homepage to check for updates manually.",
+		manual_check_fallback: "Visit the project homepage to check for updates manually.",
 
 		// Fallback mode messages
 		update_check_fallback_title: "Unable to Check for Updates",
-		update_check_fallback_message:
-			"GitHub API is currently unavailable. Your current version is shown below.",
+		update_check_fallback_message: "GitHub API is currently unavailable. Your current version is shown below.",
 		check_manually: "Check Manually",
 	};
 } // 结束 if (typeof popupEn === 'undefined') 检查

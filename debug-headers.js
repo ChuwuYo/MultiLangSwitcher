@@ -10,10 +10,7 @@ const showCurrentRules = async () => {
 		sendDebugLog(debugI18n.t("getting_rules"), "info");
 
 		const rules = await chrome.declarativeNetRequest.getDynamicRules();
-		sendDebugLog(
-			`${debugI18n.t("current_rules")} ${JSON.stringify(rules, null, 2)}`,
-			"info",
-		);
+		sendDebugLog(`${debugI18n.t("current_rules")} ${JSON.stringify(rules, null, 2)}`, "info");
 
 		if (rules.length === 0) {
 			sendDebugLog(debugI18n.t("no_rules_warning"), "warning");
@@ -21,10 +18,7 @@ const showCurrentRules = async () => {
 		}
 
 		const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
-		sendDebugLog(
-			`${debugI18n.t("matched_rules")} ${JSON.stringify(matchedRules, null, 2)}`,
-			"info",
-		);
+		sendDebugLog(`${debugI18n.t("matched_rules")} ${JSON.stringify(matchedRules, null, 2)}`, "info");
 	} catch (error) {
 		sendDebugLog(`${debugI18n.t("get_rules_error")} ${error.message}`, "error");
 	}
@@ -41,19 +35,13 @@ const testHeaderChange = async (language) => {
 	}
 
 	try {
-		sendDebugLog(
-			`${debugI18n.t("testing_language")} "${language}" ${debugI18n.t("header_effective")}`,
-			"info",
-		);
+		sendDebugLog(`${debugI18n.t("testing_language")} "${language}" ${debugI18n.t("header_effective")}`, "info");
 
 		// 使用共享模块获取请求头
 		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
 
 		if (result.success) {
-			sendDebugLog(
-				`${debugI18n.t("received_headers")} ${JSON.stringify(result.headers, null, 2)}`,
-				"info",
-			);
+			sendDebugLog(`${debugI18n.t("received_headers")} ${JSON.stringify(result.headers, null, 2)}`, "info");
 
 			if (!result.acceptLanguage) {
 				sendDebugLog(debugI18n.t("no_accept_language"), "error");
@@ -64,10 +52,7 @@ const testHeaderChange = async (language) => {
 			const expectedLanguage = language.toLowerCase();
 
 			if (acceptLanguage.includes(expectedLanguage)) {
-				sendDebugLog(
-					`${debugI18n.t("header_changed_success")} ${result.acceptLanguage}`,
-					"success",
-				);
+				sendDebugLog(`${debugI18n.t("header_changed_success")} ${result.acceptLanguage}`, "success");
 			} else {
 				sendDebugLog(
 					`${debugI18n.t("header_not_changed")} ${expectedLanguage}, ${debugI18n.t("actually_detected")} ${acceptLanguage}`,

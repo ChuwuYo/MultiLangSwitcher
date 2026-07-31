@@ -119,8 +119,7 @@ if (typeof popupZh === "undefined") {
 
 		// Fallback mode messages
 		update_check_fallback_title: "无法检查更新",
-		update_check_fallback_message:
-			"GitHub API 当前不可用。下方显示您的当前版本。",
+		update_check_fallback_message: "GitHub API 当前不可用。下方显示您的当前版本。",
 		check_manually: "手动检查",
 	};
 } // 结束 if (typeof popupZh === 'undefined') 检查

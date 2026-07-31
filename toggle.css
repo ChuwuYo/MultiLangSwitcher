@@ -40,9 +40,7 @@
 
 .toggle:focus-visible {
 	outline: 0;
-	box-shadow:
-		0 0 0 0.125rem var(--bs-body-bg),
-		0 0 0 0.25rem rgba(var(--tt-ring-color-rgb), 0.45);
+	box-shadow: 0 0 0 0.125rem var(--bs-body-bg), 0 0 0 0.25rem rgba(var(--tt-ring-color-rgb), 0.45);
 }
 
 /* 为 popup.html调整按钮 */
@@ -148,8 +146,7 @@ html[data-bs-theme="dark"] .form-control:focus {
 /* 其他可能滚动的元素（如 pre 或 debug-result）的自定义滚动条 */
 html[data-bs-theme="dark"] pre::-webkit-scrollbar-track,
 html[data-bs-theme="dark"] .debug-result::-webkit-scrollbar-track,
-html[data-bs-theme="dark"]
-	#headerCheckContent::-webkit-scrollbar-track /* popup.html 的特定 ID */ {
+html[data-bs-theme="dark"] #headerCheckContent::-webkit-scrollbar-track /* popup.html 的特定 ID */ {
 	background: #2c3034;
 }
 

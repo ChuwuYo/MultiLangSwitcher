@@ -4,17 +4,14 @@ if (typeof backgroundEn === "undefined") {
 		background: "Background",
 		domain_rules_loaded: "Domain rules loaded successfully",
 		trying_update_rules: "Trying to update request header rules to: {language}",
-		rules_updated_successfully:
-			"Request header rules successfully updated to: {language}",
+		rules_updated_successfully: "Request header rules successfully updated to: {language}",
 		rules_update_completed: "Rules update completed, status",
 		rules_update_failed: "Rules update failed",
 		auto_switch_status_updated: "Auto switch function status updated to",
-		received_domain_rules_request:
-			"Received request to get domain mapping rules",
+		received_domain_rules_request: "Received request to get domain mapping rules",
 		initialization_complete: "Initialization complete.",
 		initialization_failed: "Initialization failed: {message}",
-		fallback_state_set:
-			"Set to safe fallback state after initialization failure.",
+		fallback_state_set: "Set to safe fallback state after initialization failure.",
 		fallback_state_failed: "Failed to set fallback state: {message}",
 		error_processing_url: "Error processing URL ('{url}') for auto-switch",
 		retry: "retry",
@@ -24,8 +21,7 @@ if (typeof backgroundEn === "undefined") {
 		message: "message",
 		retry_after: "Will retry after {delay}ms (attempt #{count})",
 		update_rules_failed_with_type: "Update rules failed ({type})",
-		max_retry_reached:
-			"Maximum retry attempts reached or error cannot be retried, abandoning update",
+		max_retry_reached: "Maximum retry attempts reached or error cannot be retried, abandoning update",
 		loaded_auto_switch_status: "Loaded stored auto switch status",
 		ui_update: "UI update",
 		language: "language",
@@ -69,7 +65,7 @@ if (typeof backgroundEn === "undefined") {
 		// Domain cache test related keys
 		domain_cache_test_failed: "Domain cache test failed: {error}",
 		cached: "cached",
-		"new": "new",
+		new: "new",
 		fallback: ", fallback",
 		domain_required_error: "Domain is required",
 	};

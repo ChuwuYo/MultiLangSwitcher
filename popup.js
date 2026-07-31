@@ -23,12 +23,7 @@ const getEl = (id) => document.getElementById(id);
  * @param {HTMLElement} languageSelect - 语言选择元素
  * @param {HTMLElement} applyButton - 应用按钮元素
  */
-const updateAutoSwitchUI = (
-	enabled,
-	autoSwitchToggle,
-	languageSelect,
-	applyButton,
-) => {
+const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, applyButton) => {
 	// 检查必要元素
 	if (!autoSwitchToggle) return;
 
@@ -41,14 +36,9 @@ const updateAutoSwitchUI = (
 
 	// 记录状态变更日志
 	const statusMsg = enabled ? popupI18n.t("enabled") : popupI18n.t("disabled");
-	const actionMsg = enabled
-		? popupI18n.t("disable_manual_selection")
-		: popupI18n.t("enable_manual_selection");
+	const actionMsg = enabled ? popupI18n.t("disable_manual_selection") : popupI18n.t("enable_manual_selection");
 
-	sendDebugLog(
-		`${popupI18n.t("auto_switch_function")}${statusMsg}, ${actionMsg}.`,
-		"info",
-	);
+	sendDebugLog(`${popupI18n.t("auto_switch_function")}${statusMsg}, ${actionMsg}.`, "info");
 };
 
 /**
@@ -76,10 +66,7 @@ const updateHeaderRules = async (language, autoCheck = false) => {
 	});
 
 	// 成功处理
-	sendDebugLog(
-		`${popupI18n.t("rules_updated_successfully")} ${response.language}.`,
-		"success",
-	);
+	sendDebugLog(`${popupI18n.t("rules_updated_successfully")} ${response.language}.`, "success");
 	updateLanguageDisplay(response.language, true);
 
 	// 如果启用自动检查，触发快速检查
@@ -127,11 +114,7 @@ const displayHeaderCheckError = (element, messageKey) => {
 	const fragment = document.createDocumentFragment();
 	fragment.appendChild(document.createTextNode(popupI18n.t(messageKey)));
 	fragment.appendChild(document.createElement("br"));
-	fragment.appendChild(
-		window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) =>
-			popupI18n.t(key),
-		),
-	);
+	fragment.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) => popupI18n.t(key)));
 	element.appendChild(fragment);
 };
 
@@ -149,11 +132,7 @@ const updateLanguageDisplay = (language, showSuccess = false) => {
 	const languageSelect = getEl("languageSelect");
 
 	// 如果当前值与目标语言一致，避免不必要的 DOM 写入
-	if (
-		currentLanguageSpan &&
-		currentLanguageSpan.textContent === language &&
-		!showSuccess
-	) {
+	if (currentLanguageSpan && currentLanguageSpan.textContent === language && !showSuccess) {
 		if (languageSelect && languageSelect.value !== language) {
 			// 仅在下拉值不一致时同步一次
 			languageSelect.value = language;
@@ -211,16 +190,10 @@ const performHeaderCheck = async (headerCheckContentPre) => {
 		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
 
 		if (result.success) {
-			sendDebugLog(
-				`${popupI18n.t("successfully_got_headers_from")} ${result.endpoint}`,
-				"success",
-			);
+			sendDebugLog(`${popupI18n.t("successfully_got_headers_from")} ${result.endpoint}`, "success");
 
 			if (result.acceptLanguage) {
-				sendDebugLog(
-					`${popupI18n.t("quick_check_detected_accept_language")} ${result.acceptLanguage}.`,
-					"success",
-				);
+				sendDebugLog(`${popupI18n.t("quick_check_detected_accept_language")} ${result.acceptLanguage}.`, "success");
 				headerCheckContentPre.innerHTML = "";
 				const fragment = document.createDocumentFragment();
 				fragment.appendChild(document.createTextNode("Accept-Language: "));
@@ -232,27 +205,16 @@ const performHeaderCheck = async (headerCheckContentPre) => {
 			} else {
 				// 未找到Accept-Language头部
 				sendDebugLog(popupI18n.t("quick_check_no_accept_language"), "warning");
-				headerCheckContentPre.textContent = popupI18n.t(
-					"no_accept_language_header",
-				);
+				headerCheckContentPre.textContent = popupI18n.t("no_accept_language_header");
 			}
 		} else {
 			// 所有尝试均失败
-			sendDebugLog(
-				`${popupI18n.t("quick_check_failed_all_points")}: ${result.error}`,
-				"error",
-			);
-			displayHeaderCheckError(
-				headerCheckContentPre,
-				"all_detection_points_failed_info",
-			);
+			sendDebugLog(`${popupI18n.t("quick_check_failed_all_points")}: ${result.error}`, "error");
+			displayHeaderCheckError(headerCheckContentPre, "all_detection_points_failed_info");
 		}
 	} catch (error) {
 		// 捕获意外错误
-		sendDebugLog(
-			`${popupI18n.t("quick_check_unexpected_error")}: ${error.message}`,
-			"error",
-		);
+		sendDebugLog(`${popupI18n.t("quick_check_unexpected_error")}: ${error.message}`, "error");
 		displayHeaderCheckError(headerCheckContentPre, "detection_error");
 	}
 };
@@ -295,10 +257,7 @@ const getLanguageFromBackground = async () => {
 
 		return null;
 	} catch (error) {
-		sendDebugLog(
-			popupI18n.t("get_background_status_failed", { message: error.message }),
-			"error",
-		);
+		sendDebugLog(popupI18n.t("get_background_status_failed", { message: error.message }), "error");
 		return null;
 	}
 };
@@ -315,19 +274,13 @@ const getLanguageFromStorage = async () => {
 		});
 
 		if (result?.data?.currentLanguage) {
-			sendDebugLog(
-				`${popupI18n.t("loaded_stored_language")} ${result.data.currentLanguage}.`,
-				"info",
-			);
+			sendDebugLog(`${popupI18n.t("loaded_stored_language")} ${result.data.currentLanguage}.`, "info");
 			return result.data.currentLanguage;
 		}
 
 		return null;
 	} catch (error) {
-		sendDebugLog(
-			popupI18n.t("error_accessing_storage", { message: error.message }),
-			"error",
-		);
+		sendDebugLog(popupI18n.t("error_accessing_storage", { message: error.message }), "error");
 		return null;
 	}
 };
@@ -338,13 +291,8 @@ const getLanguageFromStorage = async () => {
  */
 const getDefaultLanguage = () => {
 	const languageSelect = document.getElementById("languageSelect");
-	const defaultLanguage = languageSelect
-		? languageSelect.value
-		: popupI18n.t("not_set");
-	sendDebugLog(
-		`${popupI18n.t("no_stored_language")} ${defaultLanguage}.`,
-		"warning",
-	);
+	const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t("not_set");
+	sendDebugLog(`${popupI18n.t("no_stored_language")} ${defaultLanguage}.`, "warning");
 	return defaultLanguage;
 };
 
@@ -415,10 +363,7 @@ const saveLanguageSetting = async (language) => {
 		data: { currentLanguage: language },
 	});
 
-	sendDebugLog(
-		`${popupI18n.t("language_settings_saved")} ${language}.`,
-		"info",
-	);
+	sendDebugLog(`${popupI18n.t("language_settings_saved")} ${language}.`, "info");
 };
 
 /**
@@ -430,10 +375,7 @@ const runDOMUpdate = (updateFn) => {
 	try {
 		updateFn();
 	} catch (error) {
-		sendDebugLog(
-			popupI18n.t("dom_update_error", { message: error.message }),
-			"error",
-		);
+		sendDebugLog(popupI18n.t("dom_update_error", { message: error.message }), "error");
 	}
 };
 
@@ -443,15 +385,8 @@ const runDOMUpdate = (updateFn) => {
 const initializeUpdateChecker = () => {
 	// 强制重新初始化以获取最新的版本号
 	const currentVersion = chrome.runtime.getManifest().version;
-	updateChecker = new UpdateChecker(
-		"ChuwuYo",
-		"MultiLangSwitcher",
-		currentVersion,
-	);
-	sendDebugLog(
-		popupI18n.t("update_checker_initialized", { version: currentVersion }),
-		"info",
-	);
+	updateChecker = new UpdateChecker("ChuwuYo", "MultiLangSwitcher", currentVersion);
+	sendDebugLog(popupI18n.t("update_checker_initialized", { version: currentVersion }), "info");
 };
 
 /**
@@ -460,11 +395,7 @@ const initializeUpdateChecker = () => {
  * @param {string} [fallbackMessage] - 可选的回退建议
  * @param {boolean} [showRetryOption] - 是否显示重试选项
  */
-const showUpdateError = (
-	message,
-	fallbackMessage = null,
-	showRetryOption = false,
-) => {
+const showUpdateError = (message, fallbackMessage = null, showRetryOption = false) => {
 	// 直接获取DOM元素
 	const updateErrorAlert = getEl("updateErrorAlert");
 	const updateErrorMessage = getEl("updateErrorMessage");
@@ -576,8 +507,7 @@ const showUpdateNotification = (updateInfo) => {
 	runDOMUpdate(() => {
 		// 当GitHub API不可用时处理回退模式
 		if (updateInfo.fallbackMode) {
-			alertDiv.className =
-				"alert alert-warning mb-0 update-notification warning";
+			alertDiv.className = "alert alert-warning mb-0 update-notification warning";
 			updateNotificationContent.innerHTML = "";
 			const fragment = document.createDocumentFragment();
 
@@ -648,10 +578,7 @@ const showUpdateNotification = (updateInfo) => {
 			const currentLine = document.createElement("div");
 			currentLine.className = "version-line";
 			const currentLabel = document.createElement("span");
-			currentLabel.textContent = popupI18n
-				.t("current_version")
-				.replace("v{current}", "")
-				.replace("{current}", "");
+			currentLabel.textContent = popupI18n.t("current_version").replace("v{current}", "").replace("{current}", "");
 			const currentBadge = document.createElement("span");
 			currentBadge.className = "version-badge";
 			currentBadge.textContent = `v${updateInfo.currentVersion}`;
@@ -663,10 +590,7 @@ const showUpdateNotification = (updateInfo) => {
 			const latestLine = document.createElement("div");
 			latestLine.className = "version-line";
 			const latestLabel = document.createElement("span");
-			latestLabel.textContent = popupI18n
-				.t("latest_version")
-				.replace("v{latest}", "")
-				.replace("{latest}", "");
+			latestLabel.textContent = popupI18n.t("latest_version").replace("v{latest}", "").replace("{latest}", "");
 			const latestBadge = document.createElement("span");
 			latestBadge.className = "version-badge";
 			latestBadge.textContent = `v${updateInfo.latestVersion}`;
@@ -697,14 +621,10 @@ const showUpdateNotification = (updateInfo) => {
 			fragment.appendChild(actions);
 			updateNotificationContent.appendChild(fragment);
 
-			sendDebugLog(
-				popupI18n.t("update_available", { version: updateInfo.latestVersion }),
-				"info",
-			);
+			sendDebugLog(popupI18n.t("update_available", { version: updateInfo.latestVersion }), "info");
 		} else {
 			// 没有可用更新
-			alertDiv.className =
-				"alert alert-success mb-0 update-notification success";
+			alertDiv.className = "alert alert-success mb-0 update-notification success";
 			updateNotificationContent.innerHTML = "";
 			const fragment = document.createDocumentFragment();
 
@@ -853,9 +773,7 @@ const performUpdateCheck = async () => {
 		sendDebugLog(popupI18n.t("starting_update_check"), "info");
 
 		// 为更新检查器添加中止信号支持，具有优雅的回退机制
-		const updateInfo = await updateChecker.checkForUpdates(
-			updateCheckController.signal,
-		);
+		const updateInfo = await updateChecker.checkForUpdates(updateCheckController.signal);
 
 		// 检查请求是否被取消
 		if (updateCheckController?.signal.aborted) {
@@ -969,12 +887,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 
 	// 加载并应用自动切换状态
 	const autoSwitchEnabled = await getAutoSwitchStatus();
-	updateAutoSwitchUI(
-		autoSwitchEnabled,
-		autoSwitchToggle,
-		languageSelect,
-		applyButton,
-	);
+	updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
 
 	// 加载并显示当前语言设置
 	const currentLanguage = await getCurrentLanguage();
@@ -990,22 +903,12 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			const enabled = event.target.checked;
 
 			// 先本地即时反馈，再异步持久化，提升交互流畅度
-			updateAutoSwitchUI(
-				enabled,
-				autoSwitchToggle,
-				languageSelect,
-				applyButton,
-			);
+			updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
 
 			const success = await setAutoSwitchStatus(enabled);
 			if (!success) {
 				// 回滚 UI 状态，使用立即模式
-				updateAutoSwitchUI(
-					!enabled,
-					autoSwitchToggle,
-					languageSelect,
-					applyButton,
-				);
+				updateAutoSwitchUI(!enabled, autoSwitchToggle, languageSelect, applyButton);
 			}
 		},
 
@@ -1023,19 +926,13 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 
 			// 防抖处理 - 0.6秒内的重复点击会被忽略
 			const now = Date.now();
-			if (
-				eventHandlers.lastApplyTime &&
-				now - eventHandlers.lastApplyTime < 600
-			) {
+			if (eventHandlers.lastApplyTime && now - eventHandlers.lastApplyTime < 600) {
 				sendDebugLog(popupI18n.t("apply_debounced"), "info");
 				return;
 			}
 			eventHandlers.lastApplyTime = now;
 
-			sendDebugLog(
-				`${popupI18n.t("clicked_apply_button")} ${selectedLanguage}.`,
-				"info",
-			);
+			sendDebugLog(`${popupI18n.t("clicked_apply_button")} ${selectedLanguage}.`, "info");
 
 			try {
 				// 保存语言设置并更新显示
@@ -1086,12 +983,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		// 重置操作错误处理函数
 		handleResetError(error) {
 			const errorDetails = error?.message || popupI18n.t("unknown_error");
-			const userMessage =
-				popupI18n.t("reset_failed_alert") + ": " + errorDetails;
-			sendDebugLog(
-				popupI18n.t("reset_request_failed", { message: errorDetails }),
-				"error",
-			);
+			const userMessage = popupI18n.t("reset_failed_alert") + ": " + errorDetails;
+			sendDebugLog(popupI18n.t("reset_request_failed", { message: errorDetails }), "error");
 			showError(userMessage);
 		},
 
@@ -1099,8 +992,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		checkHeaderBtnClick: () => {
 			sendDebugLog(popupI18n.t("clicked_quick_check"), "info");
 			const headerCheckResultDiv = document.getElementById("headerCheckResult");
-			const headerCheckContentPre =
-				document.getElementById("headerCheckContent");
+			const headerCheckContentPre = document.getElementById("headerCheckContent");
 
 			// 检查必要元素
 			if (!headerCheckContentPre) return;
@@ -1120,53 +1012,29 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 
 	// 绑定事件监听器
 	if (autoSwitchToggle) {
-		ResourceManager.addEventListener(
-			autoSwitchToggle,
-			"change",
-			eventHandlers.autoSwitchChange,
-		);
+		ResourceManager.addEventListener(autoSwitchToggle, "change", eventHandlers.autoSwitchChange);
 	}
 
 	if (languageSelect) {
-		ResourceManager.addEventListener(
-			languageSelect,
-			"focus",
-			eventHandlers.languageSelectFocus,
-		);
+		ResourceManager.addEventListener(languageSelect, "focus", eventHandlers.languageSelectFocus);
 	}
 
 	if (applyButton) {
-		ResourceManager.addEventListener(
-			applyButton,
-			"click",
-			eventHandlers.applyButtonClick,
-		);
+		ResourceManager.addEventListener(applyButton, "click", eventHandlers.applyButtonClick);
 	}
 
 	if (resetBtn) {
-		ResourceManager.addEventListener(
-			resetBtn,
-			"click",
-			eventHandlers.resetButtonClick,
-		);
+		ResourceManager.addEventListener(resetBtn, "click", eventHandlers.resetButtonClick);
 	}
 
 	if (checkHeaderBtn) {
-		ResourceManager.addEventListener(
-			checkHeaderBtn,
-			"click",
-			eventHandlers.checkHeaderBtnClick,
-		);
+		ResourceManager.addEventListener(checkHeaderBtn, "click", eventHandlers.checkHeaderBtnClick);
 	}
 
 	// 添加更新检查按钮事件监听器
 	const updateCheckBtn = getEl("updateCheckBtn");
 	if (updateCheckBtn) {
-		ResourceManager.addEventListener(
-			updateCheckBtn,
-			"click",
-			eventHandlers.updateCheckBtnClick,
-		);
+		ResourceManager.addEventListener(updateCheckBtn, "click", eventHandlers.updateCheckBtnClick);
 	}
 
 	// 全局资源清理函数
@@ -1223,23 +1091,13 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	 * @param {HTMLElement} languageSelect - 语言选择元素
 	 * @param {HTMLElement} applyButton - 应用按钮元素
 	 */
-	const handleAutoSwitchUIUpdate = (
-		uiState,
-		autoSwitchToggle,
-		languageSelect,
-		applyButton,
-	) => {
+	const handleAutoSwitchUIUpdate = (uiState, autoSwitchToggle, languageSelect, applyButton) => {
 		// 来自 background 的状态同步可能在短时间内多次触发，使用 debouncedUIUpdate 合并
 		debouncedUIUpdate(() => {
 			const autoSwitchEnabled = uiState.autoSwitchEnabled;
 
 			if (typeof autoSwitchEnabled === "boolean") {
-				updateAutoSwitchUI(
-					autoSwitchEnabled,
-					autoSwitchToggle,
-					languageSelect,
-					applyButton,
-				);
+				updateAutoSwitchUI(autoSwitchEnabled, autoSwitchToggle, languageSelect, applyButton);
 			}
 
 			if (uiState.currentLanguage) {
@@ -1261,10 +1119,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			languageSelect.value = currentLanguage;
 		}
 
-		sendDebugLog(
-			`${popupI18n.t("received_background_message")} ${currentLanguage}${popupI18n.t("update_ui")}`,
-			"info",
-		);
+		sendDebugLog(`${popupI18n.t("received_background_message")} ${currentLanguage}${popupI18n.t("update_ui")}`, "info");
 	};
 
 	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息）
@@ -1272,11 +1127,6 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		if (areaName !== "session" || !changes.uiState?.newValue) {
 			return;
 		}
-		handleAutoSwitchUIUpdate(
-			changes.uiState.newValue,
-			autoSwitchToggle,
-			languageSelect,
-			applyButton,
-		);
+		handleAutoSwitchUIUpdate(changes.uiState.newValue, autoSwitchToggle, languageSelect, applyButton);
 	});
 });

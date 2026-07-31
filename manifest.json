@@ -23,13 +23,7 @@
 	"background": {
 		"service_worker": "background.js"
 	},
-	"permissions": [
-		"storage",
-		"declarativeNetRequest",
-		"declarativeNetRequestFeedback",
-		"tabs",
-		"contextMenus"
-	],
+	"permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback", "tabs", "contextMenus"],
 	"host_permissions": ["<all_urls>"],
 	"icons": {
 		"16": "images/icon16.png",

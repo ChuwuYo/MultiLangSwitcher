@@ -126,10 +126,7 @@ const populateLanguageSelect = (selectElement, selectedValue = null) => {
 	selectElement.innerHTML = generateLanguageOptions(selectedValue);
 
 	// 如果指定了选中值但在预定义选项中没有找到，添加自定义选项
-	if (
-		selectedValue &&
-		!LANGUAGE_OPTIONS.find((opt) => opt.value === selectedValue)
-	) {
+	if (selectedValue && !LANGUAGE_OPTIONS.find((opt) => opt.value === selectedValue)) {
 		const customOption = document.createElement("option");
 		customOption.value = selectedValue;
 		customOption.textContent = `${selectedValue} (自定义)`;
