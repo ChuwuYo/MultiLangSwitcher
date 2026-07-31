@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evalInContext, loadGlobalScript } from "./helpers/global-loader.js";
 
-const context = loadGlobalScript("shared/shared-update-checker.js");
+const context = loadGlobalScript("shared/shared-update-checker.js", { sendLocalizedUpdateLog: () => {} });
 const UpdateChecker = evalInContext(context, "UpdateChecker");
 const isNewerVersion = (current, latest) => UpdateChecker.prototype.isNewerVersion.call({}, current, latest);
 

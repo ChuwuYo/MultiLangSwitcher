@@ -84,4 +84,14 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 		expect(result.hardwareFingerprint.canvas.hash).toBe("[redacted]");
 		expect(result.hardwareFingerprint.webgl).toBeUndefined();
 	});
+
+	it("handles non-array webrtc.ips", () => {
+		const result = sanitizeSnapshotForAI({ webrtc: { ips: "not-an-array" } });
+		expect(result.webrtc.ips).toEqual([]);
+	});
+
+	it("handles http section without headers", () => {
+		const result = sanitizeSnapshotForAI({ http: { url: "https://example.com" } });
+		expect(result.http.headers).toEqual({ redacted: true, headerNames: [] });
+	});
 });
