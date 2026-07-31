@@ -33,7 +33,6 @@ if (typeof popupEn === "undefined") {
 		auto_trigger_quick_check: "Auto trigger quick check after rules update.",
 		popup_script_loaded: "Popup script loaded.",
 		auto_switch_status_saved: "Auto switch function status saved:",
-		failed_notify_background: "Failed to notify background script",
 		popup_cleanup_completed: "Popup resource cleanup completed",
 		language_select_focus:
 			"Language select box gained focus, expanding dropdown.",
@@ -111,8 +110,6 @@ if (typeof popupEn === "undefined") {
 		get_current_language_from_background:
 			"Get current language from background: {language}",
 		update_storage_status_failed: "Update storage status failed: {message}",
-		synced_auto_switch_status_to_storage:
-			"Synced auto switch status to storage: {status}",
 		clicked_reset_button: "Clicked reset button",
 		reset_request_failed: "Reset request failed: {message}",
 		reset_successful: "Reset successful",

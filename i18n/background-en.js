@@ -30,7 +30,6 @@ if (typeof backgroundEn === "undefined") {
 		ui_update: "UI update",
 		language: "language",
 		original_error: "Original error",
-		failed_notify_ui_error: "Failed to notify UI of error",
 		failed_notify_ui_update: "Failed to notify UI update",
 		accept_language_reset_successful: "Accept-Language reset successful",
 		reset_error: "Reset error",

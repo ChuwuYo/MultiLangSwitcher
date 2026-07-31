@@ -254,7 +254,6 @@ if (typeof debugEn === "undefined") {
 		update_auto_switch_failed: "Update auto switch status failed:",
 		auto_switch_enabled: "Auto switch function enabled",
 		auto_switch_disabled: "Auto switch function disabled",
-		failed_update_storage: "Failed to update storage",
 		unknown_response_auto_switch:
 			"Received unknown response when updating auto switch status",
 

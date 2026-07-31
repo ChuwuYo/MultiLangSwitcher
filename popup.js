@@ -372,30 +372,19 @@ const getAutoSwitchStatus = async () => {
 
 /**
  * 设置自动切换状态
+ * 持久化由 background 的 AUTO_SWITCH_TOGGLED 处理器单点完成（写存储 + 应用规则 + 发布 UI 状态），
+ * 本页不直接写存储，避免双写竞态；返回值反映后台实际处理结果
  * @param {boolean} enabled - 是否启用
  * @returns {Promise<boolean>} 操作是否成功
  */
 const setAutoSwitchStatus = async (enabled) => {
 	try {
-		// 保存自动切换状态到本地存储
-		await requestBackground("SET_STORAGE_DATA", {
-			data: { autoSwitchEnabled: enabled },
-		});
+		await requestBackground("AUTO_SWITCH_TOGGLED", { enabled });
 
 		// 记录状态变更日志
 		sendDebugLog(
 			`${popupI18n.t("auto_switch_status_saved")} ${enabled ? popupI18n.t("enabled") : popupI18n.t("disabled")}.`,
 			"info",
-		);
-
-		// 通知 background 脚本状态变更（即发即弃，不影响当前流程；仅在失败时记录日志）
-		requestBackground("AUTO_SWITCH_TOGGLED", { enabled }).catch(
-			(notifyError) => {
-				sendDebugLog(
-					`${popupI18n.t("failed_notify_background")}: ${notifyError.message}`,
-					"warning",
-				);
-			},
 		);
 
 		return true;
@@ -509,7 +498,7 @@ const showUpdateError = (
 			retryLink.href = "#";
 			retryLink.className = "text-primary";
 			retryLink.textContent = popupI18n.t("retry_update_check");
-			retryLink.addEventListener("click", (e) => {
+			ResourceManager.addEventListener(retryLink, "click", (e) => {
 				e.preventDefault();
 				debouncedUpdateCheck();
 			});
@@ -961,7 +950,7 @@ const debouncedUIUpdate = (updateFn, delay = 16) => {
 };
 
 // --- 扩展初始化 ---
-document.addEventListener("DOMContentLoaded", async () => {
+ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	// 等待翻译系统加载完成
 	if (!popupI18n.isReady) {
 		await popupI18n.ready();
@@ -1208,13 +1197,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 	};
 
 	// 页面卸载时清理事件和请求
-	window.addEventListener("beforeunload", cleanupResources, { once: true });
+	ResourceManager.addEventListener(window, "beforeunload", cleanupResources, {
+		once: true,
+	});
 
 	// 页面隐藏时也进行清理（处理弹窗关闭的情况）
-	window.addEventListener("pagehide", cleanupResources, { once: true });
+	ResourceManager.addEventListener(window, "pagehide", cleanupResources, {
+		once: true,
+	});
 
 	// 通过可见性变化处理弹窗关闭
-	document.addEventListener("visibilitychange", () => {
+	ResourceManager.addEventListener(document, "visibilitychange", () => {
 		if (document.hidden) {
 			// 当弹窗变为隐藏时取消正在进行的更新检查
 			cancelUpdateCheck();
@@ -1223,21 +1216,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 	});
 
 	/**
-	 * 处理自动切换UI更新消息
-	 * @param {Object} request - 消息请求对象
+	 * 处理 background 发布的 UI 状态变化
+	 * 状态持久化由 background 单点负责，本页只更新展示，不回写存储
+	 * @param {Object} uiState - UI 状态对象 { autoSwitchEnabled, currentLanguage }
 	 * @param {HTMLElement} autoSwitchToggle - 自动切换开关元素
 	 * @param {HTMLElement} languageSelect - 语言选择元素
 	 * @param {HTMLElement} applyButton - 应用按钮元素
 	 */
 	const handleAutoSwitchUIUpdate = (
-		request,
+		uiState,
 		autoSwitchToggle,
 		languageSelect,
 		applyButton,
 	) => {
 		// 来自 background 的状态同步可能在短时间内多次触发，使用 debouncedUIUpdate 合并
 		debouncedUIUpdate(() => {
-			const autoSwitchEnabled = request.autoSwitchEnabled;
+			const autoSwitchEnabled = uiState.autoSwitchEnabled;
 
 			if (typeof autoSwitchEnabled === "boolean") {
 				updateAutoSwitchUI(
@@ -1246,38 +1240,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 					languageSelect,
 					applyButton,
 				);
-				syncAutoSwitchStatusToStorage(autoSwitchEnabled);
 			}
 
-			// 按需更新当前语言，避免多余写入
-			if (request.currentLanguage) {
-				updateCurrentLanguageInfo(request.currentLanguage, languageSelect);
+			if (uiState.currentLanguage) {
+				updateCurrentLanguageInfo(uiState.currentLanguage, languageSelect);
 			}
 		});
-	};
-
-	/**
-	 * 同步自动切换状态到本地存储
-	 * @param {boolean} autoSwitchEnabled - 自动切换是否启用
-	 */
-	const syncAutoSwitchStatusToStorage = async (autoSwitchEnabled) => {
-		try {
-			// 后台统一响应格式，直接 await 即可
-			await requestBackground("SET_STORAGE_DATA", {
-				data: { autoSwitchEnabled },
-			});
-			sendDebugLog(
-				popupI18n.t("synced_auto_switch_status_to_storage", {
-					status: autoSwitchEnabled,
-				}),
-				"info",
-			);
-		} catch (error) {
-			sendDebugLog(
-				popupI18n.t("update_storage_status_failed", { message: error.message }),
-				"error",
-			);
-		}
 	};
 
 	/**
@@ -1299,20 +1267,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 		);
 	};
 
-	// 监听来自 background.js 的消息
-	chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
-		// 处理 AUTO_SWITCH_UI_UPDATE
-		if (request.type === "AUTO_SWITCH_UI_UPDATE") {
-			handleAutoSwitchUIUpdate(
-				request,
-				autoSwitchToggle,
-				languageSelect,
-				applyButton,
-			);
-			sendResponse({ status: "UI updated" });
-			return true;
+	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息）
+	chrome.storage.onChanged.addListener((changes, areaName) => {
+		if (areaName !== "session" || !changes.uiState?.newValue) {
+			return;
 		}
-
-		return true;
+		handleAutoSwitchUIUpdate(
+			changes.uiState.newValue,
+			autoSwitchToggle,
+			languageSelect,
+			applyButton,
+		);
 	});
 });

@@ -26,7 +26,6 @@ if (typeof backgroundZh === "undefined") {
 		ui_update: "UI更新",
 		language: "语言",
 		original_error: "原始错误",
-		failed_notify_ui_error: "通知UI错误失败",
 		failed_notify_ui_update: "通知UI更新失败",
 		accept_language_reset_successful: "Accept-Language 重置成功",
 		reset_error: "重置错误",

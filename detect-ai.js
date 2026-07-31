@@ -1208,11 +1208,7 @@
 			elements.apiKeyInput,
 			elements.modelInput,
 		].forEach((input) => {
-			if (!input) {
-				return;
-			}
-
-			input.addEventListener("change", persistAIConfig);
+			ResourceManager.addEventListener(input, "change", persistAIConfig);
 		});
 	};
 
@@ -1223,18 +1219,45 @@
 		await loadAIConfig();
 		updateAIControls();
 
-		elements.providerSelect?.addEventListener("change", handleProviderChange);
-		elements.apiKeyToggle?.addEventListener("click", handleApiKeyToggle);
-		elements.startButton?.addEventListener("click", startAIDiagnosis);
-		elements.stopButton?.addEventListener("click", stopAIRequest);
-		elements.clearButton?.addEventListener("click", () => resetAISession());
-		elements.exportStructuredButton?.addEventListener(
+		ResourceManager.addEventListener(
+			elements.providerSelect,
+			"change",
+			handleProviderChange,
+		);
+		ResourceManager.addEventListener(
+			elements.apiKeyToggle,
+			"click",
+			handleApiKeyToggle,
+		);
+		ResourceManager.addEventListener(
+			elements.startButton,
+			"click",
+			startAIDiagnosis,
+		);
+		ResourceManager.addEventListener(
+			elements.stopButton,
+			"click",
+			stopAIRequest,
+		);
+		ResourceManager.addEventListener(elements.clearButton, "click", () =>
+			resetAISession(),
+		);
+		ResourceManager.addEventListener(
+			elements.exportStructuredButton,
 			"click",
 			exportStructuredSnapshotAsMarkdown,
 		);
-		elements.sendButton?.addEventListener("click", sendFollowupMessage);
-		elements.exportButton?.addEventListener("click", exportChatAsMarkdown);
-		elements.userInput?.addEventListener("keydown", (event) => {
+		ResourceManager.addEventListener(
+			elements.sendButton,
+			"click",
+			sendFollowupMessage,
+		);
+		ResourceManager.addEventListener(
+			elements.exportButton,
+			"click",
+			exportChatAsMarkdown,
+		);
+		ResourceManager.addEventListener(elements.userInput, "keydown", (event) => {
 			if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
 				event.preventDefault();
 				sendFollowupMessage();

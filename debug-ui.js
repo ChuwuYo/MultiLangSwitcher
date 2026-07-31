@@ -986,10 +986,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 							: debugI18n.t("auto_switch_disabled"),
 						"success",
 					);
-					// 更新存储中的状态
-					await requestBackground("SET_STORAGE_DATA", {
-						data: { autoSwitchEnabled: isEnabled },
-					});
+					// 存储持久化由 background 的 AUTO_SWITCH_TOGGLED 处理器单点完成，此处无需回写
 				} catch (error) {
 					addLogMessage(
 						`${debugI18n.t("update_auto_switch_failed")} ${error.message}`,
@@ -1248,36 +1245,21 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		},
 	);
 
-	// 监听来自 background.js 的消息
-	ResourceManager.addMessageListener((request, _sender, sendResponse) => {
-		if (request.type === "AUTO_SWITCH_UI_UPDATE") {
-			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
-			if (autoSwitchToggle) {
-				autoSwitchToggle.checked = !!request.autoSwitchEnabled;
-				(async () => {
-					try {
-						// 同步到存储：统一消息调用，失败直接抛错
-						await requestBackground("SET_STORAGE_DATA", {
-							data: { autoSwitchEnabled: !!request.autoSwitchEnabled },
-						});
-					} catch (notifyError) {
-						addLogMessage(
-							`${debugI18n.t("failed_update_storage")}: ${notifyError.message}`,
-							"warning",
-						);
-					}
-				})();
-			}
-			addLogMessage(
-				`${debugI18n.t("received_auto_switch_update")} ${request.autoSwitchEnabled ? debugI18n.t("enabled") : debugI18n.t("disabled")}, ${debugI18n.t("current_language_colon")} ${request.currentLanguage}`,
-				"info",
-			);
-
-			if (sendResponse) {
-				sendResponse({ status: "Debug UI updated" });
-			}
+	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息；
+	// 状态持久化由 background 单点负责，本页只更新展示，不回写存储）
+	chrome.storage.onChanged.addListener((changes, areaName) => {
+		if (areaName !== "session" || !changes.uiState?.newValue) {
+			return;
 		}
-		return true;
+		const { autoSwitchEnabled, currentLanguage } = changes.uiState.newValue;
+		const autoSwitchToggle = document.getElementById("autoSwitchToggle");
+		if (autoSwitchToggle) {
+			autoSwitchToggle.checked = !!autoSwitchEnabled;
+		}
+		addLogMessage(
+			`${debugI18n.t("received_auto_switch_update")} ${autoSwitchEnabled ? debugI18n.t("enabled") : debugI18n.t("disabled")}, ${debugI18n.t("current_language_colon")} ${currentLanguage}`,
+			"info",
+		);
 	});
 
 	// 页面卸载时的清理

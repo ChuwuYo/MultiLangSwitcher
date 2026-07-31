@@ -441,23 +441,6 @@ const handleRuleUpdateError = async (error, language, retryCount) => {
 
 		sendBackgroundLog(backgroundI18n.t("max_retry_reached"), "error");
 
-		// 通知用户出现了问题
-		chrome.runtime
-			.sendMessage({
-				type: "UPDATE_ERROR",
-				error: {
-					type: errorType,
-					message: error.message,
-					retryCount: retryCount,
-				},
-			})
-			.catch((notifyError) => {
-				sendBackgroundLog(
-					`${backgroundI18n.t("failed_notify_ui_error")}: ${notifyError.message}`,
-					"warning",
-				);
-			});
-
 		throw finalError;
 	}
 };
@@ -555,22 +538,28 @@ const initialize = (reason) => {
 };
 
 /**
- * 防抖的UI更新通知
+ * 发布生效 UI 状态到会话存储
+ * 页面通过 chrome.storage.onChanged 感知变化（取代自定义消息广播，
+ * popup 未打开时不再产生"无接收方"告警）。注意 currentLanguage 是
+ * 当前生效语言（自动模式下为规则实际应用值），与 storage.local 中
+ * 保存的"最后一次手动选择"语义不同，故写入 session 而非 local。
  * @param {boolean} autoSwitchEnabled - 自动切换是否启用
- * @param {string} currentLanguage - 当前语言代码
+ * @param {string} currentLanguage - 当前生效的语言代码
  */
 const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
-	const message = {
-		type: "AUTO_SWITCH_UI_UPDATE",
-		autoSwitchEnabled: autoSwitchEnabled,
-		currentLanguage: currentLanguage,
-	};
-	chrome.runtime.sendMessage(message).catch((notifyError) => {
-		sendBackgroundLog(
-			`${backgroundI18n.t("failed_notify_ui_update")}: ${notifyError.message}`,
-			"warning",
-		);
-	});
+	chrome.storage.session
+		.set({
+			uiState: {
+				autoSwitchEnabled: autoSwitchEnabled,
+				currentLanguage: currentLanguage,
+			},
+		})
+		.catch((notifyError) => {
+			sendBackgroundLog(
+				`${backgroundI18n.t("failed_notify_ui_update")}: ${notifyError.message}`,
+				"warning",
+			);
+		});
 	sendBackgroundLog(
 		`${backgroundI18n.t("ui_update")}: ${backgroundI18n.t("auto_switch")}=${autoSwitchEnabled}, ${backgroundI18n.t("language")}=${currentLanguage}`,
 		"info",

@@ -10,6 +10,19 @@ class DomainRulesManager {
 		this.domainCache = new Map(); // 域名查询结果缓存
 		this.MAX_CACHE_SIZE = 100; // 缓存大小限制
 
+		// 自定义规则内存缓存：避免每次未命中都读 chrome.storage；
+		// 外部（如手动注入 customDomainRules）修改时由 onChanged 失效
+		this.customRulesCache = null;
+		if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
+			chrome.storage.onChanged.addListener((changes, areaName) => {
+				if (areaName === "local" && changes.customDomainRules) {
+					this.customRulesCache = null;
+					// 域名查询结果由自定义规则参与计算，一并失效
+					this.domainCache.clear();
+				}
+			});
+		}
+
 		// 简化缓存统计
 		this.cacheStats = {
 			hits: 0,
@@ -238,16 +251,20 @@ class DomainRulesManager {
 	}
 
 	/**
-	 * 获取自定义规则
+	 * 获取自定义规则（首读后缓存，storage 变化时自动失效）
 	 * @returns {Promise<Object>} 自定义规则对象
 	 */
 	async getCustomRules() {
+		if (this.customRulesCache) {
+			return this.customRulesCache;
+		}
 		try {
 			const result = await chrome.storage.local.get(["customDomainRules"]);
-			return result.customDomainRules || {};
+			this.customRulesCache = result.customDomainRules || {};
 		} catch (_error) {
-			return {};
+			this.customRulesCache = {};
 		}
+		return this.customRulesCache;
 	}
 
 	/**
