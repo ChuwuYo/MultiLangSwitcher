@@ -41,6 +41,11 @@ const sanitizeSnapshotForAI = (snapshot) => {
 		sanitized.browserFingerprint.userAgent = "[redacted]";
 	}
 
+	// UA 字符串同等敏感：保留浏览器名/版本/OS，删除完整 UA
+	if (sanitized.compatibility?.browser) {
+		sanitized.compatibility.browser.userAgent = "[redacted]";
+	}
+
 	// UA-CH 高熵值与 User Agent 同等敏感：仅保留移动端布尔标志
 	if (sanitized.compatibility?.uaData) {
 		sanitized.compatibility.uaData = {

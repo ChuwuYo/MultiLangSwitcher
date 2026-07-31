@@ -1,4 +1,6 @@
 const detectEn = {
+	theme_toggle: "Toggle Theme",
+	reset_accept_language_tooltip: "Reset Accept-Language",
 	title: "MultiLangSwitcher Detection Page",
 	heading: "MultiLangSwitcher Detection Page",
 	subtitle: "This page is used to verify the effect of MultiLangSwitcher extension settings",
@@ -205,6 +207,8 @@ const detectEn = {
 };
 
 const detectZh = {
+	theme_toggle: "切换主题",
+	reset_accept_language_tooltip: "重置 Accept-Language",
 	title: "MultiLangSwitcher 检测页面",
 	heading: "MultiLangSwitcher 检测页面",
 	subtitle: "此页面用于验证MultiLangSwitcher扩展的设置效果",

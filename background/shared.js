@@ -3,10 +3,9 @@
 import { sendDebugLog } from "../shared/shared-utils.js";
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { backgroundI18n, backgroundI18nReady } from "../i18n/background-i18n.js";
-import { domainManagerI18nReady } from "../i18n/domain-manager-i18n.js";
 
 // 将所有i18n模块的初始化Promise聚合到一个地方
-export const i18nReady = Promise.all([backgroundI18nReady, domainManagerI18nReady]);
+export const i18nReady = backgroundI18nReady;
 
 // 常量定义
 export const RULE_ID = 1;

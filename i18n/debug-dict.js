@@ -1,4 +1,6 @@
 const debugEn = {
+	theme_toggle: "Toggle Theme",
+	reset_accept_language_tooltip: "Reset Accept-Language",
 	// Page basic information
 	title: "MultiLangSwitcher Debug Page",
 	heading: "MultiLangSwitcher Debug Tools",
@@ -268,6 +270,8 @@ const debugEn = {
 };
 
 const debugZh = {
+	theme_toggle: "切换主题",
+	reset_accept_language_tooltip: "重置 Accept-Language",
 	// 页面基本信息
 	title: "MultiLangSwitcher 调试页面",
 	heading: "MultiLangSwitcher 调试工具",

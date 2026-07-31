@@ -114,4 +114,21 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 		expect(JSON.stringify(result)).not.toContain("131.0.6778.86");
 		expect(JSON.stringify(result)).not.toContain("macOS");
 	});
+
+	it("redacts compatibility.browser.userAgent but keeps name/version/os", () => {
+		const result = sanitizeSnapshotForAI({
+			compatibility: {
+				browser: {
+					name: "Chrome",
+					version: "131",
+					fullVersion: "131.0.6778.86",
+					os: "MacOS",
+					userAgent: "Mozilla/5.0 real-agent",
+				},
+			},
+		});
+		expect(result.compatibility.browser.userAgent).toBe("[redacted]");
+		expect(result.compatibility.browser.name).toBe("Chrome");
+		expect(JSON.stringify(result)).not.toContain("real-agent");
+	});
 });

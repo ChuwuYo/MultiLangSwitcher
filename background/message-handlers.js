@@ -121,55 +121,6 @@ const handleGetDomainRulesRequest = async () => {
 };
 
 /**
- * 处理更新检查请求
- * @returns {Promise<Object>} 更新信息
- */
-const handleUpdateCheckRequest = async () => {
-	try {
-		const repoOwner = "ChuwuYo";
-		const repoName = "MultiLangSwitcher";
-		const currentVersion = chrome.runtime.getManifest().version; // 动态获取manifest.json中的版本号
-
-		sendBackgroundLog(
-			backgroundI18n.t("update_check_initiated", {
-				repo: `${repoOwner}/${repoName}`,
-			}),
-			"info",
-		);
-
-		const updateChecker = new UpdateChecker(repoOwner, repoName, currentVersion);
-		const updateInfo = await updateChecker.checkForUpdates();
-
-		sendBackgroundLog(backgroundI18n.t("update_check_success"), "success");
-		return { updateInfo: updateInfo };
-	} catch (error) {
-		// 根据错误类型记录日志并重新抛出
-		const errorType = error?.type || "UNKNOWN_ERROR";
-		const errorMessage = error?.message || String(error);
-
-		const errorMessages = {
-			TIMEOUT: backgroundI18n.t("update_check_timeout", { timeout: 10000 }),
-			NETWORK_ERROR: backgroundI18n.t("update_check_network_error", {
-				error: errorMessage,
-			}),
-			RATE_LIMIT: backgroundI18n.t("update_check_rate_limited"),
-			INVALID_RESPONSE: backgroundI18n.t("update_check_invalid_response", {
-				response: errorMessage,
-			}),
-			VERSION_ERROR: backgroundI18n.t("update_check_parsing_error", {
-				error: errorMessage,
-			}),
-		};
-
-		sendBackgroundLog(
-			errorMessages[errorType] || backgroundI18n.t("update_check_failed", { error: errorMessage }),
-			"error",
-		);
-		throw error;
-	}
-};
-
-/**
  * 获取并合并域名规则管理器的缓存统计信息和规则统计信息
  * @returns {Object} 合并后的统计信息
  */
@@ -362,38 +313,11 @@ export const setupMessageListener = ({ sendOk, sendErr }) => {
 
 				await ensureInitialized();
 
-				let data;
-				if (type === MessageTypes.UPDATE_RULES) {
-					data = await handleUpdateRulesRequest(request);
-				} else if (type === MessageTypes.AUTO_SWITCH_TOGGLED) {
-					data = await handleAutoSwitchToggleRequest(request);
-				} else if (type === MessageTypes.GET_CURRENT_LANG) {
-					data = await handleGetCurrentLangRequest();
-				} else if (type === MessageTypes.RESET_ACCEPT_LANGUAGE) {
-					data = await handleResetAcceptLanguageRequest();
-				} else if (type === MessageTypes.GET_DOMAIN_RULES) {
-					data = await handleGetDomainRulesRequest();
-				} else if (type === MessageTypes.UPDATE_CHECK) {
-					data = await handleUpdateCheckRequest();
-				} else if (type === MessageTypes.GET_CACHE_STATS) {
-					data = await handleGetCacheStatsRequest();
-				} else if (type === MessageTypes.TEST_DOMAIN_CACHE) {
-					data = await handleTestDomainCacheRequest(request);
-				} else if (type === MessageTypes.CLEAR_DOMAIN_CACHE) {
-					data = await handleClearCacheRequest();
-				} else if (type === MessageTypes.RESET_CACHE_STATS) {
-					data = await handleResetCacheStatsRequest();
-				} else if (type === MessageTypes.GET_DYNAMIC_RULES) {
-					data = await handleGetDynamicRulesRequest();
-				} else if (type === MessageTypes.GET_MATCHED_RULES) {
-					data = await handleGetMatchedRulesRequest();
-				} else if (type === MessageTypes.UPDATE_DYNAMIC_RULES) {
-					data = await handleUpdateDynamicRulesRequest(request);
-				} else if (type === MessageTypes.GET_MANIFEST_INFO) {
-					data = await handleGetManifestInfoRequest();
-				} else {
+				const handler = MESSAGE_HANDLERS[type];
+				if (!handler) {
 					throw new Error(`Unknown message type: ${type}`);
 				}
+				const data = await handler(request);
 
 				sendOk(sendResponse, data || {});
 			} catch (error) {
@@ -449,15 +373,19 @@ const handleUpdateDynamicRulesRequest = async (request) => {
 };
 
 /**
- * 处理获取清单信息请求
+ * 消息类型 → 处理器映射表
  */
-const handleGetManifestInfoRequest = () => {
-	try {
-		const manifest = chrome.runtime.getManifest();
-		const extensionId = chrome.runtime.id;
-		return { manifest: manifest, extensionId: extensionId };
-	} catch (error) {
-		sendBackgroundLog(`${backgroundI18n.t("get_manifest_info_failed")}: ${error.message}`, "error");
-		throw error;
-	}
+const MESSAGE_HANDLERS = {
+	[MessageTypes.UPDATE_RULES]: handleUpdateRulesRequest,
+	[MessageTypes.AUTO_SWITCH_TOGGLED]: handleAutoSwitchToggleRequest,
+	[MessageTypes.GET_CURRENT_LANG]: handleGetCurrentLangRequest,
+	[MessageTypes.RESET_ACCEPT_LANGUAGE]: handleResetAcceptLanguageRequest,
+	[MessageTypes.GET_DOMAIN_RULES]: handleGetDomainRulesRequest,
+	[MessageTypes.GET_CACHE_STATS]: handleGetCacheStatsRequest,
+	[MessageTypes.TEST_DOMAIN_CACHE]: handleTestDomainCacheRequest,
+	[MessageTypes.CLEAR_DOMAIN_CACHE]: handleClearCacheRequest,
+	[MessageTypes.RESET_CACHE_STATS]: handleResetCacheStatsRequest,
+	[MessageTypes.GET_DYNAMIC_RULES]: handleGetDynamicRulesRequest,
+	[MessageTypes.GET_MATCHED_RULES]: handleGetMatchedRulesRequest,
+	[MessageTypes.UPDATE_DYNAMIC_RULES]: handleUpdateDynamicRulesRequest,
 };

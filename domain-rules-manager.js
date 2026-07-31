@@ -1,12 +1,10 @@
 // 域名规则管理器
 import { STORAGE_KEYS } from "./shared/storage-keys.js";
-import { domainManagerI18n } from "./i18n/domain-manager-i18n.js";
 
 export class DomainRulesManager {
 	constructor() {
 		this.rules = null;
 		this.loadPromise = null;
-		this.i18n = null; // 延迟初始化
 
 		// 简化的缓存机制
 		this.domainCache = new Map(); // 域名查询结果缓存
@@ -30,14 +28,6 @@ export class DomainRulesManager {
 			hits: 0,
 			misses: 0,
 		};
-	}
-
-	// 确保 i18n 已初始化
-	ensureI18n() {
-		if (!this.i18n) {
-			this.i18n = domainManagerI18n;
-		}
-		return this.i18n;
 	}
 
 	// 加载规则数据
