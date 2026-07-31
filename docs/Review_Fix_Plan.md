@@ -21,7 +21,7 @@
 
 - [x] **F8** 删除 domain-manager i18n 全链（实例/Ready/dict 5 键/`ensureI18n`），`i18nReady` 简化为单实例 — `domain-rules-manager.js`, `background/shared.js`，已删 `i18n/domain-manager-{i18n,dict}.js`
 - [x] **F9a** dispatch 由 14 分支 if-else 改为 `MESSAGE_HANDLERS` 映射表 — `background/message-handlers.js`
-- [ ] **F9b** 删除已无引用的 `handleUpdateCheckRequest` / `handleGetManifestInfoRequest` 函数及 `MessageTypes.UPDATE_CHECK` / `GET_MANIFEST_INFO` 常量（无发送方，spec 目标协议收窄）
+- [x] **F9b** 删除已无引用的 `handleUpdateCheckRequest` / `handleGetManifestInfoRequest` 函数及 `MessageTypes.UPDATE_CHECK` / `GET_MANIFEST_INFO` 常量（无发送方，spec 目标协议收窄）；随之孤儿化的 7 个 background-dict 键一并清除
 - [ ] **F10** `detect/ai-shared.js` 去中转：`translate` / `getUiLanguage` 改为直接 re-export `detect/shared.js`，不再包一层
 - [ ] **F11** `popup/shared.js` 孤儿 JSDoc 删除；`getEl` 在 popup 内统一使用（language-apply.js 两处 raw getElementById）
 
