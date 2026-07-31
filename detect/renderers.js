@@ -412,6 +412,41 @@ export const renderCompatibilityInfo = (compatibilityInfo) => {
 	if (!browserInfoEl || !apiListEl) return;
 
 	browserInfoEl.textContent = `${compatibilityInfo.browser.name} ${compatibilityInfo.browser.fullVersion} ${translateDetect("on_connector")} ${compatibilityInfo.browser.os}`;
+
+	// UA-CH 高熵值对照（userAgentData 可用时展示，便于比对 UA 解析与 Client Hints 差异）
+	const existingUaData = document.getElementById("uaDataDisplay");
+	if (existingUaData) {
+		existingUaData.remove();
+	}
+	if (compatibilityInfo.uaData) {
+		const uaData = compatibilityInfo.uaData;
+		const container = document.createElement("div");
+		container.id = "uaDataDisplay";
+		container.className = "small text-muted mt-1";
+
+		const lines = [];
+		if (uaData.fullVersionList?.length) {
+			lines.push(`${translateDetect("ua_ch_full_version_list")}: ${uaData.fullVersionList.join(", ")}`);
+		} else if (uaData.brands?.length) {
+			lines.push(`${translateDetect("ua_ch_brands")}: ${uaData.brands.join(", ")}`);
+		}
+		const platformParts = [uaData.platform, uaData.platformVersion, uaData.architecture, uaData.bitness, uaData.model]
+			.filter(Boolean)
+			.join(" / ");
+		if (platformParts) {
+			lines.push(`${translateDetect("ua_ch_platform")}: ${platformParts}`);
+		}
+		lines.push(`${translateDetect("ua_ch_mobile")}: ${uaData.mobile ? translateDetect("yes") : translateDetect("no")}`);
+
+		for (const line of lines) {
+			const p = document.createElement("p");
+			p.className = "mb-0";
+			p.textContent = line;
+			container.appendChild(p);
+		}
+		browserInfoEl.appendChild(container);
+	}
+
 	apiListEl.innerHTML = "";
 
 	compatibilityInfo.apiSupport.forEach((api) => {

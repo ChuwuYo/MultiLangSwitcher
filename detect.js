@@ -66,13 +66,14 @@ const runAllDetections = async () => {
 		const fingerprintInfo = collectFingerprintInfo();
 		const canvasFingerprintInfo = collectCanvasFingerprintInfo();
 		const webglFingerprintInfo = collectWebglFingerprintInfo();
-		const compatibilityInfo = collectCompatibilityInfo();
+		const compatibilityInfoPromise = collectCompatibilityInfo();
 
-		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo] = await Promise.all([
+		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo, compatibilityInfo] = await Promise.all([
 			extensionContextPromise,
 			headerInfoPromise,
 			webRtcInfoPromise,
 			audioFingerprintInfoPromise,
+			compatibilityInfoPromise,
 		]);
 
 		renderHeaderInfo(headerInfo);

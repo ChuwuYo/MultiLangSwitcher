@@ -41,6 +41,14 @@ const sanitizeSnapshotForAI = (snapshot) => {
 		sanitized.browserFingerprint.userAgent = "[redacted]";
 	}
 
+	// UA-CH 高熵值与 User Agent 同等敏感：仅保留移动端布尔标志
+	if (sanitized.compatibility?.uaData) {
+		sanitized.compatibility.uaData = {
+			redacted: true,
+			mobile: !!snapshot.compatibility.uaData.mobile,
+		};
+	}
+
 	if (sanitized.hardwareFingerprint?.canvas) {
 		sanitized.hardwareFingerprint.canvas.hash = "[redacted]";
 	}

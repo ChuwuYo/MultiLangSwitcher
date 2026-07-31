@@ -94,4 +94,24 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 		const result = sanitizeSnapshotForAI({ http: { url: "https://example.com" } });
 		expect(result.http.headers).toEqual({ redacted: true, headerNames: [] });
 	});
+
+	it("redacts UA-CH high entropy values but keeps mobile flag", () => {
+		const result = sanitizeSnapshotForAI({
+			compatibility: {
+				uaData: {
+					brands: ["Chromium 131"],
+					fullVersionList: ["Chromium 131.0.6778.86"],
+					platform: "macOS",
+					platformVersion: "15.1.0",
+					architecture: "arm",
+					bitness: "64",
+					model: "",
+					mobile: false,
+				},
+			},
+		});
+		expect(result.compatibility.uaData).toEqual({ redacted: true, mobile: false });
+		expect(JSON.stringify(result)).not.toContain("131.0.6778.86");
+		expect(JSON.stringify(result)).not.toContain("macOS");
+	});
 });

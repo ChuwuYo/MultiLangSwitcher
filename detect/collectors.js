@@ -5,55 +5,33 @@ import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { translateDetect } from "./shared.js";
 
 const getBrowserInfo = () => {
+	// 扩展页面必然运行在 Chromium 系浏览器，仅保留 Chromium 家族解析；
+	// 历史上用于 Firefox/Safari/IE 的 UA 分支在本上下文不可达，已移除
 	const ua = navigator.userAgent;
-	let browserName = translateDetect("unknown_browser");
-	let browserVersion = translateDetect("unknown_version");
+	let browserName = "Chrome";
+	let browserVersion = "";
 	let fullVersion = "";
 
-	let tem;
-	const M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+	const chromeMatch = ua.match(/\bChrome\/([\d.]+)/);
+	if (chromeMatch) {
+		fullVersion = chromeMatch[1];
+		browserVersion = fullVersion.split(".")[0];
+	}
 
-	if (/trident/i.test(M[1])) {
-		tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-		browserName = "Internet Explorer";
-		browserVersion = tem[1] || "";
-		fullVersion = browserVersion;
-	} else if (M[1] === "Chrome") {
-		// 单次匹配完整版本号，主版本号取第一段，避免维护两条仅捕获模式不同的孪生正则
-		tem = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/);
-		if (tem != null) {
-			const browserParts = [tem[1], tem[2].split(".")[0]];
-			// 先精确匹配 "Edge"（EdgeHTML），再用前缀匹配兜住 "Edg"（Chromium）；
-			// 顺序不能反："Edge".startsWith("Edg") 为 true，会吞掉 Legacy 分支
-			if (browserParts[0] === "Edge") {
-				browserParts[0] = "Edge (Legacy)";
-			} else if (browserParts[0].startsWith("Edg")) {
-				browserParts[0] = "Edge (Chromium)";
-			}
-			browserName = browserParts.join(" ").replace("OPR", "Opera");
-			browserVersion = browserParts[1];
-			fullVersion = tem[2];
-		} else {
-			browserName = "Chrome";
-			browserVersion = M[2];
-			const fullMatch = ua.match(/\bChrome\/([\d.]+)/);
-			fullVersion = fullMatch ? fullMatch[1] : browserVersion;
+	// Edge / Opera 均在 UA 中附带自有标识
+	const variantMatch = ua.match(/\b(OPR|Edge|Edg)\/([\d.]+)/);
+	if (variantMatch != null) {
+		const browserParts = [variantMatch[1], variantMatch[2].split(".")[0]];
+		// 先精确匹配 "Edge"（EdgeHTML），再用前缀匹配兜住 "Edg"（Chromium）；
+		// 顺序不能反："Edge".startsWith("Edg") 为 true，会吞掉 Legacy 分支
+		if (browserParts[0] === "Edge") {
+			browserParts[0] = "Edge (Legacy)";
+		} else if (browserParts[0].startsWith("Edg")) {
+			browserParts[0] = "Edge (Chromium)";
 		}
-	} else if (M[1] === "Firefox") {
-		browserName = "Firefox";
-		browserVersion = M[2];
-		const fullMatch = ua.match(/\bFirefox\/([\d.]+)/);
-		fullVersion = fullMatch ? fullMatch[1] : browserVersion;
-	} else if (M[1] === "Safari") {
-		// 同上：单次匹配完整版本号，主版本号取第一段
-		tem = ua.match(/version\/([\d.]+)/i);
-		browserName = "Safari";
-		browserVersion = tem ? tem[1].split(".")[0] : M[2];
-		fullVersion = tem ? tem[1] : browserVersion;
-	} else if (M[1] === "MSIE") {
-		browserName = "Internet Explorer";
-		browserVersion = M[2];
-		fullVersion = browserVersion;
+		browserName = browserParts.join(" ").replace("OPR", "Opera");
+		browserVersion = browserParts[1];
+		fullVersion = variantMatch[2];
 	}
 
 	let os = translateDetect("unknown_os");
@@ -69,6 +47,45 @@ const getBrowserInfo = () => {
 		os,
 		userAgent: ua,
 	};
+};
+
+/**
+ * 采集 User-Agent Client Hints 高熵值（与 UA 字符串解析结果对照展示）
+ * @returns {Promise<Object|null>} 高熵值对象；API 不可用时为 null
+ */
+const collectUserAgentData = async () => {
+	// @types 环境未含 UA-CH 类型，最小化声明所需形状
+	const uaData = /** @type {any} */ (navigator).userAgentData;
+	if (!uaData) {
+		return null;
+	}
+
+	const result = {
+		brands: (uaData.brands || []).map((brand) => `${brand.brand} ${brand.version}`),
+		mobile: uaData.mobile,
+		platform: uaData.platform || "",
+	};
+
+	if (typeof uaData.getHighEntropyValues === "function") {
+		try {
+			const highEntropy = await uaData.getHighEntropyValues([
+				"fullVersionList",
+				"platformVersion",
+				"architecture",
+				"bitness",
+				"model",
+			]);
+			result.fullVersionList = (highEntropy.fullVersionList || []).map((brand) => `${brand.brand} ${brand.version}`);
+			result.platformVersion = highEntropy.platformVersion || "";
+			result.architecture = highEntropy.architecture || "";
+			result.bitness = highEntropy.bitness || "";
+			result.model = highEntropy.model || "";
+		} catch (error) {
+			console.warn("Failed to collect UA-CH high entropy values:", error);
+		}
+	}
+
+	return result;
 };
 
 const checkApiSupport = () => [
@@ -440,9 +457,10 @@ export const collectFingerprintInfo = () => {
 	}
 };
 
-export const collectCompatibilityInfo = () => ({
+export const collectCompatibilityInfo = async () => ({
 	status: "ok",
 	browser: getBrowserInfo(),
+	uaData: await collectUserAgentData(),
 	apiSupport: checkApiSupport(),
 });
 
