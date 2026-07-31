@@ -16,6 +16,7 @@ import {
 	updateAIControls,
 } from "./detect/ai-session.js";
 import { exportChatAsMarkdown, exportStructuredSnapshotAsMarkdown, renderChatPlaceholder } from "./detect/ai-ui.js";
+import "./detect.js";
 import "./toggle.js";
 
 const sanitizeSnapshotForAI = (snapshot) => {
