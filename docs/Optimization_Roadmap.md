@@ -6,15 +6,16 @@
 ## 执行状态（2026-08，refactor/architecture 分支）
 
 - [x] 阶段 0 工程基线：package.json + biome + scripts/check-syntax.mjs + validate-manifest.mjs + GitHub Actions
-- [x] 阶段 1 契约固化：MessageTypes（16→15）+ STORAGE_KEYS/LOCAL_STORAGE_KEYS 常量；`currentLanguage` 双写修复（background 单写者）；`customDomainRules` 决策为文档化扩展点（docs/Custom_Domain_Rules.md）；SET_STORAGE_DATA 删除
-- [x] 阶段 2 测试基线：vitest 43 测试（domain 查找链/LRU、版本比较、_formatString、normalizeMessageError、sanitizeSnapshotForAI、失败路径）；顺带修复 isNewerVersion NaN 守卫
+- [x] 阶段 1 契约固化：MessageTypes（16→14）+ STORAGE_KEYS/LOCAL_STORAGE_KEYS 常量；`currentLanguage` 双写修复（background 单写者）；`customDomainRules` 决策为文档化扩展点（docs/Custom_Domain_Rules.md）；SET_STORAGE_DATA 删除
+- [x] 阶段 2 测试基线：vitest（domain 查找链/LRU、版本比较、_formatString、normalizeMessageError、sanitizeSnapshotForAI、失败路径、fallback 覆盖）；顺带修复 isNewerVersion NaN 守卫
 - [x] 阶段 3 ESM 迁移：全仓 ESM；每页单 module 入口；SW `type: "module"`；垫片已摘除；动态 script 注入消亡；detect ↔ detect-ai 经 DetectPageContext + CustomEvent 解耦
 - [x] 阶段 4 状态收紧：storage.onChanged 取代广播（WIP 期已完成）；GET_STORAGE_DATA 删除（页面直读存储）；domain cache FIFO→LRU；SW 瞬态状态评估后不迁移（模块级 Promise 已去重，DNR 规则即真相源）
-- [x] 阶段 6.1 i18n 字典合并：10 文件 → 5 个 per-component dict 模块
-- [ ] 阶段 5 单体文件拆分（未做，见下）
-- [ ] 阶段 6.2–6.5 data-i18n 声明式翻译 / 兜底字典去重 / bootstrap 裁剪 / detect 清理（未做）
+- [x] 阶段 5 单体拆分：background 1057→44(+4 模块)、popup 1123→273(+4)、debug-ui 1298→67(+10)、detect 1170→118(+3)、detect-ai 1257→113(+3)
+- [x] 阶段 6 全部：6.1 字典合并（10→5）；6.2 data-i18n 声明式（_applyDataAttributes 扫描器，popup/debug/detect i18n 模块 129/291/277→54/60/88 行）；6.3 兜底字典裁剪至 9 个可达键 + 孤儿键清理；6.4 bootstrap PurgeCSS 263KB→52KB（产物入库 + CI 同步校验）；6.5 getBrowserInfo Chromium 化 + UA-CH 高熵值对照
+- [x] 附加 S1 类型基线：JSDoc + tsc --checkJs 零错误入 CI；i18n 实例注册表取代全局嗅探
+- [x] 附加 S7 一致性审计：ResourceManager 使用已统一（无残留裸监听需迁移）；三页 CSS 选择器交集为零，无去重空间；视觉重设计属主观决策，留待人工
 
-已知无害残留：popupZh 缺 `displaying_results`（该键无消费方，史前遗留）；i18n 键 `set_storage_data_failed`、`language_settings_saved`、`get_storage_data_failed` 已无调用方，可在阶段 6.3 一并清理。
+已知无害残留：popupZh 缺 `displaying_results`（该键无消费方，史前遗留）。
 
 ## 现状档案（勘察结论）
 
