@@ -75,13 +75,6 @@ const sendDebugLog = (message, logType = "info") => {
 	}
 };
 
-/**
- * 获取更新相关的本地化翻译
- * @param {string} key - 翻译键
- * @param {Object} params - 参数对象，用于替换翻译文本中的占位符
- * @param {string} context - 上下文 ('popup' 或 'background')
- * @returns {string} 本地化的文本
- */
 /** @type {Map<string, import("./shared-i18n-base.js").BaseI18n>} */
 const i18nRegistry = new Map();
 
@@ -93,6 +86,14 @@ const i18nRegistry = new Map();
 const registerI18nInstance = (context, instance) => {
 	i18nRegistry.set(context, instance);
 };
+
+/**
+ * 获取更新相关的本地化翻译
+ * @param {string} key - 翻译键
+ * @param {Object} params - 参数对象，用于替换翻译文本中的占位符
+ * @param {string} context - 上下文 ('popup' 或 'background')
+ * @returns {string} 本地化的文本
+ */
 
 const getUpdateTranslation = (key, params = {}, context = "popup") => {
 	try {

@@ -10,7 +10,7 @@
 		"strictNullChecks": false,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
-		"types": ["chrome", "vite/client"]
+		"types": ["chrome"]
 	},
 	"include": ["**/*.js"],
 	"exclude": ["node_modules", "shared/vendor", "tests", "scripts", ".codegraph"]
