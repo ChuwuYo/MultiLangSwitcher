@@ -2,8 +2,9 @@
  * 共享操作函数模块
  * 提供与后台脚本通信的标准化接口
  */
+import { sendDebugLog } from "./shared-utils.js";
 
-const requestBackground = async (type, payload = {}) => {
+export const requestBackground = async (type, payload = {}) => {
 	// 统一与后台通信的入口：将各种历史响应格式收敛为“成功返回数据 / 失败抛错”
 	if (!type) {
 		throw new Error("Message type is required");
@@ -48,20 +49,15 @@ const requestBackground = async (type, payload = {}) => {
  * @returns {Promise<Object>} 返回后台脚本的成功响应对象
  * @throws {Error} 当消息发送失败或后台脚本返回错误状态时抛出错误
  */
-// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
-const resetAcceptLanguage = async () => {
+export const resetAcceptLanguage = async () => {
 	try {
 		const response = await requestBackground(MessageTypes.RESET_ACCEPT_LANGUAGE);
-		if (typeof sendDebugLog === "function") {
-			sendDebugLog("Accept-Language settings reset successfully", "success");
-		}
+		sendDebugLog("Accept-Language settings reset successfully", "success");
 		return response;
 	} catch (error) {
 		// 集中化错误处理和日志记录
 		const errorMsg = `Failed to reset Accept-Language: ${error.message}`;
-		if (typeof sendDebugLog === "function") {
-			sendDebugLog(errorMsg, "error");
-		}
+		sendDebugLog(errorMsg, "error");
 		throw new Error(errorMsg);
 	}
 };

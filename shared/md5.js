@@ -20,7 +20,7 @@
  */
 
 /* eslint-disable */
-function md5(string) {
+export function md5(string) {
 	function safeAdd(x, y) {
 		var lsw = (x & 0xffff) + (y & 0xffff);
 		var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
@@ -198,6 +198,3 @@ function md5(string) {
 	return hexMD5(string);
 }
 /* eslint-enable */
-
-// 导出到 window 对象以便全局访问
-window.md5 = md5;

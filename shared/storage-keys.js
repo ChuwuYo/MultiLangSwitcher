@@ -4,7 +4,7 @@
  * LOCAL_STORAGE_KEYS: window.localStorage 键（仅页面环境可用）
  */
 // biome-ignore lint/correctness/noUnusedVariables: 常量对象供各页面与后台脚本引用
-const STORAGE_KEYS = Object.freeze({
+export const STORAGE_KEYS = Object.freeze({
 	CURRENT_LANGUAGE: "currentLanguage",
 	AUTO_SWITCH_ENABLED: "autoSwitchEnabled",
 	CUSTOM_DOMAIN_RULES: "customDomainRules",
@@ -14,7 +14,7 @@ const STORAGE_KEYS = Object.freeze({
 });
 
 // biome-ignore lint/correctness/noUnusedVariables: 常量对象供页面脚本引用
-const LOCAL_STORAGE_KEYS = Object.freeze({
+export const LOCAL_STORAGE_KEYS = Object.freeze({
 	APP_LANG: "app-lang",
 	THEME: "theme",
 });

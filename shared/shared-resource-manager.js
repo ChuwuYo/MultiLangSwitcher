@@ -187,13 +187,4 @@ const createResourceManager = () => {
 	};
 };
 
-const ResourceManager = createResourceManager();
-
-// 根据环境导出为全局对象
-if (typeof window !== "undefined") {
-	// 页面环境（如popup、debug页面）
-	window.ResourceManager = ResourceManager;
-} else {
-	// background script环境
-	globalThis.ResourceManager = ResourceManager;
-}
+export const ResourceManager = createResourceManager();

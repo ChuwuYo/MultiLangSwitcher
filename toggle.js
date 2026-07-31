@@ -1,4 +1,7 @@
 // toggle.js - 通用切换按钮功能
+import { LOCAL_STORAGE_KEYS } from "./shared/storage-keys.js";
+import { switchLanguageAndReload } from "./shared/shared-utils.js";
+import { ResourceManager } from "./shared/shared-resource-manager.js";
 
 // 语言切换功能（复用共享工具函数）
 class LanguageToggle {
@@ -13,8 +16,7 @@ class LanguageToggle {
 	 * @param {string} lang - 目标语言代码
 	 */
 	switchLanguage(lang) {
-		// 通过 window 对象访问全局函数
-		const switched = window.switchLanguageAndReload(lang);
+		const switched = switchLanguageAndReload(lang);
 		if (switched) {
 			this.currentLang = lang;
 		}

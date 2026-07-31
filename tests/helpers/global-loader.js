@@ -5,19 +5,6 @@ import vm from "node:vm";
 const ROOT = resolve(import.meta.dirname, "../..");
 
 /**
- * 在 vm 沙箱中加载全局脚本（模拟扩展的 script 标签 / importScripts 环境），
- * 返回可访问脚本内顶级绑定的上下文。
- */
-export const loadGlobalScript = (relativePath, sandbox = {}) => {
-	const code = readFileSync(resolve(ROOT, relativePath), "utf8");
-	const context = vm.createContext({ console, ...sandbox });
-	vm.runInContext(code, context, { filename: relativePath });
-	return context;
-};
-
-export const evalInContext = (context, expression) => vm.runInContext(expression, context);
-
-/**
  * 从源码中提取自包含的顶级/IIFE 内常量箭头函数（如 sanitizeSnapshotForAI），
  * 在干净沙箱中求值后返回该函数。仅用于无闭包依赖的纯函数。
  * 限制：按花括号配平截取，函数体内的字符串/正则/模板字面量中不得含花括号，

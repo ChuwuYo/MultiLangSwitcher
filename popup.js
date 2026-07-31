@@ -1,5 +1,14 @@
 // --- 导入共享模块 ---
-// 注意：这些脚本已在 popup.html 中通过 <script> 标签加载
+import { MessageTypes } from "./shared/message-types.js";
+import { STORAGE_KEYS } from "./shared/storage-keys.js";
+import { sendDebugLog } from "./shared/shared-utils.js";
+import { requestBackground, resetAcceptLanguage } from "./shared/shared-actions.js";
+import { UpdateChecker } from "./shared/shared-update-checker.js";
+import { populateLanguageSelect } from "./shared/shared-language-options.js";
+import { fetchHeadersFromEndpoints, createLocalizedExternalCheckLinks } from "./shared/header-check-utils.js";
+import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { popupI18n } from "./i18n/popup-i18n.js";
+import "./toggle.js";
 
 // --- 全局常量和配置 ---
 const UPDATE_CHECK_MIN_INTERVAL = 3000; // 最小检查间隔3秒
@@ -114,7 +123,7 @@ const displayHeaderCheckError = (element, messageKey) => {
 	const fragment = document.createDocumentFragment();
 	fragment.appendChild(document.createTextNode(popupI18n.t(messageKey)));
 	fragment.appendChild(document.createElement("br"));
-	fragment.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) => popupI18n.t(key)));
+	fragment.appendChild(createLocalizedExternalCheckLinks((key) => popupI18n.t(key)));
 	element.appendChild(fragment);
 };
 
@@ -187,7 +196,7 @@ const performHeaderCheck = async (headerCheckContentPre) => {
 
 	try {
 		// 使用共享模块获取请求头
-		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+		const result = await fetchHeadersFromEndpoints();
 
 		if (result.success) {
 			sendDebugLog(`${popupI18n.t("successfully_got_headers_from")} ${result.endpoint}`, "success");

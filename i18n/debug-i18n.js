@@ -1,5 +1,6 @@
-// 引入基础国际化类
-// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { debugEn } from "./debug-en.js";
+import { debugZh } from "./debug-zh.js";
 
 /**
  * 调试页面国际化类
@@ -7,7 +8,7 @@
  */
 class DebugI18n extends BaseI18n {
 	constructor() {
-		super("debug", false); // 标记为浏览器环境
+		super("debug", false, { en: debugEn, zh: debugZh });
 	}
 
 	/**
@@ -283,7 +284,7 @@ class DebugI18n extends BaseI18n {
 	}
 }
 
-const debugI18n = new DebugI18n();
+export const debugI18n = new DebugI18n();
 
 // DOM加载完成后，初始化并应用翻译
 document.addEventListener("DOMContentLoaded", () => {

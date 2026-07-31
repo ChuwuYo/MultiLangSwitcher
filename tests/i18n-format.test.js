@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evalInContext, loadGlobalScript } from "./helpers/global-loader.js";
-
-const context = loadGlobalScript("shared/shared-i18n-base.js");
-const BaseI18n = evalInContext(context, "BaseI18n");
+import { BaseI18n } from "../shared/shared-i18n-base.js";
 const format = (str, params) => BaseI18n.prototype._formatString.call({}, str, params);
 
 describe("BaseI18n._formatString", () => {

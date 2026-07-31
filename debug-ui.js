@@ -1,5 +1,16 @@
 // debug-ui.js - 调试页面UI交互脚本
 
+import { debugI18n } from "./i18n/debug-i18n.js";
+import { createLocalizedExternalCheckLinks, fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
+import { MessageTypes } from "./shared/message-types.js";
+import { requestBackground, resetAcceptLanguage } from "./shared/shared-actions.js";
+import { populateLanguageSelect } from "./shared/shared-language-options.js";
+import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { getFallbackTranslation } from "./shared/shared-utils.js";
+import { STORAGE_KEYS } from "./shared/storage-keys.js";
+import "./toggle.js";
+import "./debug-headers.js";
+
 /**
  * 安全地创建HTML元素并设置属性
  * @param {string} tag - HTML标签名
@@ -82,7 +93,7 @@ const appendExternalCheckLinks = (fragment, leadingText) => {
 	if (leadingText) {
 		wrapper.textContent = leadingText;
 	}
-	wrapper.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks((key) => debugI18n.t(key)));
+	wrapper.appendChild(createLocalizedExternalCheckLinks((key) => debugI18n.t(key)));
 	fragment.appendChild(wrapper);
 };
 
@@ -354,7 +365,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 		try {
 			// 使用共享模块获取请求头
-			const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+			const result = await fetchHeadersFromEndpoints();
 
 			// 清空现有内容
 			resultElement.innerHTML = "";

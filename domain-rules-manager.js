@@ -1,6 +1,8 @@
 // 域名规则管理器
+import { STORAGE_KEYS } from "./shared/storage-keys.js";
+import { domainManagerI18n } from "./i18n/domain-manager-i18n.js";
 
-class DomainRulesManager {
+export class DomainRulesManager {
 	constructor() {
 		this.rules = null;
 		this.loadPromise = null;
@@ -32,7 +34,7 @@ class DomainRulesManager {
 
 	// 确保 i18n 已初始化
 	ensureI18n() {
-		if (!this.i18n && typeof domainManagerI18n !== "undefined") {
+		if (!this.i18n) {
 			this.i18n = domainManagerI18n;
 		}
 		return this.i18n;
@@ -290,5 +292,4 @@ class DomainRulesManager {
 }
 
 // 导出单例实例
-// biome-ignore lint/correctness/noUnusedVariables: 该变量用于外部脚本引用
-const domainRulesManager = new DomainRulesManager();
+export const domainRulesManager = new DomainRulesManager();

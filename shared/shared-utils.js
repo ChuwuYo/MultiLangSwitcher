@@ -2,6 +2,8 @@
  * 共享工具函数模块
  * 提供调试日志、语言检测、本地化翻译等通用功能
  */
+import { MessageTypes } from "./message-types.js";
+import { LOCAL_STORAGE_KEYS } from "./storage-keys.js";
 
 /**
  * 检测当前语言设置
@@ -45,12 +47,6 @@ const switchLanguageAndReload = (lang) => {
 		return false;
 	}
 };
-
-// 导出为全局函数（供 toggle.js 等 module 脚本使用）
-if (typeof window !== "undefined") {
-	window.detectCurrentLanguage = detectCurrentLanguage;
-	window.switchLanguageAndReload = switchLanguageAndReload;
-}
 
 /**
  * 发送调试日志消息到后台脚本
@@ -253,4 +249,13 @@ const sendLocalizedUpdateLog = (key, params = {}, logType = "info") => {
 		const fallbackMessage = getFallbackTranslation(key, params);
 		sendDebugLog(fallbackMessage, logType);
 	}
+};
+
+export {
+	detectCurrentLanguage,
+	switchLanguageAndReload,
+	sendDebugLog,
+	getUpdateTranslation,
+	getFallbackTranslation,
+	sendLocalizedUpdateLog,
 };

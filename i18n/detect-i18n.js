@@ -1,5 +1,7 @@
-// 引入基础国际化类
-// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { AIProviderPresets, AIProviderPresetUtils } from "../shared/ai-provider-presets.js";
+import { detectEn } from "./detect-en.js";
+import { detectZh } from "./detect-zh.js";
 
 /**
  * 检测页面国际化类
@@ -7,7 +9,7 @@
  */
 class DetectI18n extends BaseI18n {
 	constructor() {
-		super("detect", false); // 标记为浏览器环境
+		super("detect", false, { en: detectEn, zh: detectZh });
 	}
 
 	/**
@@ -145,13 +147,13 @@ class DetectI18n extends BaseI18n {
 
 		const aiProviderSelect = document.querySelector("#aiProviderSelect");
 		if (aiProviderSelect) {
-			window.AIProviderPresetUtils?.populateSelectOptions?.(aiProviderSelect, (key) => this.t(key));
+			AIProviderPresetUtils.populateSelectOptions(aiProviderSelect, (key) => this.t(key));
 		}
 
 		const aiProviderDescription = document.querySelector("#aiProviderDescription");
 		if (aiProviderDescription && !aiProviderDescription.dataset.initialized) {
 			const providerKey = aiProviderSelect?.value || "openrouter";
-			const preset = window.AIProviderPresets?.[providerKey];
+			const preset = AIProviderPresets?.[providerKey];
 			aiProviderDescription.textContent = preset?.descriptionKey ? this.t(preset.descriptionKey) : "";
 		}
 
@@ -269,7 +271,7 @@ class DetectI18n extends BaseI18n {
 	}
 }
 
-const detectI18n = new DetectI18n();
+export const detectI18n = new DetectI18n();
 
 // DOM加载完成后，初始化并应用翻译
 document.addEventListener("DOMContentLoaded", () => {

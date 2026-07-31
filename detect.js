@@ -1,8 +1,12 @@
+import { detectI18n } from "./i18n/detect-i18n.js";
+import { createLocalizedExternalCheckLinks, fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
+import { md5 } from "./shared/md5.js";
+import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { STORAGE_KEYS } from "./shared/storage-keys.js";
+
 let latestDetectionSnapshot = null;
 let latestSnapshotVersion = "";
 let detectionRunInFlight = null;
-
-window.latestDetectionSnapshot = latestDetectionSnapshot;
 
 const getUiLanguage = () => (detectI18n?.currentLang === "zh" ? "zh" : "en");
 
@@ -122,7 +126,7 @@ const checkApiSupport = () => [
 
 const collectHeaderInfo = async () => {
 	try {
-		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+		const result = await fetchHeadersFromEndpoints();
 		if (!result.success) {
 			return {
 				status: "error",
@@ -205,7 +209,7 @@ const renderHeaderInfo = (headerInfo) => {
 
 			const linkP = document.createElement("p");
 			linkP.className = "mt-2";
-			linkP.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect));
+			linkP.appendChild(createLocalizedExternalCheckLinks(translateDetect));
 			fragment.appendChild(linkP);
 		}
 
@@ -234,7 +238,7 @@ const renderHeaderInfo = (headerInfo) => {
 
 	const linkP = document.createElement("p");
 	linkP.className = "mt-2";
-	linkP.appendChild(window.HeaderCheckUtils.createLocalizedExternalCheckLinks(translateDetect));
+	linkP.appendChild(createLocalizedExternalCheckLinks(translateDetect));
 	fragment.appendChild(linkP);
 
 	headerLanguageInfo.appendChild(fragment);
@@ -974,7 +978,7 @@ const buildDetectionSnapshot = (results) => {
 	};
 };
 
-window.DetectPageContext = {
+export const DetectPageContext = {
 	getUiLanguage,
 	translate: translateDetect,
 	createMessageId,
@@ -1063,13 +1067,8 @@ const runAllDetections = async () => {
 
 		latestDetectionSnapshot = snapshot;
 		latestSnapshotVersion = snapshot.meta.snapshotVersion;
-		window.latestDetectionSnapshot = latestDetectionSnapshot;
 
-		if (window.DetectAIContext?.isChatContextStale?.()) {
-			window.DetectAIContext.setAIStatus?.("ai_session_expired", "warning");
-		}
-
-		window.DetectAIContext?.updateAIControls?.();
+		window.dispatchEvent(new CustomEvent("detect:snapshot-updated"));
 		return snapshot;
 	})()
 		.catch((error) => {
@@ -1078,7 +1077,7 @@ const runAllDetections = async () => {
 		})
 		.finally(() => {
 			detectionRunInFlight = null;
-			window.DetectAIContext?.updateAIControls?.();
+			window.dispatchEvent(new CustomEvent("detect:run-finished"));
 		});
 
 	return detectionRunInFlight;

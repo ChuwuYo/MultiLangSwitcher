@@ -11,7 +11,6 @@
   <!-- 样式表引入 -->
   <link href="bootstrap.min.css" rel="stylesheet">
   <link href="toggle.css" rel="stylesheet">
-  <script src="shared/storage-keys.js"></script>
   <script src="shared/theme-init.js"></script>
   <style>
     /* 主体布局样式 */
@@ -533,23 +532,8 @@
     </div>
   </div>
 
-  <!-- 共享工具脚本 - 按正确顺序加载 -->
-  <script src="shared/message-types.js"></script>
-  <script src="shared/shared-utils.js"></script>
-  <script src="shared/shared-i18n-base.js"></script>
-  <script src="shared/shared-language-options.js"></script>
-  <script src="shared/shared-actions.js"></script>
-  <script src="shared/shared-update-checker.js"></script>
-  <script src="shared/header-check-utils.js"></script>
-  <!-- 资源管理器必须在popup.js之前加载 -->
-  <script src="shared/shared-resource-manager.js"></script>
-  <!-- 预加载翻译文件以避免延迟 -->
-  <script src="i18n/popup-en.js"></script>
-  <script src="i18n/popup-zh.js"></script>
-  <script src="i18n/popup-i18n.js"></script>
-  <!-- 主要功能脚本 -->
-  <script src="popup.js"></script>
-  <script type="module" src="toggle.js"></script>
+  <!-- 主要功能脚本（ESM 入口） -->
+  <script type="module" src="popup.js"></script>
 </body>
 
 </html>

@@ -1,5 +1,6 @@
-// 引入基础国际化类
-// 注意：在HTML中需要先加载 shared/shared-i18n-base.js
+import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { popupEn } from "./popup-en.js";
+import { popupZh } from "./popup-zh.js";
 
 /**
  * 弹窗页面国际化类
@@ -7,7 +8,7 @@
  */
 class PopupI18n extends BaseI18n {
 	constructor() {
-		super("popup", false); // 标记为浏览器环境
+		super("popup", false, { en: popupEn, zh: popupZh });
 	}
 
 	/**
@@ -121,7 +122,7 @@ class PopupI18n extends BaseI18n {
 }
 
 // 创建全局实例
-const popupI18n = new PopupI18n();
+export const popupI18n = new PopupI18n();
 
 // DOM加载完成后，初始化并应用翻译
 document.addEventListener("DOMContentLoaded", () => {

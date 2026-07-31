@@ -16,7 +16,7 @@
  * 统一的请求头检测端点配置
  * 按优先级顺序排列，系统将依次尝试直到成功
  */
-const HEADER_CHECK_ENDPOINTS = [
+export const HEADER_CHECK_ENDPOINTS = [
 	"https://httpbin.org/headers",
 	"https://postman-echo.com/headers",
 	"https://header-echo.addr.tools/",
@@ -36,7 +36,7 @@ const HEADER_CHECK_ENDPOINTS = [
  *   - error: string - 错误信息（如果失败）
  *   - attemptedEndpoints: Array - 尝试过的所有端点
  */
-const fetchHeadersFromEndpoints = async (timeout = 10000) => {
+export const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 	const timestamp = Date.now();
 	const attemptedEndpoints = [];
 	const errors = [];
@@ -134,7 +134,7 @@ const fetchHeadersFromEndpoints = async (timeout = 10000) => {
  * @param {string} texts.suffix - "进行查看"的翻译 (如: "进行查看" / "to view")
  * @returns {DocumentFragment} 包含链接的文档片段
  */
-const createExternalCheckLinks = (texts = {}) => {
+export const createExternalCheckLinks = (texts = {}) => {
 	const prefix = texts.prefix || "Please visit";
 	const or = texts.or || "or";
 	const suffix = texts.suffix || "to view";
@@ -169,19 +169,9 @@ const createExternalCheckLinks = (texts = {}) => {
  * @param {Function} translate - 翻译函数，接收翻译键返回对应文案
  * @returns {DocumentFragment} 包含链接的文档片段
  */
-const createLocalizedExternalCheckLinks = (translate) =>
+export const createLocalizedExternalCheckLinks = (translate) =>
 	createExternalCheckLinks({
 		prefix: translate("external_check_prefix"),
 		or: translate("external_check_or"),
 		suffix: translate("external_check_suffix"),
 	});
-
-// 导出为全局对象（用于非模块环境）
-if (typeof window !== "undefined") {
-	window.HeaderCheckUtils = {
-		HEADER_CHECK_ENDPOINTS,
-		fetchHeadersFromEndpoints,
-		createExternalCheckLinks,
-		createLocalizedExternalCheckLinks,
-	};
-}

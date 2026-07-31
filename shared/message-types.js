@@ -4,7 +4,7 @@
  * 禁止散落字符串字面量。
  */
 // biome-ignore lint/correctness/noUnusedVariables: 常量对象供各页面与后台脚本引用
-const MessageTypes = Object.freeze({
+export const MessageTypes = Object.freeze({
 	DEBUG_LOG: "DEBUG_LOG",
 	UPDATE_RULES: "UPDATE_RULES",
 	AUTO_SWITCH_TOGGLED: "AUTO_SWITCH_TOGGLED",

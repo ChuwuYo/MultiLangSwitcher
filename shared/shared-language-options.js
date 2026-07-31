@@ -2,7 +2,7 @@
  * 共享的语言选项列表
  * 包含常用的语言代码和对应的显示标签
  */
-const LANGUAGE_OPTIONS = [
+export const LANGUAGE_OPTIONS = [
 	// 中文圈
 	{ value: "zh-CN", label: "简体中文 (zh-CN)" }, // 中国大陆、新加坡
 	{ value: "zh-HK", label: "繁體中文 (香港) (zh-HK)" }, // 中国香港特别行政区
@@ -94,7 +94,7 @@ let cachedLanguageOptionsHTML = null;
  * @param {string|null} selectedValue - 选中的语言值，为null时不选中任何选项
  * @returns {string} 生成的option元素HTML字符串
  */
-const generateLanguageOptions = (selectedValue = null) => {
+export const generateLanguageOptions = (selectedValue = null) => {
 	// 早期返回 - 如果没有选中值且已有缓存，直接返回缓存结果
 	if (!selectedValue && cachedLanguageOptionsHTML) {
 		return cachedLanguageOptionsHTML;
@@ -119,7 +119,7 @@ const generateLanguageOptions = (selectedValue = null) => {
  * @param {string|null} selectedValue - 要选中的语言值
  */
 // biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
-const populateLanguageSelect = (selectElement, selectedValue = null) => {
+export const populateLanguageSelect = (selectElement, selectedValue = null) => {
 	// 验证必需参数和类型
 	if (!selectElement || !(selectElement instanceof HTMLElement)) return;
 

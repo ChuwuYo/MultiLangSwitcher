@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evalInContext, loadGlobalScript } from "./helpers/global-loader.js";
-
-const context = loadGlobalScript("domain-rules-manager.js");
-const DomainRulesManager = evalInContext(context, "DomainRulesManager");
+import { DomainRulesManager } from "../domain-rules-manager.js";
 
 const builtinRules = {
 	"example.com": "en",

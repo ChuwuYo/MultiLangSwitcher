@@ -1,11 +1,14 @@
 /**
  * 调试脚本 - 用于验证请求头更改是否生效
  */
+import { sendDebugLog } from "./shared/shared-utils.js";
+import { fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
+import { debugI18n } from "./i18n/debug-i18n.js";
 
 /**
  * 显示当前生效的动态规则和最近匹配的规则
  */
-const showCurrentRules = async () => {
+export const showCurrentRules = async () => {
 	try {
 		sendDebugLog(debugI18n.t("getting_rules"), "info");
 
@@ -28,7 +31,7 @@ const showCurrentRules = async () => {
  * 测试指定语言的 Accept-Language 请求头是否生效
  * @param {string} language - 要测试的语言代码
  */
-const testHeaderChange = async (language) => {
+export const testHeaderChange = async (language) => {
 	if (!language) {
 		sendDebugLog(debugI18n.t("invalid_language_code"), "error");
 		return;
@@ -38,7 +41,7 @@ const testHeaderChange = async (language) => {
 		sendDebugLog(`${debugI18n.t("testing_language")} "${language}" ${debugI18n.t("header_effective")}`, "info");
 
 		// 使用共享模块获取请求头
-		const result = await window.HeaderCheckUtils.fetchHeadersFromEndpoints();
+		const result = await fetchHeadersFromEndpoints();
 
 		if (result.success) {
 			sendDebugLog(`${debugI18n.t("received_headers")} ${JSON.stringify(result.headers, null, 2)}`, "info");

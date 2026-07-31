@@ -2,14 +2,16 @@
  * 基础国际化类
  * 提供通用的翻译功能和语言检测，统一了浏览器和Service Worker环境的加载逻辑。
  */
-// biome-ignore lint/correctness/noUnusedVariables: 该类用于外部继承
-class BaseI18n {
+import { LOCAL_STORAGE_KEYS } from "./storage-keys.js";
+import { switchLanguageAndReload } from "./shared-utils.js";
+
+export class BaseI18n {
 	/**
 	 * 构造函数
 	 * @param {string} componentName - 组件名称，用于加载对应的翻译文件。
 	 * @param {boolean} [isServiceWorker=false] - 是否在Service Worker环境中运行。
 	 */
-	constructor(componentName, isServiceWorker = false) {
+	constructor(componentName, isServiceWorker = false, dictionaries = null) {
 		if (!componentName || typeof componentName !== "string") {
 			const error = new Error("Component name is required and must be a string.");
 			console.error("BaseI18n constructor error:", error.message);
@@ -18,6 +20,7 @@ class BaseI18n {
 
 		this.componentName = componentName;
 		this.isServiceWorker = isServiceWorker;
+		this.dictionaries = dictionaries;
 		this.currentLang = "en";
 		this.translations = {};
 		this.isReady = false;
@@ -91,61 +94,13 @@ class BaseI18n {
 	 * @private
 	 */
 	async _loadLanguageFile(lang) {
-		const translationVarName = this.componentName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-		const langSuffix = lang === "zh" ? "Zh" : "En";
-		const expectedVar = `${translationVarName}${langSuffix}`;
-		const globalScope = globalThis;
-
-		// 如果翻译已存在于全局作用域，则直接使用
-		if (globalScope[expectedVar]) {
-			this.translations = globalScope[expectedVar];
+		// 字典由子类通过静态 import 注入，消除动态脚本加载
+		const dictionary = this.dictionaries?.[lang];
+		if (dictionary) {
+			this.translations = dictionary;
 			return;
 		}
-
-		// 根据环境加载脚本
-		const scriptPath = `i18n/${this.componentName}-${lang}.js`;
-		if (this.isServiceWorker) {
-			importScripts(scriptPath);
-		} else {
-			await this._loadScriptForBrowser(scriptPath);
-		}
-
-		// 从全局作用域获取翻译
-		if (globalScope[expectedVar]) {
-			this.translations = globalScope[expectedVar];
-		} else {
-			throw new Error(`Translation variable '${expectedVar}' not found after loading script.`);
-		}
-	}
-
-	/**
-	 * 在浏览器环境中通过动态添加<script>标签加载脚本。
-	 * @param {string} src - 脚本路径。
-	 * @returns {Promise<void>}
-	 * @private
-	 */
-	_loadScriptForBrowser(src) {
-		return new Promise((resolve, reject) => {
-			const script = document.createElement("script");
-			script.src = src;
-
-			const timeoutId = setTimeout(() => {
-				script.remove();
-				reject(new Error(`Script loading timed out: ${src}`));
-			}, 5000);
-
-			script.onload = () => {
-				clearTimeout(timeoutId);
-				resolve();
-			};
-
-			script.onerror = () => {
-				clearTimeout(timeoutId);
-				reject(new Error(`Failed to load script: ${src}`));
-			};
-
-			document.head.appendChild(script);
-		});
+		throw new Error(`Translation '${this.componentName}-${lang}' not found in injected dictionaries.`);
 	}
 
 	/**
@@ -205,9 +160,6 @@ class BaseI18n {
 		if (lang === this.currentLang) {
 			return;
 		}
-		// 使用共享函数切换语言
-		if (typeof switchLanguageAndReload === "function") {
-			switchLanguageAndReload(lang);
-		}
+		switchLanguageAndReload(lang);
 	}
 }

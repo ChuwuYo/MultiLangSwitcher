@@ -1,28 +1,16 @@
 // 后台脚本，确保扩展在浏览器启动时就能应用语言设置
 
-// 按正确顺序导入依赖
-// 0. 协议与存储键常量（无依赖，最先导入）
-importScripts("shared/message-types.js");
-importScripts("shared/storage-keys.js");
-// 1. 首先导入共享工具
-importScripts("shared/shared-utils.js");
-// 2. 然后导入基础国际化类
-importScripts("shared/shared-i18n-base.js");
-// 3. 导入具体的国际化类
-importScripts("i18n/background-i18n.js");
-importScripts("i18n/domain-manager-i18n.js");
+import { MessageTypes } from "./shared/message-types.js";
+import { STORAGE_KEYS } from "./shared/storage-keys.js";
+import { sendDebugLog } from "./shared/shared-utils.js";
+import { backgroundI18n, backgroundI18nReady } from "./i18n/background-i18n.js";
+import { domainManagerI18nReady } from "./i18n/domain-manager-i18n.js";
+import { domainRulesManager } from "./domain-rules-manager.js";
+import { UpdateChecker } from "./shared/shared-update-checker.js";
+import { ResourceManager } from "./shared/shared-resource-manager.js";
 
-// 4. 将所有i18n模块的初始化Promise聚合到一个地方
+// 将所有i18n模块的初始化Promise聚合到一个地方
 const i18nReady = Promise.all([backgroundI18nReady, domainManagerI18nReady]);
-
-// 5. 导入域名规则管理器
-importScripts("domain-rules-manager.js");
-// 6. 导入更新检查器
-importScripts("shared/shared-update-checker.js");
-
-// --- 资源管理器  ---
-// 使用共享的资源管理器
-importScripts("shared/shared-resource-manager.js");
 
 // 常量定义
 const RULE_ID = 1;

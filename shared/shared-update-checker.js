@@ -2,6 +2,7 @@
  * GitHub 更新检查器
  * 提供扩展版本更新检查功能
  */
+import { getFallbackTranslation } from "./shared-utils.js";
 
 /**
  * 获取本地化翻译的辅助函数。
@@ -9,19 +10,12 @@
  * @param {Object} [params={}] - 参数对象
  * @returns {string} 本地化的文本
  */
-const getLocalizedText = (key, params = {}) => {
-	// 依赖于 shared-utils.js 中的 getFallbackTranslation
-	if (typeof getFallbackTranslation === "function") {
-		return getFallbackTranslation(key, params);
-	}
-	// 最终回退
-	return key;
-};
+const getLocalizedText = (key, params = {}) => getFallbackTranslation(key, params);
 
 /**
  * GitHub 发布版本更新检查器类
  */
-class UpdateChecker {
+export class UpdateChecker {
 	/**
 	 * 构造函数
 	 * @param {string} repoOwner - GitHub 仓库所有者
@@ -296,9 +290,4 @@ class UpdateChecker {
 			sendLocalizedUpdateLog("failed_clear_persistent_cache", { error: error.message }, "warning");
 		}
 	}
-}
-
-// 导出以供其他模块使用
-if (typeof module !== "undefined" && module.exports) {
-	module.exports = UpdateChecker;
 }
