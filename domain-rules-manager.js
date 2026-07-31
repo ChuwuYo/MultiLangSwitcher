@@ -88,10 +88,12 @@ export class DomainRulesManager {
 	 */
 	async getLanguageForDomain(domain) {
 		try {
-			// 检查缓存
+			// 检查缓存（LRU：命中时重插入以刷新热度）
 			if (this.domainCache.has(domain)) {
 				this.cacheStats.hits++;
 				const cachedResult = this.domainCache.get(domain);
+				this.domainCache.delete(domain);
+				this.domainCache.set(domain, cachedResult);
 				return cachedResult ? cachedResult.language : null;
 			}
 
@@ -152,10 +154,10 @@ export class DomainRulesManager {
 	 * @private
 	 */
 	_cacheAndReturn(domain, result) {
-		// 简单的FIFO缓存：超过限制时删除最早的条目
+		// LRU缓存：超过限制时淘汰最久未使用的条目（Map 迭代序即插入序）
 		if (this.domainCache.size >= this.MAX_CACHE_SIZE) {
-			const firstKey = this.domainCache.keys().next().value;
-			this.domainCache.delete(firstKey);
+			const oldestKey = this.domainCache.keys().next().value;
+			this.domainCache.delete(oldestKey);
 		}
 		this.domainCache.set(domain, result);
 		return result;

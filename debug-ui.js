@@ -325,21 +325,18 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	// 页面加载时同步自动切换状态
 	(async () => {
 		try {
-			// 统一消息调用：避免到处写 response.success 检查
-			const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
-				keys: [STORAGE_KEYS.AUTO_SWITCH_ENABLED],
-			});
+			const result = await chrome.storage.local.get([STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
 
 			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
 			if (!autoSwitchToggle) return;
 
-			autoSwitchToggle.checked = !!result.data?.autoSwitchEnabled;
+			autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 
 			// 等待i18n系统初始化完成后再输出日志
 			const checkI18nAndLog = () => {
 				if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
 					addLogMessage(
-						`${result.data?.autoSwitchEnabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
+						`${result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
 						"info",
 					);
 				} else {
@@ -531,10 +528,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 				});
 
 				// 清除成功后，重新应用默认或存储的规则
-				const storageResponse = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
-					keys: [STORAGE_KEYS.CURRENT_LANGUAGE],
-				});
-				const languageToApply = storageResponse.data?.currentLanguage || "zh-CN";
+				const storageResponse = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
+				const languageToApply = storageResponse[STORAGE_KEYS.CURRENT_LANGUAGE] || "zh-CN";
 
 				await requestBackground(MessageTypes.UPDATE_RULES, {
 					language: languageToApply,
@@ -766,19 +761,20 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 			// 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
 			(async () => {
 				try {
-					const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
-						keys: [STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED],
-					});
+					const result = await chrome.storage.local.get([
+						STORAGE_KEYS.CURRENT_LANGUAGE,
+						STORAGE_KEYS.AUTO_SWITCH_ENABLED,
+					]);
 
 					const storedTitle = document.createElement("h5");
 					storedTitle.textContent = debugI18n.t("stored_language_settings");
 					fragment.appendChild(storedTitle);
 
-					if (result.data?.currentLanguage) {
+					if (result[STORAGE_KEYS.CURRENT_LANGUAGE]) {
 						const p = document.createElement("p");
-						p.textContent = `${debugI18n.t("current_language")} ${result.data.currentLanguage}`;
+						p.textContent = `${debugI18n.t("current_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}`;
 						fragment.appendChild(p);
-						addLogMessage(`${debugI18n.t("diagnostics_stored_language")} ${result.data.currentLanguage}.`, "info");
+						addLogMessage(`${debugI18n.t("diagnostics_stored_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}.`, "info");
 					} else {
 						const p = document.createElement("p");
 						p.className = "warning";
@@ -795,8 +791,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					const statusP = document.createElement("p");
 					statusP.textContent = `${debugI18n.t("status")} `;
 					const statusSpan = document.createElement("span");
-					statusSpan.className = result.data?.autoSwitchEnabled ? "success" : "error";
-					statusSpan.textContent = result.data?.autoSwitchEnabled ? debugI18n.t("enabled") : debugI18n.t("disabled");
+					statusSpan.className = result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? "success" : "error";
+					statusSpan.textContent = result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("enabled") : debugI18n.t("disabled");
 					statusP.appendChild(statusSpan);
 					fragment.appendChild(statusP);
 
@@ -808,7 +804,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					// 同步更新自动切换开关状态
 					const autoSwitchToggle = document.getElementById("autoSwitchToggle");
 					if (autoSwitchToggle) {
-						autoSwitchToggle.checked = !!result.data?.autoSwitchEnabled;
+						autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 					}
 				} catch (storageError) {
 					console.error("Error collecting diagnostic information (storage):", storageError);

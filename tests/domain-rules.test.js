@@ -76,4 +76,17 @@ describe("DomainRulesManager._findMatchingRule lookup chain", () => {
 		const result = manager._findMatchingRule("example.com", {});
 		expect(manager.domainCache.get("example.com")).toEqual(result);
 	});
+
+	it("evicts least-recently-used entry when cache is full", async () => {
+		const manager = createManager();
+		manager.MAX_CACHE_SIZE = 3;
+		manager.customRulesCache = {}; // 跳过 chrome.storage 读取
+		await manager.getLanguageForDomain("example.com");
+		await manager.getLanguageForDomain("www.co.jp");
+		await manager.getLanguageForDomain("example.com"); // 命中并刷新热度
+		await manager.getLanguageForDomain("www.example.fr"); // 占满
+		await manager.getLanguageForDomain("intranet"); // 触发淘汰
+		expect(manager.domainCache.has("example.com")).toBe(true); // 热条目保留
+		expect(manager.domainCache.has("www.co.jp")).toBe(false); // 最久未用被淘汰
+	});
 });

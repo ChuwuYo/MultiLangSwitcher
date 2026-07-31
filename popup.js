@@ -277,14 +277,11 @@ const getLanguageFromBackground = async () => {
  */
 const getLanguageFromStorage = async () => {
 	try {
-		// 从存储获取：{ data: { currentLanguage } }
-		const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
-			keys: [STORAGE_KEYS.CURRENT_LANGUAGE],
-		});
+		const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
 
-		if (result?.data?.currentLanguage) {
-			sendDebugLog(`${popupI18n.t("loaded_stored_language")} ${result.data.currentLanguage}.`, "info");
-			return result.data.currentLanguage;
+		if (result?.[STORAGE_KEYS.CURRENT_LANGUAGE]) {
+			sendDebugLog(`${popupI18n.t("loaded_stored_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}.`, "info");
+			return result[STORAGE_KEYS.CURRENT_LANGUAGE];
 		}
 
 		return null;
@@ -311,11 +308,8 @@ const getDefaultLanguage = () => {
  */
 const getAutoSwitchStatus = async () => {
 	try {
-		// 从本地存储获取自动切换状态
-		const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
-			keys: [STORAGE_KEYS.AUTO_SWITCH_ENABLED],
-		});
-		return !!result.data?.autoSwitchEnabled;
+		const result = await chrome.storage.local.get([STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
+		return !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 	} catch (error) {
 		sendDebugLog(
 			popupI18n.t("error_getting_auto_switch_status", {

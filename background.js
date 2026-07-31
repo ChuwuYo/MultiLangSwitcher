@@ -879,8 +879,6 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 				data = await handleGetMatchedRulesRequest();
 			} else if (type === MessageTypes.UPDATE_DYNAMIC_RULES) {
 				data = await handleUpdateDynamicRulesRequest(request);
-			} else if (type === MessageTypes.GET_STORAGE_DATA) {
-				data = await handleGetStorageDataRequest(request);
 			} else if (type === MessageTypes.GET_MANIFEST_INFO) {
 				data = await handleGetManifestInfoRequest();
 			} else {
@@ -989,21 +987,6 @@ const handleUpdateDynamicRulesRequest = async (request) => {
 		return {};
 	} catch (error) {
 		sendBackgroundLog(`${backgroundI18n.t("update_dynamic_rules_failed")}: ${error.message}`, "error");
-		throw error;
-	}
-};
-
-/**
- * 处理获取存储数据请求
- * @param {Object} request - 请求对象
- */
-const handleGetStorageDataRequest = async (request) => {
-	try {
-		const { keys } = request;
-		const result = await chrome.storage.local.get(keys);
-		return { data: result };
-	} catch (error) {
-		sendBackgroundLog(`${backgroundI18n.t("get_storage_data_failed")}: ${error.message}`, "error");
 		throw error;
 	}
 };
