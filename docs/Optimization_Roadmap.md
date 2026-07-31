@@ -3,6 +3,19 @@
 > 基于 2026-06 全量架构勘察（消息协议、状态管理、共享层、i18n、domain-rules、detect 子系统）。
 > 原则：先建安全网，再固化契约，再动结构；每阶段为下一阶段降险；全程小步 PR。
 
+## 执行状态（2026-08，refactor/architecture 分支）
+
+- [x] 阶段 0 工程基线：package.json + biome + scripts/check-syntax.mjs + validate-manifest.mjs + GitHub Actions
+- [x] 阶段 1 契约固化：MessageTypes（16→15）+ STORAGE_KEYS/LOCAL_STORAGE_KEYS 常量；`currentLanguage` 双写修复（background 单写者）；`customDomainRules` 决策为文档化扩展点（docs/Custom_Domain_Rules.md）；SET_STORAGE_DATA 删除
+- [x] 阶段 2 测试基线：vitest 43 测试（domain 查找链/LRU、版本比较、_formatString、normalizeMessageError、sanitizeSnapshotForAI、失败路径）；顺带修复 isNewerVersion NaN 守卫
+- [x] 阶段 3 ESM 迁移：全仓 ESM；每页单 module 入口；SW `type: "module"`；垫片已摘除；动态 script 注入消亡；detect ↔ detect-ai 经 DetectPageContext + CustomEvent 解耦
+- [x] 阶段 4 状态收紧：storage.onChanged 取代广播（WIP 期已完成）；GET_STORAGE_DATA 删除（页面直读存储）；domain cache FIFO→LRU；SW 瞬态状态评估后不迁移（模块级 Promise 已去重，DNR 规则即真相源）
+- [x] 阶段 6.1 i18n 字典合并：10 文件 → 5 个 per-component dict 模块
+- [ ] 阶段 5 单体文件拆分（未做，见下）
+- [ ] 阶段 6.2–6.5 data-i18n 声明式翻译 / 兜底字典去重 / bootstrap 裁剪 / detect 清理（未做）
+
+已知无害残留：popupZh 缺 `displaying_results`（该键无消费方，史前遗留）；i18n 键 `set_storage_data_failed`、`language_settings_saved`、`get_storage_data_failed` 已无调用方，可在阶段 6.3 一并清理。
+
 ## 现状档案（勘察结论）
 
 | 维度 | 现状 | 证据 |

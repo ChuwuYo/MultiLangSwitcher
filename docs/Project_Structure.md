@@ -1,62 +1,62 @@
+# 项目结构
+
+> 2026-08 重构后：全仓 ES Modules，无构建步骤，浏览器/SW 原生加载。
+
 ```
 MultiLangSwitcher/
 ├── LICENSE                          - 许可证文件
 ├── README.md                        - 项目说明文档
-├── _locales/                        - 扩展描述的国际化目录
-│   ├── en/                          - 英文语言包
-│   └── zh/                          - 中文语言包
+├── package.json                     - 工程基线（biome/vitest，private，仅 devDependencies）
+├── biome.json                       - lint + format 配置（tab 缩进、双引号）
+├── _locales/                        - 扩展描述的国际化目录（chrome.i18n，仅 manifest 元数据）
+│   ├── en/
+│   └── zh/
 ├── docs/                            - 项目文档目录
-│   ├── README/                      - 多语言说明文档目录
-│   ├── Project_Structure.md         - 项目结构文档（完整的文件结构说明）
-│   └── TODO.md                      - 待完成功能和改进项目
-├── shared/                          - 共享资源目录
-│   ├── ai-chat-client.js            - OpenAI 兼容聊天客户端与流式输出解析
-│   ├── ai-provider-presets.js       - AI 服务商预设列表与默认模型配置
-│   ├── copy-button.css              - 共享复制按钮组件样式
-│   ├── copy-button.js               - 共享复制按钮组件
-│   ├── shared-actions.js            - 共享常量定义
-│   ├── shared-utils.js              - 共享工具函数
-│   ├── shared-i18n-base.js          - 基础国际化类
-│   ├── shared-update-checker.js     - 共享更新检查器
-│   ├── shared-language-options.js   - 共享语言选项列表
-│   ├── header-check-utils.js        - 请求头检查工具函数
-│   ├── shared-resource-manager.js   - 共享资源管理器
-│   ├── md5.js                       - MD5 哈希函数
-│   ├── theme-init.js                - 主题初始化脚本
-│   └── vendor/                      - 第三方前端库
-│       ├── marked.umd.min.js        - Markdown 渲染库
-│       └── purify.min.js            - HTML 净化库（DOMPurify）
-├── fonts/                           - 字体资源目录
-├── i18n/                            - 国际化文本资源目录
-│   ├── background-en.js             - 后台页面英文文本
-│   ├── background-i18n.js           - 后台页面国际化配置
-│   ├── background-zh.js             - 后台页面中文文本
-│   ├── domain-manager-en.js         - 域名管理页面英文文本
-│   ├── domain-manager-i18n.js       - 域名管理页面国际化配置
-│   ├── domain-manager-zh.js         - 域名管理页面中文文本
-│   ├── debug-en.js                  - 调试页面英文文本
-│   ├── debug-i18n.js                - 调试页面国际化配置
-│   ├── debug-zh.js                  - 调试页面中文文本
-│   ├── popup-en.js                  - 弹窗页面英文文本
-│   ├── popup-i18n.js                - 弹窗页面国际化配置
-│   ├── popup-zh.js                  - 弹窗页面中文文本
-│   ├── detect-en.js                 - 测试页面英文文本
-│   ├── detect-i18n.js               - 测试页面国际化配置
-│   └── detect-zh.js                 - 测试页面中文文本
-├── images/                          - 图片资源目录
-├── manifest.json                    - 扩展配置清单文件
-├── popup.html                       - 扩展弹窗页面
-├── popup.js                         - 弹窗交互逻辑脚本
-├── detect.html                      - 环境检测与 AI 诊断页面
-├── detect.js                        - detect 页面环境采集、结果渲染与快照生成
-├── detect-ai.js                     - detect 页面 AI 配置、聊天、导出与 Prompt 逻辑
-├── toggle.css                       - 切换按钮样式文件
-├── toggle.js                        - 切换按钮交互脚本
-├── domain-rules-manager.js          - 域名规则管理模块
-├── domain-rules.json                - 域名规则配置文件
-├── background.js                    - 扩展后台运行脚本
-├── bootstrap.min.css                - Bootstrap CSS框架
-├── debug-headers.js                 - 调试页面请求头处理脚本
-├── debug-ui.js                      - 调试页面UI交互脚本
-└── debug.html                       - 扩展调试工具页面
+├── scripts/                         - CI 校验脚本
+│   ├── check-syntax.mjs             - 全部 js 的 node --check
+│   └── validate-manifest.mjs        - manifest + _locales 校验
+├── tests/                           - vitest 测试（纯逻辑 + 失败路径）
+│   └── helpers/global-loader.js     - extractFunction（提取自包含纯函数）
+├── shared/                          - 共享 ESM 模块
+│   ├── message-types.js             - 消息协议常量（MessageTypes）
+│   ├── storage-keys.js              - 存储键常量（STORAGE_KEYS / LOCAL_STORAGE_KEYS）
+│   ├── shared-utils.js              - 通用工具（日志、语言检测、兜底翻译）
+│   ├── shared-i18n-base.js          - BaseI18n 基类（字典由子类静态注入）
+│   ├── shared-actions.js            - requestBackground 信封 + resetAcceptLanguage
+│   ├── shared-update-checker.js     - UpdateChecker（版本比较/缓存）
+│   ├── shared-language-options.js   - 语言选项列表
+│   ├── header-check-utils.js        - 请求头检查工具
+│   ├── shared-resource-manager.js   - 资源管理器
+│   ├── ai-provider-presets.js       - AI 服务商预设
+│   ├── ai-chat-client.js            - OpenAI 兼容聊天客户端
+│   ├── copy-button.js               - 复制按钮组件（+ copy-button.css）
+│   ├── md5.js                       - MD5 哈希
+│   ├── theme-init.js                - 主题初始化（classic script，预渲染同步执行）
+│   └── vendor/                      - 第三方库（marked / DOMPurify，classic script）
+├── i18n/                            - 运行时 i18n（每组件单文件双语字典 + 实例模块）
+│   ├── popup-dict.js / popup-i18n.js
+│   ├── debug-dict.js / debug-i18n.js
+│   ├── detect-dict.js / detect-i18n.js
+│   ├── background-dict.js / background-i18n.js       （Service Worker）
+│   └── domain-manager-dict.js / domain-manager-i18n.js（Service Worker）
+├── fonts/ images/                   - 静态资源
+├── manifest.json                    - MV3 清单（background 为 module SW）
+├── popup.html / popup.js            - 弹窗页（单 module 入口）
+├── debug.html / debug-ui.js         - 调试页（单 module 入口）
+├── debug-headers.js                 - 调试页控制台工具（window.debugHeaders）
+├── detect.html / detect.js          - 检测页采集与渲染（导出 DetectPageContext）
+├── detect-ai.js                     - 检测页 AI 诊断（单 module 入口；经 CustomEvent 感知快照生命周期）
+├── toggle.js / toggle.css           - 语言/主题切换（ESM，被各页面入口 side-effect 导入）
+├── domain-rules-manager.js          - 域名规则管理（LRU 缓存；customDomainRules 扩展点）
+├── domain-rules.json                - 内置域名规则
+├── background.js                    - Service Worker（ESM；消息分发、规则应用、状态单写者）
+└── bootstrap.min.css                - Bootstrap 样式
 ```
+
+## 架构契约
+
+- **消息协议**：页面与 SW 之间的消息类型一律使用 `shared/message-types.js` 的 `MessageTypes`，禁止字符串字面量；响应信封 `{ ok, data } / { ok, error }`。
+- **存储键**：一律使用 `shared/storage-keys.js` 常量。`currentLanguage` / `autoSwitchEnabled` 由 background 单写者持久化；`uiState` 位于 `chrome.storage.session`，页面经 `storage.onChanged` 只读订阅。
+- **i18n**：字典静态注入 `BaseI18n` 子类；运行时切换语言能力保留（`app-lang` localStorage + reload）。
+- **页面加载**：每页单个 `<script type="module">` 入口；`theme-init.js` 是唯一 classic 业务脚本（预渲染防主题闪烁，"theme" 键与 `LOCAL_STORAGE_KEYS.THEME` 保持同步）。
+- **检测页解耦**：detect.js 不引用 detect-ai.js；快照生命周期经 `detect:snapshot-updated` / `detect:run-finished` CustomEvent 传播。
