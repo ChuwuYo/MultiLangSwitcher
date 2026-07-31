@@ -228,8 +228,8 @@ class UpdateChecker {
 			const maxLength = Math.max(currentParts.length, latestParts.length);
 
 			for (let i = 0; i < maxLength; i++) {
-				const curr = currentParts[i] || 0; // 补 0 处理 1.2 vs 1.2.3
-				const lat = latestParts[i] || 0;
+				const curr = i < currentParts.length ? currentParts[i] : 0; // 补 0 处理 1.2 vs 1.2.3
+				const lat = i < latestParts.length ? latestParts[i] : 0;
 
 				if (Number.isNaN(curr) || Number.isNaN(lat)) {
 					return false;
