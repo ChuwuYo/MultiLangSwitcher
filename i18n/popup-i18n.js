@@ -23,46 +23,10 @@ class PopupI18n extends BaseI18n {
 	 * @private
 	 */
 	_applyTranslations() {
+		this._applyDataAttributes();
+
 		// 设置页面标题
 		document.title = this.t("extension_name");
-
-		// 主题按钮和重置按钮
-		const themeToggleBtn = /** @type {HTMLElement} */ (document.querySelector("#themeToggleBtn"));
-		if (themeToggleBtn) {
-			themeToggleBtn.title = this.t("theme_toggle");
-		}
-
-		const resetBtn = /** @type {HTMLElement} */ (document.querySelector("#resetBtn"));
-		if (resetBtn) {
-			resetBtn.title = this.t("reset_accept_language_tooltip");
-		}
-
-		const resetBtnImg = /** @type {HTMLImageElement} */ (document.querySelector("#resetBtnImg"));
-		if (resetBtnImg) {
-			resetBtnImg.alt = this.t("reset_accept_language_tooltip");
-		}
-
-		// 请求头设置
-		const extensionName = document.querySelector("#extensionName");
-		if (extensionName) {
-			extensionName.textContent = this.t("extension_name");
-		}
-
-		const extensionSubtitle = document.querySelector("#extensionSubtitle");
-		if (extensionSubtitle) {
-			extensionSubtitle.textContent = this.t("subtitle");
-		}
-
-		// 语言选择
-		const languageSelectLabel = document.querySelector("#languageSelectLabel");
-		if (languageSelectLabel) {
-			languageSelectLabel.textContent = this.t("select_language");
-		}
-
-		const applyButton = document.querySelector("#applyButton");
-		if (applyButton) {
-			applyButton.textContent = this.t("apply_changes");
-		}
 
 		// 状态
 		const currentLangSpan = document.querySelector("#currentLanguage");
@@ -77,45 +41,6 @@ class PopupI18n extends BaseI18n {
 			span.id = "currentLanguage";
 			span.textContent = shouldKeepCurrent ? currentLangText : this.t("not_set");
 			statusText.appendChild(span);
-		}
-
-		// Auto switch section
-		const autoSwitchLabel = document.querySelector("#autoSwitchLabel");
-		if (autoSwitchLabel) {
-			autoSwitchLabel.textContent = this.t("auto_switch");
-		}
-
-		// Function buttons section
-		const detectionPageLink = document.querySelector("#detectionPageLink");
-		if (detectionPageLink) {
-			detectionPageLink.textContent = this.t("detection_page");
-		}
-
-		const debugPageLink = document.querySelector("#debugPageLink");
-		if (debugPageLink) {
-			debugPageLink.textContent = this.t("debug_tools");
-		}
-
-		const checkHeaderBtn = document.querySelector("#checkHeaderBtn");
-		if (checkHeaderBtn) {
-			checkHeaderBtn.textContent = this.t("quick_check");
-		}
-
-		// Header check result section
-		const headerCheckResultTitle = document.querySelector("#headerCheckResultTitle");
-		if (headerCheckResultTitle) {
-			headerCheckResultTitle.textContent = this.t("header_check_result");
-		}
-
-		const headerCheckContent = document.querySelector("#headerCheckContent");
-		if (headerCheckContent) {
-			headerCheckContent.textContent = this.t("click_quick_check");
-		}
-
-		// 添加更新按钮的翻译
-		const updateCheckText = document.querySelector("#updateCheckText");
-		if (updateCheckText) {
-			updateCheckText.textContent = this.t("check_for_updates");
 		}
 	}
 }

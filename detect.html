@@ -172,11 +172,11 @@
 </head>
 
 <body>
-  <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
+  <button id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle"></button>
 
   <div class="container">
-    <h2 id="pageHeading"></h2>
-    <p class="lead" id="pageSubtitle"></p>
+    <h2 id="pageHeading" data-i18n="heading"></h2>
+    <p class="lead" id="pageSubtitle" data-i18n="subtitle"></p>
 
     <div class="alert alert-info">
       <strong id="tipLabel"></strong> <span id="tipText"></span>
@@ -186,16 +186,16 @@
       <div class="col-md-12">
         <div class="card mb-3 ai-diagnosis-card">
           <div class="card-header text-white">
-            <h4 class="mb-1" id="aiDiagnosisTitle"></h4>
+            <h4 class="mb-1" id="aiDiagnosisTitle" data-i18n="ai_diagnosis_title"></h4>
             <p class="mb-0 small text-white-50" id="aiDiagnosisSubtitle"></p>
           </div>
           <div class="card-body">
             <details class="ai-config-details mb-3" id="aiConfigDetails" open>
-              <summary id="aiConfigSummary"></summary>
+              <summary id="aiConfigSummary" data-i18n="ai_config_summary"></summary>
 
               <div class="ai-provider-row mt-3">
                 <div>
-                  <label class="form-label" for="aiProviderSelect" id="aiProviderLabel"></label>
+                  <label class="form-label" for="aiProviderSelect" id="aiProviderLabel" data-i18n="ai_provider_label"></label>
                   <select class="form-select" id="aiProviderSelect"></select>
                 </div>
                 <div class="d-flex flex-column justify-content-end">
@@ -205,31 +205,31 @@
 
               <div class="ai-config-grid">
                 <div>
-                  <label class="form-label" for="aiBaseUrlInput" id="aiBaseUrlLabel"></label>
+                  <label class="form-label" for="aiBaseUrlInput" id="aiBaseUrlLabel" data-i18n="ai_base_url_label"></label>
                   <input class="form-control" type="url" id="aiBaseUrlInput" autocomplete="off">
                 </div>
                 <div>
-                  <label class="form-label" for="aiModelInput" id="aiModelLabel"></label>
+                  <label class="form-label" for="aiModelInput" id="aiModelLabel" data-i18n="ai_model_label"></label>
                   <input class="form-control" type="text" id="aiModelInput" autocomplete="off">
                 </div>
                 <div>
-                  <label class="form-label" for="aiApiKeyInput" id="aiApiKeyLabel"></label>
+                  <label class="form-label" for="aiApiKeyInput" id="aiApiKeyLabel" data-i18n="ai_api_key_label"></label>
                   <div class="input-group">
                     <input class="form-control" type="password" id="aiApiKeyInput" autocomplete="off">
-                    <button class="btn btn-outline-secondary" type="button" id="aiApiKeyToggle"></button>
+                    <button class="btn btn-outline-secondary" type="button" id="aiApiKeyToggle" data-i18n="ai_api_key_toggle_show"></button>
                   </div>
                 </div>
               </div>
 
-              <p class="small text-muted mt-3 mb-1" id="aiPrivacyHint"></p>
+              <p class="small text-muted mt-3 mb-1" id="aiPrivacyHint" data-i18n="ai_privacy_hint"></p>
               <p class="small mb-0 ai-config-hint" id="aiConfigHint"></p>
             </details>
 
             <div class="ai-chat-actions mb-3">
-              <button class="btn btn-primary" type="button" id="aiStartButton"></button>
-              <button class="btn btn-outline-danger" type="button" id="aiStopButton" disabled></button>
-              <button class="btn btn-outline-secondary" type="button" id="aiClearButton"></button>
-              <button class="btn btn-outline-secondary" type="button" id="aiExportStructuredButton"></button>
+              <button class="btn btn-primary" type="button" id="aiStartButton" data-i18n="ai_start"></button>
+              <button class="btn btn-outline-danger" type="button" id="aiStopButton" data-i18n="ai_stop" disabled></button>
+              <button class="btn btn-outline-secondary" type="button" id="aiClearButton" data-i18n="ai_clear"></button>
+              <button class="btn btn-outline-secondary" type="button" id="aiExportStructuredButton" data-i18n="ai_export_structured"></button>
             </div>
 
             <div class="ai-chat-messages mb-3" id="aiChatMessages"></div>
@@ -237,12 +237,12 @@
 
             <div class="ai-chat-composer">
               <div class="ai-chat-composer-main">
-                <label class="visually-hidden" for="aiUserInput" id="aiUserInputLabel"></label>
-                <textarea class="form-control" id="aiUserInput"></textarea>
+                <label class="visually-hidden" for="aiUserInput" id="aiUserInputLabel" data-i18n="ai_user_input_label"></label>
+                <textarea class="form-control" id="aiUserInput" data-i18n-placeholder="ai_user_input_placeholder"></textarea>
               </div>
               <div class="ai-chat-composer-actions">
-                <button class="btn btn-success" type="button" id="aiSendButton"></button>
-                <button class="btn btn-outline-secondary" type="button" id="aiExportButton"></button>
+                <button class="btn btn-success" type="button" id="aiSendButton" data-i18n="ai_send"></button>
+                <button class="btn btn-outline-secondary" type="button" id="aiExportButton" data-i18n="ai_export"></button>
               </div>
             </div>
           </div>
@@ -250,41 +250,41 @@
       </div>
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-primary text-white" id="requestHeaderTitle"></div>
+          <div class="card-header bg-primary text-white" id="requestHeaderTitle" data-i18n="request_header"></div>
           <div class="card-body">
-            <div id="headerLanguageInfo"></div>
+            <div id="headerLanguageInfo" data-i18n="detecting"></div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-info text-white" id="jsLanguageTitle"></div>
+          <div class="card-header bg-info text-white" id="jsLanguageTitle" data-i18n="js_language"></div>
           <div class="card-body">
-            <div id="jsLanguageInfo"></div>
+            <div id="jsLanguageInfo" data-i18n="detecting"></div>
           </div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card mb-3">
-          <div class="card-header bg-secondary text-white" id="intlApiTitle"></div>
+          <div class="card-header bg-secondary text-white" id="intlApiTitle" data-i18n="intl_api"></div>
           <div class="card-body">
-            <div id="intlApiInfo"></div>
+            <div id="intlApiInfo" data-i18n="detecting"></div>
           </div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="card mb-3">
-          <div class="card-header bg-warning text-dark" id="webRtcTitle"></div>
+          <div class="card-header bg-warning text-dark" id="webRtcTitle" data-i18n="webrtc_detection"></div>
           <div class="card-body">
-            <div id="webRtcInfo"></div>
+            <div id="webRtcInfo" data-i18n="detecting"></div>
           </div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="card mb-3">
-          <div class="card-header bg-success text-white" id="browserFingerprintTitle"></div>
+          <div class="card-header bg-success text-white" id="browserFingerprintTitle" data-i18n="browser_fingerprint"></div>
           <div class="card-body">
-            <div id="fingerprintInfo"></div>
+            <div id="fingerprintInfo" data-i18n="detecting"></div>
           </div>
         </div>
       </div>
@@ -294,13 +294,13 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card mb-3">
-          <div class="card-header bg-dark text-white" id="browserCompatibilityTitle"></div>
+          <div class="card-header bg-dark text-white" id="browserCompatibilityTitle" data-i18n="browser_compatibility"></div>
           <div class="card-body">
-            <p><strong id="browserInfoLabel"></strong> <span id="browserInfoDisplay"></span></p>
-            <h5 id="apiSupportTitle"></h5>
+            <p><strong id="browserInfoLabel" data-i18n="browser_info"></strong> <span id="browserInfoDisplay" data-i18n="detecting"></span></p>
+            <h5 id="apiSupportTitle" data-i18n="api_support"></h5>
             <ul id="apiCompatibilityList" class="list-group">
               <!-- JS will populate API compatibility info here -->
-              <li class="list-group-item" id="detectingItem"></li>
+              <li class="list-group-item" id="detectingItem" data-i18n="detecting"></li>
             </ul>
           </div>
         </div>
@@ -311,30 +311,30 @@
     <div class="row">
       <div class="col-md-12">
         <div class="card mb-3">
-          <div class="card-header bg-dark text-white" id="hardwareFingerprintTitle"></div>
+          <div class="card-header bg-dark text-white" id="hardwareFingerprintTitle" data-i18n="hardware_fingerprint"></div>
           <div class="card-body">
             <div class="row g-3">
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark" id="canvasFingerprintTitle"></div>
+                  <div class="card-header bg-light text-dark" id="canvasFingerprintTitle" data-i18n="canvas_fingerprint"></div>
                   <div class="card-body">
-                    <div id="canvasFingerprintInfo"></div>
+                    <div id="canvasFingerprintInfo" data-i18n="detecting"></div>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark" id="webglFingerprintTitle"></div>
+                  <div class="card-header bg-light text-dark" id="webglFingerprintTitle" data-i18n="webgl_fingerprint"></div>
                   <div class="card-body">
-                    <div id="webglFingerprintInfo"></div>
+                    <div id="webglFingerprintInfo" data-i18n="detecting"></div>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="card h-100">
-                  <div class="card-header bg-light text-dark" id="audioFingerprintTitle"></div>
+                  <div class="card-header bg-light text-dark" id="audioFingerprintTitle" data-i18n="audio_fingerprint"></div>
                   <div class="card-body">
-                    <div id="audioFingerprintInfo"></div>
+                    <div id="audioFingerprintInfo" data-i18n="detecting"></div>
                   </div>
                 </div>
               </div>
@@ -345,8 +345,8 @@
     </div>
 
     <div class="header-info mt-4">
-      <h4 id="completeHeadersTitle"></h4>
-      <pre id="headerInfo"></pre>
+      <h4 id="completeHeadersTitle" data-i18n="complete_headers"></h4>
+      <pre id="headerInfo" data-i18n="loading"></pre>
     </div>
   </div>
 

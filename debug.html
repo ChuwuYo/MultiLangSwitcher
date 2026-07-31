@@ -168,53 +168,56 @@
 </head>
 
 <body>
-  <button id="themeToggleBtn" class="toggle" title="Toggle Theme"></button>
+  <button id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle"></button>
 
   <div class="container">
-    <h2 id="pageHeading"></h2>
-    <p class="lead" id="pageSubtitle"></p>
+    <h2 id="pageHeading" data-i18n="heading"></h2>
+    <p class="lead" id="pageSubtitle" data-i18n="subtitle"></p>
 
     <div class="alert alert-info">
-      <strong id="tipLabel"></strong> <span id="tipText"></span>
+      <strong id="tipLabel" data-i18n="tip_label"></strong> <span id="tipText" data-i18n="tip"></span>
     </div>
 
     <div class="row">
       <div class="col-md-6">
         <div class="debug-section">
-          <h4 id="currentRulesTitle"></h4>
-          <p class="text-muted" id="currentRulesDesc"></p>
-          <button id="showRulesBtn" class="btn btn-primary"></button>
-          <div id="rulesResult" class="debug-result"></div>
+          <h4 id="currentRulesTitle" data-i18n="current_rules"></h4>
+          <p class="text-muted" id="currentRulesDesc" data-i18n="current_rules_desc"></p>
+          <button id="showRulesBtn" class="btn btn-primary" data-i18n="show_rules"></button>
+          <div id="rulesResult" class="debug-result" data-i18n="click_view_rules"></div>
         </div>
       </div>
 
       <div class="col-md-6">
         <div class="debug-section">
-          <h4 id="headerTestTitle"></h4>
-          <p class="text-muted" id="headerTestDesc"></p>
+          <h4 id="headerTestTitle" data-i18n="header_test"></h4>
+          <p class="text-muted" id="headerTestDesc" data-i18n="header_test_desc"></p>
           <div class="mb-3">
-            <label for="testLanguage" class="form-label" id="testLanguageLabel"></label>
+            <label for="testLanguage" class="form-label" id="testLanguageLabel" data-i18n="test_language_label"></label>
             <select class="form-select" id="testLanguage">
               <!-- 语言选项将由JavaScript动态生成 -->
             </select>
           </div>
-          <button id="testHeaderBtn" class="btn btn-success"></button>
-          <div id="headerTestResult" class="debug-result"></div>
+          <button id="testHeaderBtn" class="btn btn-success" data-i18n="test_header"></button>
+          <div id="headerTestResult" class="debug-result" data-i18n="click_test_header"></div>
         </div>
       </div>
 
       <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"><img src="images/reset.svg" id="resetBtnImg"
-              width="16" height="16" class="invert-on-dark"></button>
-          <h4 id="customLangTitle"></h4>
-          <p class="text-muted" id="customLangDesc"></p>
+          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"
+            data-i18n-title="reset_accept_language_tooltip"><img src="images/reset.svg" id="resetBtnImg" width="16"
+              height="16" class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
+          <h4 id="customLangTitle" data-i18n="custom_language"></h4>
+          <p class="text-muted" id="customLangDesc" data-i18n="custom_language_desc"></p>
           <div class="mb-3">
-            <label for="customLanguageInput" class="form-label" id="customLangInputLabel"></label>
-            <input type="text" class="form-control" id="customLanguageInput">
+            <label for="customLanguageInput" class="form-label" id="customLangInputLabel"
+              data-i18n="custom_language_label"></label>
+            <input type="text" class="form-control" id="customLanguageInput"
+              data-i18n-placeholder="custom_language_placeholder">
           </div>
-          <button id="applyCustomLangBtn" class="btn btn-primary"></button>
+          <button id="applyCustomLangBtn" class="btn btn-primary" data-i18n="apply_custom"></button>
           <div id="customLangResult" class="debug-result mt-2"></div>
         </div>
       </div>
@@ -223,19 +226,19 @@
       <!-- Accept-Language 格式说明卡片 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <h4 id="formatExplanationTitle"></h4>
-          <p class="text-muted" id="formatExplanationDesc"></p>
-          <p><strong id="basicFormatTitle"></strong></p>
+          <h4 id="formatExplanationTitle" data-i18n="format_explanation"></h4>
+          <p class="text-muted" id="formatExplanationDesc" data-i18n="format_explanation_desc"></p>
+          <p><strong id="basicFormatTitle" data-i18n="basic_format"></strong></p>
           <ul id="formatList">
             <li id="languageCodeItem"></li>
             <li id="regionCodeItem"></li>
             <li id="qualityValueItem"></li>
           </ul>
-          <p><strong id="examplesTitle"></strong></p>
+          <p><strong id="examplesTitle" data-i18n="examples"></strong></p>
           <ul id="examplesList">
             <li id="exampleComplex"></li>
           </ul>
-          <p class="small text-muted" id="formatNote"></p>
+          <p class="small text-muted" id="formatNote" data-i18n="format_note"></p>
         </div>
       </div>
       <!-- Accept-Language 格式说明卡片结束 -->
@@ -299,61 +302,64 @@
     </div>
 
     <div class="debug-section mt-4">
-      <h4 id="liveLogsTitle"></h4>
-      <p class="text-muted" id="liveLogsDesc"></p>
+      <h4 id="liveLogsTitle" data-i18n="live_logs"></h4>
+      <p class="text-muted" id="liveLogsDesc" data-i18n="live_logs_desc"></p>
       <div class="mb-3">
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterInfo" value="info" checked>
-          <label class="form-check-label" for="filterInfo" id="infoLabel"></label>
+          <label class="form-check-label" for="filterInfo" id="infoLabel" data-i18n="info"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterWarning" value="warning" checked>
-          <label class="form-check-label" for="filterWarning" id="warningLabel"></label>
+          <label class="form-check-label" for="filterWarning" id="warningLabel" data-i18n="warning"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterError" value="error" checked>
-          <label class="form-check-label" for="filterError" id="errorLabel"></label>
+          <label class="form-check-label" for="filterError" id="errorLabel" data-i18n="error"></label>
         </div>
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="filterSuccess" value="success" checked>
-          <label class="form-check-label" for="filterSuccess" id="successLabel"></label>
+          <label class="form-check-label" for="filterSuccess" id="successLabel" data-i18n="success"></label>
         </div>
       </div>
       <div id="logOutput" class="debug-result"></div>
-      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2"></button>
+      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2" data-i18n="clear_logs"></button>
     </div>
 
     <div class="debug-section mt-4">
-      <h4 id="commonFixesTitle"></h4>
-      <p class="text-muted" id="commonFixesDesc"></p>
+      <h4 id="commonFixesTitle" data-i18n="common_fixes"></h4>
+      <p class="text-muted" id="commonFixesDesc" data-i18n="common_fixes_desc"></p>
       <div class="list-group">
         <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
-          <strong id="fixPriorityTitle"></strong> <span id="fixPriorityDesc"></span>
+          <strong id="fixPriorityTitle" data-i18n="fix_priority"></strong> <span id="fixPriorityDesc"
+            data-i18n="fix_priority_desc"></span>
         </button>
         <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
-          <strong id="clearReapplyTitle"></strong> <span id="clearReapplyDesc"></span>
+          <strong id="clearReapplyTitle" data-i18n="clear_reapply"></strong> <span id="clearReapplyDesc"
+            data-i18n="clear_reapply_desc"></span>
         </button>
       </div>
-      <div id="fixResult" class="debug-result mt-3"></div>
+      <div id="fixResult" class="debug-result mt-3" data-i18n="select_fix_option"></div>
     </div>
 
     <div class="debug-section mt-4">
-      <h4 id="diagnosticsTitle"></h4>
-      <p class="text-muted" id="diagnosticsDesc"></p>
-      <button id="showDiagnosticsBtn" class="btn btn-info"></button>
-      <div id="diagnosticsResult" class="debug-result"></div>
+      <h4 id="diagnosticsTitle" data-i18n="diagnostics"></h4>
+      <p class="text-muted" id="diagnosticsDesc" data-i18n="diagnostics_desc"></p>
+      <button id="showDiagnosticsBtn" class="btn btn-info" data-i18n="show_diagnostics"></button>
+      <div id="diagnosticsResult" class="debug-result" data-i18n="click_view_diagnostics"></div>
     </div>
 
     <!-- 自动切换功能控制 -->
     <div class="debug-section mt-4">
-      <h4 id="autoSwitchTitle"></h4>
-      <p class="text-muted" id="autoSwitchDesc"></p>
+      <h4 id="autoSwitchTitle" data-i18n="auto_switch_feature"></h4>
+      <p class="text-muted" id="autoSwitchDesc" data-i18n="auto_switch_desc"></p>
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" id="autoSwitchToggle">
-        <label class="form-check-label" for="autoSwitchToggle" id="enableAutoSwitchLabel"></label>
+        <label class="form-check-label" for="autoSwitchToggle" id="enableAutoSwitchLabel"
+          data-i18n="enable_auto_switch"></label>
       </div>
-      <button id="showDomainRulesBtn" class="btn btn-outline-primary"></button>
-      <div id="domainRulesResult" class="debug-result"></div>
+      <button id="showDomainRulesBtn" class="btn btn-outline-primary" data-i18n="show_domain_rules"></button>
+      <div id="domainRulesResult" class="debug-result" data-i18n="click_view_domain_rules"></div>
     </div>
     <!-- 自动切换功能控制结束 -->
   </div>

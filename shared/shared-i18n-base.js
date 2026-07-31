@@ -122,6 +122,33 @@ export class BaseI18n {
 	}
 
 	/**
+	 * 通用声明式翻译扫描器：处理带 data-i18n* 属性的元素。
+	 * - data-i18n="key"            → textContent
+	 * - data-i18n-title="key"      → title 属性
+	 * - data-i18n-placeholder="key"→ placeholder 属性
+	 * - data-i18n-alt="key"        → alt 属性
+	 * 子类的 _applyTranslations 应先调用本方法，再处理特殊 DOM 结构。
+	 * @param {ParentNode} [root=document] - 扫描根节点
+	 * @protected
+	 */
+	_applyDataAttributes(root = document) {
+		for (const el of root.querySelectorAll("[data-i18n]")) {
+			el.textContent = this.t(/** @type {HTMLElement} */ (el).dataset.i18n);
+		}
+		for (const el of root.querySelectorAll("[data-i18n-title]")) {
+			/** @type {HTMLElement} */ (el).title = this.t(/** @type {HTMLElement} */ (el).dataset.i18nTitle);
+		}
+		for (const el of root.querySelectorAll("[data-i18n-placeholder]")) {
+			/** @type {HTMLInputElement} */ (el).placeholder = this.t(
+				/** @type {HTMLElement} */ (el).dataset.i18nPlaceholder,
+			);
+		}
+		for (const el of root.querySelectorAll("[data-i18n-alt]")) {
+			/** @type {HTMLImageElement} */ (el).alt = this.t(/** @type {HTMLElement} */ (el).dataset.i18nAlt);
+		}
+	}
+
+	/**
 	 * 格式化字符串，替换占位符。
 	 * @param {string} str - 包含占位符的字符串。
 	 * @param {Object} params - 参数对象。

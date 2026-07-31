@@ -433,28 +433,28 @@
 
 <body class="popup-body">
   <!-- 主题切换按钮 -->
-  <button id="themeToggleBtn" class="toggle"></button>
+  <button id="themeToggleBtn" class="toggle" data-i18n-title="theme_toggle"></button>
   <!-- 重置Accept-Language按钮 -->
-  <button id="resetBtn" class="toggle"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16"
-      class="invert-on-dark"></button>
+  <button id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16"
+      class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
 
   <div class="container">
     <!-- 页面头部 -->
     <div class="header">
-      <h4 id="extensionName"></h4>
-      <p class="text-muted" id="extensionSubtitle"></p>
+      <h4 id="extensionName" data-i18n="extension_name"></h4>
+      <p class="text-muted" id="extensionSubtitle" data-i18n="subtitle"></p>
     </div>
 
     <!-- 语言选择区域 -->
     <div class="language-select">
-      <label for="languageSelect" class="form-label" id="languageSelectLabel"></label>
+      <label for="languageSelect" class="form-label" id="languageSelectLabel" data-i18n="select_language"></label>
       <select class="form-select" id="languageSelect">
         <!-- 语言选项将由JavaScript动态生成 -->
       </select>
     </div>
 
     <!-- 应用按钮 -->
-    <button id="applyButton" class="btn btn-primary w-100"></button>
+    <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
 
     <!-- 状态显示区域 -->
     <div class="status mt-3">
@@ -468,7 +468,7 @@
 
     <!-- 自动切换语言开关区域 -->
     <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label"></label>
+      <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label" data-i18n="auto_switch"></label>
       <div class="toggle-wrapper toggle-wrapper-inline">
         <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle">
         <div class="toggle-container">
@@ -495,17 +495,17 @@
 
     <!-- 功能按钮区域 -->
     <div class="mt-3 text-center">
-      <a href="detect.html" target="_blank" class="btn btn-sm btn-outline-secondary" id="detectionPageLink"></a>
-      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2" id="debugPageLink"></a>
-      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2"></button>
+      <a href="detect.html" target="_blank" class="btn btn-sm btn-outline-secondary" id="detectionPageLink" data-i18n="detection_page"></a>
+      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2" id="debugPageLink" data-i18n="debug_tools"></a>
+      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2" data-i18n="quick_check"></button>
     </div>
 
     <!-- 请求头检查结果显示区域 -->
     <div class="mt-3 d-none header-check-result" id="headerCheckResult">
       <div class="card">
-        <div class="card-header bg-light" id="headerCheckResultTitle"></div>
+        <div class="card-header bg-light" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
         <div class="card-body">
-          <pre id="headerCheckContent" class="mb-0" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
+          <pre id="headerCheckContent" class="mb-0" style="font-size: 12px; max-height: 150px; overflow-y: auto;" data-i18n="click_quick_check"></pre>
         </div>
       </div>
     </div>
@@ -513,7 +513,7 @@
     <!-- 更新检查器区域 -->
     <div class="mt-3 text-center">
       <button id="updateCheckBtn" class="btn btn-sm w-100 update-check-button">
-        <span id="updateCheckText"></span>
+        <span id="updateCheckText" data-i18n="check_for_updates"></span>
         <span id="updateCheckSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"
           aria-hidden="true"></span>
       </button>
