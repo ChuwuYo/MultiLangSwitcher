@@ -256,7 +256,7 @@ class DomainRulesManager {
 			return this.customRulesCache;
 		}
 		try {
-			const result = await chrome.storage.local.get(["customDomainRules"]);
+			const result = await chrome.storage.local.get([STORAGE_KEYS.CUSTOM_DOMAIN_RULES]);
 			this.customRulesCache = result.customDomainRules || {};
 		} catch (_error) {
 			this.customRulesCache = {};

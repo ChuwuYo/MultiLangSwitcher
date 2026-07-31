@@ -1,5 +1,5 @@
 (() => {
-	const AI_CONFIG_STORAGE_KEY = "aiDiagnosisConfig";
+	const AI_CONFIG_STORAGE_KEY = STORAGE_KEYS.AI_DIAGNOSIS_CONFIG;
 	const DEFAULT_PROVIDER_KEY = "openrouter";
 	const AI_PROVIDER_PRESETS = window.AIProviderPresets || {};
 	const AI_PROVIDER_PRESET_ORDER = window.AIProviderPresetOrder || Object.keys(AI_PROVIDER_PRESETS);

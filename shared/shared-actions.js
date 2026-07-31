@@ -51,7 +51,7 @@ const requestBackground = async (type, payload = {}) => {
 // biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
 const resetAcceptLanguage = async () => {
 	try {
-		const response = await requestBackground("RESET_ACCEPT_LANGUAGE");
+		const response = await requestBackground(MessageTypes.RESET_ACCEPT_LANGUAGE);
 		if (typeof sendDebugLog === "function") {
 			sendDebugLog("Accept-Language settings reset successfully", "success");
 		}

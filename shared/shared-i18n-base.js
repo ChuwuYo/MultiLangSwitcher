@@ -68,7 +68,7 @@ class BaseI18n {
 	_detectLanguage() {
 		// 优先从localStorage获取（仅浏览器环境）
 		if (!this.isServiceWorker && typeof localStorage !== "undefined") {
-			const savedLang = localStorage.getItem("app-lang");
+			const savedLang = localStorage.getItem(LOCAL_STORAGE_KEYS.APP_LANG);
 			if (savedLang) {
 				this.currentLang = savedLang;
 				return;

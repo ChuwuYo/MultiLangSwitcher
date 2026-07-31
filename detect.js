@@ -883,7 +883,7 @@ const collectExtensionContext = async () => {
 
 	try {
 		if (chrome?.storage?.local?.get) {
-			const result = await chrome.storage.local.get(["currentLanguage", "autoSwitchEnabled"]);
+			const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
 			currentLanguage = result.currentLanguage || "";
 			autoSwitchEnabled = !!result.autoSwitchEnabled;
 		}

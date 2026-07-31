@@ -4,7 +4,8 @@
 class LanguageToggle {
 	constructor() {
 		// 语言状态从 localStorage (app-lang) 读取，与 BaseI18n 共享同一数据源
-		this.currentLang = localStorage.getItem("app-lang") || (navigator.language.startsWith("zh") ? "zh" : "en");
+		this.currentLang =
+			localStorage.getItem(LOCAL_STORAGE_KEYS.APP_LANG) || (navigator.language.startsWith("zh") ? "zh" : "en");
 	}
 
 	/**
@@ -66,7 +67,7 @@ class ThemeManager {
 	 */
 	init() {
 		// 应用初始主题
-		const savedTheme = localStorage.getItem("theme");
+		const savedTheme = localStorage.getItem(LOCAL_STORAGE_KEYS.THEME);
 		if (savedTheme) {
 			this.applyTheme(savedTheme);
 		} else {
@@ -82,7 +83,7 @@ class ThemeManager {
 	 */
 	applyTheme(theme) {
 		document.documentElement.setAttribute("data-bs-theme", theme);
-		localStorage.setItem("theme", theme);
+		localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, theme);
 
 		if (!this.themeToggleBtn) return;
 
@@ -109,7 +110,7 @@ class ThemeManager {
 		// 监听操作系统主题变化
 		ResourceManager.addEventListener(this.prefersDarkScheme, "change", (e) => {
 			// 仅当用户未设置偏好时才更改
-			if (!localStorage.getItem("theme")) {
+			if (!localStorage.getItem(LOCAL_STORAGE_KEYS.THEME)) {
 				this.applyTheme(e.matches ? "dark" : "light");
 			}
 		});

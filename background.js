@@ -1,6 +1,9 @@
 // 后台脚本，确保扩展在浏览器启动时就能应用语言设置
 
 // 按正确顺序导入依赖
+// 0. 协议与存储键常量（无依赖，最先导入）
+importScripts("shared/message-types.js");
+importScripts("shared/storage-keys.js");
 // 1. 首先导入共享工具
 importScripts("shared/shared-utils.js");
 // 2. 然后导入基础国际化类
@@ -402,7 +405,7 @@ const performInitialization = async (reason) => {
 		sendBackgroundLog(backgroundI18n.t("domain_rules_loaded"), "info");
 
 		// 2. 从存储中获取设置
-		const result = await chrome.storage.local.get(["currentLanguage", "autoSwitchEnabled"]);
+		const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
 		autoSwitchEnabled = result.autoSwitchEnabled !== false; // 默认为 true
 		sendBackgroundLog(`${backgroundI18n.t("loaded_auto_switch_status")}: ${autoSwitchEnabled}`, "info");
 
@@ -420,8 +423,8 @@ const performInitialization = async (reason) => {
 		try {
 			await clearAllDynamicRules();
 			await chrome.storage.local.set({
-				autoSwitchEnabled: false,
-				currentLanguage: "",
+				[STORAGE_KEYS.AUTO_SWITCH_ENABLED]: false,
+				[STORAGE_KEYS.CURRENT_LANGUAGE]: "",
 			});
 			notifyPopupUIUpdate(false, null);
 			sendBackgroundLog(backgroundI18n.t("fallback_state_set"), "warning");
@@ -474,7 +477,7 @@ const initialize = (reason) => {
 const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
 	chrome.storage.session
 		.set({
-			uiState: {
+			[STORAGE_KEYS.UI_STATE]: {
 				autoSwitchEnabled: autoSwitchEnabled,
 				currentLanguage: currentLanguage,
 			},
@@ -503,7 +506,7 @@ const handleUpdateRulesRequest = async (request) => {
 			"info",
 		);
 
-		await chrome.storage.local.set({ currentLanguage: language });
+		await chrome.storage.local.set({ [STORAGE_KEYS.CURRENT_LANGUAGE]: language });
 
 		// 只在状态发生变化时才通知UI更新
 		if (result.changed) {
@@ -526,9 +529,9 @@ const handleAutoSwitchToggleRequest = async (request) => {
 	autoSwitchEnabled = request.enabled;
 	sendBackgroundLog(`${backgroundI18n.t("auto_switch_status_updated")}: ${autoSwitchEnabled}`, "info");
 
-	await chrome.storage.local.set({ autoSwitchEnabled: autoSwitchEnabled });
+	await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: autoSwitchEnabled });
 
-	const { currentLanguage: storedLanguage } = await chrome.storage.local.get(["currentLanguage"]);
+	const { currentLanguage: storedLanguage } = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
 	await applyLanguageRulesBasedOnState(storedLanguage);
 
 	const currentEffectiveLanguage = autoSwitchEnabled ? DEFAULT_LANG_EN : storedLanguage || DEFAULT_LANG_EN;
@@ -581,7 +584,7 @@ const handleGetCurrentLangRequest = async () => {
 	// 两个读取无数据依赖，并行执行避免串行等待两次 IPC 往返
 	const [actualCurrentLang, result] = await Promise.all([
 		getCurrentAcceptLanguageHeader(),
-		chrome.storage.local.get(["currentLanguage", "autoSwitchEnabled"]),
+		chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]),
 	]);
 	return {
 		currentLanguage: actualCurrentLang || result.currentLanguage,
@@ -598,7 +601,7 @@ const handleResetAcceptLanguageRequest = async () => {
 			removeRuleIds: [RULE_ID],
 		});
 
-		await chrome.storage.local.remove(["currentLanguage"]);
+		await chrome.storage.local.remove([STORAGE_KEYS.CURRENT_LANGUAGE]);
 		sendBackgroundLog(backgroundI18n.t("accept_language_reset_successful"), "success");
 		notifyPopupUIUpdate(autoSwitchEnabled, null);
 		return {};
@@ -754,7 +757,7 @@ const handleTestDomainCacheRequest = async (request) => {
 			// 策略2: 如果还没有找到，检查存储的当前语言设置
 			if (!language) {
 				try {
-					const result = await chrome.storage.local.get(["currentLanguage"]);
+					const result = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
 
 					if (result.currentLanguage) {
 						language = result.currentLanguage;
@@ -854,7 +857,7 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 			}
 
 			// 调试日志属于广播消息：后台无需参与业务处理，避免触发 unknown type 报错/噪音
-			if (type === "DEBUG_LOG") {
+			if (type === MessageTypes.DEBUG_LOG) {
 				sendOk(sendResponse, {});
 				return;
 			}
@@ -862,37 +865,35 @@ chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
 			await ensureInitialized();
 
 			let data;
-			if (type === "UPDATE_RULES") {
+			if (type === MessageTypes.UPDATE_RULES) {
 				data = await handleUpdateRulesRequest(request);
-			} else if (type === "AUTO_SWITCH_TOGGLED") {
+			} else if (type === MessageTypes.AUTO_SWITCH_TOGGLED) {
 				data = await handleAutoSwitchToggleRequest(request);
-			} else if (type === "GET_CURRENT_LANG") {
+			} else if (type === MessageTypes.GET_CURRENT_LANG) {
 				data = await handleGetCurrentLangRequest();
-			} else if (type === "RESET_ACCEPT_LANGUAGE") {
+			} else if (type === MessageTypes.RESET_ACCEPT_LANGUAGE) {
 				data = await handleResetAcceptLanguageRequest();
-			} else if (type === "GET_DOMAIN_RULES") {
+			} else if (type === MessageTypes.GET_DOMAIN_RULES) {
 				data = await handleGetDomainRulesRequest();
-			} else if (type === "UPDATE_CHECK") {
+			} else if (type === MessageTypes.UPDATE_CHECK) {
 				data = await handleUpdateCheckRequest();
-			} else if (type === "GET_CACHE_STATS") {
+			} else if (type === MessageTypes.GET_CACHE_STATS) {
 				data = await handleGetCacheStatsRequest();
-			} else if (type === "TEST_DOMAIN_CACHE") {
+			} else if (type === MessageTypes.TEST_DOMAIN_CACHE) {
 				data = await handleTestDomainCacheRequest(request);
-			} else if (type === "CLEAR_DOMAIN_CACHE") {
+			} else if (type === MessageTypes.CLEAR_DOMAIN_CACHE) {
 				data = await handleClearCacheRequest();
-			} else if (type === "RESET_CACHE_STATS") {
+			} else if (type === MessageTypes.RESET_CACHE_STATS) {
 				data = await handleResetCacheStatsRequest();
-			} else if (type === "GET_DYNAMIC_RULES") {
+			} else if (type === MessageTypes.GET_DYNAMIC_RULES) {
 				data = await handleGetDynamicRulesRequest();
-			} else if (type === "GET_MATCHED_RULES") {
+			} else if (type === MessageTypes.GET_MATCHED_RULES) {
 				data = await handleGetMatchedRulesRequest();
-			} else if (type === "UPDATE_DYNAMIC_RULES") {
+			} else if (type === MessageTypes.UPDATE_DYNAMIC_RULES) {
 				data = await handleUpdateDynamicRulesRequest(request);
-			} else if (type === "GET_STORAGE_DATA") {
+			} else if (type === MessageTypes.GET_STORAGE_DATA) {
 				data = await handleGetStorageDataRequest(request);
-			} else if (type === "SET_STORAGE_DATA") {
-				data = await handleSetStorageDataRequest(request);
-			} else if (type === "GET_MANIFEST_INFO") {
+			} else if (type === MessageTypes.GET_MANIFEST_INFO) {
 				data = await handleGetManifestInfoRequest();
 			} else {
 				throw new Error(`Unknown message type: ${type}`);
@@ -1015,21 +1016,6 @@ const handleGetStorageDataRequest = async (request) => {
 		return { data: result };
 	} catch (error) {
 		sendBackgroundLog(`${backgroundI18n.t("get_storage_data_failed")}: ${error.message}`, "error");
-		throw error;
-	}
-};
-
-/**
- * 处理设置存储数据请求
- * @param {Object} request - 请求对象
- */
-const handleSetStorageDataRequest = async (request) => {
-	try {
-		const { data } = request;
-		await chrome.storage.local.set(data);
-		return {};
-	} catch (error) {
-		sendBackgroundLog(`${backgroundI18n.t("set_storage_data_failed")}: ${error.message}`, "error");
 		throw error;
 	}
 };

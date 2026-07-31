@@ -61,7 +61,7 @@ const updateHeaderRules = async (language, autoCheck = false) => {
 	);
 
 	// 统一消息调用：成功返回 data，失败直接抛错
-	const response = await requestBackground("UPDATE_RULES", {
+	const response = await requestBackground(MessageTypes.UPDATE_RULES, {
 		language: cleanLanguage,
 	});
 
@@ -243,7 +243,7 @@ const getCurrentLanguage = async () => {
 const getLanguageFromBackground = async () => {
 	try {
 		// 从后台获取：{ currentLanguage, autoSwitchEnabled }
-		const response = await requestBackground("GET_CURRENT_LANG");
+		const response = await requestBackground(MessageTypes.GET_CURRENT_LANG);
 
 		if (response?.currentLanguage) {
 			sendDebugLog(
@@ -269,8 +269,8 @@ const getLanguageFromBackground = async () => {
 const getLanguageFromStorage = async () => {
 	try {
 		// 从存储获取：{ data: { currentLanguage } }
-		const result = await requestBackground("GET_STORAGE_DATA", {
-			keys: ["currentLanguage"],
+		const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
+			keys: [STORAGE_KEYS.CURRENT_LANGUAGE],
 		});
 
 		if (result?.data?.currentLanguage) {
@@ -303,8 +303,8 @@ const getDefaultLanguage = () => {
 const getAutoSwitchStatus = async () => {
 	try {
 		// 从本地存储获取自动切换状态
-		const result = await requestBackground("GET_STORAGE_DATA", {
-			keys: ["autoSwitchEnabled"],
+		const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
+			keys: [STORAGE_KEYS.AUTO_SWITCH_ENABLED],
 		});
 		return !!result.data?.autoSwitchEnabled;
 	} catch (error) {
@@ -327,7 +327,7 @@ const getAutoSwitchStatus = async () => {
  */
 const setAutoSwitchStatus = async (enabled) => {
 	try {
-		await requestBackground("AUTO_SWITCH_TOGGLED", { enabled });
+		await requestBackground(MessageTypes.AUTO_SWITCH_TOGGLED, { enabled });
 
 		// 记录状态变更日志
 		sendDebugLog(
@@ -352,20 +352,6 @@ const setAutoSwitchStatus = async (enabled) => {
  * @param {string} language - 语言代码
  * @returns {Promise<void>}
  */
-const saveLanguageSetting = async (language) => {
-	// 验证输入
-	if (!language) {
-		throw new Error("Language parameter is required");
-	}
-
-	// 保存语言设置到本地存储
-	await requestBackground("SET_STORAGE_DATA", {
-		data: { currentLanguage: language },
-	});
-
-	sendDebugLog(`${popupI18n.t("language_settings_saved")} ${language}.`, "info");
-};
-
 /**
  * 安全执行DOM更新操作，捕获并记录错误
  * @param {Function} updateFn - 要执行的DOM更新函数
@@ -935,12 +921,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			sendDebugLog(`${popupI18n.t("clicked_apply_button")} ${selectedLanguage}.`, "info");
 
 			try {
-				// 保存语言设置并更新显示
-				await saveLanguageSetting(selectedLanguage);
-				updateLanguageDisplay(selectedLanguage);
-
 				// 更新请求头规则并触发自动检查
+				// currentLanguage 由 background 的 UPDATE_RULES 处理器在规则应用成功后持久化（单写者原则）
 				await updateHeaderRules(selectedLanguage, true);
+				updateLanguageDisplay(selectedLanguage);
 
 				// 折叠下拉框，直接同步
 				languageSelect.size = 1;
@@ -1124,9 +1108,9 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 
 	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息）
 	chrome.storage.onChanged.addListener((changes, areaName) => {
-		if (areaName !== "session" || !changes.uiState?.newValue) {
+		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
 			return;
 		}
-		handleAutoSwitchUIUpdate(changes.uiState.newValue, autoSwitchToggle, languageSelect, applyButton);
+		handleAutoSwitchUIUpdate(changes[STORAGE_KEYS.UI_STATE].newValue, autoSwitchToggle, languageSelect, applyButton);
 	});
 });

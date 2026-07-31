@@ -102,7 +102,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		(async () => {
 			try {
 				// 统一消息调用：成功直接返回数据，失败走 catch
-				const response = await requestBackground("GET_DYNAMIC_RULES");
+				const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
 				const rules = response.rules;
 
 				resultElement.innerHTML = "";
@@ -172,7 +172,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 				}
 
 				// 通过消息传递获取最近匹配的规则信息
-				const matchedResponse = await requestBackground("GET_MATCHED_RULES");
+				const matchedResponse = await requestBackground(MessageTypes.GET_MATCHED_RULES);
 				const matchedRules = matchedResponse.matchedRules;
 
 				const matchedTitle = document.createElement("h5");
@@ -287,7 +287,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 
 	// 监听来自扩展其他部分的日志消息
 	ResourceManager.addMessageListener((request) => {
-		if (request.type !== "DEBUG_LOG") return;
+		if (request.type !== MessageTypes.DEBUG_LOG) return;
 
 		// 过滤掉后台脚本的日志消息
 		if (!request.message.startsWith("[后台]") && !request.message.startsWith("[Background]")) {
@@ -315,8 +315,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	(async () => {
 		try {
 			// 统一消息调用：避免到处写 response.success 检查
-			const result = await requestBackground("GET_STORAGE_DATA", {
-				keys: ["autoSwitchEnabled"],
+			const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
+				keys: [STORAGE_KEYS.AUTO_SWITCH_ENABLED],
 			});
 
 			const autoSwitchToggle = document.getElementById("autoSwitchToggle");
@@ -476,7 +476,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		(async () => {
 			try {
 				// 统一消息调用：避免重复的 response.success 校验
-				const response = await requestBackground("GET_DYNAMIC_RULES");
+				const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
 
 				const existingRules = response.rules;
 				const existingRuleIds = existingRules.map((rule) => rule.id);
@@ -487,7 +487,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					};
 				});
 
-				await requestBackground("UPDATE_DYNAMIC_RULES", {
+				await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
 					removeRuleIds: existingRuleIds,
 					addRules: updatedRules,
 				});
@@ -510,22 +510,22 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		// 通过消息传递获取和清除动态规则
 		(async () => {
 			try {
-				const response = await requestBackground("GET_DYNAMIC_RULES");
+				const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
 
 				const existingRules = response.rules;
 				const existingRuleIds = existingRules.map((rule) => rule.id);
 
-				await requestBackground("UPDATE_DYNAMIC_RULES", {
+				await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
 					removeRuleIds: existingRuleIds,
 				});
 
 				// 清除成功后，重新应用默认或存储的规则
-				const storageResponse = await requestBackground("GET_STORAGE_DATA", {
-					keys: ["currentLanguage"],
+				const storageResponse = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
+					keys: [STORAGE_KEYS.CURRENT_LANGUAGE],
 				});
 				const languageToApply = storageResponse.data?.currentLanguage || "zh-CN";
 
-				await requestBackground("UPDATE_RULES", {
+				await requestBackground(MessageTypes.UPDATE_RULES, {
 					language: languageToApply,
 				});
 				setSafeSuccessMessage(resultElement, `${debugI18n.t("rules_cleared_reapplied")} ${languageToApply}`);
@@ -622,7 +622,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		// 发送消息到 background.js 请求更新规则
 		(async () => {
 			try {
-				await requestBackground("UPDATE_RULES", { language: languageString });
+				await requestBackground(MessageTypes.UPDATE_RULES, { language: languageString });
 
 				// 使用安全的DOM操作
 				const messages = [
@@ -755,8 +755,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 			// 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
 			(async () => {
 				try {
-					const result = await requestBackground("GET_STORAGE_DATA", {
-						keys: ["currentLanguage", "autoSwitchEnabled"],
+					const result = await requestBackground(MessageTypes.GET_STORAGE_DATA, {
+						keys: [STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED],
 					});
 
 					const storedTitle = document.createElement("h5");
@@ -824,7 +824,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		(async () => {
 			try {
 				// 后台统一响应格式，失败会抛错
-				await requestBackground("AUTO_SWITCH_TOGGLED", {
+				await requestBackground(MessageTypes.AUTO_SWITCH_TOGGLED, {
 					enabled: isEnabled,
 				});
 				addLogMessage(isEnabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled"), "success");
@@ -844,7 +844,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 		// 从 background.js 获取域名映射规则
 		(async () => {
 			try {
-				const response = await requestBackground("GET_DOMAIN_RULES");
+				const response = await requestBackground(MessageTypes.GET_DOMAIN_RULES);
 
 				addLogMessage(`${debugI18n.t("received_response")} ${JSON.stringify(response)}`, "info");
 
@@ -1009,10 +1009,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息；
 	// 状态持久化由 background 单点负责，本页只更新展示，不回写存储）
 	chrome.storage.onChanged.addListener((changes, areaName) => {
-		if (areaName !== "session" || !changes.uiState?.newValue) {
+		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
 			return;
 		}
-		const { autoSwitchEnabled, currentLanguage } = changes.uiState.newValue;
+		const { autoSwitchEnabled, currentLanguage } = changes[STORAGE_KEYS.UI_STATE].newValue;
 		const autoSwitchToggle = document.getElementById("autoSwitchToggle");
 		if (autoSwitchToggle) {
 			autoSwitchToggle.checked = !!autoSwitchEnabled;
@@ -1102,7 +1102,7 @@ const testDomainCache = async () => {
 		setSafeContent(resultElement, debugI18n.t("testing_domain", { domain }));
 
 		// 通过消息传递请求后台测试域名：成功返回数据，失败走 catch
-		const response = await requestBackground("TEST_DOMAIN_CACHE", {
+		const response = await requestBackground(MessageTypes.TEST_DOMAIN_CACHE, {
 			domain: domain,
 		});
 		const { language, fromCache, isUsingFallback, cacheStats } = response;
@@ -1252,7 +1252,7 @@ const handleCacheOperation = async (messageType, successMessageKey, additionalCa
  * 刷新缓存统计显示
  */
 const refreshCacheStats = async () => {
-	return handleCacheOperation("GET_CACHE_STATS", "cache_stats_refreshed");
+	return handleCacheOperation(MessageTypes.GET_CACHE_STATS, "cache_stats_refreshed");
 };
 
 /**
@@ -1272,12 +1272,12 @@ const updateCacheStatsDisplay = (stats) => {
  * 清理域名缓存
  */
 const clearDomainCache = async () => {
-	return handleCacheOperation("CLEAR_DOMAIN_CACHE", "domain_cache_cleared");
+	return handleCacheOperation(MessageTypes.CLEAR_DOMAIN_CACHE, "domain_cache_cleared");
 };
 
 /**
  * 重置缓存统计
  */
 const resetCacheStats = async () => {
-	return handleCacheOperation("RESET_CACHE_STATS", "cache_stats_reset");
+	return handleCacheOperation(MessageTypes.RESET_CACHE_STATS, "cache_stats_reset");
 };

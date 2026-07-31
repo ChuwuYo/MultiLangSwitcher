@@ -10,7 +10,7 @@
 const detectCurrentLanguage = () => {
 	// 优先从 localStorage 获取
 	if (typeof localStorage !== "undefined") {
-		const saved = localStorage.getItem("app-lang");
+		const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.APP_LANG);
 		if (saved) return saved;
 	}
 	// 其次使用浏览器语言
@@ -37,7 +37,7 @@ const switchLanguageAndReload = (lang) => {
 		const currentLang = detectCurrentLanguage();
 		if (lang === currentLang) return false;
 
-		localStorage.setItem("app-lang", lang);
+		localStorage.setItem(LOCAL_STORAGE_KEYS.APP_LANG, lang);
 		location.reload();
 		return true;
 	} catch (error) {
@@ -65,7 +65,7 @@ const sendDebugLog = (message, logType = "info") => {
 		if (chrome?.runtime?.sendMessage) {
 			chrome.runtime
 				.sendMessage({
-					type: "DEBUG_LOG",
+					type: MessageTypes.DEBUG_LOG,
 					message: String(message),
 					logType,
 				})
