@@ -38,6 +38,6 @@
 		}
 	},
 	"files": {
-		"ignore": ["bootstrap.min.css", "shared/vendor/**", ".codegraph/**", "coverage/**"]
+		"ignore": ["bootstrap.min.css", "bootstrap.purged.css", "shared/vendor/**", ".codegraph/**", "coverage/**"]
 	}
 }

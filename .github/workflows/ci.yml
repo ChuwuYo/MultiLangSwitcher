@@ -35,6 +35,10 @@ jobs:
       - run: node scripts/check-syntax.mjs
       - run: node scripts/validate-manifest.mjs
       - run: npm test
+      - name: Verify purged CSS is in sync
+        run: |
+          node scripts/purge-css.mjs
+          git diff --exit-code bootstrap.purged.css
 
   package:
     name: Build extension zip
@@ -59,7 +63,8 @@ jobs:
             detect.html detect.js detect-ai.js \
             toggle.js toggle.css \
             domain-rules-manager.js domain-rules.json \
-            bootstrap.min.css \
+            bootstrap.purged.css \
+            background popup debug detect \
             _locales shared i18n images fonts \
             -x "shared/vendor/*.map"
           sha256sum "MultiLangSwitcher-v${VERSION}.zip" | awk '{print $1}' > digest.txt
