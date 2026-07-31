@@ -2,7 +2,7 @@
  * GitHub 更新检查器
  * 提供扩展版本更新检查功能
  */
-import { getFallbackTranslation } from "./shared-utils.js";
+import { getFallbackTranslation, sendLocalizedUpdateLog } from "./shared-utils.js";
 
 /**
  * 获取本地化翻译的辅助函数。

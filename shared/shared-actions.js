@@ -2,6 +2,7 @@
  * 共享操作函数模块
  * 提供与后台脚本通信的标准化接口
  */
+import { MessageTypes } from "./message-types.js";
 import { sendDebugLog } from "./shared-utils.js";
 
 export const requestBackground = async (type, payload = {}) => {

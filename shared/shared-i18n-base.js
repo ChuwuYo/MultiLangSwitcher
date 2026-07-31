@@ -80,7 +80,9 @@ export class BaseI18n {
 
 		// 其次使用Chrome扩展API或浏览器API
 		const langSource =
-			(typeof chrome?.i18n?.getUILanguage === "function" && chrome.i18n.getUILanguage()) ||
+			(typeof chrome !== "undefined" &&
+				typeof chrome.i18n?.getUILanguage === "function" &&
+				chrome.i18n.getUILanguage()) ||
 			(typeof navigator?.language === "string" && navigator.language) ||
 			"en";
 
