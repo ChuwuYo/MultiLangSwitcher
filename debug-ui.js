@@ -774,7 +774,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 						const p = document.createElement("p");
 						p.textContent = `${debugI18n.t("current_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}`;
 						fragment.appendChild(p);
-						addLogMessage(`${debugI18n.t("diagnostics_stored_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}.`, "info");
+						addLogMessage(
+							`${debugI18n.t("diagnostics_stored_language")} ${result[STORAGE_KEYS.CURRENT_LANGUAGE]}.`,
+							"info",
+						);
 					} else {
 						const p = document.createElement("p");
 						p.className = "warning";
@@ -792,7 +795,9 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 					statusP.textContent = `${debugI18n.t("status")} `;
 					const statusSpan = document.createElement("span");
 					statusSpan.className = result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? "success" : "error";
-					statusSpan.textContent = result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("enabled") : debugI18n.t("disabled");
+					statusSpan.textContent = result[STORAGE_KEYS.AUTO_SWITCH_ENABLED]
+						? debugI18n.t("enabled")
+						: debugI18n.t("disabled");
 					statusP.appendChild(statusSpan);
 					fragment.appendChild(statusP);
 
