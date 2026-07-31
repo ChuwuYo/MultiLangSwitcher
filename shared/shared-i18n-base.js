@@ -128,6 +128,7 @@ export class BaseI18n {
 	 * - data-i18n-placeholder="key"→ placeholder 属性
 	 * - data-i18n-alt="key"        → alt 属性
 	 * 子类的 _applyTranslations 应先调用本方法，再处理特殊 DOM 结构。
+	 * 约束：不允许 data-i18n 嵌套（父元素 textContent 覆盖会分离子节点）。
 	 * @param {ParentNode} [root=document] - 扫描根节点
 	 * @protected
 	 */

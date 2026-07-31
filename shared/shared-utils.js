@@ -137,73 +137,25 @@ const getFallbackTranslation = (key, params = {}) => {
 	// 统一的fallback翻译库
 	const fallbackTranslations = {
 		en: {
-			// General UI
-			check_for_updates: "Check for updates",
-			checking_updates: "Checking for updates...",
-			update_available: "Update available: v{version}",
-			no_updates_available: "You're using the latest version",
-			current_version: "Current: v{current}",
-			latest_version: "Latest: v{latest}",
-			view_release: "View Release",
-			download_update: "Download Update",
 			no_release_notes: "No release notes provided.",
-
-			// Status Messages
-			update_check_success: "Update check completed successfully",
 			update_check_failed: "Update check failed: {error}",
-			update_check_cancelled: "Update check was cancelled",
-			update_notification_title: "Extension Update Available",
-
-			// Log & Debug Messages
-			update_check_attempt: "Update check attempt {attempt}/{maxAttempts}",
 			version_comparison_failed: "Version comparison failed: {error}",
 			failed_load_persistent_cache: "Failed to load persistent cache: {error}",
 			failed_cache_update_info: "Failed to cache update info persistently: {error}",
 			failed_clear_persistent_cache: "Failed to clear persistent cache: {error}",
 			github_api_failed_trying_fallback: "GitHub API failed ({error}), trying jsDelivr fallback...",
 			jsdelivr_fallback_failed: "jsDelivr fallback also failed: {error}",
-
-			// Simplified Error Messages
-			update_check_network_issue: "Network Issue",
-			update_check_service_issue: "Service Issue",
-			update_check_unexpected_error: "An unexpected error occurred.",
-
-			// Debug Messages
 			debug_log_started: "Debug log started",
 		},
 		zh: {
-			// General UI
-			check_for_updates: "检查更新",
-			checking_updates: "正在检查更新...",
-			update_available: "发现新版本: v{version}",
-			no_updates_available: "您正在使用最新版本",
-			current_version: "当前版本: v{current}",
-			latest_version: "最新版本: v{latest}",
-			view_release: "查看发布页面",
-			download_update: "下载更新",
 			no_release_notes: "未提供版本说明。",
-
-			// Status Messages
-			update_check_success: "更新检查完成",
 			update_check_failed: "检查更新失败: {error}",
-			update_check_cancelled: "更新检查已取消",
-			update_notification_title: "扩展更新可用",
-
-			// Log & Debug Messages
-			update_check_attempt: "更新检查尝试 {attempt}/{maxAttempts}",
 			version_comparison_failed: "版本比较失败: {error}",
 			failed_load_persistent_cache: "加载持久化缓存失败: {error}",
 			failed_cache_update_info: "持久化缓存更新信息失败: {error}",
 			failed_clear_persistent_cache: "清除持久化缓存失败: {error}",
 			github_api_failed_trying_fallback: "GitHub API 失败（{error}），正在尝试 jsDelivr 备用源...",
 			jsdelivr_fallback_failed: "jsDelivr 备用源也失败了：{error}",
-
-			// 简化后的错误信息
-			update_check_network_issue: "网络问题",
-			update_check_service_issue: "服务问题",
-			update_check_unexpected_error: "发生意外错误。",
-
-			// 调试信息
 			debug_log_started: "调试日志已启动",
 		},
 	};
