@@ -36,10 +36,10 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
     <table>
         <tr>
             <td>
-                <img src="https://github.com/user-attachments/assets/b5f35aef-ef5a-4f9b-bcaa-d6e05ae3ccd3" alt="CN_Light">
+                <img src="../screenshots/popup-cn-light.png" alt="CN_Light">
             </td>
             <td>
-                <img src="https://github.com/user-attachments/assets/acea080d-cf67-47ca-9989-144a334a602c" alt="EN_Dark">
+                <img src="../screenshots/popup-en-dark.png" alt="EN_Dark">
             </td>
         </tr>
     </table>
