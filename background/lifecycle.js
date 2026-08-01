@@ -172,7 +172,7 @@ const performInitialization = async (reason) => {
 		const result = /** @type {Record<string, any>} */ (
 			await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED])
 		);
-		setAutoSwitchEnabled(result.autoSwitchEnabled !== false); // 默认为 true
+		setAutoSwitchEnabled(result.autoSwitchEnabled === true); // 未显式开启过则默认为 false
 		sendBackgroundLog(`${backgroundI18n.t("loaded_auto_switch_status")}: ${getAutoSwitchEnabled()}`, "info");
 
 		// 3. 根据状态应用规则
