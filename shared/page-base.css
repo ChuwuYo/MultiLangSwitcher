@@ -6,4 +6,6 @@
 
 body {
 	font-family: "MapleMonoNL", sans-serif;
+	/* 等宽字体视觉偏大，基准字号略小于常规网页 */
+	font-size: 0.875rem;
 }
