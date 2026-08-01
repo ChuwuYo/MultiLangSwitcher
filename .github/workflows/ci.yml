@@ -92,7 +92,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: extension-zip
           path: release
@@ -319,7 +319,7 @@ jobs:
           TAG=${GITHUB_REF_NAME#v}
           VERSION=$(jq -r .version manifest.json)
           test "$TAG" = "$VERSION" || { echo "tag $TAG != manifest version $VERSION"; exit 1; }
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: extension-zip
           path: release
