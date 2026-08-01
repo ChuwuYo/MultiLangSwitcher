@@ -1,5 +1,20 @@
 import { getUiLanguage } from "./shared.js";
 
+/**
+ * 检测快照结构（AI 诊断输入；sanitizeSnapshotForAI 依赖本形状，改动需同步）
+ * @typedef {Object} DetectionSnapshot
+ * @property {{ generatedAt: string, snapshotVersion: string, uiLanguage: string, extensionVersion: string }} meta
+ * @property {{ currentLanguage: string, autoSwitchEnabled: boolean }} extension
+ * @property {Object} http - 请求头信息（headers 值脱敏后仅保留名称）
+ * @property {Object} jsEnv - JS 环境信息
+ * @property {Object} intl - Intl API 信息
+ * @property {Object} webrtc - WebRTC 信息（ips 脱敏）
+ * @property {Object} browserFingerprint - 浏览器指纹（userAgent 脱敏）
+ * @property {Object} hardwareFingerprint - 硬件指纹（canvas/webgl/audio hash 脱敏）
+ * @property {{ browser: Object, uaData: Object|null, apiSupport: Array }} compatibility
+ */
+
+/** @type {DetectionSnapshot|null} */
 let latestDetectionSnapshot = null;
 let latestSnapshotVersion = "";
 let detectionRunInFlight = null;
@@ -16,6 +31,11 @@ export const setDetectionRunInFlight = (runPromise) => {
 
 export const isDetectionRunning = () => !!detectionRunInFlight;
 
+/**
+ * 组装检测快照
+ * @param {Object} results - 各 collector 的采集结果
+ * @returns {DetectionSnapshot}
+ */
 export const buildDetectionSnapshot = (results) => {
 	const snapshotVersion = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 

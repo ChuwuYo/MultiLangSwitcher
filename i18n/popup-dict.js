@@ -1,4 +1,6 @@
 const popupEn = {
+	start_quick_check: "Starting quick header check...",
+	quick_check_unexpected_error: "Unexpected error during quick check: {message}",
 	extension_name: "MultiLangSwitcher",
 	theme_toggle: "Toggle Theme",
 	subtitle: "Quickly switch Accept-Language",
@@ -122,6 +124,8 @@ const popupEn = {
 };
 
 const popupZh = {
+	start_quick_check: "正在开始快速请求头检查...",
+	quick_check_unexpected_error: "快速检查时发生意外错误：{message}",
 	extension_name: "MultiLangSwitcher",
 	theme_toggle: "切换主题",
 	subtitle: "快速切换浏览器语言偏好设置",

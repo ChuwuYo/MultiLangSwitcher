@@ -1,4 +1,6 @@
 const detectEn = {
+	ai_copy_tooltip: "Copy",
+	ai_copied_tooltip: "Copied",
 	theme_toggle: "Toggle Theme",
 	reset_accept_language_tooltip: "Reset Accept-Language",
 	title: "MultiLangSwitcher Detection Page",
@@ -207,6 +209,8 @@ const detectEn = {
 };
 
 const detectZh = {
+	ai_copy_tooltip: "复制",
+	ai_copied_tooltip: "已复制",
 	theme_toggle: "切换主题",
 	reset_accept_language_tooltip: "重置 Accept-Language",
 	title: "MultiLangSwitcher 检测页面",

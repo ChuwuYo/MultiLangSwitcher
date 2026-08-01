@@ -17,6 +17,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/chrome": "^0.2.2",
+		"jsdom": "^30.0.1",
 		"purgecss": "^8.0.0",
 		"typescript": "^7.0.2",
 		"vitest": "^2.1.9"

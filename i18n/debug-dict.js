@@ -1,4 +1,14 @@
 const debugEn = {
+	debug_tool_loaded: "Debug tool loaded",
+	debug_ui_cleanup_completed: "Debug UI cleanup completed",
+	getting_rules: "Getting current rules...",
+	header_effective: "- checking if header is effective",
+	matched_rules: "Matched rules",
+	no_accept_language: "No Accept-Language header found",
+	no_rules_warning: "No rules found",
+	received_headers: "Received headers",
+	test_failed: "Test failed",
+	testing_language: "Testing language",
 	theme_toggle: "Toggle Theme",
 	reset_accept_language_tooltip: "Reset Accept-Language",
 	// Page basic information
@@ -270,6 +280,16 @@ const debugEn = {
 };
 
 const debugZh = {
+	debug_tool_loaded: "调试工具已加载",
+	debug_ui_cleanup_completed: "调试页面清理完成",
+	getting_rules: "正在获取当前规则...",
+	header_effective: "- 检查请求头是否生效",
+	matched_rules: "匹配的规则",
+	no_accept_language: "未找到 Accept-Language 请求头",
+	no_rules_warning: "未找到规则",
+	received_headers: "收到的请求头",
+	test_failed: "测试失败",
+	testing_language: "正在测试语言",
 	theme_toggle: "切换主题",
 	reset_accept_language_tooltip: "重置 Accept-Language",
 	// 页面基本信息
