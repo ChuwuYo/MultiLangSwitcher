@@ -12,15 +12,14 @@ import {
 	translate,
 } from "./ai-shared.js";
 import { renderVisibleChatMessages, updateChatMessageElement } from "./ai-ui.js";
-import { createMessageId } from "./shared.js";
-import { getLatestDetectionSnapshot, getLatestSnapshotVersion, isDetectionRunning } from "./snapshot.js";
+import { DetectPageContext } from "../detect.js";
 
 export const isChatContextStale = () =>
 	!!(
 		aiSessionState.hasStarted &&
 		aiSessionState.activeSnapshotVersion &&
-		getLatestSnapshotVersion() &&
-		aiSessionState.activeSnapshotVersion !== getLatestSnapshotVersion()
+		DetectPageContext.getLatestSnapshotVersion() &&
+		aiSessionState.activeSnapshotVersion !== DetectPageContext.getLatestSnapshotVersion()
 	);
 
 const getSystemPrompt = () => {
@@ -145,7 +144,7 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 		return;
 	}
 
-	const snapshot = getLatestDetectionSnapshot();
+	const snapshot = DetectPageContext.getLatestSnapshot();
 	if (!snapshot) {
 		setAIStatus("ai_detection_pending", "warning");
 		return;
@@ -154,13 +153,13 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 	if (firstTurn) {
 		aiSessionState.messages = [
 			{
-				id: createMessageId(),
+				id: DetectPageContext.createMessageId(),
 				role: "system",
 				content: getSystemPrompt(),
 				visible: false,
 			},
 			{
-				id: createMessageId(),
+				id: DetectPageContext.createMessageId(),
 				role: "user",
 				content: buildInitialPrompt(snapshot, sanitizeSnapshot),
 				visible: false,
@@ -168,7 +167,7 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 		];
 	} else {
 		appendChatMessage({
-			id: createMessageId(),
+			id: DetectPageContext.createMessageId(),
 			role: "user",
 			content: userMessage,
 			visible: true,
@@ -182,7 +181,7 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 	}));
 
 	const assistantMessage = appendChatMessage({
-		id: createMessageId(),
+		id: DetectPageContext.createMessageId(),
 		role: "assistant",
 		content: "",
 		visible: true,
@@ -240,12 +239,12 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 };
 
 export const startAIDiagnosis = async (sanitizeSnapshot) => {
-	if (isDetectionRunning()) {
+	if (DetectPageContext.isDetectionRunning()) {
 		setAIStatus("ai_detection_pending", "warning");
 		return;
 	}
 
-	const snapshot = getLatestDetectionSnapshot();
+	const snapshot = DetectPageContext.getLatestSnapshot();
 	if (!snapshot) {
 		setAIStatus("ai_detection_pending", "warning");
 		return;
@@ -326,7 +325,7 @@ export const updateAIControls = () => {
 	const elements = getAiElements();
 	const config = readAIConfigFromInputs();
 	const validation = validateAIConfig(config);
-	const hasSnapshot = !!getLatestDetectionSnapshot();
+	const hasSnapshot = !!DetectPageContext.getLatestSnapshot();
 	const stale = isChatContextStale();
 	const canFollowUp =
 		aiSessionState.hasStarted && !stale && !aiSessionState.isRequestInFlight && validation.valid && hasSnapshot;

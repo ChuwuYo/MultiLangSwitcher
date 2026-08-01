@@ -1,4 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { popupEn, popupZh } from "./popup-dict.js";
 
 /**
@@ -49,6 +50,6 @@ class PopupI18n extends BaseI18n {
 export const popupI18n = new PopupI18n();
 
 // DOM加载完成后，初始化并应用翻译
-document.addEventListener("DOMContentLoaded", () => {
+ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	popupI18n.applyTranslationsToDOM();
 });

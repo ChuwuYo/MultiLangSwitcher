@@ -1,4 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { AIProviderPresets, AIProviderPresetUtils } from "../shared/ai-provider-presets.js";
 import { detectEn, detectZh } from "./detect-dict.js";
 
@@ -83,6 +84,6 @@ class DetectI18n extends BaseI18n {
 export const detectI18n = new DetectI18n();
 
 // DOM加载完成后，初始化并应用翻译
-document.addEventListener("DOMContentLoaded", () => {
+ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	detectI18n.applyTranslationsToDOM();
 });

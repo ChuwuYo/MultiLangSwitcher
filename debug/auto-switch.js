@@ -21,9 +21,10 @@ export const initAutoSwitch = () => {
 
 			autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 
-			// 等待i18n系统初始化完成后再输出日志
+			// 等待i18n系统初始化完成后再输出日志（以 isReady 为终止条件，
+			// 字典加载失败时 translations 恒为空对象，轮询它会永不终止）
 			const checkI18nAndLog = () => {
-				if (debugI18n.translations && Object.keys(debugI18n.translations).length > 0) {
+				if (debugI18n.isReady) {
 					addLogMessage(
 						`${result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
 						"info",

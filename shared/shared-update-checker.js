@@ -3,6 +3,7 @@
  * 提供扩展版本更新检查功能
  */
 import { getFallbackTranslation, sendLocalizedUpdateLog } from "./shared-utils.js";
+import { STORAGE_KEYS } from "./storage-keys.js";
 
 /**
  * 获取本地化翻译的辅助函数。
@@ -27,7 +28,7 @@ export class UpdateChecker {
 		this.repoName = repoName;
 		this.currentVersion = currentVersion;
 		this.apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/releases/latest`;
-		this.cacheKey = `updateChecker_${repoOwner}_${repoName}`;
+		this.cacheKey = `${STORAGE_KEYS.UPDATE_CHECKER_CACHE_PREFIX}${repoOwner}_${repoName}`;
 		this.cacheTimeout = 1 * 60 * 60 * 1000; // 1小时缓存
 	}
 
@@ -192,11 +193,19 @@ export class UpdateChecker {
 		const latestVersion = releaseData.tag_name.replace(/^v/, "");
 		const isNewer = this.isNewerVersion(this.currentVersion, latestVersion);
 
+		// releaseUrl 将进入 href：仅允许 https，异常时回退到仓库 releases 页
+		let releaseUrl = `https://github.com/${this.repoOwner}/${this.repoName}/releases`;
+		try {
+			if (new URL(releaseData.html_url).protocol === "https:") {
+				releaseUrl = releaseData.html_url;
+			}
+		} catch (_error) {}
+
 		return {
 			updateAvailable: isNewer,
 			currentVersion: this.currentVersion,
 			latestVersion: latestVersion,
-			releaseUrl: releaseData.html_url,
+			releaseUrl: releaseUrl,
 			releaseNotes: releaseData.body ? releaseData.body.substring(0, 200) : getLocalizedText("no_release_notes"),
 			publishedAt: releaseData.published_at,
 		};

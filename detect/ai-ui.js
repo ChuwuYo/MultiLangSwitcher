@@ -10,7 +10,7 @@ import {
 	setAIStatus,
 	translate,
 } from "./ai-shared.js";
-import { getLatestDetectionSnapshot } from "./snapshot.js";
+import { DetectPageContext } from "../detect.js";
 
 export const renderChatPlaceholder = () => {
 	const { messagesContainer } = getAiElements();
@@ -299,7 +299,7 @@ export const exportChatAsMarkdown = () => {
 };
 
 export const exportStructuredSnapshotAsMarkdown = (sanitizeSnapshot) => {
-	const snapshot = getLatestDetectionSnapshot();
+	const snapshot = DetectPageContext.getLatestSnapshot();
 	const markdown = buildStructuredSnapshotMarkdown(snapshot, sanitizeSnapshot);
 	if (!markdown) {
 		setAIStatus("ai_export_structured_empty", "warning");

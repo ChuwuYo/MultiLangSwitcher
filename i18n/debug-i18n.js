@@ -1,4 +1,5 @@
 import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { debugEn, debugZh } from "./debug-dict.js";
 
 /**
@@ -55,6 +56,6 @@ class DebugI18n extends BaseI18n {
 export const debugI18n = new DebugI18n();
 
 // DOM加载完成后，初始化并应用翻译
-document.addEventListener("DOMContentLoaded", () => {
+ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	debugI18n.applyTranslationsToDOM();
 });

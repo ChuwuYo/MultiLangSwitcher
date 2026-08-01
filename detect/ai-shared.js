@@ -1,8 +1,8 @@
-import { getUiLanguage as getPageUiLanguage, translateDetect } from "./shared.js";
+import { DetectPageContext } from "../detect.js";
 
-export const translate = (key, params = {}) => (translateDetect ? translateDetect(key, params) : key);
+export const translate = (key, params = {}) => DetectPageContext.translate(key, params);
 
-export const getUiLanguage = () => (getPageUiLanguage() === "zh" ? "zh" : "en");
+export const getUiLanguage = () => DetectPageContext.getUiLanguage();
 
 export const aiSessionState = {
 	messages: [],

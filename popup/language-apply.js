@@ -6,6 +6,7 @@ import { sendDebugLog } from "../shared/shared-utils.js";
 import { requestBackground } from "../shared/shared-actions.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { popupI18n } from "../i18n/popup-i18n.js";
+import { getEl } from "./shared.js";
 import { showError, updateLanguageDisplay } from "./ui-sync.js";
 
 /**
@@ -38,8 +39,8 @@ export const updateHeaderRules = async (language, autoCheck = false) => {
 
 	// 如果启用自动检查，触发快速检查
 	if (autoCheck) {
-		const checkHeaderBtn = document.getElementById("checkHeaderBtn");
-		if (checkHeaderBtn && document.getElementById("headerCheckResult")) {
+		const checkHeaderBtn = getEl("checkHeaderBtn");
+		if (checkHeaderBtn && getEl("headerCheckResult")) {
 			sendDebugLog(popupI18n.t("auto_trigger_quick_check"), "info");
 			ResourceManager.setTimeout(() => checkHeaderBtn.click(), 500);
 		}
@@ -116,7 +117,7 @@ const getLanguageFromStorage = async () => {
  * @returns {string} 默认语言代码
  */
 const getDefaultLanguage = () => {
-	const languageSelect = /** @type {HTMLSelectElement} */ (document.getElementById("languageSelect"));
+	const languageSelect = /** @type {HTMLSelectElement} */ (getEl("languageSelect"));
 	const defaultLanguage = languageSelect ? languageSelect.value : popupI18n.t("not_set");
 	sendDebugLog(`${popupI18n.t("no_stored_language")} ${defaultLanguage}.`, "warning");
 	return defaultLanguage;

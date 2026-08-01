@@ -8,11 +8,6 @@ import { popupI18n } from "../i18n/popup-i18n.js";
 export const getEl = (id) => document.getElementById(id);
 
 /**
- * 保存当前语言设置
- * @param {string} language - 语言代码
- * @returns {Promise<void>}
- */
-/**
  * 安全执行DOM更新操作，捕获并记录错误
  * @param {Function} updateFn - 要执行的DOM更新函数
  */
