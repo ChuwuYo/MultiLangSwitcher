@@ -133,12 +133,23 @@ export const updateLanguageDisplay = (language, showSuccess = false) => {
  * 执行头部快速检查
  * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
  */
+let headerCheckInFlight = false;
 export const performHeaderCheck = async (headerCheckContentPre) => {
-	// 显示初始加载状态
-	headerCheckContentPre.textContent = popupI18n.t("fetching_headers") + "...";
-	sendDebugLog(popupI18n.t("start_quick_check"), "info");
+	// 请求未返回期间禁止重复触发（手动点击与程序性 .click() 均被拦截）
+	if (headerCheckInFlight) {
+		return;
+	}
+	headerCheckInFlight = true;
+	const checkHeaderBtn = /** @type {HTMLButtonElement|null} */ (getEl("checkHeaderBtn"));
+	if (checkHeaderBtn) {
+		checkHeaderBtn.disabled = true;
+	}
 
 	try {
+		// 显示初始加载状态
+		headerCheckContentPre.textContent = popupI18n.t("fetching_headers") + "...";
+		sendDebugLog(popupI18n.t("start_quick_check"), "info");
+
 		// 使用共享模块获取请求头
 		const result = await fetchHeadersFromEndpoints();
 
@@ -169,6 +180,11 @@ export const performHeaderCheck = async (headerCheckContentPre) => {
 		// 捕获意外错误
 		sendDebugLog(`${popupI18n.t("quick_check_unexpected_error")}: ${error.message}`, "error");
 		displayHeaderCheckError(headerCheckContentPre, "detection_error");
+	} finally {
+		headerCheckInFlight = false;
+		if (checkHeaderBtn) {
+			checkHeaderBtn.disabled = false;
+		}
 	}
 };
 
