@@ -27,13 +27,10 @@ const CONSUMERS = {
 	background: ["background.js", "background/**/*.js", "domain-rules-manager.js"],
 };
 
-const INSTANCES = { popup: "popupI18n", debug: "debugI18n", detect: "detectI18n", background: "backgroundI18n" };
-
 const expand = (patterns) => patterns.flatMap((p) => (p.includes("*") ? globSync(p) : [p]));
 
 const extractKeys = (component) => {
 	const keys = new Set();
-	const instance = INSTANCES[component];
 	for (const file of expand(CONSUMERS[component])) {
 		const code = readFileSync(file, "utf8");
 		// .t("key") 调用（i18n 实例与共享 translate 包装）

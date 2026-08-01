@@ -39,7 +39,7 @@
 ## 收尾
 
 - [x] **F17** 文档数字修正：roadmap 执行状态（MessageTypes 实际数量、i18n 文件数口径、detect 页 script 标签说明）；Project_Structure 与 DetectPageContext 契约描述对齐 F6 结果
-- [ ] **F18** 全量验证（biome/tsc/syntax/manifest/tests/purge-css 同步）+ 分组提交 + CodeGraph sync
+- [x] **F18** 全量验证（biome/tsc/syntax/manifest/tests/purge-css 同步）+ 分组提交 + CodeGraph sync
 
 ## 明确不做（评估记录）
 

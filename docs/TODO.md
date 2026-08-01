@@ -2,7 +2,7 @@
 
 ### 性能优化
 
-## [] 1. 全局变量耦合严重
+## [x] 1. 全局变量耦合严重（2026-08 已解决：全仓 ESM 显式 import，domain-manager i18n 死链已删，i18n 经注册表注入）
 **文件**: `shared-i18n-base.js`, `domain-rules-manager.js`, `popup.js` 等
 
 组件通过全局变量通信（如 `domainManagerI18n`, `popupI18n`, `sendDebugLog`），而不是通过依赖注入或参数传递：
