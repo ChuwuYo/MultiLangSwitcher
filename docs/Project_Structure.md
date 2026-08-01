@@ -37,8 +37,7 @@ MultiLangSwitcher/
 │   ├── popup-dict.js / popup-i18n.js
 │   ├── debug-dict.js / debug-i18n.js
 │   ├── detect-dict.js / detect-i18n.js
-│   ├── background-dict.js / background-i18n.js       （Service Worker）
-│   └── domain-manager-dict.js / domain-manager-i18n.js（Service Worker）
+│   └── background-dict.js / background-i18n.js       （Service Worker）
 ├── fonts/ images/                   - 静态资源
 ├── manifest.json                    - MV3 清单（background 为 module SW）
 ├── popup.html / popup.js            - 弹窗页（单 module 入口）
@@ -46,7 +45,7 @@ MultiLangSwitcher/
 ├── debug.html / debug-ui.js         - 调试页（单 module 入口）
 │   └── debug/                       - 调试模块（safe-dom/log-panel/rules-view/header-test/cache-mgmt/custom-language/rules-fix/diagnostics/auto-switch/domain-rules）
 ├── debug-headers.js                 - 调试页控制台工具（window.debugHeaders）
-├── detect.html / detect.js          - 检测页采集编排（导出 DetectPageContext）
+├── detect.html / detect.js          - 检测页采集编排（DetectPageContext 为 AI 侧唯一读接口）
 │   └── detect/                      - 检测模块（shared/collectors/renderers/snapshot/ai-shared/ai-config/ai-ui/ai-session）
 ├── detect-ai.js                     - 检测页 AI 诊断（单 module 入口；经 CustomEvent 感知快照生命周期）
 ├── toggle.js / toggle.css           - 语言/主题切换（ESM，被各页面入口 side-effect 导入）
