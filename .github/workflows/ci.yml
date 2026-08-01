@@ -56,18 +56,20 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(jq -r .version manifest.json)
-          zip -r "MultiLangSwitcher-v${VERSION}.zip" \
-            manifest.json LICENSE \
+          STAGE="MultiLangSwitcher-v${VERSION}"
+          mkdir "$STAGE"
+          cp manifest.json LICENSE \
             background.js popup.html popup.js \
             debug.html debug-ui.js debug-headers.js \
             detect.html detect.js detect-ai.js \
             toggle.js toggle.css \
             domain-rules-manager.js domain-rules.json \
             bootstrap.purged.css \
-            background popup debug detect \
-            _locales shared i18n images fonts \
-            -x "shared/vendor/*.map"
-          sha256sum "MultiLangSwitcher-v${VERSION}.zip" | awk '{print $1}' > digest.txt
+            "$STAGE/"
+          cp -r background popup debug detect _locales shared i18n images fonts "$STAGE/"
+          find "$STAGE/shared/vendor" -name "*.map" -delete 2>/dev/null || true
+          zip -r "${STAGE}.zip" "$STAGE"
+          sha256sum "${STAGE}.zip" | awk '{print $1}' > digest.txt
           printf '%s\n' "$GITHUB_SHA" > source-sha.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
