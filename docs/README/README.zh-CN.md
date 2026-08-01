@@ -27,7 +27,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 页面样式采用Bootstrap框架。
 
-如果拓展自带的请求头检测报错或不返回结果，可以自行跳转到 [Pixelscan](https://pixelscan.net/fingerprint-check) 、 [BrowserScan](https://www.browserscan.net/zh) 、 [Beeceptor Echo](https://echo.free.beeceptor.com) 进行查看。
+如果拓展自带的请求头检测报错或不返回结果，可以自行跳转到 [Pixelscan](https://pixelscan.net/fingerprint-check) 、 [BrowserScan](https://www.browserscan.net/zh) 、 [httpbingo](https://httpbingo.org/headers) 进行查看。
 
 如果需要切换浏览器UA可以看一下这个项目：[User-Agent Switcher and Manager](https://github.com/ray-lothian/UserAgent-Switcher)
 

@@ -19,7 +19,7 @@
 export const HEADER_CHECK_ENDPOINTS = [
 	"https://httpbin.org/headers",
 	"https://postman-echo.com/headers",
-	"https://echo.free.beeceptor.com",
+	"https://httpbingo.org/headers",
 ];
 
 /**
@@ -71,8 +71,11 @@ export const fetchHeadersFromEndpoints = async (timeout = 10000) => {
 				// 解析响应数据
 				const data = await response.json();
 
-				// 提取请求头
-				const headers = data.headers || {};
+				// 提取请求头（httpbingo 等端点将值包成数组，归一化为字符串）
+				const rawHeaders = data.headers || {};
+				const headers = Object.fromEntries(
+					Object.entries(rawHeaders).map(([key, value]) => [key, Array.isArray(value) ? (value[0] ?? "") : value]),
+				);
 
 				// 查找 Accept-Language 头部（不区分大小写，支持多种变体）
 				let acceptLanguage = null;
