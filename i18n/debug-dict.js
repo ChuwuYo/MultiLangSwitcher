@@ -109,7 +109,7 @@ const debugEn = {
 	// Keys used in debug-ui.js
 	external_check_prefix: "Please visit",
 	external_check_or: "or",
-	external_check_suffix: "to view",
+	external_check_suffix: "and similar sites to view",
 	getting_rule_info: "Getting rule information...",
 	dynamic_rules: "Dynamic rules:",
 	no_dynamic_rules: "No dynamic rules found!",
@@ -388,7 +388,7 @@ const debugZh = {
 	// debug-ui.js 中使用的键
 	external_check_prefix: "请访问",
 	external_check_or: "或",
-	external_check_suffix: "进行查看",
+	external_check_suffix: "等网站进行查看",
 	getting_rule_info: "正在获取规则信息...",
 	dynamic_rules: "动态规则：",
 	no_dynamic_rules: "没有发现动态规则！",

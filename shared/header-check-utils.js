@@ -19,7 +19,7 @@
 export const HEADER_CHECK_ENDPOINTS = [
 	"https://httpbin.org/headers",
 	"https://postman-echo.com/headers",
-	"https://header-echo.addr.tools/",
+	"https://echo.free.beeceptor.com",
 ];
 
 /**
@@ -144,9 +144,9 @@ export const createExternalCheckLinks = (texts = {}) => {
 	fragment.appendChild(document.createTextNode(`${prefix} `));
 
 	const link1 = document.createElement("a");
-	link1.href = "https://webcha.cn/";
+	link1.href = "https://pixelscan.net/fingerprint-check";
 	link1.target = "_blank";
-	link1.textContent = "https://webcha.cn/";
+	link1.textContent = "https://pixelscan.net/fingerprint-check";
 	fragment.appendChild(link1);
 
 	fragment.appendChild(document.createTextNode(` ${or} `));
