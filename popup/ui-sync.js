@@ -130,12 +130,12 @@ export const updateLanguageDisplay = (language, showSuccess = false) => {
 };
 
 /**
- * 执行头部快速检查
+ * 快速检查防重入控制器：请求未返回期间禁止重复触发
+ * （手动点击与程序性 .click() 均经此唯一入口拦截），并同步按钮禁用态
  * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
  */
 let headerCheckInFlight = false;
-export const performHeaderCheck = async (headerCheckContentPre) => {
-	// 请求未返回期间禁止重复触发（手动点击与程序性 .click() 均被拦截）
+export const performHeaderCheckGuarded = async (headerCheckContentPre) => {
 	if (headerCheckInFlight) {
 		return;
 	}
@@ -144,7 +144,21 @@ export const performHeaderCheck = async (headerCheckContentPre) => {
 	if (checkHeaderBtn) {
 		checkHeaderBtn.disabled = true;
 	}
+	try {
+		await performHeaderCheck(headerCheckContentPre);
+	} finally {
+		headerCheckInFlight = false;
+		if (checkHeaderBtn) {
+			checkHeaderBtn.disabled = false;
+		}
+	}
+};
 
+/**
+ * 执行头部快速检查（纯逻辑，不含重入控制）
+ * @param {HTMLElement} headerCheckContentPre - 用于显示结果的 <pre> 元素
+ */
+export const performHeaderCheck = async (headerCheckContentPre) => {
 	try {
 		// 显示初始加载状态
 		headerCheckContentPre.textContent = popupI18n.t("fetching_headers") + "...";
@@ -180,11 +194,6 @@ export const performHeaderCheck = async (headerCheckContentPre) => {
 		// 捕获意外错误
 		sendDebugLog(`${popupI18n.t("quick_check_unexpected_error")}: ${error.message}`, "error");
 		displayHeaderCheckError(headerCheckContentPre, "detection_error");
-	} finally {
-		headerCheckInFlight = false;
-		if (checkHeaderBtn) {
-			checkHeaderBtn.disabled = false;
-		}
 	}
 };
 

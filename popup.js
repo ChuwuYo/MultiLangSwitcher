@@ -8,7 +8,7 @@ import { popupI18n } from "./i18n/popup-i18n.js";
 import { getEl } from "./popup/shared.js";
 import {
 	debouncedUIUpdate,
-	performHeaderCheck,
+	performHeaderCheckGuarded,
 	showError,
 	updateAutoSwitchUI,
 	updateLanguageDisplay,
@@ -155,7 +155,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			// 显示检查结果区域并开始检查
 			if (headerCheckResultDiv) headerCheckResultDiv.classList.remove("d-none");
 			headerCheckContentPre.textContent = popupI18n.t("fetching_headers");
-			performHeaderCheck(headerCheckContentPre);
+			performHeaderCheckGuarded(headerCheckContentPre);
 		},
 
 		// 更新检查按钮点击处理
