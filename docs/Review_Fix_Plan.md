@@ -8,27 +8,27 @@
 
 - [x] **F1** sanitizer 补 `compatibility.browser.userAgent` 脱敏（UA 此前经快照泄漏给 AI）+ 对应测试 — `detect-ai.js`, `tests/sanitize-snapshot.test.js`
 - [x] **F2** `softprops/action-gh-release` pin 到 commit SHA（其余 action 已 pin，release 是唯一漏网且跑在 contents:write 岗位）— `.github/workflows/ci.yml`
-- [ ] **F3** `popup/update-check.js` 的 `releaseUrl` 赋 href 前校验 `https:` 协议（两处，:181/:245）
+- [x] **F3** `popup/update-check.js` 的 `releaseUrl` 赋 href 前校验 `https:` 协议（两处，:181/:245）
 
 ## 契约正确性
 
 - [x] **F4** 补 background-dict 缺失的 21 个日志键（en+zh）；debug-dict / detect-dict 补 `theme_toggle`、`reset_accept_language_tooltip`（此前按钮 tooltip 显示原始键名）
 - [ ] **F5** i18n 键完备性测试入 vitest（脚本交叉核对 `.t()` / `translateDetect` / `data-i18n*` 引用 vs 各组件字典，used-but-missing 必须为零）— 防复发
-- [ ] **F6** `DetectPageContext` 恢复为真实边界：detect-ai 各模块（ai-shared/ai-session/ai-ui）改经 `DetectPageContext` 消费快照与工具，不再直接 import `detect/snapshot.js` / `detect/shared.js`（文档承诺的解耦契约）
-- [ ] **F7** `shared/storage-keys.js` 增加 `UPDATE_CHECKER_CACHE_PREFIX` 常量，`shared-update-checker.js:30` 动态键改引用
+- [x] **F6** `DetectPageContext` 恢复为真实边界：detect-ai 各模块（ai-shared/ai-session/ai-ui）改经 `DetectPageContext` 消费快照与工具，不再直接 import `detect/snapshot.js` / `detect/shared.js`（文档承诺的解耦契约）
+- [x] **F7** `shared/storage-keys.js` 增加 `UPDATE_CHECKER_CACHE_PREFIX` 常量，`shared-update-checker.js:30` 动态键改引用
 
 ## 死代码清理
 
 - [x] **F8** 删除 domain-manager i18n 全链（实例/Ready/dict 5 键/`ensureI18n`），`i18nReady` 简化为单实例 — `domain-rules-manager.js`, `background/shared.js`，已删 `i18n/domain-manager-{i18n,dict}.js`
 - [x] **F9a** dispatch 由 14 分支 if-else 改为 `MESSAGE_HANDLERS` 映射表 — `background/message-handlers.js`
 - [x] **F9b** 删除已无引用的 `handleUpdateCheckRequest` / `handleGetManifestInfoRequest` 函数及 `MessageTypes.UPDATE_CHECK` / `GET_MANIFEST_INFO` 常量（无发送方，spec 目标协议收窄）；随之孤儿化的 7 个 background-dict 键一并清除
-- [ ] **F10** `detect/ai-shared.js` 去中转：`translate` / `getUiLanguage` 改为直接 re-export `detect/shared.js`，不再包一层
-- [ ] **F11** `popup/shared.js` 孤儿 JSDoc 删除；`getEl` 在 popup 内统一使用（language-apply.js 两处 raw getElementById）
+- [x] **F10** `detect/ai-shared.js` 去中转：`translate` / `getUiLanguage` 改为直接 re-export `detect/shared.js`，不再包一层
+- [x] **F11** `popup/shared.js` 孤儿 JSDoc 删除；`getEl` 在 popup 内统一使用（language-apply.js 两处 raw getElementById）
 
 ## 一致性与可靠性
 
-- [ ] **F12** 三个页面 i18n 模块的 `DOMContentLoaded` 改走 `ResourceManager.addEventListener`（roadmap 声称已统一，代码要兑现）— `i18n/{popup,debug,detect}-i18n.js`
-- [ ] **F13** `debug/auto-switch.js` `checkI18nAndLog` 轮询条件由 `translations` 非空改为 `isReady`（现分支在字典加载失败时永不终止）
+- [x] **F12** 三个页面 i18n 模块的 `DOMContentLoaded` 改走 `ResourceManager.addEventListener`（roadmap 声称已统一，代码要兑现）— `i18n/{popup,debug,detect}-i18n.js`
+- [x] **F13** `debug/auto-switch.js` `checkI18nAndLog` 轮询条件由 `translations` 非空改为 `isReady`（现分支在字典加载失败时永不终止）
 
 ## 类型与测试
 
