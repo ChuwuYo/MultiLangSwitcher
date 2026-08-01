@@ -30,10 +30,40 @@
       margin-bottom: 15px;
     }
 
+    /* 状态卡：当前语言醒目展示 */
+    .status-card {
+      padding: 10px 12px;
+      border: 1px solid var(--bs-border-color);
+      border-radius: 8px;
+      background-color: var(--bs-tertiary-bg);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    /* 分区节奏 */
+    .section {
+      margin-bottom: 12px;
+    }
+
+    /* 自动切换行：标签与开关同行 */
+    .auto-switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 4px 2px;
+    }
+
+    /* 页脚：次级操作区 */
+    .popup-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--bs-border-color-translucent);
+    }
+
     /* 状态显示区域样式 */
     .status {
       margin-top: 15px;
-      font-style: italic;
     }
 
     /* 当前语言代码高亮样式 */
@@ -176,10 +206,11 @@
       background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
     }
 
-    /* 重置按钮位置 */
+    /* 重置按钮位置：与主题按钮同行并列 */
     #resetBtn {
       position: absolute;
-      top: 42px;
+      top: 5px;
+      right: 38px;
     }
 
     /* 更新检查按钮基础样式 - 独特的淡紫色调 */
@@ -425,8 +456,12 @@
     /* 自动切换外层容器 */
     .toggle-wrapper-inline {
       font-size: 1em;
-      margin: 0 auto;
       width: fit-content;
+    }
+
+    /* 行内布局时清除开关自身的上边距与自动居中 */
+    .auto-switch-row .toggle-wrapper {
+      margin-top: 0;
     }
   </style>
 </head>
@@ -442,23 +477,12 @@
     <!-- 页面头部 -->
     <div class="header">
       <h4 id="extensionName" data-i18n="extension_name"></h4>
-      <p class="text-muted" id="extensionSubtitle" data-i18n="subtitle"></p>
+      <p class="text-muted mb-0" id="extensionSubtitle" data-i18n="subtitle"></p>
     </div>
 
-    <!-- 语言选择区域 -->
-    <div class="language-select">
-      <label for="languageSelect" class="form-label" id="languageSelectLabel" data-i18n="select_language"></label>
-      <select class="form-select" id="languageSelect">
-        <!-- 语言选项将由JavaScript动态生成 -->
-      </select>
-    </div>
-
-    <!-- 应用按钮 -->
-    <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
-
-    <!-- 状态显示区域 -->
-    <div class="status mt-3">
-      <p id="statusText"></p>
+    <!-- 当前状态卡：当前语言一目了然 -->
+    <div class="status-card">
+      <p id="statusText" class="mb-0"></p>
     </div>
 
     <!-- 错误提示区域 -->
@@ -466,9 +490,20 @@
       <span id="errorMessage"></span>
     </div>
 
-    <!-- 自动切换语言开关区域 -->
-    <div class="text-center mt-2 mb-2">
-      <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label" data-i18n="auto_switch"></label>
+    <!-- 主操作区：语言选择 + 应用 -->
+    <div class="section">
+      <div class="language-select">
+        <label for="languageSelect" class="form-label" id="languageSelectLabel" data-i18n="select_language"></label>
+        <select class="form-select" id="languageSelect">
+          <!-- 语言选项将由JavaScript动态生成 -->
+        </select>
+      </div>
+      <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
+    </div>
+
+    <!-- 自动切换：标签与开关同一行 -->
+    <div class="auto-switch-row">
+      <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label mb-0" data-i18n="auto_switch"></label>
       <div class="toggle-wrapper toggle-wrapper-inline">
         <input class="toggle-checkbox" type="checkbox" id="autoSwitchToggle">
         <div class="toggle-container">
@@ -493,15 +528,15 @@
       </div>
     </div>
 
-    <!-- 功能按钮区域 -->
-    <div class="mt-3 text-center">
-      <a href="detect.html" target="_blank" class="btn btn-sm btn-outline-secondary" id="detectionPageLink" data-i18n="detection_page"></a>
-      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-danger ms-2" id="debugPageLink" data-i18n="debug_tools"></a>
-      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-info ms-2" data-i18n="quick_check"></button>
+    <!-- 快捷工具区：语义一致的中性按钮 + 主强调给检查 -->
+    <div class="section d-flex gap-2">
+      <button id="checkHeaderBtn" class="btn btn-sm btn-outline-primary flex-fill" data-i18n="quick_check"></button>
+      <a href="detect.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="detectionPageLink" data-i18n="detection_page"></a>
+      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="debugPageLink" data-i18n="debug_tools"></a>
     </div>
 
     <!-- 请求头检查结果显示区域 -->
-    <div class="mt-3 d-none header-check-result" id="headerCheckResult">
+    <div class="mt-2 d-none header-check-result" id="headerCheckResult">
       <div class="card">
         <div class="card-header bg-light" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
         <div class="card-body">
@@ -510,8 +545,8 @@
       </div>
     </div>
 
-    <!-- 更新检查器区域 -->
-    <div class="mt-3 text-center">
+    <!-- 页脚：更新检查（次级、弱化） -->
+    <div class="popup-footer">
       <button id="updateCheckBtn" class="btn btn-sm w-100 update-check-button">
         <span id="updateCheckText" data-i18n="check_for_updates"></span>
         <span id="updateCheckSpinner" class="spinner-border spinner-border-sm ms-1 d-none" role="status"
