@@ -79,32 +79,6 @@ html[data-bs-theme="dark"] .bg-light {
 	color: #e9ecef !important;
 }
 
-html[data-bs-theme="dark"] pre {
-	background-color: #373c42 !important;
-	color: #e9ecef !important;
-	border: 1px solid #495057;
-	/*于定义的边框 */
-}
-
-html[data-bs-theme="dark"] .debug-section {
-	background-color: #373c42 !important;
-	color: #e9ecef !important;
-}
-
-html[data-bs-theme="dark"] .debug-result {
-	background-color: #2c3034 !important;
-	/* 结果区域使用略微不同的深色阴影 */
-	color: #f8f9fa !important;
-	/* 更亮的灰白色文本 */
-	border-color: #495057 !important;
-}
-
-html[data-bs-theme="dark"] .debug-result code,
-html[data-bs-theme="dark"] .debug-result pre,
-html[data-bs-theme="dark"] .debug-result span {
-	color: #f8f9fa !important;
-}
-
 .text-dark.fw-bold.small,
 .text-dark.small {
 	color: #bd97ab !important;
