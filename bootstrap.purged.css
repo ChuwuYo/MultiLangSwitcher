@@ -1959,10 +1959,6 @@ fieldset:disabled .btn {
 	--bs-text-opacity: 1;
 	color: rgba(var(--bs-dark-rgb), var(--bs-text-opacity)) !important;
 }
-.text-white {
-	--bs-text-opacity: 1;
-	color: rgba(var(--bs-white-rgb), var(--bs-text-opacity)) !important;
-}
 .text-muted {
 	--bs-text-opacity: 1;
 	color: var(--bs-secondary-color) !important;
@@ -1971,35 +1967,10 @@ fieldset:disabled .btn {
 	--bs-text-opacity: 1;
 	color: rgba(255, 255, 255, 0.5) !important;
 }
-.bg-primary {
-	--bs-bg-opacity: 1;
-	background-color: rgba(
-		var(--bs-primary-rgb),
-		var(--bs-bg-opacity)
-	) !important;
-}
-.bg-secondary {
-	--bs-bg-opacity: 1;
-	background-color: rgba(
-		var(--bs-secondary-rgb),
-		var(--bs-bg-opacity)
-	) !important;
-}
 .bg-success {
 	--bs-bg-opacity: 1;
 	background-color: rgba(
 		var(--bs-success-rgb),
-		var(--bs-bg-opacity)
-	) !important;
-}
-.bg-info {
-	--bs-bg-opacity: 1;
-	background-color: rgba(var(--bs-info-rgb), var(--bs-bg-opacity)) !important;
-}
-.bg-warning {
-	--bs-bg-opacity: 1;
-	background-color: rgba(
-		var(--bs-warning-rgb),
 		var(--bs-bg-opacity)
 	) !important;
 }
@@ -2011,9 +1982,12 @@ fieldset:disabled .btn {
 	--bs-bg-opacity: 1;
 	background-color: rgba(var(--bs-light-rgb), var(--bs-bg-opacity)) !important;
 }
-.bg-dark {
+.bg-body-tertiary {
 	--bs-bg-opacity: 1;
-	background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+	background-color: rgba(
+		var(--bs-tertiary-bg-rgb),
+		var(--bs-bg-opacity)
+	) !important;
 }
 .visible {
 	visibility: visible !important;
