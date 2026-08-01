@@ -13,7 +13,7 @@
 ## 契约正确性
 
 - [x] **F4** 补 background-dict 缺失的 21 个日志键（en+zh）；debug-dict / detect-dict 补 `theme_toggle`、`reset_accept_language_tooltip`（此前按钮 tooltip 显示原始键名）
-- [ ] **F5** i18n 键完备性测试入 vitest（脚本交叉核对 `.t()` / `translateDetect` / `data-i18n*` 引用 vs 各组件字典，used-but-missing 必须为零）— 防复发
+- [x] **F5** i18n 键完备性测试入 vitest（脚本交叉核对 `.t()` / `translateDetect` / `data-i18n*` 引用 vs 各组件字典，used-but-missing 必须为零）— 防复发
 - [x] **F6** `DetectPageContext` 恢复为真实边界：detect-ai 各模块（ai-shared/ai-session/ai-ui）改经 `DetectPageContext` 消费快照与工具，不再直接 import `detect/snapshot.js` / `detect/shared.js`（文档承诺的解耦契约）
 - [x] **F7** `shared/storage-keys.js` 增加 `UPDATE_CHECKER_CACHE_PREFIX` 常量，`shared-update-checker.js:30` 动态键改引用
 
@@ -32,13 +32,13 @@
 
 ## 类型与测试
 
-- [ ] **F14** `detect/snapshot.js` 加 `@typedef DetectionSnapshot`；`shared-actions.js` 加消息信封 `@typedef`（跨上下文契约）
-- [ ] **F15** `requestBackground` 信封 round-trip 测试（ok→resolve / ok:false→抛错且字段保真 / 旧格式→告警透传）
-- [ ] **F16** `_applyDataAttributes` 扫描器测试（jsdom：四种属性填充、缺键行为、嵌套约束文档符合性）
+- [x] **F14** `detect/snapshot.js` 加 `@typedef DetectionSnapshot`；`shared-actions.js` 加消息信封 `@typedef`（跨上下文契约）
+- [x] **F15** `requestBackground` 信封 round-trip 测试（ok→resolve / ok:false→抛错且字段保真 / 旧格式→告警透传）
+- [x] **F16** `_applyDataAttributes` 扫描器测试（jsdom：四种属性填充、缺键行为、嵌套约束文档符合性）
 
 ## 收尾
 
-- [ ] **F17** 文档数字修正：roadmap 执行状态（MessageTypes 实际数量、i18n 文件数口径、detect 页 script 标签说明）；Project_Structure 与 DetectPageContext 契约描述对齐 F6 结果
+- [x] **F17** 文档数字修正：roadmap 执行状态（MessageTypes 实际数量、i18n 文件数口径、detect 页 script 标签说明）；Project_Structure 与 DetectPageContext 契约描述对齐 F6 结果
 - [ ] **F18** 全量验证（biome/tsc/syntax/manifest/tests/purge-css 同步）+ 分组提交 + CodeGraph sync
 
 ## 明确不做（评估记录）
