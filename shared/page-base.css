@@ -4,8 +4,11 @@
 	src: url("../fonts/MapleMonoNL-Regular.woff2") format("woff2");
 }
 
+/* rem 基于根元素：在 html 上缩放才能同时缩小 bootstrap 的 rem 组件尺寸 */
+html {
+	font-size: 0.875rem;
+}
+
 body {
 	font-family: "MapleMonoNL", sans-serif;
-	/* 等宽字体视觉偏大，基准字号略小于常规网页 */
-	font-size: 0.875rem;
 }
