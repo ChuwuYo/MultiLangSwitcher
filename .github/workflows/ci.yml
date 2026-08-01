@@ -215,6 +215,16 @@ jobs:
           trap 'rollback_publish 130' INT
           trap 'rollback_publish 143' TERM
 
+          # 失败定位辅助：每个关键步骤出错时打印步骤名（此前裸失败时无报错行可查）
+          step() {
+            echo "::group::$*"
+            local rc=0
+            "$@" || rc=$?
+            echo "::endgroup::"
+            if [ "$rc" -ne 0 ]; then echo "::error::FAILED AT STEP: $* (exit $rc)"; fi
+            return "$rc"
+          }
+
           # 首次发布：创建 prerelease；后续：上传暂存资产并校验摘要。
           if [ -z "$release_id" ]; then
             gh release create latest --repo "$GITHUB_REPOSITORY" \
@@ -223,18 +233,23 @@ jobs:
             test -n "$release_id"
           fi
 
-          gh release upload latest "$staged_zip" --repo "$GITHUB_REPOSITORY"
-          staged_id="$(wait_for_asset_digest "$staged_name" "sha256:$expected_digest")"
+          step gh release upload latest "$staged_zip" --repo "$GITHUB_REPOSITORY"
+          # GitHub 异步计算资产 digest，上传后留出沉降时间再轮询
+          sleep 5
+          staged_id="$(wait_for_asset_digest "$staged_name" "sha256:$expected_digest")" || {
+            echo "::error::FAILED AT STEP: wait_for_asset_digest staged"
+            exit 1
+          }
 
           # 上传暂存资产可能耗时；在触碰旧固定资产前再核对一次分支头。
           assert_current_head
 
           # 暂存资产完整后，旧固定资产改回滚名，新资产切换为固定名。
           if [ -n "$old_asset_id" ]; then
-            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" \
+            step gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" \
               -f name="$rollback_name" >/dev/null
           fi
-          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$staged_id" \
+          step gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$staged_id" \
             -f name="$FIXED_NAME" >/dev/null
 
           notes="$RUNNER_TEMP/release-notes.md"
