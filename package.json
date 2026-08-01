@@ -15,7 +15,7 @@
 		"verify": "biome ci . && tsc && node scripts/check-syntax.mjs && node scripts/validate-manifest.mjs"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
+		"@biomejs/biome": "^2.0.0",
 		"@types/chrome": "^0.2.2",
 		"jsdom": "^30.0.1",
 		"purgecss": "^8.0.0",
