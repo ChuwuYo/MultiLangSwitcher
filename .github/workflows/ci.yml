@@ -9,10 +9,11 @@ on:
 permissions:
   contents: read
 
-# main/master 使用发布锁，历史 run 的误重跑不能并发改 Release；其他 ref 只保留最新验证。
+# 所有 ref 统一：新提交到达即取消同 ref 在跑的旧 run。
+# main 的 publish 步骤有回滚 trap 兜底中断态，且发布头检查会拒绝过期 run。
 concurrency:
-  group: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'rolling-release' || format('ci-{0}', github.ref) }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+  group: ${{ format('ci-{0}', github.ref) }}
+  cancel-in-progress: true
 
 jobs:
   verify:
