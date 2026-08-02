@@ -386,21 +386,6 @@ export const collectLocaleFormattingInfo = () => {
  */
 const IP_GEO_ENDPOINTS = [
 	{
-		url: "https://api.ipapi.is/",
-		normalize: (data) => {
-			// 兼容扁平与嵌套 location 两种形状
-			const loc = data?.location || data || {};
-			return {
-				ip: data?.ip || "",
-				timezone: loc.timeZone || data?.timeZone || "N/A",
-				country: loc.country || data?.country || "N/A",
-				region: loc.region || data?.region || "",
-				city: [loc.city, loc.locality].filter(Boolean).join(" / ") || data?.city || "",
-				organization: data?.organization?.name || data?.organization || data?.org || "",
-			};
-		},
-	},
-	{
 		url: "https://ipwhois.app/json/",
 		normalize: (data) => {
 			if (data?.success !== true) throw new Error(data?.message || "ipwhois.app lookup failed");
@@ -424,20 +409,6 @@ const IP_GEO_ENDPOINTS = [
 			city: data?.cityName || "",
 			organization: data?.asnOrganization || "",
 		}),
-	},
-	{
-		url: "https://ipwho.is/",
-		normalize: (data) => {
-			if (!data?.success) throw new Error(data?.message || "ipwho.is lookup failed");
-			return {
-				ip: data.ip || "",
-				timezone: data.timezone?.id || "N/A",
-				country: data.country || "N/A",
-				region: data.region || "",
-				city: data.city || "",
-				organization: data.connection?.org || "",
-			};
-		},
 	},
 ];
 
