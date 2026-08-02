@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { BaseI18n } from "../shared/shared-i18n-base.js";
+import { BaseI18n } from "../src/shared/shared-i18n-base.js";
 
 const createI18n = () => {
 	const i18n = new BaseI18n("test", false, {

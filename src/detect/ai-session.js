@@ -12,7 +12,7 @@ import {
 	translate,
 } from "./ai-shared.js";
 import { renderVisibleChatMessages, updateChatMessageElement } from "./ai-ui.js";
-import { DetectPageContext } from "../detect.js";
+import { DetectPageContext } from "./detect.js";
 
 export const isChatContextStale = () =>
 	!!(

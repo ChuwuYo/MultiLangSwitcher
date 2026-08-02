@@ -3,7 +3,7 @@
 import { MessageTypes } from "../shared/message-types.js";
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { backgroundI18n } from "../i18n/background-i18n.js";
-import { domainRulesManager } from "../domain-rules-manager.js";
+import { domainRulesManager } from "./domain-rules-manager.js";
 import {
 	DEFAULT_LANG_EN,
 	RULE_ID,

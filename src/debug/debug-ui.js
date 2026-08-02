@@ -1,19 +1,19 @@
 // debug-ui.js - 调试页面UI交互脚本
 
-import { populateLanguageSelect } from "./shared/shared-language-options.js";
-import { ResourceManager } from "./shared/shared-resource-manager.js";
-import { registerI18nInstance } from "./shared/shared-utils.js";
-import { debugI18n } from "./i18n/debug-i18n.js";
-import { initAutoSwitch } from "./debug/auto-switch.js";
-import { initializeCacheManagement } from "./debug/cache-mgmt.js";
-import { initCustomLanguage } from "./debug/custom-language.js";
-import { initDiagnostics } from "./debug/diagnostics.js";
-import { initDomainRules } from "./debug/domain-rules.js";
-import { initHeaderTest } from "./debug/header-test.js";
-import { addLogMessage, initLogPanel } from "./debug/log-panel.js";
-import { initRulesFix } from "./debug/rules-fix.js";
-import { initRulesView } from "./debug/rules-view.js";
-import "./toggle.js";
+import { populateLanguageSelect } from "../shared/shared-language-options.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
+import { registerI18nInstance } from "../shared/shared-utils.js";
+import { debugI18n } from "../i18n/debug-i18n.js";
+import { initAutoSwitch } from "./auto-switch.js";
+import { initializeCacheManagement } from "./cache-mgmt.js";
+import { initCustomLanguage } from "./custom-language.js";
+import { initDiagnostics } from "./diagnostics.js";
+import { initDomainRules } from "./domain-rules.js";
+import { initHeaderTest } from "./header-test.js";
+import { addLogMessage, initLogPanel } from "./log-panel.js";
+import { initRulesFix } from "./rules-fix.js";
+import { initRulesView } from "./rules-view.js";
+import "../shared/toggle.js";
 import "./debug-headers.js";
 
 registerI18nInstance("debug", debugI18n);

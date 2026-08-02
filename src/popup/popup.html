@@ -7,12 +7,12 @@
   <meta name="color-scheme" content="light dark">
   <title></title>
   <!-- 字体预加载 -->
-  <link rel="preload" href="fonts/MapleMonoNL-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../../fonts/MapleMonoNL-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <!-- 样式表引入 -->
-  <link href="bootstrap.purged.css" rel="stylesheet">
-  <link href="shared/page-base.css" rel="stylesheet">
-  <link href="toggle.css" rel="stylesheet">
-  <script src="shared/theme-init.js"></script>
+  <link href="../../bootstrap.purged.css" rel="stylesheet">
+  <link href="../shared/page-base.css" rel="stylesheet">
+  <link href="../shared/toggle.css" rel="stylesheet">
+  <script src="../shared/theme-init.js"></script>
   <style>
     /* 主体布局样式 */
     body {
@@ -483,7 +483,7 @@
         <p id="statusText" class="mb-0"></p>
       </div>
       <!-- 重置Accept-Language按钮 -->
-      <button id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16"
+      <button id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip"><img src="../../images/reset.svg" id="resetBtnImg" width="16" height="16"
           class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
     </div>
 
@@ -533,8 +533,8 @@
     <!-- 快捷工具区：语义一致的中性按钮 + 主强调给检查 -->
     <div class="section d-flex gap-2">
       <button id="checkHeaderBtn" class="btn btn-sm btn-outline-primary flex-fill" data-i18n="quick_check"></button>
-      <a href="detect.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="detectionPageLink" data-i18n="detection_page"></a>
-      <a href="debug.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="debugPageLink" data-i18n="debug_tools"></a>
+      <a href="../detect/detect.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="detectionPageLink" data-i18n="detection_page"></a>
+      <a href="../debug/debug.html" target="_blank" class="btn btn-sm btn-outline-secondary flex-fill" id="debugPageLink" data-i18n="debug_tools"></a>
     </div>
 
     <!-- 请求头检查结果显示区域 -->

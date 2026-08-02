@@ -1,12 +1,12 @@
-import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import {
 	ensureProviderOptions,
 	handleApiKeyToggle,
 	handleProviderChange,
 	loadAIConfig,
 	persistAIConfig,
-} from "./detect/ai-config.js";
-import { getAiElements, setAIStatus } from "./detect/ai-shared.js";
+} from "./ai-config.js";
+import { getAiElements, setAIStatus } from "./ai-shared.js";
 import {
 	isChatContextStale,
 	resetAISession,
@@ -14,10 +14,10 @@ import {
 	startAIDiagnosis,
 	stopAIRequest,
 	updateAIControls,
-} from "./detect/ai-session.js";
-import { exportChatAsMarkdown, exportStructuredSnapshotAsMarkdown, renderChatPlaceholder } from "./detect/ai-ui.js";
+} from "./ai-session.js";
+import { exportChatAsMarkdown, exportStructuredSnapshotAsMarkdown, renderChatPlaceholder } from "./ai-ui.js";
 import "./detect.js";
-import "./toggle.js";
+import "../shared/toggle.js";
 
 const sanitizeSnapshotForAI = (snapshot) => {
 	if (!snapshot) {

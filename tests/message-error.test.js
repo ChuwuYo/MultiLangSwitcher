@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractFunction } from "./helpers/global-loader.js";
 
-const normalizeMessageError = extractFunction("background.js", "normalizeMessageError");
+const normalizeMessageError = extractFunction("src/background/background.js", "normalizeMessageError");
 
 describe("normalizeMessageError", () => {
 	it("passes through message from Error instance", () => {

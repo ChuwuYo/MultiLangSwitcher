@@ -2,7 +2,7 @@
 
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { backgroundI18n } from "../i18n/background-i18n.js";
-import { domainRulesManager } from "../domain-rules-manager.js";
+import { domainRulesManager } from "./domain-rules-manager.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import {
 	DEFAULT_LANG_EN,
@@ -130,9 +130,9 @@ const createContextMenusOnce = async () => {
 
 chrome.contextMenus.onClicked.addListener((info, _tab) => {
 	if (info.menuItemId === "open-detect-page") {
-		chrome.tabs.create({ url: chrome.runtime.getURL("detect.html") });
+		chrome.tabs.create({ url: chrome.runtime.getURL("src/detect/detect.html") });
 	} else if (info.menuItemId === "open-debug-page") {
-		chrome.tabs.create({ url: chrome.runtime.getURL("debug.html") });
+		chrome.tabs.create({ url: chrome.runtime.getURL("src/debug/debug.html") });
 	}
 });
 

@@ -1,6 +1,6 @@
-import { registerI18nInstance } from "./shared/shared-utils.js";
-import { detectI18n } from "./i18n/detect-i18n.js";
-import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { registerI18nInstance } from "../shared/shared-utils.js";
+import { detectI18n } from "../i18n/detect-i18n.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import {
 	collectAudioFingerprintInfo,
 	collectCanvasFingerprintInfo,
@@ -12,7 +12,7 @@ import {
 	collectJsLanguageInfo,
 	collectWebglFingerprintInfo,
 	collectWebRtcInfo,
-} from "./detect/collectors.js";
+} from "./collectors.js";
 import {
 	addRefreshButton,
 	renderAudioFingerprintInfo,
@@ -24,8 +24,8 @@ import {
 	renderJsLanguageInfo,
 	renderWebglFingerprintInfo,
 	renderWebRtcInfo,
-} from "./detect/renderers.js";
-import { createMessageId, getUiLanguage, translateDetect } from "./detect/shared.js";
+} from "./renderers.js";
+import { createMessageId, getUiLanguage, translateDetect } from "./shared.js";
 import {
 	buildDetectionSnapshot,
 	commitDetectionSnapshot,
@@ -35,7 +35,7 @@ import {
 	getLatestSnapshotVersion,
 	isDetectionRunning,
 	setDetectionRunInFlight,
-} from "./detect/snapshot.js";
+} from "./snapshot.js";
 
 registerI18nInstance("detect", detectI18n);
 

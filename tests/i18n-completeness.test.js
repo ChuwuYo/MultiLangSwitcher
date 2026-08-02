@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 // 防复发：历史上出现过 35 个 used-but-missing 键（tooltip/日志显示原始键名）。
 
 const COMPONENTS = {
-	popup: { dict: "i18n/popup-dict.js", en: "popupEn", zh: "popupZh" },
-	debug: { dict: "i18n/debug-dict.js", en: "debugEn", zh: "debugZh" },
-	detect: { dict: "i18n/detect-dict.js", en: "detectEn", zh: "detectZh" },
-	background: { dict: "i18n/background-dict.js", en: "backgroundEn", zh: "backgroundZh" },
+	popup: { dict: "src/i18n/popup-dict.js", en: "popupEn", zh: "popupZh" },
+	debug: { dict: "src/i18n/debug-dict.js", en: "debugEn", zh: "debugZh" },
+	detect: { dict: "src/i18n/detect-dict.js", en: "detectEn", zh: "detectZh" },
+	background: { dict: "src/i18n/background-dict.js", en: "backgroundEn", zh: "backgroundZh" },
 };
 
 const loadDict = async (path) => await import(`../${path}`);
@@ -21,10 +21,10 @@ for (const [name, meta] of Object.entries(COMPONENTS)) {
 
 // 组件 → 引用该组件字典的源码文件（i18n 实例 + 直接使用方）
 const CONSUMERS = {
-	popup: ["i18n/popup-i18n.js", "popup.js", "popup/**/*.js"],
-	debug: ["i18n/debug-i18n.js", "debug-ui.js", "debug-headers.js", "debug/**/*.js"],
-	detect: ["i18n/detect-i18n.js", "detect.js", "detect-ai.js", "detect/**/*.js"],
-	background: ["background.js", "background/**/*.js", "domain-rules-manager.js"],
+	popup: ["src/i18n/popup-i18n.js", "src/popup/popup.js", "src/popup/**/*.js"],
+	debug: ["src/i18n/debug-i18n.js", "src/debug/debug-ui.js", "src/debug/debug-headers.js", "src/debug/**/*.js"],
+	detect: ["src/i18n/detect-i18n.js", "src/detect/detect.js", "src/detect/detect-ai.js", "src/detect/**/*.js"],
+	background: ["src/background/background.js", "src/background/**/*.js", "src/background/domain-rules-manager.js"],
 };
 
 const expand = (patterns) => patterns.flatMap((p) => (p.includes("*") ? globSync(p) : [p]));
@@ -40,7 +40,9 @@ const extractKeys = (component) => {
 		// data-i18n 属性仅存在于 HTML；HTML 在下方单独扫描
 	}
 	// HTML 静态声明
-	const htmlFiles = { popup: "popup.html", debug: "debug.html", detect: "detect.html" }[component];
+	const htmlFiles = { popup: "src/popup/popup.html", debug: "src/debug/debug.html", detect: "src/detect/detect.html" }[
+		component
+	];
 	if (htmlFiles) {
 		const html = readFileSync(htmlFiles, "utf8");
 		for (const match of html.matchAll(/data-i18n(?:-title|-placeholder|-alt)?="([a-z0-9_]+)"/g)) keys.add(match[1]);

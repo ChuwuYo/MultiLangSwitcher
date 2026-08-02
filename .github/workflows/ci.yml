@@ -59,16 +59,9 @@ jobs:
           VERSION=$(jq -r .version manifest.json)
           STAGE="MultiLangSwitcher-v${VERSION}"
           mkdir "$STAGE"
-          cp manifest.json LICENSE \
-            background.js popup.html popup.js \
-            debug.html debug-ui.js debug-headers.js \
-            detect.html detect.js detect-ai.js \
-            toggle.js toggle.css \
-            domain-rules-manager.js domain-rules.json \
-            bootstrap.purged.css \
-            "$STAGE/"
-          cp -r background popup debug detect _locales shared i18n images fonts "$STAGE/"
-          find "$STAGE/shared/vendor" -name "*.map" -delete 2>/dev/null || true
+          cp manifest.json LICENSE domain-rules.json bootstrap.purged.css "$STAGE/"
+          cp -r src _locales images fonts "$STAGE/"
+          find "$STAGE/src/shared/vendor" -name "*.map" -delete 2>/dev/null || true
           zip -r "${STAGE}.zip" "$STAGE"
           sha256sum "${STAGE}.zip" | awk '{print $1}' > digest.txt
           printf '%s\n' "$GITHUB_SHA" > source-sha.txt

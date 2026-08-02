@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchHeadersFromEndpoints } from "../shared/header-check-utils.js";
+import { fetchHeadersFromEndpoints } from "../src/shared/header-check-utils.js";
 
 const jsonResponse = (payload, status = 200) =>
 	new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json" } });

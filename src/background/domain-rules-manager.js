@@ -1,5 +1,5 @@
 // 域名规则管理器
-import { STORAGE_KEYS } from "./shared/storage-keys.js";
+import { STORAGE_KEYS } from "../shared/storage-keys.js";
 
 export class DomainRulesManager {
 	constructor() {

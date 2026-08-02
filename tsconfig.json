@@ -13,5 +13,5 @@
 		"types": ["chrome"]
 	},
 	"include": ["**/*.js"],
-	"exclude": ["node_modules", "shared/vendor", "tests", "scripts", ".codegraph"]
+	"exclude": ["node_modules", "src/shared/vendor", "tests", "scripts", ".codegraph"]
 }

@@ -10,7 +10,7 @@ import {
 	setAIStatus,
 	translate,
 } from "./ai-shared.js";
-import { DetectPageContext } from "../detect.js";
+import { DetectPageContext } from "./detect.js";
 
 export const renderChatPlaceholder = () => {
 	const { messagesContainer } = getAiElements();

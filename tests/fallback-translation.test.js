@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFallbackTranslation } from "../shared/shared-utils.js";
+import { getFallbackTranslation } from "../src/shared/shared-utils.js";
 
 const REACHABLE_KEYS = [
 	"no_release_notes",

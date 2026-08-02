@@ -1,4 +1,4 @@
-import { DetectPageContext } from "../detect.js";
+import { DetectPageContext } from "./detect.js";
 
 export const translate = (key, params = {}) => DetectPageContext.translate(key, params);
 

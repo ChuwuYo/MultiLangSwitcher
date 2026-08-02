@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { requestBackground } from "../shared/shared-actions.js";
+import { requestBackground } from "../src/shared/shared-actions.js";
 
 const stubChrome = (response) => {
 	const sendMessage = vi.fn(async () => response);

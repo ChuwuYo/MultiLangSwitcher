@@ -1,7 +1,7 @@
 /* 页面公共基础样式：字体定义与应用（三页共享，单一来源） */
 @font-face {
 	font-family: "MapleMonoNL";
-	src: url("../fonts/MapleMonoNL-Regular.woff2") format("woff2");
+	src: url("../../fonts/MapleMonoNL-Regular.woff2") format("woff2");
 }
 
 /* rem 基于根元素：在 html 上缩放才能同时缩小 bootstrap 的 rem 组件尺寸 */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DomainRulesManager } from "../domain-rules-manager.js";
+import { DomainRulesManager } from "../src/background/domain-rules-manager.js";
 
 const builtinRules = {
 	"example.com": "en",

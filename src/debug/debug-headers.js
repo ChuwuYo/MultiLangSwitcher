@@ -1,9 +1,9 @@
 /**
  * 调试脚本 - 用于验证请求头更改是否生效
  */
-import { sendDebugLog } from "./shared/shared-utils.js";
-import { fetchHeadersFromEndpoints } from "./shared/header-check-utils.js";
-import { debugI18n } from "./i18n/debug-i18n.js";
+import { sendDebugLog } from "../shared/shared-utils.js";
+import { fetchHeadersFromEndpoints } from "../shared/header-check-utils.js";
+import { debugI18n } from "../i18n/debug-i18n.js";
 
 /**
  * 显示当前生效的动态规则和最近匹配的规则

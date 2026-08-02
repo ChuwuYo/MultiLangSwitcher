@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UpdateChecker } from "../shared/shared-update-checker.js";
+import { UpdateChecker } from "../src/shared/shared-update-checker.js";
 const isNewerVersion = (current, latest) => UpdateChecker.prototype.isNewerVersion.call({}, current, latest);
 
 describe("UpdateChecker.isNewerVersion", () => {

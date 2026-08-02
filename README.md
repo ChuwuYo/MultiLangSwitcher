@@ -75,14 +75,14 @@ Features
 * **Theme Switching**: Support for light/dark theme switching
 * **Update Checker**: Automatically checks GitHub Releases for the latest version information
 * **Reset Function**: One-click reset of the Accept-Language request header
-* **Detection Page**: `detect.html` for verifying request header modifications, which detects:
+* **Detection Page**: `src/detect/detect.html` for verifying request header modifications, which detects:
   - `Accept-Language` request headers
   - JavaScript language preferences (`navigator.language`, `navigator.languages`)
   - Internationalization API (Intl) information
   - WebRTC local IP leakage
   - Canvas, WebGL, and AudioContext fingerprinting information
   - AI Diagnosis panel with OpenAI-compatible providers, multi-turn chat, per-provider local config, Markdown export, and message copy actions
-* **Debugging Tools**: `debug.html` provides debugging and diagnostic features, including:
+* **Debugging Tools**: `src/debug/debug.html` provides debugging and diagnostic features, including:
   - View `declarativeNetRequest` dynamic rule details
   - Multi-endpoint request header testing
   - Custom `Accept-Language` strings (e.g., `en-US,en;q=0.9,zh-CN;q=0.8`)
@@ -133,7 +133,7 @@ Usage
 
 ### AI Diagnosis Notes
 
-The `detect.html` page now includes an AI diagnosis panel. It sends the current structured detection snapshot to an OpenAI-compatible model and turns the raw data into user-friendly explanations.
+The `src/detect/detect.html` page now includes an AI diagnosis panel. It sends the current structured detection snapshot to an OpenAI-compatible model and turns the raw data into user-friendly explanations.
 
 Tips:
 

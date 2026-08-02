@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractFunction } from "./helpers/global-loader.js";
 
-const sanitizeSnapshotForAI = extractFunction("detect-ai.js", "sanitizeSnapshotForAI");
+const sanitizeSnapshotForAI = extractFunction("src/detect/detect-ai.js", "sanitizeSnapshotForAI");
 
 const fullSnapshot = () => ({
 	http: {

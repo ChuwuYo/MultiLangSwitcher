@@ -1,7 +1,7 @@
 // toggle.js - 通用切换按钮功能
-import { LOCAL_STORAGE_KEYS } from "./shared/storage-keys.js";
-import { switchLanguageAndReload } from "./shared/shared-utils.js";
-import { ResourceManager } from "./shared/shared-resource-manager.js";
+import { LOCAL_STORAGE_KEYS } from "./storage-keys.js";
+import { switchLanguageAndReload } from "./shared-utils.js";
+import { ResourceManager } from "./shared-resource-manager.js";
 
 // 语言切换功能（复用共享工具函数）
 class LanguageToggle {
@@ -54,11 +54,11 @@ class ThemeManager {
 
 		this.themeButtonDetails = {
 			dark: {
-				icon: '<img src="images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
+				icon: '<img src="../../images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
 				state: "on",
 			},
 			light: {
-				icon: '<img src="images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">',
+				icon: '<img src="../../images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">',
 				state: "off",
 			},
 		};

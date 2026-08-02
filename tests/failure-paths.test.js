@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resetAcceptLanguage } from "../shared/shared-actions.js";
-import { UpdateChecker } from "../shared/shared-update-checker.js";
+import { resetAcceptLanguage } from "../src/shared/shared-actions.js";
+import { UpdateChecker } from "../src/shared/shared-update-checker.js";
 
 const chromeStub = {
 	runtime: {

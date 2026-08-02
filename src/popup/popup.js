@@ -1,26 +1,21 @@
 // --- 导入共享模块 ---
-import { STORAGE_KEYS } from "./shared/storage-keys.js";
-import { registerI18nInstance, sendDebugLog } from "./shared/shared-utils.js";
-import { resetAcceptLanguage } from "./shared/shared-actions.js";
-import { populateLanguageSelect } from "./shared/shared-language-options.js";
-import { ResourceManager } from "./shared/shared-resource-manager.js";
-import { popupI18n } from "./i18n/popup-i18n.js";
-import { getEl } from "./popup/shared.js";
+import { STORAGE_KEYS } from "../shared/storage-keys.js";
+import { registerI18nInstance, sendDebugLog } from "../shared/shared-utils.js";
+import { resetAcceptLanguage } from "../shared/shared-actions.js";
+import { populateLanguageSelect } from "../shared/shared-language-options.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
+import { popupI18n } from "../i18n/popup-i18n.js";
+import { getEl } from "./shared.js";
 import {
 	debouncedUIUpdate,
 	performHeaderCheckGuarded,
 	showError,
 	updateAutoSwitchUI,
 	updateLanguageDisplay,
-} from "./popup/ui-sync.js";
-import {
-	getAutoSwitchStatus,
-	getCurrentLanguage,
-	setAutoSwitchStatus,
-	updateHeaderRules,
-} from "./popup/language-apply.js";
-import { cancelUpdateCheck, debouncedUpdateCheck, resetUpdateCheckState } from "./popup/update-check.js";
-import "./toggle.js";
+} from "./ui-sync.js";
+import { getAutoSwitchStatus, getCurrentLanguage, setAutoSwitchStatus, updateHeaderRules } from "./language-apply.js";
+import { cancelUpdateCheck, debouncedUpdateCheck, resetUpdateCheckState } from "./update-check.js";
+import "../shared/toggle.js";
 
 registerI18nInstance("popup", popupI18n);
 
