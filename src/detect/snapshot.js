@@ -9,6 +9,8 @@ import { getUiLanguage } from "./shared.js";
  * @property {Object} jsEnv - JS 环境信息
  * @property {Object} intl - Intl API 信息
  * @property {Object} webrtc - WebRTC 信息（ips 脱敏）
+ * @property {Object} [localeFormatting] - Locale 格式化指纹
+ * @property {Object} [ipTimezone] - IP 时区（ip 脱敏）
  * @property {Object} browserFingerprint - 浏览器指纹（userAgent 脱敏）
  * @property {Object} hardwareFingerprint - 硬件指纹（canvas/webgl/audio hash 脱敏）
  * @property {{ browser: Object, uaData: Object|null, apiSupport: Array }} compatibility
@@ -73,6 +75,30 @@ export const buildDetectionSnapshot = (results) => {
 			ipLeakDetected: results.webRtcInfo.ipLeakDetected,
 			error: results.webRtcInfo.error,
 		},
+		localeFormatting: results.localeFormattingInfo
+			? {
+					collatorLocale: results.localeFormattingInfo.collatorLocale,
+					pluralLocale: results.localeFormattingInfo.pluralLocale,
+					relativeTimeLocale: results.localeFormattingInfo.relativeTimeLocale,
+					samples: {
+						date: results.localeFormattingInfo.dateSample,
+						number: results.localeFormattingInfo.numberSample,
+						currency: results.localeFormattingInfo.currencySample,
+						sort: results.localeFormattingInfo.sortSample,
+					},
+				}
+			: null,
+		ipTimezone: results.ipTimezoneInfo
+			? {
+					status: results.ipTimezoneInfo.status,
+					ip: results.ipTimezoneInfo.ip,
+					timezone: results.ipTimezoneInfo.timezone,
+					country: results.ipTimezoneInfo.country,
+					region: results.ipTimezoneInfo.region,
+					city: results.ipTimezoneInfo.city,
+					organization: results.ipTimezoneInfo.organization,
+				}
+			: null,
 		browserFingerprint: {
 			userAgent: results.fingerprintInfo.userAgent,
 			screen: results.fingerprintInfo.screen,

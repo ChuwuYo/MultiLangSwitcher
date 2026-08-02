@@ -8,6 +8,8 @@ import {
 	collectExtensionContext,
 	collectFingerprintInfo,
 	collectHeaderInfo,
+	collectIpTimezoneInfo,
+	collectLocaleFormattingInfo,
 	collectIntlInfo,
 	collectJsLanguageInfo,
 	collectWebglFingerprintInfo,
@@ -19,6 +21,7 @@ import {
 	renderCanvasFingerprintInfo,
 	renderCompatibilityInfo,
 	renderFingerprintInfo,
+	renderLocaleFormattingInfo,
 	renderHeaderInfo,
 	renderIntlInfo,
 	renderJsLanguageInfo,
@@ -64,23 +67,28 @@ const runAllDetections = async () => {
 		const jsLanguageInfo = collectJsLanguageInfo();
 		const intlInfo = collectIntlInfo();
 		const fingerprintInfo = collectFingerprintInfo();
+		const localeFormattingInfo = collectLocaleFormattingInfo();
+		const ipTimezoneInfoPromise = collectIpTimezoneInfo();
 		const canvasFingerprintInfo = collectCanvasFingerprintInfo();
 		const webglFingerprintInfo = collectWebglFingerprintInfo();
 		const compatibilityInfoPromise = collectCompatibilityInfo();
 
-		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo, compatibilityInfo] = await Promise.all([
-			extensionContextPromise,
-			headerInfoPromise,
-			webRtcInfoPromise,
-			audioFingerprintInfoPromise,
-			compatibilityInfoPromise,
-		]);
+		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo, compatibilityInfo, ipTimezoneInfo] =
+			await Promise.all([
+				extensionContextPromise,
+				headerInfoPromise,
+				webRtcInfoPromise,
+				audioFingerprintInfoPromise,
+				compatibilityInfoPromise,
+				ipTimezoneInfoPromise,
+			]);
 
 		renderHeaderInfo(headerInfo);
 		renderJsLanguageInfo(jsLanguageInfo);
 		renderIntlInfo(intlInfo);
 		renderWebRtcInfo(webRtcInfo);
-		renderFingerprintInfo(fingerprintInfo);
+		renderFingerprintInfo(fingerprintInfo, ipTimezoneInfo);
+		renderLocaleFormattingInfo(localeFormattingInfo);
 		renderCanvasFingerprintInfo(canvasFingerprintInfo);
 		renderWebglFingerprintInfo(webglFingerprintInfo);
 		renderAudioFingerprintInfo(audioFingerprintInfo);
@@ -93,6 +101,8 @@ const runAllDetections = async () => {
 			intlInfo,
 			webRtcInfo,
 			fingerprintInfo,
+			localeFormattingInfo,
+			ipTimezoneInfo,
 			canvasFingerprintInfo,
 			webglFingerprintInfo,
 			audioFingerprintInfo,

@@ -344,6 +344,122 @@ export const collectIntlInfo = () => {
 	}
 };
 
+/**
+ * Locale 格式化指纹：网站通过格式化输出校验语言声明的真伪
+ * @returns {Object} collator/plural/relativetime/list/segmenter 解析值与日期/数字/货币/排序样本
+ */
+export const collectLocaleFormattingInfo = () => {
+	try {
+		const collator = Intl.Collator().resolvedOptions();
+		const pluralRules = new Intl.PluralRules();
+		const pluralSamples = [0, 1, 2, 5].map((n) => `${n}→${pluralRules.select(n)}`);
+		const now = new Date(2026, 0, 15, 13, 30, 0);
+
+		return {
+			status: "ok",
+			collatorLocale: collator.locale || "N/A",
+			collation: collator.collation || "N/A",
+			caseFirst: collator.caseFirst || "N/A",
+			pluralLocale: pluralRules.resolvedOptions().locale || "N/A",
+			pluralSamples: pluralSamples.join(", "),
+			relativeTimeLocale: new Intl.RelativeTimeFormat().resolvedOptions().locale || "N/A",
+			listFormatLocale: new Intl.ListFormat().resolvedOptions().locale || "N/A",
+			segmenterLocale: typeof Intl.Segmenter === "function" ? new Intl.Segmenter().resolvedOptions().locale : "N/A",
+			dateSample: now.toLocaleString(),
+			numberSample: (1234567.89).toLocaleString(),
+			currencySample: new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(1234.5),
+			sortSample: ["a", "ä", "z"].sort((x, y) => x.localeCompare(y)).join(","),
+			error: "",
+		};
+	} catch (error) {
+		console.error(translateDetect("locale_formatting_detection_failed"), error);
+		return {
+			status: "error",
+			error: error?.message || String(error),
+		};
+	}
+};
+
+/**
+ * IP 地理/时区检测：网站可经出口 IP 推断地区与时区，与系统时区对照即是泄漏点
+ * 多源链式回退（均为免费无 key 的公益服务）
+ */
+const IP_GEO_ENDPOINTS = [
+	{
+		url: "https://ipwhois.app/json/",
+		normalize: (data) => {
+			if (data?.success !== true) throw new Error(data?.message || "ipwhois.app lookup failed");
+			return {
+				ip: data.ip || "",
+				timezone: data.timezone || "N/A",
+				country: data.country || "N/A",
+				region: data.region || "",
+				city: data.city || "",
+				organization: data.org || data.isp || "",
+			};
+		},
+	},
+	{
+		url: "https://free.freeipapi.com/api/json",
+		normalize: (data) => ({
+			ip: data?.ipAddress || "",
+			timezone: Array.isArray(data?.timeZones) ? data.timeZones[0] : "N/A",
+			country: data?.countryName || "N/A",
+			region: data?.regionName || "",
+			city: data?.cityName || "",
+			organization: data?.asnOrganization || "",
+		}),
+	},
+	{
+		url: "https://ipwho.is/",
+		normalize: (data) => {
+			if (!data?.success) throw new Error(data?.message || "ipwho.is lookup failed");
+			return {
+				ip: data.ip || "",
+				timezone: data.timezone?.id || "N/A",
+				country: data.country || "N/A",
+				region: data.region || "",
+				city: data.city || "",
+				organization: data.connection?.org || "",
+			};
+		},
+	},
+];
+
+export const collectIpTimezoneInfo = async () => {
+	const errors = [];
+	for (const endpoint of IP_GEO_ENDPOINTS) {
+		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 8000);
+			const response = await fetch(endpoint.url, { signal: controller.signal, cache: "no-store" });
+			clearTimeout(timeoutId);
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+			const data = await response.json();
+			const result = endpoint.normalize(data);
+			if (!result.timezone || result.timezone === "N/A") {
+				throw new Error("no timezone in response");
+			}
+			return { status: "ok", ...result, error: "" };
+		} catch (error) {
+			errors.push(`${endpoint.url}: ${error?.message || String(error)}`);
+		}
+	}
+	console.warn(translateDetect("ip_timezone_detection_failed"), errors.join("; "));
+	return {
+		status: "error",
+		ip: "",
+		timezone: "N/A",
+		country: "N/A",
+		region: "",
+		city: "",
+		organization: "",
+		error: errors.join("; "),
+	};
+};
+
 const collectWebRtcIps = async () =>
 	new Promise((resolve) => {
 		const ips = [];

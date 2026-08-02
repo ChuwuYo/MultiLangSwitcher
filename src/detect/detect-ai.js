@@ -41,6 +41,11 @@ const sanitizeSnapshotForAI = (snapshot) => {
 		sanitized.browserFingerprint.userAgent = "[redacted]";
 	}
 
+	// IP 时区检测的出口 IP 与 WebRTC IP 同等脱敏
+	if (sanitized.ipTimezone?.ip) {
+		sanitized.ipTimezone.ip = "[redacted]";
+	}
+
 	// UA 字符串同等敏感：保留浏览器名/版本/OS，删除完整 UA
 	if (sanitized.compatibility?.browser) {
 		sanitized.compatibility.browser.userAgent = "[redacted]";

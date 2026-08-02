@@ -358,7 +358,7 @@ export const renderWebRtcInfo = (webRtcInfo) => {
 	webRtcInfoElement.appendChild(fragment);
 };
 
-export const renderFingerprintInfo = (fingerprintInfo) => {
+export const renderFingerprintInfo = (fingerprintInfo, ipTimezoneInfo = null) => {
 	const fingerprintInfoElement = document.getElementById("fingerprintInfo");
 	if (!fingerprintInfoElement) return;
 
@@ -393,10 +393,28 @@ export const renderFingerprintInfo = (fingerprintInfo) => {
 		true,
 	);
 	addDetail(
-		translateDetect("timezone_label"),
+		translateDetect("system_timezone_label"),
 		`${fingerprintInfo.timezone} (${translateDetect("offset_label")} ${fingerprintInfo.timezoneOffset})`,
 		true,
 	);
+
+	if (ipTimezoneInfo) {
+		const ok = ipTimezoneInfo.status === "ok";
+		addDetail(
+			translateDetect("ip_timezone_label"),
+			ok ? ipTimezoneInfo.timezone : translateDetect("ip_timezone_unavailable"),
+			ok,
+		);
+		if (ok) {
+			const geoParts = [ipTimezoneInfo.country, ipTimezoneInfo.region, ipTimezoneInfo.city].filter(Boolean).join(" / ");
+			if (geoParts) {
+				addDetail(translateDetect("ip_geo_label"), geoParts, true);
+			}
+			if (ipTimezoneInfo.organization) {
+				addDetail(translateDetect("ip_org_label"), ipTimezoneInfo.organization);
+			}
+		}
+	}
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
@@ -490,4 +508,52 @@ export const addRefreshButton = (requestRerun) => {
 
 		container.appendChild(refreshButton);
 	}
+};
+
+export const renderLocaleFormattingInfo = (info) => {
+	const el = document.getElementById("localeFormattingInfo");
+	if (!el) return;
+
+	el.innerHTML = "";
+	if (!info || info.status !== "ok") {
+		const errorP = document.createElement("p");
+		errorP.className = "text-danger";
+		errorP.textContent = `${translateDetect("detection_failed")}: ${info?.error || ""}`;
+		el.appendChild(errorP);
+		return;
+	}
+
+	const fragment = document.createDocumentFragment();
+	const addDetail = (title, value, isBold = false) => {
+		const titleP = document.createElement("p");
+		titleP.className = "mb-1 mt-2";
+		const strongTitle = document.createElement("strong");
+		strongTitle.textContent = title;
+		titleP.appendChild(strongTitle);
+		fragment.appendChild(titleP);
+
+		const valP = document.createElement("p");
+		valP.className = `text-success small${isBold ? " fw-bold" : ""}`;
+		valP.textContent = value;
+		fragment.appendChild(valP);
+	};
+
+	addDetail(
+		translateDetect("collator_label"),
+		`${info.collatorLocale} (${info.collation}, caseFirst: ${info.caseFirst})`,
+		true,
+	);
+	addDetail(translateDetect("plural_rules_label"), `${info.pluralLocale} [${info.pluralSamples}]`);
+	addDetail(
+		translateDetect("other_intl_locale_label"),
+		`RelativeTime: ${info.relativeTimeLocale} / List: ${info.listFormatLocale} / Segmenter: ${info.segmenterLocale}`,
+	);
+	addDetail(
+		translateDetect("format_samples_label"),
+		`${info.dateSample} | ${info.numberSample} | ${info.currencySample}`,
+		true,
+	);
+	addDetail(translateDetect("sort_sample_label"), info.sortSample);
+
+	el.appendChild(fragment);
 };
