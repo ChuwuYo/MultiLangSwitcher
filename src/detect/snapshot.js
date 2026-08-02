@@ -77,6 +77,8 @@ export const buildDetectionSnapshot = (results) => {
 		},
 		localeFormatting: results.localeFormattingInfo
 			? {
+					status: results.localeFormattingInfo.status,
+					error: results.localeFormattingInfo.error,
 					collatorLocale: results.localeFormattingInfo.collatorLocale,
 					pluralLocale: results.localeFormattingInfo.pluralLocale,
 					relativeTimeLocale: results.localeFormattingInfo.relativeTimeLocale,

@@ -433,11 +433,13 @@ export const collectIpTimezoneInfo = async () => {
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 8000);
 			const response = await fetch(endpoint.url, { signal: controller.signal, cache: "no-store" });
-			clearTimeout(timeoutId);
 			if (!response.ok) {
+				clearTimeout(timeoutId);
 				throw new Error(`HTTP ${response.status}`);
 			}
+			// clearTimeout 必须在读取 body 之后：端点只回 header 不回 body 时仍能按时中止
 			const data = await response.json();
+			clearTimeout(timeoutId);
 			const result = endpoint.normalize(data);
 			if (!result.timezone || result.timezone === "N/A") {
 				throw new Error("no timezone in response");
