@@ -148,21 +148,25 @@ jobs:
               | jq -r --arg name "$1" '[.assets[] | select(.name == $name) | .id][0] // empty'
           }
 
-          wait_for_asset_digest() {
-            local name="$1" expected="$2" expected_id="${3:-}"
-            local attempt asset_id digest
+          # 下载资产回本地做 sha256 比对（不依赖 GitHub 异步计算的 digest 字段，消除时序抖动）
+          wait_for_asset_bytes() {
+            local name="$1" expected_hex="$2" expected_id="${3:-}"
+            local attempt asset_id
             for attempt in {1..15}; do
               asset_id="$(asset_id_by_name "$name" 2>/dev/null || true)"
               if [ -n "$asset_id" ] && { [ -z "$expected_id" ] || [ "$asset_id" = "$expected_id" ]; }; then
-                digest="$(gh api "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" --jq '.digest // empty' 2>/dev/null || true)"
-                if [ "$digest" = "$expected" ]; then
+                rm -f "$RUNNER_TEMP/asset-check.bin"
+                gh api -H 'Accept: application/octet-stream' \
+                  "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" > "$RUNNER_TEMP/asset-check.bin" 2>/dev/null || true
+                if [ -s "$RUNNER_TEMP/asset-check.bin" ] && \
+                   [ "$(sha256sum "$RUNNER_TEMP/asset-check.bin" | awk '{print $1}')" = "$expected_hex" ]; then
                   printf '%s\n' "$asset_id"
                   return 0
                 fi
               fi
               sleep 2
             done
-            echo "::error::等待 Release 资产 $name 的摘要就绪超时。" >&2
+            echo "::error::等待 Release 资产 $name 下载校验超时。" >&2
             return 1
           }
 
@@ -235,10 +239,10 @@ jobs:
           fi
 
           step gh release upload latest "$staged_zip" --repo "$GITHUB_REPOSITORY"
-          # GitHub 异步计算资产 digest，上传后留出沉降时间再轮询
+          # 上传后短暂沉降，降低资产列表/下载端点的可见性延迟
           sleep 5
-          staged_id="$(wait_for_asset_digest "$staged_name" "sha256:$expected_digest")" || {
-            echo "::error::FAILED AT STEP: wait_for_asset_digest staged"
+          staged_id="$(wait_for_asset_bytes "$staged_name" "$expected_digest")" || {
+            echo "::error::FAILED AT STEP: wait_for_asset_bytes staged"
             exit 1
           }
 
@@ -275,7 +279,7 @@ jobs:
           actual_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq '.object.sha')"
           test "$actual_tag" = "$GITHUB_SHA"
 
-          asset_id="$(wait_for_asset_digest "$FIXED_NAME" "sha256:$expected_digest" "$staged_id")"
+          asset_id="$(wait_for_asset_bytes "$FIXED_NAME" "$expected_digest" "$staged_id")"
           test "$asset_id" = "$staged_id"
           gh api -H 'Accept: application/octet-stream' \
             "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" > "$RUNNER_TEMP/published.zip"
