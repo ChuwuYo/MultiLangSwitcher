@@ -1,4 +1,12 @@
 const detectEn = {
+	hardware_info_label: "Hardware",
+	cores_unit: "cores",
+	touch_points_label: "touch points",
+	display_caps_label: "Display capabilities",
+	connection_label: "Connection",
+	storage_quota_label: "Storage usage / quota",
+	voices_label: "Speech synthesis voices",
+	webgl_extensions_count_label: "WebGL extensions",
 	ai_copy_tooltip: "Copy",
 	ai_copied_tooltip: "Copied",
 	theme_toggle: "Toggle Theme",
@@ -209,6 +217,14 @@ const detectEn = {
 };
 
 const detectZh = {
+	hardware_info_label: "硬件信息",
+	cores_unit: "核",
+	touch_points_label: "触点数",
+	display_caps_label: "显示能力",
+	connection_label: "网络连接",
+	storage_quota_label: "存储用量 / 配额",
+	voices_label: "语音合成声音数",
+	webgl_extensions_count_label: "WebGL 扩展数量",
 	ai_copy_tooltip: "复制",
 	ai_copied_tooltip: "已复制",
 	theme_toggle: "切换主题",

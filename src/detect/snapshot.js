@@ -76,6 +76,11 @@ export const buildDetectionSnapshot = (results) => {
 		browserFingerprint: {
 			userAgent: results.fingerprintInfo.userAgent,
 			screen: results.fingerprintInfo.screen,
+			hardware: results.fingerprintInfo.hardware,
+			display: results.fingerprintInfo.display,
+			connection: results.fingerprintInfo.connection,
+			storage: results.fingerprintInfo.storage,
+			voices: results.fingerprintInfo.voices,
 			timezone: results.fingerprintInfo.timezone,
 			timezoneOffset: results.fingerprintInfo.timezoneOffset,
 		},
@@ -92,6 +97,7 @@ export const buildDetectionSnapshot = (results) => {
 				renderer: results.webglFingerprintInfo.renderer,
 				version: results.webglFingerprintInfo.version,
 				shadingLanguageVersion: results.webglFingerprintInfo.shadingLanguageVersion,
+				extensionsCount: results.webglFingerprintInfo.extensionsCount,
 				error: results.webglFingerprintInfo.error,
 			},
 			audio: {
