@@ -96,216 +96,33 @@ jobs:
         with:
           name: extension-zip
           path: release
-      - name: Publish asset with rollback, then move tag and verify
+      - name: Verify artifact integrity and branch head
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: bash
         run: |
           set -euo pipefail
-          VERSION=$(jq -r .version manifest.json)
-          FIXED_NAME="MultiLangSwitcher-latest.zip"
           zip_file="$(ls release/MultiLangSwitcher-v*.zip)"
-          expected_digest="$(cat release/digest.txt)"
-          source_sha="$(cat release/source-sha.txt)"
-          test "$source_sha" = "$GITHUB_SHA"
-          test "$(sha256sum "$zip_file" | awk '{print $1}')" = "$expected_digest"
-
-          current_branch_sha() {
-            gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$GITHUB_REF_NAME" --jq '.object.sha'
-          }
-
-          # concurrency 只能约束运行顺序；显式头检查同时拦截旧 run 的 Re-run。
-          assert_current_head() {
-            local current
-            current="$(current_branch_sha)"
-            if [ "$current" != "$GITHUB_SHA" ]; then
-              echo "::error::$GITHUB_REF_NAME 已前进到 $current，拒绝用旧提交 $GITHUB_SHA 更新滚动 Release。"
-              return 1
-            fi
-          }
-          assert_current_head
-
-          release_api="repos/$GITHUB_REPOSITORY/releases/tags/latest"
-          metadata_before="$RUNNER_TEMP/release-metadata-before.json"
-          old_tag_sha=''
-          release_id=''
-          if gh api "$release_api" > "$RUNNER_TEMP/release-before.json" 2>/dev/null; then
-            release_id="$(jq -r '.id' "$RUNNER_TEMP/release-before.json")"
-            jq '{name, body, draft, prerelease}' "$RUNNER_TEMP/release-before.json" > "$metadata_before"
-            old_tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq '.object.sha' 2>/dev/null || true)"
-          else
-            jq -n '{name: "Latest (continuous)", body: "", draft: false, prerelease: true}' > "$metadata_before"
-          fi
-
-          staged_name="staging-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}.zip"
-          rollback_name="rollback-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.zip"
-          staged_zip="release/$staged_name"
-          cp "$zip_file" "$staged_zip"
-
-          asset_id_by_name() {
-            test -n "$release_id" || return 0
-            gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
-              | jq -r --arg name "$1" '[.assets[] | select(.name == $name) | .id][0] // empty'
-          }
-
-          # 下载资产回本地做 sha256 比对（不依赖 GitHub 异步计算的 digest 字段，消除时序抖动）
-          wait_for_asset_bytes() {
-            local name="$1" expected_hex="$2" expected_id="${3:-}"
-            local attempt asset_id
-            for attempt in {1..15}; do
-              asset_id="$(asset_id_by_name "$name" 2>/dev/null || true)"
-              if [ -n "$asset_id" ] && { [ -z "$expected_id" ] || [ "$asset_id" = "$expected_id" ]; }; then
-                rm -f "$RUNNER_TEMP/asset-check.bin"
-                gh api -H 'Accept: application/octet-stream' \
-                  "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" > "$RUNNER_TEMP/asset-check.bin" 2>/dev/null || true
-                if [ -s "$RUNNER_TEMP/asset-check.bin" ] && \
-                   [ "$(sha256sum "$RUNNER_TEMP/asset-check.bin" | awk '{print $1}')" = "$expected_hex" ]; then
-                  printf '%s\n' "$asset_id"
-                  return 0
-                fi
-              fi
-              sleep 2
-            done
-            echo "::error::等待 Release 资产 $name 下载校验超时。" >&2
-            return 1
-          }
-
-          staged_id=''
-          old_asset_id="$(asset_id_by_name "$FIXED_NAME")"
-          test -z "$(asset_id_by_name "$staged_name")"
-          test -z "$(asset_id_by_name "$rollback_name")"
-
-          rollback_publish() {
-            local status="$1"
-            local cleanup_id fixed_id old_name current_tag
-            trap - ERR INT TERM
-            set +e
-            echo '::warning::滚动 Release 发布失败，正在恢复上一个已验证状态。'
-
-            cleanup_id="$staged_id"
-            if [ -z "$cleanup_id" ]; then
-              cleanup_id="$(asset_id_by_name "$staged_name")"
-            fi
-            if [ -n "$cleanup_id" ] && [ "$cleanup_id" != "$old_asset_id" ]; then
-              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$cleanup_id" >/dev/null
-            fi
-
-            if [ -n "$old_asset_id" ]; then
-              old_name="$(gh api "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" --jq '.name' 2>/dev/null)"
-              if [ -n "$old_name" ] && [ "$old_name" != "$FIXED_NAME" ]; then
-                fixed_id="$(asset_id_by_name "$FIXED_NAME")"
-                if [ -n "$fixed_id" ] && [ "$fixed_id" != "$old_asset_id" ]; then
-                  gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$fixed_id" >/dev/null
-                fi
-                gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" \
-                  -f name="$FIXED_NAME" >/dev/null
-              fi
-            fi
-
-            if [ -n "$release_id" ]; then
-              gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" \
-                --input "$metadata_before" >/dev/null
-            fi
-            if [ -n "$old_tag_sha" ]; then
-              gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
-                -f sha="$old_tag_sha" -F force=true >/dev/null
-              current_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq '.object.sha' 2>/dev/null)"
-              if [ "$current_tag" != "$old_tag_sha" ]; then
-                echo '::error::tag 回滚未恢复，需要人工检查。'
-              fi
-            fi
-            exit "$status"
-          }
-          trap 'rollback_publish $?' ERR
-          trap 'rollback_publish 130' INT
-          trap 'rollback_publish 143' TERM
-
-          # 失败定位辅助：每个关键步骤出错时打印步骤名（此前裸失败时无报错行可查）
-          step() {
-            echo "::group::$*"
-            local rc=0
-            "$@" || rc=$?
-            echo "::endgroup::"
-            if [ "$rc" -ne 0 ]; then echo "::error::FAILED AT STEP: $* (exit $rc)"; fi
-            return "$rc"
-          }
-
-          # 首次发布：创建 prerelease；后续：上传暂存资产并校验摘要。
-          if [ -z "$release_id" ]; then
-            gh release create latest --repo "$GITHUB_REPOSITORY" \
-              --title "Latest (continuous)" --prerelease --notes "滚动最新构建渠道。"
-            release_id="$(gh api "$release_api" --jq '.id')"
-            test -n "$release_id"
-          fi
-
-          step gh release upload latest "$staged_zip" --repo "$GITHUB_REPOSITORY"
-          # 上传后短暂沉降，降低资产列表/下载端点的可见性延迟
-          sleep 5
-          staged_id="$(wait_for_asset_bytes "$staged_name" "$expected_digest")" || {
-            echo "::error::FAILED AT STEP: wait_for_asset_bytes staged"
-            exit 1
-          }
-
-          # 上传暂存资产可能耗时；在触碰旧固定资产前再核对一次分支头。
-          assert_current_head
-
-          # 暂存资产完整后，旧固定资产改回滚名，新资产切换为固定名。
-          if [ -n "$old_asset_id" ]; then
-            step gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" \
-              -f name="$rollback_name" >/dev/null
-          fi
-          step gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/assets/$staged_id" \
-            -f name="$FIXED_NAME" >/dev/null
-
-          notes="$RUNNER_TEMP/release-notes.md"
-          {
-            echo "自动构建的最新扩展包（滚动测试渠道，与正式版 Release 互不冲突）。"
-            echo "- 版本：v${VERSION}"
-            echo "- 提交：${GITHUB_SHA}"
-            echo "- 分支：${GITHUB_REF_NAME}"
-          } > "$notes"
-          gh release edit latest --repo "$GITHUB_REPOSITORY" \
-            --title "Latest v${VERSION} (${GITHUB_SHA::7})" \
-            --notes-file "$notes" \
-            --prerelease
-
-          # 新资产和发布说明就绪后才移动 tag。
-          assert_current_head
-          gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
-            -f sha="$GITHUB_SHA" -F force=true >/dev/null || \
-          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
-            -f ref="refs/tags/latest" -f sha="$GITHUB_SHA" >/dev/null
-
-          actual_tag="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq '.object.sha')"
-          test "$actual_tag" = "$GITHUB_SHA"
-
-          asset_id="$(wait_for_asset_bytes "$FIXED_NAME" "$expected_digest" "$staged_id")"
-          test "$asset_id" = "$staged_id"
-          gh api -H 'Accept: application/octet-stream' \
-            "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" > "$RUNNER_TEMP/published.zip"
-          test "$(sha256sum "$RUNNER_TEMP/published.zip" | awk '{print $1}')" = "$expected_digest"
-
-          # 若发布期间分支已前进，就在旧资产仍可恢复时主动回滚本次结果。
-          assert_current_head
-
-          # 新状态已完整核验，之后只清理旧副本。
-          trap - ERR INT TERM
-          if [ -n "$old_asset_id" ]; then
-            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$old_asset_id" >/dev/null
-          fi
-          mapfile -t orphan_asset_ids < <(
-            gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
-              | jq -r '.assets[] | select(.name | test("^(staging|rollback)-.*\\.zip$")) | .id'
-          )
-          for orphan_id in "${orphan_asset_ids[@]}"; do
-            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$orphan_id" >/dev/null
-          done
-
-          final_count="$(
-            gh api "repos/$GITHUB_REPOSITORY/releases/$release_id" \
-              | jq --arg name "$FIXED_NAME" '[.assets[] | select(.name == $name)] | length'
-          )"
-          test "$final_count" = '1'
+          test "$(cat release/digest.txt)" = "$(sha256sum "$zip_file" | awk '{print $1}')"
+          test "$(cat release/source-sha.txt)" = "$GITHUB_SHA"
+          # 过期 run（re-run 或并发）不接触线上 Release
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$GITHUB_REF_NAME" --jq '.object.sha')"
+          test "$current" = "$GITHUB_SHA" || { echo "::error::$GITHUB_REF_NAME 已前进，拒绝用旧提交发布。"; exit 1; }
+          cp "$zip_file" release/MultiLangSwitcher-latest.zip
+      - name: Move latest tag to HEAD
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -fa latest -m "Rolling latest build"
+          git push -f origin latest
+      - uses: softprops/action-gh-release@c12583777ecdfd3be55c69cf75464299dc01057e # v3
+        with:
+          tag_name: latest
+          name: Latest (continuous)
+          body: |
+            自动构建的最新扩展包（滚动测试渠道，与正式版 Release 互不冲突）。
+            提交：${{ github.sha }}
+          prerelease: true
+          files: release/MultiLangSwitcher-latest.zip
 
   release:
     name: Publish tagged release
@@ -333,7 +150,7 @@ jobs:
           zip_file="$(ls release/MultiLangSwitcher-v*.zip)"
           test "$(sha256sum "$zip_file" | awk '{print $1}')" = "$(cat release/digest.txt)"
           test "$(cat release/source-sha.txt)" = "$GITHUB_SHA"
-      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+      - uses: softprops/action-gh-release@c12583777ecdfd3be55c69cf75464299dc01057e # v3
         with:
           files: release/MultiLangSwitcher-v*.zip
           generate_release_notes: true
