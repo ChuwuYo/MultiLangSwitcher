@@ -248,7 +248,6 @@ export const collectWebglFingerprintInfo = () => {
 		const version = gl.getParameter(gl.VERSION) || "N/A";
 		const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
 
-		const extensions = gl.getSupportedExtensions() || [];
 		const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
 		return {
 			status: "ok",
@@ -257,7 +256,6 @@ export const collectWebglFingerprintInfo = () => {
 			renderer,
 			version,
 			shadingLanguageVersion,
-			extensionsCount: extensions.length,
 			error: "",
 		};
 	} catch (error) {
@@ -430,72 +428,18 @@ export const collectWebRtcInfo = async () => {
 	}
 };
 
-export const collectFingerprintInfo = async () => {
+export const collectFingerprintInfo = () => {
 	try {
 		const screenInfo = {
 			width: screen.width || 0,
 			height: screen.height || 0,
 			colorDepth: screen.colorDepth || 0,
-			availWidth: screen.availWidth || 0,
-			availHeight: screen.availHeight || 0,
-			pixelRatio: window.devicePixelRatio || 1,
-			orientation: screen.orientation?.type || "N/A",
 		};
-
-		const hardware = {
-			cores: navigator.hardwareConcurrency || 0,
-			// @ts-expect-error deviceMemory 为非标准但 Chromium 支持的指纹面
-			memory: navigator.deviceMemory || 0,
-			maxTouchPoints: navigator.maxTouchPoints || 0,
-		};
-
-		const media = (query) => (typeof matchMedia === "function" && matchMedia(query).matches) || false;
-		const display = {
-			colorGamut: media("(color-gamut: rec2020)") ? "rec2020" : media("(color-gamut: p3)") ? "p3" : "srgb",
-			dynamicRange: media("(dynamic-range: high)") ? "high" : "standard",
-			prefersColorScheme: media("(prefers-color-scheme: dark)") ? "dark" : "light",
-			prefersReducedMotion: media("(prefers-reduced-motion: reduce)"),
-			prefersContrast: media("(prefers-contrast: more)") ? "more" : "no-preference",
-		};
-
-		// @ts-expect-error NetworkInformation 为非标准但 Chromium 支持
-		const connection = navigator.connection
-			? {
-					// @ts-expect-error 同上
-					effectiveType: navigator.connection.effectiveType || "N/A",
-					// @ts-expect-error 同上
-					downlink: navigator.connection.downlink ?? null,
-					// @ts-expect-error 同上
-					rtt: navigator.connection.rtt ?? null,
-					// @ts-expect-error 同上
-					saveData: !!navigator.connection.saveData,
-				}
-			: null;
-
-		let storage = null;
-		if (navigator.storage?.estimate) {
-			try {
-				const estimate = await navigator.storage.estimate();
-				storage = { quota: estimate.quota ?? 0, usage: estimate.usage ?? 0 };
-			} catch (_error) {}
-		}
-
-		let voices = null;
-		if (typeof speechSynthesis !== "undefined") {
-			try {
-				voices = speechSynthesis.getVoices().length;
-			} catch (_error) {}
-		}
 
 		return {
 			status: "ok",
 			userAgent: navigator.userAgent || "N/A",
 			screen: screenInfo,
-			hardware,
-			display,
-			connection,
-			storage,
-			voices,
 			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A",
 			timezoneOffset: new Date().getTimezoneOffset(),
 			error: "",
@@ -506,11 +450,6 @@ export const collectFingerprintInfo = async () => {
 			status: "error",
 			userAgent: "N/A",
 			screen: { width: 0, height: 0, colorDepth: 0 },
-			hardware: null,
-			display: null,
-			connection: null,
-			storage: null,
-			voices: null,
 			timezone: "N/A",
 			timezoneOffset: 0,
 			error: error?.message || String(error),

@@ -208,7 +208,6 @@ export const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 	addDetail(translateDetect("webgl_unmasked_renderer_label"), webglFingerprintInfo.renderer);
 	addDetail(translateDetect("webgl_version_label"), webglFingerprintInfo.version);
 	addDetail(translateDetect("webgl_shading_language_version_label"), webglFingerprintInfo.shadingLanguageVersion);
-	addDetail(translateDetect("webgl_extensions_count_label"), String(webglFingerprintInfo.extensionsCount ?? 0));
 
 	const footerP = document.createElement("p");
 	footerP.className = "mb-0 mt-2 small text-muted";
@@ -390,48 +389,9 @@ export const renderFingerprintInfo = (fingerprintInfo) => {
 	addDetail(translateDetect("user_agent_label"), fingerprintInfo.userAgent, false, "", true);
 	addDetail(
 		translateDetect("screen_information_label"),
-		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}` +
-			` @${fingerprintInfo.screen.pixelRatio}x (${fingerprintInfo.screen.availWidth}x${fingerprintInfo.screen.availHeight}, ${fingerprintInfo.screen.orientation})`,
+		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}`,
 		true,
 	);
-
-	if (fingerprintInfo.hardware) {
-		const hw = fingerprintInfo.hardware;
-		addDetail(
-			translateDetect("hardware_info_label"),
-			`${hw.cores} ${translateDetect("cores_unit")} / ${hw.memory || "?"} GB / ${translateDetect("touch_points_label")} ${hw.maxTouchPoints}`,
-			true,
-		);
-	}
-
-	if (fingerprintInfo.display) {
-		const d = fingerprintInfo.display;
-		addDetail(
-			translateDetect("display_caps_label"),
-			`${d.colorGamut} / ${d.dynamicRange} / ${d.prefersColorScheme}${d.prefersReducedMotion ? " / reduced-motion" : ""}`,
-			true,
-		);
-	}
-
-	if (fingerprintInfo.connection) {
-		const c = fingerprintInfo.connection;
-		addDetail(
-			translateDetect("connection_label"),
-			`${c.effectiveType} / ${c.downlink} Mbps / RTT ${c.rtt} ms${c.saveData ? " / save-data" : ""}`,
-			true,
-		);
-	}
-
-	if (fingerprintInfo.storage) {
-		const quotaGb = (fingerprintInfo.storage.quota / 1024 ** 3).toFixed(1);
-		const usageMb = (fingerprintInfo.storage.usage / 1024 ** 2).toFixed(1);
-		addDetail(translateDetect("storage_quota_label"), `${usageMb} MB / ${quotaGb} GB`, true);
-	}
-
-	if (fingerprintInfo.voices !== null && fingerprintInfo.voices !== undefined) {
-		addDetail(translateDetect("voices_label"), String(fingerprintInfo.voices), true);
-	}
-
 	addDetail(
 		translateDetect("timezone_label"),
 		`${fingerprintInfo.timezone} (${translateDetect("offset_label")} ${fingerprintInfo.timezoneOffset})`,

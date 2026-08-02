@@ -63,20 +63,18 @@ const runAllDetections = async () => {
 
 		const jsLanguageInfo = collectJsLanguageInfo();
 		const intlInfo = collectIntlInfo();
-		const fingerprintInfoPromise = collectFingerprintInfo();
+		const fingerprintInfo = collectFingerprintInfo();
 		const canvasFingerprintInfo = collectCanvasFingerprintInfo();
 		const webglFingerprintInfo = collectWebglFingerprintInfo();
 		const compatibilityInfoPromise = collectCompatibilityInfo();
 
-		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo, compatibilityInfo, fingerprintInfo] =
-			await Promise.all([
-				extensionContextPromise,
-				headerInfoPromise,
-				webRtcInfoPromise,
-				audioFingerprintInfoPromise,
-				compatibilityInfoPromise,
-				fingerprintInfoPromise,
-			]);
+		const [extensionContext, headerInfo, webRtcInfo, audioFingerprintInfo, compatibilityInfo] = await Promise.all([
+			extensionContextPromise,
+			headerInfoPromise,
+			webRtcInfoPromise,
+			audioFingerprintInfoPromise,
+			compatibilityInfoPromise,
+		]);
 
 		renderHeaderInfo(headerInfo);
 		renderJsLanguageInfo(jsLanguageInfo);
