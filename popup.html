@@ -31,22 +31,25 @@
       margin-bottom: 15px;
     }
 
-    /* 状态卡：当前语言醒目展示，重置按钮内嵌同行 */
-    .status-card {
+    /* 状态行：状态卡 + 独立重置按钮 */
+    .status-row {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      align-items: stretch;
       gap: 8px;
-      padding: 8px 10px 8px 12px;
-      border: 1px solid var(--bs-border-color);
-      border-radius: 8px;
-      background-color: var(--bs-tertiary-bg);
       margin-bottom: 12px;
     }
 
-    .status-card #statusText {
+    /* 状态卡：当前语言醒目展示 */
+    .status-card {
       flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--bs-border-color);
+      border-radius: 8px;
+      background-color: var(--bs-tertiary-bg);
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* 分区节奏 */
@@ -199,13 +202,13 @@
       background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
     }
 
-    /* 重置按钮内嵌状态卡右侧（覆盖 .toggle 的角落绝对定位，尺寸与角落按钮一致） */
+    /* 重置按钮：状态卡右侧独立按钮（覆盖 .toggle 的角落绝对定位） */
     #resetBtn {
       position: static;
       flex-shrink: 0;
-      width: 28px;
-      height: 28px;
+      width: 36px;
       font-size: 0.9rem;
+      border-radius: 8px;
     }
 
     /* 更新检查按钮基础样式 - 独特的淡紫色调 */
@@ -472,9 +475,12 @@
       <p class="text-muted mb-0" id="extensionSubtitle" data-i18n="subtitle"></p>
     </div>
 
-    <!-- 当前状态卡：当前语言一目了然，重置按钮贴着状态 -->
-    <div class="status-card">
-      <p id="statusText" class="mb-0"></p>
+    <!-- 状态行：当前语言状态卡 + 独立重置按钮 -->
+    <div class="status-row">
+      <!-- 当前状态卡：当前语言一目了然 -->
+      <div class="status-card">
+        <p id="statusText" class="mb-0"></p>
+      </div>
       <!-- 重置Accept-Language按钮 -->
       <button id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip"><img src="images/reset.svg" id="resetBtnImg" width="16" height="16"
           class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
