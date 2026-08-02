@@ -406,7 +406,8 @@ export const renderFingerprintInfo = (fingerprintInfo, ipTimezoneInfo = null) =>
 			ok,
 		);
 		if (ok) {
-			const geoParts = [ipTimezoneInfo.country, ipTimezoneInfo.region, ipTimezoneInfo.city].filter(Boolean).join(" / ");
+			// 精度只到地区级（国家/地区），城市级 geo 库误差大不展示
+			const geoParts = [ipTimezoneInfo.country, ipTimezoneInfo.region].filter(Boolean).join(" / ");
 			if (geoParts) {
 				addDetail(translateDetect("ip_geo_label"), geoParts, true);
 			}
