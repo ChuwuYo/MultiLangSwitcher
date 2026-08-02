@@ -446,7 +446,7 @@ export const collectIpTimezoneInfo = async () => {
 	for (const endpoint of IP_GEO_ENDPOINTS) {
 		try {
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 8000);
+			const timeoutId = setTimeout(() => controller.abort(), 5000);
 			const response = await fetch(endpoint.url, { signal: controller.signal, cache: "no-store" });
 			if (!response.ok) {
 				clearTimeout(timeoutId);
