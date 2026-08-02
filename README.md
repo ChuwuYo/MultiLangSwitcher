@@ -33,10 +33,10 @@ If you need to switch the browser UA, you can take a look at this project: [User
     <table>
         <tr>
             <td>
-                <img src="docs/screenshots/popup-cn-light.png" alt="CN_Light">
+                <img src="docs/screenshots/popup-cn-light.png?v=2" alt="CN_Light">
             </td>
             <td>
-                <img src="docs/screenshots/popup-en-dark.png" alt="EN_Dark">
+                <img src="docs/screenshots/popup-en-dark.png?v=2" alt="EN_Dark">
             </td>
         </tr>
     </table>
