@@ -57,19 +57,19 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(jq -r .version manifest.json)
-          STAGE="MultiLangSwitcher-v${VERSION}"
+          STAGE="MultiLangSwitcher"
           mkdir "$STAGE"
           cp manifest.json LICENSE "$STAGE/"
           cp -r src _locales assets "$STAGE/"
           find "$STAGE/src/shared/vendor" -name "*.map" -delete 2>/dev/null || true
-          zip -r "${STAGE}.zip" "$STAGE"
-          sha256sum "${STAGE}.zip" | awk '{print $1}' > digest.txt
+          zip -r "MultiLangSwitcher.zip" "$STAGE"
+          sha256sum "MultiLangSwitcher.zip" | awk '{print $1}' > digest.txt
           printf '%s\n' "$GITHUB_SHA" > source-sha.txt
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: extension-zip
           path: |
-            MultiLangSwitcher-v*.zip
+            MultiLangSwitcher.zip
             digest.txt
             source-sha.txt
           if-no-files-found: error
@@ -94,7 +94,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          zip_file="$(ls release/MultiLangSwitcher-v*.zip)"
+          zip_file="release/MultiLangSwitcher.zip"
           test "$(cat release/digest.txt)" = "$(sha256sum "$zip_file" | awk '{print $1}')"
           test "$(cat release/source-sha.txt)" = "$GITHUB_SHA"
           # 过期 run（re-run 或并发）不接触线上 Release
@@ -140,10 +140,10 @@ jobs:
       - name: Verify digest before publishing
         run: |
           set -euo pipefail
-          zip_file="$(ls release/MultiLangSwitcher-v*.zip)"
+          zip_file="release/MultiLangSwitcher.zip"
           test "$(sha256sum "$zip_file" | awk '{print $1}')" = "$(cat release/digest.txt)"
           test "$(cat release/source-sha.txt)" = "$GITHUB_SHA"
       - uses: softprops/action-gh-release@c12583777ecdfd3be55c69cf75464299dc01057e # v3
         with:
-          files: release/MultiLangSwitcher-v*.zip
+          files: release/MultiLangSwitcher.zip
           generate_release_notes: true
