@@ -1,6 +1,6 @@
 {
 	"name": "multilangswitcher",
-	"version": "2.2.0",
+	"version": "2.2.4",
 	"private": true,
 	"description": "Chrome extension for switching Accept-Language headers per domain",
 	"type": "module",
