@@ -47,7 +47,7 @@ export class DomainRulesManager {
 	 */
 	async _loadRulesFromFile() {
 		try {
-			const url = chrome.runtime.getURL("domain-rules.json");
+			const url = chrome.runtime.getURL("src/background/domain-rules.json");
 			const response = await fetch(url);
 
 			if (!response.ok) {

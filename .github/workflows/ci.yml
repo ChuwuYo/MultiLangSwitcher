@@ -39,7 +39,7 @@ jobs:
       - name: Verify purged CSS is in sync
         run: |
           node scripts/purge-css.mjs
-          git diff --exit-code bootstrap.purged.css
+          git diff --exit-code src/shared/vendor/bootstrap.purged.css
 
   package:
     name: Build extension zip
@@ -59,8 +59,8 @@ jobs:
           VERSION=$(jq -r .version manifest.json)
           STAGE="MultiLangSwitcher-v${VERSION}"
           mkdir "$STAGE"
-          cp manifest.json LICENSE domain-rules.json bootstrap.purged.css "$STAGE/"
-          cp -r src _locales images fonts "$STAGE/"
+          cp manifest.json LICENSE "$STAGE/"
+          cp -r src _locales assets "$STAGE/"
           find "$STAGE/src/shared/vendor" -name "*.map" -delete 2>/dev/null || true
           zip -r "${STAGE}.zip" "$STAGE"
           sha256sum "${STAGE}.zip" | awk '{print $1}' > digest.txt

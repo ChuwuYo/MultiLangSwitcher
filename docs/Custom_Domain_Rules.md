@@ -2,7 +2,7 @@
 
 `domain-rules-manager.js` 在域名匹配时会优先读取 `chrome.storage.local` 中的
 `customDomainRules` 键。该键**没有内置 UI**，是一个面向高级用户 / 开发调试的
-手动注入扩展点：用于覆盖或补充内置的 `domain-rules.json` 映射。
+手动注入扩展点：用于覆盖或补充内置的 `src/background/domain-rules.json` 映射。
 
 ## 数据结构
 

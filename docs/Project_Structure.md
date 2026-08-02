@@ -7,15 +7,14 @@ MultiLangSwitcher/
 ├── LICENSE                          - 许可证文件
 ├── README.md                        - 项目说明文档
 ├── manifest.json                    - MV3 清单（SW: src/background/background.js，popup: src/popup/popup.html）
-├── domain-rules.json                - 内置域名规则（web_accessible_resource，保留根目录）
-├── bootstrap.min.css                - Bootstrap 源文件（仅裁剪输入，不直接引用）
-├── bootstrap.purged.css             - PurgeCSS 裁剪产物（页面实际引用）
 ├── package.json / tsconfig.json / biome.json / renovate.json
 ├── _locales/                        - manifest 元数据国际化（chrome.i18n）
+├── assets/                          - 静态资产
+│   ├── images/                      - 图标与图片
+│   └── fonts/                       - 自托管字体
 ├── docs/                            - 文档（含 screenshots/）
 ├── scripts/                         - CI 校验/构建脚本
 ├── tests/                           - vitest 测试
-├── images/ fonts/                   - 静态资源
 └── src/                             - 全部运行时代码
     ├── popup/                       - 弹窗页
     │   ├── popup.html               - 页面（单 module 入口 popup.js）
@@ -47,7 +46,8 @@ MultiLangSwitcher/
     │   ├── lifecycle.js             - 初始化、上下文菜单、启动/安装/标签页监听
     │   ├── rule-engine.js           - DNR 规则应用（互斥锁 + 重试）
     │   ├── message-handlers.js      - MESSAGE_HANDLERS 分发表 + 全部处理器
-    │   └── domain-rules-manager.js  - 域名规则（LRU 缓存；customDomainRules 扩展点）
+    │   ├── domain-rules-manager.js  - 域名规则（LRU 缓存；customDomainRules 扩展点）
+    │   └── domain-rules.json        - 内置域名规则（web_accessible_resource）
     ├── shared/                      - 跨页共享模块
     │   ├── message-types.js         - 消息协议常量（MessageTypes，13 个）
     │   ├── storage-keys.js          - 存储键常量（STORAGE_KEYS / LOCAL_STORAGE_KEYS）
@@ -60,7 +60,7 @@ MultiLangSwitcher/
     │   ├── theme-init.js            - 主题初始化（classic script，预渲染同步执行）
     │   ├── toggle.js / toggle.css   - 语言/主题切换组件（各页面 side-effect 导入）
     │   ├── page-base.css            - 页面公共基础样式（字体定义，单一来源）
-    │   └── vendor/                  - marked / DOMPurify（classic script）
+    │   └── vendor/                  - 第三方资产：marked / DOMPurify / bootstrap 源文件与 PurgeCSS 产物
     └── i18n/                        - 运行时 i18n（每组件单文件双语字典 + 实例模块）
         ├── popup-dict.js / popup-i18n.js
         ├── debug-dict.js / debug-i18n.js

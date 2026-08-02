@@ -54,11 +54,11 @@ class ThemeManager {
 
 		this.themeButtonDetails = {
 			dark: {
-				icon: '<img src="../../images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
+				icon: '<img src="../../assets/images/sun.svg" alt="Light Mode" width="16" height="16" class="invert-on-dark">',
 				state: "on",
 			},
 			light: {
-				icon: '<img src="../../images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">',
+				icon: '<img src="../../assets/images/moon.svg" alt="Dark Mode" width="16" height="16" class="invert-on-dark">',
 				state: "off",
 			},
 		};

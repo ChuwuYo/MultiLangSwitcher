@@ -11,13 +11,13 @@
 	"action": {
 		"default_popup": "src/popup/popup.html",
 		"default_icon": {
-			"16": "images/icon16.png",
-			"32": "images/icon32.png",
-			"48": "images/icon48.png",
-			"64": "images/icon64.png",
-			"128": "images/icon128.png",
-			"256": "images/icon256.png",
-			"512": "images/icon512.png"
+			"16": "assets/images/icon16.png",
+			"32": "assets/images/icon32.png",
+			"48": "assets/images/icon48.png",
+			"64": "assets/images/icon64.png",
+			"128": "assets/images/icon128.png",
+			"256": "assets/images/icon256.png",
+			"512": "assets/images/icon512.png"
 		}
 	},
 	"background": {
@@ -27,17 +27,17 @@
 	"permissions": ["storage", "declarativeNetRequest", "declarativeNetRequestFeedback", "tabs", "contextMenus"],
 	"host_permissions": ["<all_urls>"],
 	"icons": {
-		"16": "images/icon16.png",
-		"32": "images/icon32.png",
-		"48": "images/icon48.png",
-		"64": "images/icon64.png",
-		"128": "images/icon128.png",
-		"256": "images/icon256.png",
-		"512": "images/icon512.png"
+		"16": "assets/images/icon16.png",
+		"32": "assets/images/icon32.png",
+		"48": "assets/images/icon48.png",
+		"64": "assets/images/icon64.png",
+		"128": "assets/images/icon128.png",
+		"256": "assets/images/icon256.png",
+		"512": "assets/images/icon512.png"
 	},
 	"web_accessible_resources": [
 		{
-			"resources": ["images/*", "domain-rules.json", "fonts/*"],
+			"resources": ["assets/images/*", "src/background/domain-rules.json", "assets/fonts/*"],
 			"matches": ["<all_urls>"],
 			"use_dynamic_url": true
 		}
