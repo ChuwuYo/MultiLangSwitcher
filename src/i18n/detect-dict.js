@@ -120,24 +120,20 @@ const detectEn = {
 	ai_provider_kimi: "Kimi / Moonshot",
 	ai_provider_minimax: "MiniMax",
 	ai_provider_custom: "Custom Compatible API",
-	ai_provider_openai_desc:
-		"Official OpenAI endpoint with default Base URL https://api.openai.com/v1. Default model is gpt-5-mini.",
+	ai_provider_openai_desc: "Official OpenAI endpoint with default Base URL https://api.openai.com/v1.",
 	ai_provider_openrouter_desc:
-		"Good for routing across many models, with default Base URL https://openrouter.ai/api/v1. Default model is openrouter/free.",
-	ai_provider_deepseek_desc:
-		"Official DeepSeek endpoint with default Base URL https://api.deepseek.com. Default model is deepseek-chat, which DeepSeek documents as the non-thinking V3.2 chat alias.",
+		"Good for routing across many models, with default Base URL https://openrouter.ai/api/v1.",
+	ai_provider_deepseek_desc: "Official DeepSeek endpoint with default Base URL https://api.deepseek.com.",
 	ai_provider_gemini_desc:
-		"Google's OpenAI-compatible Gemini endpoint uses https://generativelanguage.googleapis.com/v1beta/openai. Default model is gemini-2.5-flash.",
+		"Google's OpenAI-compatible Gemini endpoint uses https://generativelanguage.googleapis.com/v1beta/openai.",
 	ai_provider_qwen_desc:
-		"DashScope OpenAI-compatible endpoint. Default preset uses the Beijing region at https://dashscope.aliyuncs.com/compatible-mode/v1. Default model is qwen3.5-plus. Official docs also list Singapore and Virginia region variants.",
+		"DashScope OpenAI-compatible endpoint. Default preset uses the Beijing region at https://dashscope.aliyuncs.com/compatible-mode/v1. Official docs also list Singapore and Virginia region variants.",
 	ai_provider_siliconflow_desc:
-		"SiliconFlow OpenAI-compatible endpoint with default Base URL https://api.siliconflow.com/v1. Default model is Qwen/Qwen3.5-27B.",
-	ai_provider_glm_desc:
-		"Zhipu GLM's OpenAI-compatible endpoint uses https://open.bigmodel.cn/api/paas/v4. Default model is glm-4.7.",
-	ai_provider_kimi_desc:
-		"Moonshot Kimi's OpenAI-compatible endpoint uses https://api.moonshot.cn/v1. Default model is kimi-k2-0905.",
+		"SiliconFlow OpenAI-compatible endpoint with default Base URL https://api.siliconflow.com/v1.",
+	ai_provider_glm_desc: "Zhipu GLM's OpenAI-compatible endpoint uses https://open.bigmodel.cn/api/paas/v4.",
+	ai_provider_kimi_desc: "Moonshot Kimi's OpenAI-compatible endpoint uses https://api.moonshot.cn/v1.",
 	ai_provider_minimax_desc:
-		"MiniMax's OpenAI-compatible endpoint uses https://api.minimax.io/v1 for the international platform, and MiniMax docs note https://api.minimaxi.com/v1 for users in China. Default model is MiniMax-M2.5.",
+		"MiniMax's OpenAI-compatible endpoint uses https://api.minimax.io/v1 for the international platform, and MiniMax docs note https://api.minimaxi.com/v1 for users in China.",
 	ai_provider_custom_desc: "Keep manual values for any OpenAI-compatible service.",
 	ai_base_url_label: "API Base URL",
 	ai_api_key_label: "API Key",
@@ -340,21 +336,18 @@ const detectZh = {
 	ai_provider_kimi: "Kimi / Moonshot",
 	ai_provider_minimax: "MiniMax",
 	ai_provider_custom: "自定义兼容接口",
-	ai_provider_openai_desc: "官方 OpenAI 接口，默认 Base URL 为 https://api.openai.com/v1，默认模型为 gpt-5-mini。",
-	ai_provider_openrouter_desc:
-		"适合统一接入多家模型，默认 Base URL 为 https://openrouter.ai/api/v1，默认模型为 openrouter/free。",
-	ai_provider_deepseek_desc:
-		"DeepSeek 官方接口当前文档主地址为 https://api.deepseek.com；默认模型为 deepseek-chat，官方将其说明为 V3.2 的非思考聊天别名。",
+	ai_provider_openai_desc: "官方 OpenAI 接口，默认 Base URL 为 https://api.openai.com/v1。",
+	ai_provider_openrouter_desc: "适合统一接入多家模型，默认 Base URL 为 https://openrouter.ai/api/v1。",
+	ai_provider_deepseek_desc: "DeepSeek 官方接口当前文档主地址为 https://api.deepseek.com。",
 	ai_provider_gemini_desc:
-		"Google Gemini 的 OpenAI 兼容入口为 https://generativelanguage.googleapis.com/v1beta/openai，默认模型为 gemini-2.5-flash。",
+		"Google Gemini 的 OpenAI 兼容入口为 https://generativelanguage.googleapis.com/v1beta/openai。",
 	ai_provider_qwen_desc:
-		"阿里云百炼 OpenAI 兼容接口。默认预设为北京地域 https://dashscope.aliyuncs.com/compatible-mode/v1，默认模型为 qwen3.5-plus，官方还提供新加坡和美国（弗吉尼亚）地域变体。",
-	ai_provider_siliconflow_desc:
-		"SiliconFlow OpenAI 兼容接口当前文档地址为 https://api.siliconflow.com/v1，默认模型为 Qwen/Qwen3.5-27B。",
-	ai_provider_glm_desc: "智谱 GLM 的 OpenAI 兼容入口为 https://open.bigmodel.cn/api/paas/v4，默认模型为 glm-4.7。",
-	ai_provider_kimi_desc: "Moonshot Kimi 的 OpenAI 兼容入口为 https://api.moonshot.cn/v1，默认模型为 kimi-k2-0905。",
+		"阿里云百炼 OpenAI 兼容接口。默认预设为北京地域 https://dashscope.aliyuncs.com/compatible-mode/v1，官方还提供新加坡和美国（弗吉尼亚）地域变体。",
+	ai_provider_siliconflow_desc: "SiliconFlow OpenAI 兼容接口当前文档地址为 https://api.siliconflow.com/v1。",
+	ai_provider_glm_desc: "智谱 GLM 的 OpenAI 兼容入口为 https://open.bigmodel.cn/api/paas/v4。",
+	ai_provider_kimi_desc: "Moonshot Kimi 的 OpenAI 兼容入口为 https://api.moonshot.cn/v1。",
 	ai_provider_minimax_desc:
-		"MiniMax 的 OpenAI 兼容入口国际站为 https://api.minimax.io/v1；官方也说明中国区可使用 https://api.minimaxi.com/v1。默认模型为 MiniMax-M2.5。",
+		"MiniMax 的 OpenAI 兼容入口国际站为 https://api.minimax.io/v1；官方也说明中国区可使用 https://api.minimaxi.com/v1。",
 	ai_provider_custom_desc: "保持手动填写，适用于任意 OpenAI 兼容服务。",
 	ai_base_url_label: "API Base URL",
 	ai_api_key_label: "API Key",
