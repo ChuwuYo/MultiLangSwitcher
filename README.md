@@ -156,9 +156,4 @@ Thanks to Contributors (Welcome to Submit PRs)
 
 ***
 
-<div align="center">
-License
-</div>
-
-***
 
