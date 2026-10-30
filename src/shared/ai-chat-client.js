@@ -27,7 +27,10 @@ const extractErrorMessage = async (response) => {
 
 // 明文 HTTP 会泄露 API Key；本机、局域网与 Tailscale 地址放行，以兼容 Ollama 等本地模型服务
 const isLocalNetworkHost = (hostname) => {
-	const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+	const host = hostname
+		.replace(/^\[|\]$/g, "")
+		.replace(/\.$/, "")
+		.toLowerCase();
 	if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "::1") {
 		return true;
 	}
