@@ -145,7 +145,8 @@ const detectEn = {
 	ai_config_ready: "AI configuration saved. You can start a diagnosis now.",
 	ai_config_incomplete: "Please provide Base URL, API key, and model name to enable AI diagnosis.",
 	ai_config_replace_template: "Replace the template resource name in the endpoint before starting AI diagnosis.",
-	ai_config_invalid_url: "Base URL must be a full address starting with https://.",
+	ai_config_invalid_url:
+		"Base URL is not a valid address. Use https:// for remote services, or http:// for local addresses.",
 	ai_config_insecure_url:
 		"Base URL must use HTTPS. Plain HTTP is only allowed for localhost and local network addresses.",
 	ai_chat_placeholder: "Start AI diagnosis to turn the current detection snapshot into actionable privacy guidance.",
@@ -361,7 +362,7 @@ const detectZh = {
 	ai_config_ready: "AI 配置已保存，可开始诊断。",
 	ai_config_incomplete: "请填写完整的 Base URL、API Key 和模型名称。",
 	ai_config_replace_template: "请先把地址中的模板资源名替换成您自己的实际资源名，再开始 AI 诊断。",
-	ai_config_invalid_url: "Base URL 需要是以 https:// 开头的完整地址。",
+	ai_config_invalid_url: "Base URL 不是有效地址。远程服务请用 https://，本机或局域网地址可用 http://。",
 	ai_config_insecure_url: "Base URL 必须使用 HTTPS；只有本机和局域网地址允许使用 HTTP。",
 	ai_chat_placeholder: "点击“开始 AI 诊断”后，AI 会基于当前检测快照给出风险分析。",
 	ai_user_input_placeholder: "继续追问，例如：为什么语言和时区不一致会增加指纹风险？",
