@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { UpdateChecker } from "../src/shared/shared-update-checker.js";
 const isNewerVersion = (current, latest) => UpdateChecker.prototype.isNewerVersion.call({}, current, latest);
 
@@ -40,5 +40,26 @@ describe("UpdateChecker.isNewerVersion", () => {
 
 	it("treats empty current version as 0.0.0 (update available)", () => {
 		expect(isNewerVersion("", "1.0.0")).toBe(true);
+	});
+});
+
+describe("UpdateChecker.checkForUpdates", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it("rethrows a typed network error instead of a ReferenceError when fetch fails", async () => {
+		vi.stubGlobal("chrome", { storage: { local: { get: async () => ({}), set: async () => {} } } });
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => {
+				throw new Error("network down");
+			}),
+		);
+
+		const failure = await new UpdateChecker("owner", "repo", "2.1.1").checkForUpdates().catch((error) => error);
+		expect(failure).toBeInstanceOf(Error);
+		expect(failure.message).toBe("network down");
+		expect(failure.type).toBe("NETWORK_ISSUE");
 	});
 });
