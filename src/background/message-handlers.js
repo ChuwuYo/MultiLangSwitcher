@@ -295,7 +295,11 @@ const handleResetCacheStatsRequest = () =>
  */
 export const setupMessageListener = ({ sendOk, sendErr }) => {
 	// 监听来自 popup 或 debug 页面的消息
-	chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		// content script 的消息 sender.id 也是本扩展，只能靠 sender.url 区分；只放行扩展自身页面
+		if (sender?.id !== chrome.runtime.id || !sender.url?.startsWith(chrome.runtime.getURL(""))) {
+			return false;
+		}
 		(async () => {
 			try {
 				// 统一消息处理入口：所有分支只返回数据或抛错，最终由 sendOk/sendErr 统一响应
