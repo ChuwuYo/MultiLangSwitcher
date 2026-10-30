@@ -47,7 +47,7 @@ MultiLangSwitcher/
     │   ├── rule-engine.js           - DNR 规则应用（互斥锁 + 重试）
     │   ├── message-handlers.js      - MESSAGE_HANDLERS 分发表 + 全部处理器
     │   ├── domain-rules-manager.js  - 域名规则（LRU 缓存；customDomainRules 扩展点）
-    │   └── domain-rules.json        - 内置域名规则（web_accessible_resource）
+    │   └── domain-rules.json        - 内置域名规则
     ├── shared/                      - 跨页共享模块
     │   ├── message-types.js         - 消息协议常量（MessageTypes，13 个）
     │   ├── storage-keys.js          - 存储键常量（STORAGE_KEYS / LOCAL_STORAGE_KEYS）
