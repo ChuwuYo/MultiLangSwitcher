@@ -1,3 +1,4 @@
+import { AIChatClient } from "../shared/ai-chat-client.js";
 import { AIProviderPresetOrder, AIProviderPresets, AIProviderPresetUtils } from "../shared/ai-provider-presets.js";
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { getAiElements, setAIConfigHint, translate } from "./ai-shared.js";
@@ -174,6 +175,14 @@ export const validateAIConfig = (config) => {
 
 	if (String(config.baseUrl).includes("YOUR-RESOURCE-NAME")) {
 		return { valid: false, messageKey: "ai_config_replace_template" };
+	}
+
+	const endpointStatus = AIChatClient.checkEndpointSecurity(config.baseUrl);
+	if (endpointStatus === "invalid") {
+		return { valid: false, messageKey: "ai_config_invalid_url" };
+	}
+	if (endpointStatus === "insecure") {
+		return { valid: false, messageKey: "ai_config_insecure_url" };
 	}
 
 	return { valid: true, messageKey: "ai_config_ready" };

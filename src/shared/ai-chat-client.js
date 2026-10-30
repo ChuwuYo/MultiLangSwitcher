@@ -25,6 +25,49 @@ const extractErrorMessage = async (response) => {
 	}
 };
 
+// 明文 HTTP 会泄露 API Key；本机、局域网与 Tailscale 地址放行，以兼容 Ollama 等本地模型服务
+const isLocalNetworkHost = (hostname) => {
+	const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+	if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "::1") {
+		return true;
+	}
+	if (/^f[cd][0-9a-f]{0,2}:/.test(host)) {
+		return true;
+	}
+	const octets = host.split(".").map(Number);
+	if (octets.length !== 4 || octets.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+		return false;
+	}
+	const [a, b] = octets;
+	return (
+		a === 127 ||
+		a === 10 ||
+		(a === 192 && b === 168) ||
+		(a === 172 && b >= 16 && b <= 31) ||
+		(a === 100 && b >= 64 && b <= 127)
+	);
+};
+
+/**
+ * @param {string} url
+ * @returns {"ok" | "invalid" | "insecure"}
+ */
+const checkEndpointSecurity = (url) => {
+	let parsed;
+	try {
+		parsed = new URL(String(url || "").trim());
+	} catch (_error) {
+		return "invalid";
+	}
+	if (parsed.protocol === "https:") {
+		return "ok";
+	}
+	if (parsed.protocol === "http:") {
+		return isLocalNetworkHost(parsed.hostname) ? "ok" : "insecure";
+	}
+	return "invalid";
+};
+
 const createChatCompletion = async ({
 	url,
 	apiKey,
@@ -39,6 +82,9 @@ const createChatCompletion = async ({
 	const normalizedUrl = normalizeChatCompletionsUrl(url);
 	if (!normalizedUrl) {
 		throw new Error("Missing API URL");
+	}
+	if (checkEndpointSecurity(normalizedUrl) !== "ok") {
+		throw new Error("Refusing to send API key to a non-HTTPS endpoint");
 	}
 
 	const headers = {
@@ -136,6 +182,7 @@ const createChatCompletion = async ({
 
 const AIChatClient = {
 	normalizeChatCompletionsUrl,
+	checkEndpointSecurity,
 	createChatCompletion,
 };
 
