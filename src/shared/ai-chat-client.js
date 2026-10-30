@@ -98,6 +98,8 @@ const createChatCompletion = async ({
 
 	const response = await fetch(normalizedUrl, {
 		method: "POST",
+		// 重定向目标不经过 HTTPS 校验，自定义认证头和请求体可能被转发到明文地址
+		redirect: "error",
 		headers,
 		body: JSON.stringify({
 			model,
