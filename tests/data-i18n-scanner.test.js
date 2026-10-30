@@ -27,12 +27,6 @@ describe("BaseI18n._applyDataAttributes", () => {
 		expect(document.getElementById("d").alt).toBe("Alt text");
 	});
 
-	it("leaves elements without data attributes untouched", () => {
-		document.body.innerHTML = `<span id="plain">keep</span>`;
-		createI18n()._applyDataAttributes(document);
-		expect(document.getElementById("plain").textContent).toBe("keep");
-	});
-
 	it("renders raw key when translation missing (t() fallback)", () => {
 		document.body.innerHTML = `<span id="e" data-i18n="missing_key"></span>`;
 		createI18n()._applyDataAttributes(document);

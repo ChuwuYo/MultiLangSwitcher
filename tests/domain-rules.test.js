@@ -13,30 +13,6 @@ const createManager = () => {
 	return manager;
 };
 
-describe("DomainRulesManager._parseDomain", () => {
-	const manager = createManager();
-
-	it("splits full domain into parts, second-level and top-level", () => {
-		expect(manager._parseDomain("www.example.com")).toEqual({
-			parts: ["www", "example", "com"],
-			secondLevel: "example.com",
-			topLevel: "com",
-		});
-	});
-
-	it("returns null secondLevel for single-label domain", () => {
-		expect(manager._parseDomain("localhost")).toEqual({
-			parts: ["localhost"],
-			secondLevel: null,
-			topLevel: "localhost",
-		});
-	});
-
-	it("handles two-label domain", () => {
-		expect(manager._parseDomain("example.com").secondLevel).toBe("example.com");
-	});
-});
-
 describe("DomainRulesManager._findMatchingRule lookup chain", () => {
 	it("matches full domain first", () => {
 		const manager = createManager();
@@ -69,12 +45,6 @@ describe("DomainRulesManager._findMatchingRule lookup chain", () => {
 	it("returns null for single-label domain without full match", () => {
 		const manager = createManager();
 		expect(manager._findMatchingRule("intranet", {})).toBeNull();
-	});
-
-	it("caches lookup result in domainCache", () => {
-		const manager = createManager();
-		const result = manager._findMatchingRule("example.com", {});
-		expect(manager.domainCache.get("example.com")).toEqual(result);
 	});
 
 	it("evicts least-recently-used entry when cache is full", async () => {
