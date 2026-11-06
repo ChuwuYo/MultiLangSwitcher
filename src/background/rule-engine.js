@@ -2,6 +2,8 @@
 
 import { backgroundI18n } from "../i18n/background-i18n.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
+import { AUTO_SWITCH_RULE_ID_BASE } from "../shared/dnr-rule-ids.js";
+import { domainRulesManager } from "./domain-rules-manager.js";
 import { DEFAULT_LANG_EN, RULE_ID, getAutoSwitchEnabled, sendBackgroundLog } from "./shared.js";
 
 // 指数退避重试配置
@@ -10,6 +12,35 @@ const BASE_RETRY_DELAY = 500; // 毫秒
 
 // 规则更新锁，确保串行执行
 let updateRulesLock = Promise.resolve();
+
+/**
+ * 在规则更新锁内执行，避免与其他规则写入交错
+ * @template T
+ * @param {() => Promise<T>} task
+ * @returns {Promise<T>}
+ */
+const withRulesLock = async (task) => {
+	let release;
+	const prevLock = updateRulesLock;
+	updateRulesLock = new Promise((r) => {
+		release = r;
+	});
+	await prevLock;
+	try {
+		return await task();
+	} finally {
+		release();
+	}
+};
+
+const HEADER_RESOURCE_TYPES = /** @type {chrome.declarativeNetRequest.ResourceType[]} */ ([
+	"main_frame",
+	"sub_frame",
+	"xmlhttprequest",
+	"script",
+]);
+const HOSTNAME_PATTERN = /^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
+const HEADER_VALUE_PATTERN = /^[\x20-\x7e]+$/;
 
 /**
  * 清理所有动态规则
@@ -40,19 +71,98 @@ export const clearAllDynamicRules = async () => {
  */
 export const updateHeaderRules = async (language, retryCount = 0, isAutoSwitch = false) => {
 	const normalizedLanguage = language ? language.trim() : DEFAULT_LANG_EN;
+	return withRulesLock(() => updateHeaderRulesInternal(normalizedLanguage, retryCount, isAutoSwitch));
+};
 
-	// 使用Promise链实现互斥锁，确保规则更新串行执行
-	let resolve;
-	const prevLock = updateRulesLock;
-	updateRulesLock = new Promise((r) => {
-		resolve = r;
-	});
-	await prevLock;
+/**
+ * 把域名→语言表编译成按请求目标域名生效的 DNR 规则。
+ * 优先级沿用 _findMatchingRule 的顺序：完整域名 > 二级 > 顶级，同级自定义优先于内置；
+ * 都高于 RULE_ID（100），未命中的请求落到 RULE_ID 的回退语言。
+ * @param {Record<string, unknown>} builtinRules
+ * @param {Record<string, unknown>} customRules
+ * @returns {chrome.declarativeNetRequest.Rule[]}
+ */
+const buildAutoSwitchRules = (builtinRules, customRules) => {
+	/** @type {Map<string, {priority: number, language: string, domains: string[]}>} */
+	const domainGroups = new Map();
+	/** @type {chrome.declarativeNetRequest.Rule[]} */
+	const exactHostRules = [];
+
+	const addEntry = (domain, language, isCustom) => {
+		if (typeof domain !== "string" || typeof language !== "string") return;
+		const host = domain.trim().toLowerCase();
+		const value = language.trim();
+		if (!HOSTNAME_PATTERN.test(host) || !HEADER_VALUE_PATTERN.test(value)) return;
+		const labels = host.split(".").length;
+		const priority = (labels >= 3 ? 130 : labels === 2 ? 120 : 110) + (isCustom ? 1 : 0);
+		const action = /** @type {chrome.declarativeNetRequest.RuleAction} */ ({
+			type: "modifyHeaders",
+			requestHeaders: [{ header: "Accept-Language", operation: "set", value }],
+		});
+		if (labels >= 3) {
+			// 旧逻辑对三段以上的键只做完整域名匹配；requestDomains 会连带子域名，故用正则精确匹配主机
+			exactHostRules.push(
+				/** @type {chrome.declarativeNetRequest.Rule} */ ({
+					id: 0,
+					priority,
+					action,
+					condition: {
+						regexFilter: `^[a-z][a-z0-9+.-]*://${host.replaceAll(".", "\\.")}(?::[0-9]+)?/`,
+						resourceTypes: HEADER_RESOURCE_TYPES,
+					},
+				}),
+			);
+			return;
+		}
+		const key = `${priority}|${value}`;
+		const group = domainGroups.get(key) ?? { priority, language: value, domains: [] };
+		group.domains.push(host);
+		domainGroups.set(key, group);
+	};
+
+	for (const [domain, language] of Object.entries(builtinRules || {})) addEntry(domain, language, false);
+	for (const [domain, language] of Object.entries(customRules || {})) addEntry(domain, language, true);
+
+	const rules = [...domainGroups.values()].map(
+		(group) =>
+			/** @type {chrome.declarativeNetRequest.Rule} */ ({
+				id: 0,
+				priority: group.priority,
+				action: {
+					type: "modifyHeaders",
+					requestHeaders: [{ header: "Accept-Language", operation: "set", value: group.language }],
+				},
+				condition: { requestDomains: group.domains, resourceTypes: HEADER_RESOURCE_TYPES },
+			}),
+	);
+	return [...rules, ...exactHostRules].map((rule, index) => ({ ...rule, id: AUTO_SWITCH_RULE_ID_BASE + index }));
+};
+
+/**
+ * 同步自动切换的按域名规则：开启时按请求目标域名设置语言，关闭时全部移除。
+ * 不能再按"最后加载完成的标签页"改写全局规则，否则任何网站都能从自己的请求头
+ * 读出用户在其他标签页（含无痕窗口）访问的站点所属地区。
+ * @param {boolean} enabled
+ */
+export const syncAutoSwitchDomainRules = async (enabled) => {
+	const builtinRules = enabled ? await domainRulesManager.loadRules() : {};
+	const customRules = enabled ? await domainRulesManager.getCustomRules() : {};
+
+	const apply = (addRules) =>
+		withRulesLock(async () => {
+			const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
+			const removeRuleIds = currentRules.filter((rule) => rule.id >= AUTO_SWITCH_RULE_ID_BASE).map((rule) => rule.id);
+			if (removeRuleIds.length === 0 && addRules.length === 0) return;
+			await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds, addRules });
+		});
 
 	try {
-		return await updateHeaderRulesInternal(normalizedLanguage, retryCount, isAutoSwitch);
-	} finally {
-		resolve();
+		await apply(buildAutoSwitchRules(builtinRules, customRules));
+	} catch (error) {
+		if (!enabled) throw error;
+		// 手动注入的自定义规则可能被 Chrome 拒绝（如域名或语言值不合法），退回仅内置规则，保证自动切换仍可用
+		sendBackgroundLog(`${backgroundI18n.t("update_rules_failed")}: ${error.message}`, "error");
+		await apply(buildAutoSwitchRules(builtinRules, {}));
 	}
 };
 
@@ -216,6 +326,7 @@ export const applyLanguageRulesBasedOnState = async (storedLanguage) => {
 	}
 
 	await updateHeaderRules(languageToApply, 0, getAutoSwitchEnabled());
+	await syncAutoSwitchDomainRules(getAutoSwitchEnabled());
 };
 
 /**

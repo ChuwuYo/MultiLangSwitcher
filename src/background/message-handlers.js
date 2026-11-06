@@ -12,7 +12,12 @@ import {
 	sendBackgroundLog,
 	setAutoSwitchEnabled,
 } from "./shared.js";
-import { applyLanguageRulesBasedOnState, getCurrentAcceptLanguageHeader, updateHeaderRules } from "./rule-engine.js";
+import {
+	applyLanguageRulesBasedOnState,
+	getCurrentAcceptLanguageHeader,
+	syncAutoSwitchDomainRules,
+	updateHeaderRules,
+} from "./rule-engine.js";
 import { ensureInitialized } from "./lifecycle.js";
 
 /**
@@ -25,6 +30,10 @@ const handleUpdateRulesRequest = async (request) => {
 		sendBackgroundLog(backgroundI18n.t("trying_update_rules", { language }), "info");
 
 		const result = await updateHeaderRules(language);
+		// 调试页"清除并重新应用"会删掉全部动态规则，自动切换开启时需要补回按域名规则
+		if (getAutoSwitchEnabled()) {
+			await syncAutoSwitchDomainRules(true);
+		}
 		sendBackgroundLog(
 			`${backgroundI18n.t("rules_update_completed")}: ${result.changed ? "changed" : "unchanged"}`,
 			"info",
@@ -70,12 +79,17 @@ const handleAutoSwitchToggleRequest = async (request) => {
  */
 const handleGetCurrentLangRequest = async () => {
 	// 两个读取无数据依赖，并行执行避免串行等待两次 IPC 往返
-	const [actualCurrentLang, result] = await Promise.all([
+	const [actualCurrentLang, result, sessionState] = await Promise.all([
 		getCurrentAcceptLanguageHeader(),
 		chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE, STORAGE_KEYS.AUTO_SWITCH_ENABLED]),
+		chrome.storage.session.get([STORAGE_KEYS.UI_STATE]),
 	]);
+	// 自动切换时 RULE_ID 只是回退值，popup 应显示最近访问站点对应的语言
+	const autoSwitchLanguage = getAutoSwitchEnabled()
+		? /** @type {Record<string, any>} */ (sessionState)[STORAGE_KEYS.UI_STATE]?.currentLanguage
+		: null;
 	return {
-		currentLanguage: actualCurrentLang || result.currentLanguage,
+		currentLanguage: autoSwitchLanguage || actualCurrentLang || result.currentLanguage,
 		autoSwitchEnabled: !!result.autoSwitchEnabled,
 	};
 };

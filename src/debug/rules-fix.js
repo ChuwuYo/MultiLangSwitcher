@@ -4,6 +4,7 @@ import { MessageTypes } from "../shared/message-types.js";
 import { requestBackground } from "../shared/shared-actions.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
+import { RULE_ID } from "../shared/dnr-rule-ids.js";
 import { debugI18n } from "../i18n/debug-i18n.js";
 import { addLogMessage } from "./log-panel.js";
 import { setSafeContent, setSafeErrorMessage, setSafeSuccessMessage } from "./safe-dom.js";
@@ -26,12 +27,8 @@ export const initRulesFix = () => {
 
 				const existingRules = response.rules;
 				const existingRuleIds = existingRules.map((rule) => rule.id);
-				const updatedRules = existingRules.map((rule) => {
-					return {
-						...rule,
-						priority: 100, // 设置更高优先级
-					};
-				});
+				// 自动切换的按域名规则靠高于 RULE_ID 的分级优先级生效，统一改成 100 会让它们失效
+				const updatedRules = existingRules.map((rule) => (rule.id === RULE_ID ? { ...rule, priority: 100 } : rule));
 
 				await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
 					removeRuleIds: existingRuleIds,
