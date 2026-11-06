@@ -8,7 +8,7 @@ import { backgroundI18n, backgroundI18nReady } from "../i18n/background-i18n.js"
 export const i18nReady = backgroundI18nReady;
 
 // 常量定义
-export const RULE_ID = 1;
+export { RULE_ID } from "../shared/dnr-rule-ids.js";
 export const DEFAULT_LANG_EN = "en-US"; // 为英文用户设置的默认语言，也用作自动切换的回退语言
 
 // 使用共享的sendDebugLog函数，但保留后台特定的日志前缀
@@ -47,7 +47,16 @@ export const setAutoSwitchEnabled = (value) => {
  * @param {boolean} autoSwitchEnabled - 自动切换是否启用
  * @param {string} currentLanguage - 当前生效的语言代码
  */
+let lastNotifiedLanguage = null;
+
+/**
+ * 最近一次发布到 UI 的生效语言（自动切换据此避免每次导航都重复通知）
+ * @returns {string|null}
+ */
+export const getLastNotifiedLanguage = () => lastNotifiedLanguage;
+
 export const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
+	lastNotifiedLanguage = currentLanguage;
 	chrome.storage.session
 		.set({
 			[STORAGE_KEYS.UI_STATE]: {

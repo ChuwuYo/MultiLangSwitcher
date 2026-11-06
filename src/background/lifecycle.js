@@ -7,17 +7,13 @@ import { ResourceManager } from "../shared/shared-resource-manager.js";
 import {
 	DEFAULT_LANG_EN,
 	getAutoSwitchEnabled,
+	getLastNotifiedLanguage,
 	i18nReady,
 	notifyPopupUIUpdate,
 	sendBackgroundLog,
 	setAutoSwitchEnabled,
 } from "./shared.js";
-import {
-	applyLanguageRulesBasedOnState,
-	clearAllDynamicRules,
-	getCurrentAcceptLanguageHeader,
-	updateHeaderRules,
-} from "./rule-engine.js";
+import { applyLanguageRulesBasedOnState, clearAllDynamicRules, syncAutoSwitchDomainRules } from "./rule-engine.js";
 
 // 全局状态变量
 let isInitialized = false; // 初始化完成标志
@@ -231,7 +227,7 @@ const initialize = (reason) => {
 	return initializationPromise;
 };
 
-// 监听标签页更新以实现自动切换 (Manifest V3 compatible)
+// 自动切换的请求头由按域名规则直接生效（见 syncAutoSwitchDomainRules），这里只更新 popup 显示的语言
 chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 	try {
 		await ensureInitialized();
@@ -240,49 +236,39 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
 		return;
 	}
 
-	if (getAutoSwitchEnabled() && changeInfo.status === "complete" && tab?.url?.startsWith("http")) {
-		try {
-			const url = new URL(tab.url);
-			const hostname = url.hostname.toLowerCase();
-
-			const targetLanguage = await domainRulesManager.getLanguageForDomain(hostname);
-
-			if (targetLanguage) {
-				// 如果找到特定于域的语言，则应用它
-				sendBackgroundLog(
-					backgroundI18n.t("auto_switching_hostname", {
-						hostname,
-						language: targetLanguage,
-					}),
-					"info",
-				);
-				const result = await updateHeaderRules(targetLanguage, 0, true);
-				if (result.changed) {
-					notifyPopupUIUpdate(true, targetLanguage);
-				}
-			} else {
-				// 否则，确保应用了默认的回退语言
-				const fallbackLanguage = DEFAULT_LANG_EN;
-				const currentLang = await getCurrentAcceptLanguageHeader();
-
-				if (currentLang !== fallbackLanguage) {
-					sendBackgroundLog(
-						backgroundI18n.t("no_matching_rule", {
-							hostname,
-							fallback: fallbackLanguage,
-						}),
-						"info",
-					);
-					const result = await updateHeaderRules(fallbackLanguage, 0, true);
-					if (result.changed) {
-						notifyPopupUIUpdate(true, fallbackLanguage);
-					}
-				}
-			}
-		} catch (error) {
-			sendBackgroundLog(`${backgroundI18n.t("error_processing_url", { url: tab.url })}: ${error.message}`, "error");
-		}
+	// 无痕标签页不参与：spanning 模式下 UI 状态与普通窗口共用
+	if (!getAutoSwitchEnabled() || changeInfo.status !== "complete" || !tab?.url?.startsWith("http") || tab.incognito) {
+		return;
 	}
+
+	try {
+		const hostname = new URL(tab.url).hostname.toLowerCase();
+		const matchedLanguage = await domainRulesManager.getLanguageForDomain(hostname);
+		const displayLanguage = typeof matchedLanguage === "string" && matchedLanguage ? matchedLanguage : DEFAULT_LANG_EN;
+
+		if (displayLanguage === getLastNotifiedLanguage()) {
+			return;
+		}
+		sendBackgroundLog(
+			matchedLanguage
+				? backgroundI18n.t("auto_switching_hostname", { hostname, language: displayLanguage })
+				: backgroundI18n.t("no_matching_rule", { hostname, fallback: displayLanguage }),
+			"info",
+		);
+		notifyPopupUIUpdate(true, displayLanguage);
+	} catch (error) {
+		sendBackgroundLog(`${backgroundI18n.t("error_processing_url", { url: tab.url })}: ${error.message}`, "error");
+	}
+});
+
+// 手动注入的自定义域名规则变化时，重建自动切换规则
+chrome.storage.onChanged.addListener((changes, areaName) => {
+	if (areaName !== "local" || !changes[STORAGE_KEYS.CUSTOM_DOMAIN_RULES] || !getAutoSwitchEnabled()) {
+		return;
+	}
+	syncAutoSwitchDomainRules(true).catch((error) => {
+		sendBackgroundLog(`${backgroundI18n.t("update_rules_failed")}: ${error.message}`, "error");
+	});
 });
 
 // 扩展卸载时的清理
