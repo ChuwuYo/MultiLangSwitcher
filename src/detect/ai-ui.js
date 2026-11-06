@@ -21,6 +21,31 @@ export const renderChatPlaceholder = () => {
 	messagesContainer.innerHTML = `<div class="text-muted small">${escapeHtml(translate("ai_chat_placeholder"))}</div>`;
 };
 
+// 模型回复可被提示注入操控：默认配置仍放行远程图片、style 里的 url() 和表单，
+// 渲染即会向任意站点发请求（泄露已脱敏的 IP/UA），表单还能把用户输入发到外站
+const AI_REPLY_PURIFY_CONFIG = {
+	FORBID_TAGS: [
+		"img",
+		"picture",
+		"source",
+		"video",
+		"audio",
+		"svg",
+		"math",
+		"form",
+		"input",
+		"button",
+		"textarea",
+		"select",
+		"style",
+		"link",
+		"meta",
+		"base",
+	],
+	FORBID_ATTR: ["style", "action", "formaction", "srcset", "background", "poster"],
+	ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|#)/i,
+};
+
 const createChatMessageElement = (message) => {
 	const element = document.createElement("div");
 	element.className = `ai-chat-message ai-chat-message-${message.role}`;
@@ -78,7 +103,7 @@ export const updateChatMessageElement = (message, options = {}) => {
 
 	if (message.role === "assistant" && options.finalize && canRenderMarkdown()) {
 		const rawHtml = /** @type {any} */ (window).marked.parse(message.content || "");
-		contentElement.innerHTML = /** @type {any} */ (window).DOMPurify.sanitize(rawHtml);
+		contentElement.innerHTML = /** @type {any} */ (window).DOMPurify.sanitize(rawHtml, AI_REPLY_PURIFY_CONFIG);
 	} else {
 		contentElement.textContent = message.content || "";
 	}
