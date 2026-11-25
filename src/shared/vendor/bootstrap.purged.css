@@ -1935,6 +1935,9 @@ fieldset:disabled .btn {
 .gap-2 {
 	gap: 0.5rem !important;
 }
+.font-monospace {
+	font-family: var(--bs-font-monospace) !important;
+}
 .fw-bold {
 	font-weight: 700 !important;
 }
@@ -1944,10 +1947,6 @@ fieldset:disabled .btn {
 .text-primary {
 	--bs-text-opacity: 1;
 	color: rgba(var(--bs-primary-rgb), var(--bs-text-opacity)) !important;
-}
-.text-secondary {
-	--bs-text-opacity: 1;
-	color: rgba(var(--bs-secondary-rgb), var(--bs-text-opacity)) !important;
 }
 .text-success {
 	--bs-text-opacity: 1;
@@ -1965,9 +1964,9 @@ fieldset:disabled .btn {
 	--bs-text-opacity: 1;
 	color: rgba(var(--bs-danger-rgb), var(--bs-text-opacity)) !important;
 }
-.text-dark {
+.text-body {
 	--bs-text-opacity: 1;
-	color: rgba(var(--bs-dark-rgb), var(--bs-text-opacity)) !important;
+	color: rgba(var(--bs-body-color-rgb), var(--bs-text-opacity)) !important;
 }
 .text-muted {
 	--bs-text-opacity: 1;
@@ -1983,10 +1982,6 @@ fieldset:disabled .btn {
 .bg-danger {
 	--bs-bg-opacity: 1;
 	background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity)) !important;
-}
-.bg-light {
-	--bs-bg-opacity: 1;
-	background-color: rgba(var(--bs-light-rgb), var(--bs-bg-opacity)) !important;
 }
 .bg-body-tertiary {
 	--bs-bg-opacity: 1;

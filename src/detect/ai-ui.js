@@ -159,7 +159,7 @@ export const updateChatMessageElement = (message, options = {}) => {
 	}
 	const frameId = requestAnimationFrame(() => {
 		pendingStreamFrames.delete(message.id);
-		if (!aiSessionState.messages.some((item) => item.id === message.id)) {
+		if (!getMessageById(message.id)) {
 			return;
 		}
 		applyChatMessageUpdateNow(message, { finalize: false });
