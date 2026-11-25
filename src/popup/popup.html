@@ -73,6 +73,7 @@
     .auto-switch-label {
       font-size: 0.92em;
       cursor: pointer;
+      user-select: none;
     }
 
     .popup-footer {
@@ -106,11 +107,10 @@
       overflow-y: auto;
     }
 
-    /* 现代克制胶囊开关（原生适配明暗双主题） */
+    /* 切换开关 */
     .toggle-wrapper {
       position: relative;
       display: inline-flex;
-      align-items: center;
       flex-shrink: 0;
     }
 
@@ -119,8 +119,6 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      width: 100%;
-      height: 100%;
       margin: 0;
       opacity: 0;
       cursor: pointer;
@@ -128,48 +126,58 @@
 
     .toggle-container {
       position: relative;
-      display: flex;
-      align-items: center;
-      width: 44px;
-      height: 24px;
+      width: 46px;
+      height: 26px;
       border-radius: 999px;
-      background-color: var(--bs-secondary-bg);
-      border: 1px solid var(--mls-border);
-      transition: background-color 0.2s ease, border-color 0.2s ease;
+      background-color: rgba(120, 120, 128, 0.24);
+      transition: background-color 0.24s ease;
+    }
+
+    html[data-bs-theme="dark"] .toggle-container {
+      background-color: rgba(120, 120, 128, 0.36);
     }
 
     .toggle-button {
       position: absolute;
+      top: 2px;
       left: 2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background-color: var(--bs-body-bg);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0.5px 1px rgba(0, 0, 0, 0.12);
+      transition:
+        transform 0.26s cubic-bezier(0.32, 1.25, 0.5, 1),
+        width 0.16s ease;
     }
 
-    html[data-bs-theme="dark"] .toggle-button {
-      background-color: #cbd5e1;
+    .toggle-checkbox:active:not(:disabled) + .toggle-container > .toggle-button {
+      width: 28px;
     }
 
     .toggle-checkbox:checked + .toggle-container {
-      background-color: var(--mls-accent);
-      border-color: var(--mls-accent);
+      background-color: #34c759;
+    }
+
+    html[data-bs-theme="dark"] .toggle-checkbox:checked + .toggle-container {
+      background-color: #30d158;
     }
 
     .toggle-checkbox:checked + .toggle-container > .toggle-button {
       transform: translateX(20px);
-      background-color: #ffffff;
+    }
+
+    .toggle-checkbox:checked:active:not(:disabled) + .toggle-container > .toggle-button {
+      transform: translateX(14px);
     }
 
     .toggle-checkbox:focus-visible + .toggle-container {
-      outline: 2px solid var(--mls-accent);
+      outline: var(--mls-focus-outline);
       outline-offset: 2px;
     }
 
     .toggle-checkbox:disabled + .toggle-container {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
@@ -386,7 +394,7 @@
       <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
     </div>
 
-    <!-- 自动切换：标签与开关同一行 -->
+    <!-- 自动切换：标签与精密机械开关同一行 -->
     <div class="auto-switch-row">
       <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label mb-0" data-i18n="auto_switch"></label>
       <div class="toggle-wrapper">
