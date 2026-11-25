@@ -60,7 +60,7 @@ MultiLangSwitcher/
     │   ├── ai-provider-presets.js / ai-chat-client.js / copy-button.js(+css) / md5.js
     │   ├── theme-init.js            - 主题初始化（classic script，预渲染同步执行）
     │   ├── toggle.js / toggle.css   - 语言/主题切换组件（各页面 side-effect 导入）
-    │   ├── page-base.css            - 页面公共基础样式（字体定义，单一来源）
+    │   ├── page-base.css            - 页面公共基础样式（字体定义 + 三页共享 Design Tokens、暗色模式对比度覆盖、统一焦点环，单一来源）
     │   └── vendor/                  - 第三方资产：marked / DOMPurify / bootstrap 源文件与 PurgeCSS 产物
     └── i18n/                        - 运行时 i18n（每组件单文件双语字典 + 实例模块）
         ├── popup-dict.js / popup-i18n.js

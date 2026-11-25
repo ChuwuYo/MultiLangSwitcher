@@ -14,6 +14,7 @@
 - [x] 阶段 6 全部：6.1 字典合并（15→8：4 组件 dict + 4 实例模块；domain-manager 链已删除）；6.2 data-i18n 声明式（_applyDataAttributes 扫描器，popup/debug/detect i18n 模块 129/291/277→54/60/88 行）；6.3 兜底字典裁剪至 9 个可达键 + 孤儿键清理；6.4 bootstrap PurgeCSS 263KB→52KB（产物入库 + CI 同步校验）；6.5 getBrowserInfo Chromium 化 + UA-CH 高熵值对照
 - [x] 附加 S1 类型基线：JSDoc + tsc --checkJs 零错误入 CI；i18n 实例注册表取代全局嗅探
 - [x] 附加 S7 一致性审计：ResourceManager 使用已统一（无残留裸监听需迁移）；三页 CSS 选择器交集为零，无去重空间；视觉重设计属主观决策，留待人工
+- [x] 后续进展（2026-11，PR #74）：S7 的视觉部分已落地——三页共享 Design Tokens（`src/shared/page-base.css` 单一来源）、暗色模式对比度重塑、统一焦点环；上行的"留待人工"保留为 2026-08 归档快照
 
 已知无害残留：popupZh 缺 `displaying_results`（该键无消费方，史前遗留）。
 
