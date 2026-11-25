@@ -78,14 +78,14 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 * **主题切换**: 支持明暗主题切换
 * **更新检查**: 自动检查GitHub Release获取最新版本信息
 * **重置功能**: 一键重置Accept-Language请求头
-* **检测页面**: `detect.html` 用于验证请求头修改效果，检测：
+* **检测页面**: `src/detect/detect.html` 用于验证请求头修改效果，检测：
   - `Accept-Language` 请求头
   - JavaScript 语言偏好（`navigator.language`、`navigator.languages`）
   - 国际化 API (Intl) 信息
   - WebRTC 本地 IP 泄露
   - Canvas、WebGL、AudioContext 指纹信息
   - AI 诊断面板，支持 OpenAI 兼容平台、多轮对话、按 provider 分离本地配置、Markdown 导出和单条消息复制
-* **调试工具**: `debug.html` 提供调试和诊断功能：
+* **调试工具**: `src/debug/debug.html` 提供调试和诊断功能：
   - 查看 `declarativeNetRequest` 动态规则详情
   - 多端点请求头测试
   - 自定义 `Accept-Language` 字符串（如 `en-US,en;q=0.9,zh-CN;q=0.8`）
@@ -136,7 +136,7 @@ MultiLangSwitcher 是一个 Chromium 内核浏览器扩展，帮助用户快速�
 
 ### AI 诊断说明
 
-`detect.html` 现已内置 AI 诊断面板。它会把当前结构化检测快照发送给 OpenAI 兼容模型，把原始检测数据转成更易懂的说明。
+`src/detect/detect.html` 现已内置 AI 诊断面板。它会把当前结构化检测快照发送给 OpenAI 兼容模型，把原始检测数据转成更易懂的说明。
 
 Tips：
 

@@ -17,9 +17,9 @@
  * 按优先级顺序排列，系统将依次尝试直到成功
  */
 export const HEADER_CHECK_ENDPOINTS = [
-	"https://httpbin.org/headers",
-	"https://postman-echo.com/headers",
 	"https://httpbingo.org/headers",
+	"https://postman-echo.com/headers",
+	"https://httpbin.org/headers",
 ];
 
 /**
@@ -131,10 +131,11 @@ export const fetchHeadersFromEndpoints = async (timeout = 10000) => {
  * 创建外部检查链接的 DOM 片段
  * 用于在检测失败时提供手动检查的选项
  *
- * @param {{ prefix?: string, or?: string, suffix?: string }} [texts] - 文本对象,包含国际化文本
+ * @param {{ prefix?: string, or?: string, suffix?: string, browserScanUrl?: string }} [texts] - 文本对象,包含国际化文本
  *   - prefix: 链接前缀文本 (如: "请访问" / "Please visit")
  *   - or: "或"的翻译 (如: "或" / "or")
  *   - suffix: "进行查看"的翻译 (如: "进行查看" / "to view")
+ *   - browserScanUrl: 第二个检查链接（可选，缺省按页面语言推导）
  * @returns {DocumentFragment} 包含链接的文档片段
  */
 export const createExternalCheckLinks = (texts = {}) => {
@@ -149,15 +150,24 @@ export const createExternalCheckLinks = (texts = {}) => {
 	const link1 = document.createElement("a");
 	link1.href = "https://pixelscan.net/fingerprint-check";
 	link1.target = "_blank";
+	link1.rel = "noopener noreferrer";
 	link1.textContent = "https://pixelscan.net/fingerprint-check";
 	fragment.appendChild(link1);
 
 	fragment.appendChild(document.createTextNode(` ${or} `));
 
+	const isZh =
+		typeof document !== "undefined" &&
+		String(document.documentElement?.lang || "")
+			.toLowerCase()
+			.startsWith("zh");
+	const browserScanUrl =
+		texts.browserScanUrl || (isZh ? "https://www.browserscan.net/zh" : "https://www.browserscan.net/");
 	const link2 = document.createElement("a");
-	link2.href = "https://www.browserscan.net/zh";
+	link2.href = browserScanUrl;
 	link2.target = "_blank";
-	link2.textContent = "https://www.browserscan.net/zh";
+	link2.rel = "noopener noreferrer";
+	link2.textContent = browserScanUrl;
 	fragment.appendChild(link2);
 
 	fragment.appendChild(document.createTextNode(` ${suffix}`));

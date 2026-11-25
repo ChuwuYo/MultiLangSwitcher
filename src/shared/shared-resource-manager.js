@@ -24,7 +24,17 @@ const createResourceManager = () => {
 
 	const addController = (controller) => {
 		if (controller) {
+			if (controller.signal?.aborted) {
+				return controller;
+			}
 			trackedControllers.add(controller);
+			controller.signal?.addEventListener?.(
+				"abort",
+				() => {
+					trackedControllers.delete(controller);
+				},
+				{ once: true },
+			);
 			return controller;
 		}
 		return null;
@@ -36,6 +46,7 @@ const createResourceManager = () => {
 		if (!controller || typeof controller.abort !== "function") {
 			return;
 		}
+		trackedControllers.delete(controller);
 		if (controller.signal?.aborted) {
 			return;
 		}
@@ -44,7 +55,6 @@ const createResourceManager = () => {
 		} catch (_error) {
 			// 静默处理
 		}
-		trackedControllers.delete(controller);
 	};
 
 	const getRTCPeerConnectionClass = () => {
@@ -146,8 +156,14 @@ const createResourceManager = () => {
 	};
 
 	return {
-		// 定时器管理 - 跟踪需要手动清理的定时器
-		setTimeout: (callback, delay, ...args) => trackTimer(setTimeout(callback, delay, ...args)),
+		// 定时器管理 - 跟踪需要手动清理的定时器（触发后自动移除，避免长期驻留泄漏）
+		setTimeout: (callback, delay, ...args) => {
+			const timerId = setTimeout(() => {
+				trackedTimers.delete(timerId);
+				callback(...args);
+			}, delay);
+			return trackTimer(timerId);
+		},
 		setInterval: (callback, delay, ...args) => trackTimer(setInterval(callback, delay, ...args)),
 		clearTimeout: (id) => clearTimer(id),
 		clearInterval: (id) => clearTimer(id),

@@ -3,7 +3,6 @@
  * STORAGE_KEYS: chrome.storage.local 键（UI_STATE 例外，位于 chrome.storage.session）
  * LOCAL_STORAGE_KEYS: window.localStorage 键（仅页面环境可用）
  */
-// biome-ignore lint/correctness/noUnusedVariables: 常量对象供各页面与后台脚本引用
 export const STORAGE_KEYS = Object.freeze({
 	CURRENT_LANGUAGE: "currentLanguage",
 	AUTO_SWITCH_ENABLED: "autoSwitchEnabled",
@@ -15,7 +14,6 @@ export const STORAGE_KEYS = Object.freeze({
 	UI_STATE: "uiState",
 });
 
-// biome-ignore lint/correctness/noUnusedVariables: 常量对象供页面脚本引用
 export const LOCAL_STORAGE_KEYS = Object.freeze({
 	APP_LANG: "app-lang",
 	THEME: "theme",

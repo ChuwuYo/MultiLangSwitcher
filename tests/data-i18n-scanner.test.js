@@ -17,7 +17,8 @@ describe("BaseI18n._applyDataAttributes", () => {
 			<span id="a" data-i18n="greeting"></span>
 			<button id="b" data-i18n-title="hint"></button>
 			<input id="c" data-i18n-placeholder="ph">
-			<img id="d" data-i18n-alt="alt_text">`;
+			<img id="d" data-i18n-alt="alt_text">
+			<button id="f" data-i18n-aria-label="hint"></button>`;
 
 		createI18n()._applyDataAttributes(document);
 
@@ -25,6 +26,7 @@ describe("BaseI18n._applyDataAttributes", () => {
 		expect(document.getElementById("b").title).toBe("Hint text");
 		expect(document.getElementById("c").placeholder).toBe("Type here");
 		expect(document.getElementById("d").alt).toBe("Alt text");
+		expect(document.getElementById("f").getAttribute("aria-label")).toBe("Hint text");
 	});
 
 	it("renders raw key when translation missing (t() fallback)", () => {

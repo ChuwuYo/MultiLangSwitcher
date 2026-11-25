@@ -277,6 +277,8 @@ const debugEn = {
 	// Domain test related translations
 	please_enter_domain: "Please enter a domain",
 	testing_domain: "Testing domain: {domain}...",
+	feedback_permission_denied:
+		"Optional permission declarativeNetRequestFeedback was not granted; matched rule history is unavailable.",
 };
 
 const debugZh = {
@@ -556,6 +558,7 @@ const debugZh = {
 	// 域名测试相关翻译
 	please_enter_domain: "请输入域名",
 	testing_domain: "正在测试域名: {domain}...",
+	feedback_permission_denied: "未授予可选调试权限 declarativeNetRequestFeedback，暂无法读取最近匹配规则记录。",
 };
 
 export { debugEn, debugZh };

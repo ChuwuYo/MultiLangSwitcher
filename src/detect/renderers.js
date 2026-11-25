@@ -1,4 +1,5 @@
 import { createLocalizedExternalCheckLinks } from "../shared/header-check-utils.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { translateDetect } from "./shared.js";
 
 export const renderHeaderInfo = (headerInfo) => {
@@ -489,9 +490,10 @@ export const addRefreshButton = (requestRerun) => {
 	refreshButton.id = "detectRefreshButton";
 	refreshButton.className = "btn btn-primary mt-3";
 	refreshButton.textContent = translateDetect("Refresh detection");
-	refreshButton.onclick = () => {
-		requestRerun();
-	};
+	refreshButton.type = "button";
+	ResourceManager.addEventListener(refreshButton, "click", () => {
+		Promise.resolve(requestRerun()).catch(() => {});
+	});
 
 	const headerInfoDiv = document.querySelector(".header-info.mt-4");
 	if (headerInfoDiv) {

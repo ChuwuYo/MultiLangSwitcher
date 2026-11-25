@@ -20,10 +20,17 @@ describe("UpdateChecker.isNewerVersion", () => {
 		expect(isNewerVersion("2.1.1", "v2.1.1")).toBe(false);
 	});
 
-	it("ignores prerelease tags and build metadata", () => {
+	it("follows SemVer 2.0.0 prerelease precedence", () => {
 		expect(isNewerVersion("2.1.1", "2.1.2-beta")).toBe(true);
 		expect(isNewerVersion("2.1.1", "2.1.2-rc.1+build5")).toBe(true);
-		expect(isNewerVersion("2.1.1-beta", "2.1.1")).toBe(false);
+		expect(isNewerVersion("2.1.1-beta", "2.1.1")).toBe(true);
+		expect(isNewerVersion("2.1.1", "2.1.1-beta")).toBe(false);
+		expect(isNewerVersion("2.1.1-alpha.1", "2.1.1-beta.1")).toBe(true);
+		expect(isNewerVersion("2.1.1-alpha.2", "2.1.1-alpha.10")).toBe(true);
+		expect(isNewerVersion("2.1.1-2", "2.1.1-alpha")).toBe(true);
+		expect(isNewerVersion("2.1.1-alpha", "2.1.1-alpha.1")).toBe(true);
+		expect(isNewerVersion("2.1.1+build.1", "2.1.1+build.2")).toBe(false);
+		expect(isNewerVersion("2.1.1+build.2", "2.1.1+build.1")).toBe(false);
 	});
 
 	it("zero-pads missing segments", () => {

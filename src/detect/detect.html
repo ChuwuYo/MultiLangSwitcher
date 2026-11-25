@@ -160,9 +160,9 @@
 </head>
 
 <body>
-  <button id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle"></button>
+  <button type="button" id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
 
-  <div class="container">
+  <main class="container">
     <h2 id="pageHeading" data-i18n="heading"></h2>
     <p class="lead" id="pageSubtitle" data-i18n="subtitle"></p>
 
@@ -209,7 +209,14 @@
                 </div>
               </div>
 
-              <p class="small text-muted mt-3 mb-1" id="aiPrivacyHint" data-i18n="ai_privacy_hint"></p>
+              <div class="d-flex align-items-center gap-2 flex-wrap mt-3">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="checkbox" id="aiSessionOnlyKey">
+                  <label class="form-check-label small" for="aiSessionOnlyKey" id="aiSessionOnlyKeyLabel" data-i18n="ai_session_only_key_label"></label>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="aiClearKeysBtn" data-i18n="ai_clear_keys"></button>
+              </div>
+              <p class="small text-muted mt-2 mb-1" id="aiPrivacyHint" data-i18n="ai_privacy_hint"></p>
               <p class="small mb-0 ai-config-hint" id="aiConfigHint"></p>
             </details>
 
@@ -344,7 +351,7 @@
       <h4 id="completeHeadersTitle" data-i18n="complete_headers"></h4>
       <pre id="headerInfo" data-i18n="loading"></pre>
     </div>
-  </div>
+  </main>
 
   <!-- vendor 经典脚本保留，模块入口统一为 detect-ai.js -->
   <script src="../shared/vendor/marked.umd.min.js"></script>

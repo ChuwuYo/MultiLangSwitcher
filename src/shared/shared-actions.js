@@ -13,13 +13,13 @@
 import { MessageTypes } from "./message-types.js";
 import { sendDebugLog } from "./shared-utils.js";
 
-export /**
+/**
  * 统一与后台通信的入口
  * @param {string} type - MessageTypes 成员
  * @param {Object} [payload={}] - 附加到消息体的字段
  * @returns {Promise<*>} 成功时返回信封 data，失败时抛出保留信封字段的 Error
  */
-const requestBackground = async (type, payload = {}) => {
+export const requestBackground = async (type, payload = {}) => {
 	// 统一与后台通信的入口：将各种历史响应格式收敛为“成功返回数据 / 失败抛错”
 	if (!type) {
 		throw new Error("Message type is required");
@@ -30,7 +30,7 @@ const requestBackground = async (type, payload = {}) => {
 
 	let response;
 	try {
-		response = await chrome.runtime.sendMessage({ type, ...payload });
+		response = await chrome.runtime.sendMessage({ ...payload, type });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		throw new Error(message);
@@ -73,6 +73,11 @@ export const resetAcceptLanguage = async () => {
 		// 集中化错误处理和日志记录
 		const errorMsg = `Failed to reset Accept-Language: ${error.message}`;
 		sendDebugLog(errorMsg, "error");
-		throw new Error(errorMsg);
+		const wrappedError = new Error(errorMsg, { cause: error });
+		if (error && typeof error === "object") {
+			Object.assign(wrappedError, error);
+			wrappedError.message = errorMsg;
+		}
+		throw wrappedError;
 	}
 };

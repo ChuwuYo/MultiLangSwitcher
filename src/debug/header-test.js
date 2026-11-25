@@ -103,7 +103,7 @@ export const initHeaderTest = () => {
 					}),
 				);
 
-				appendExternalCheckLinks(fragment, debugI18n.t("check_network_connection") + " ");
+				appendExternalCheckLinks(fragment, `${debugI18n.t("check_network_connection")} `);
 
 				addLogMessage(debugI18n.t("header_test_failed_all_endpoints"), "error");
 			}
@@ -126,7 +126,7 @@ export const initHeaderTest = () => {
 				}),
 			);
 
-			appendExternalCheckLinks(fragment, debugI18n.t("check_network_connection") + " ");
+			appendExternalCheckLinks(fragment, `${debugI18n.t("check_network_connection")} `);
 
 			resultElement.appendChild(fragment);
 

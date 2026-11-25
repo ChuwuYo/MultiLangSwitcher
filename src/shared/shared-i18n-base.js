@@ -58,6 +58,9 @@ export class BaseI18n {
 				}
 			} finally {
 				this.isReady = true;
+				if (!this.isServiceWorker && typeof document !== "undefined" && document.documentElement) {
+					document.documentElement.lang = this.currentLang === "zh" ? "zh-CN" : "en";
+				}
 			}
 		})();
 
@@ -146,6 +149,9 @@ export class BaseI18n {
 		}
 		for (const el of root.querySelectorAll("[data-i18n-alt]")) {
 			/** @type {HTMLImageElement} */ (el).alt = this.t(/** @type {HTMLElement} */ (el).dataset.i18nAlt);
+		}
+		for (const el of root.querySelectorAll("[data-i18n-aria-label]")) {
+			el.setAttribute("aria-label", this.t(/** @type {HTMLElement} */ (el).dataset.i18nAriaLabel));
 		}
 	}
 

@@ -15,14 +15,14 @@ const AIProviderPresets = {
 	},
 	deepseek: {
 		baseUrl: "https://api.deepseek.com",
-		model: "deepseek-v4-flash",
+		model: "deepseek-flash",
 		authHeader: "Authorization",
 		labelKey: "ai_provider_deepseek",
 		descriptionKey: "ai_provider_deepseek_desc",
 	},
 	gemini: {
 		baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-		model: "gemini-3.6-flash",
+		model: "gemini-3.8-flash",
 		authHeader: "Authorization",
 		labelKey: "ai_provider_gemini",
 		descriptionKey: "ai_provider_gemini_desc",
@@ -50,7 +50,7 @@ const AIProviderPresets = {
 	},
 	kimi: {
 		baseUrl: "https://api.moonshot.cn/v1",
-		model: "kimi-k3",
+		model: "kimi-k3.1-pro",
 		authHeader: "Authorization",
 		labelKey: "ai_provider_kimi",
 		descriptionKey: "ai_provider_kimi_desc",

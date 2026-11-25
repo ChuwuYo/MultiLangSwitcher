@@ -2,7 +2,7 @@
 
 > 来源：review-swarm 四轴（意图回归/安全隐私/性能可靠/契约覆盖）+ code-review 双轴（规范/规格）+ Chrome 官方文档时效核对。
 > 排序原则：安全优先 → 契约正确 → 死代码清理 → 一致性 → 测试补齐 → 文档收尾。
-> 状态截至 2026-08-01；改动尚未提交，全部完成后统一验证再提交。
+> 历史归档记录（原记录截至 2026-08-01，已合入并由 2026-11 全量审查迭代更新）。
 
 ## 安全
 
@@ -22,7 +22,7 @@
 - [x] **F8** 删除 domain-manager i18n 全链（实例/Ready/dict 5 键/`ensureI18n`），`i18nReady` 简化为单实例 — `domain-rules-manager.js`, `background/shared.js`，已删 `i18n/domain-manager-{i18n,dict}.js`
 - [x] **F9a** dispatch 由 14 分支 if-else 改为 `MESSAGE_HANDLERS` 映射表 — `background/message-handlers.js`
 - [x] **F9b** 删除已无引用的 `handleUpdateCheckRequest` / `handleGetManifestInfoRequest` 函数及 `MessageTypes.UPDATE_CHECK` / `GET_MANIFEST_INFO` 常量（无发送方，spec 目标协议收窄）；随之孤儿化的 7 个 background-dict 键一并清除
-- [x] **F10** `detect/ai-shared.js` 去中转：`translate` / `getUiLanguage` 改为直接 re-export `detect/shared.js`，不再包一层
+- [x] **F10** ~~`detect/ai-shared.js` 去中转~~（已由 F6 架构边界收紧替代，现统一经 `DetectPageContext` 转发）
 - [x] **F11** `popup/shared.js` 孤儿 JSDoc 删除；`getEl` 在 popup 内统一使用（language-apply.js 两处 raw getElementById）
 
 ## 一致性与可靠性
@@ -47,4 +47,4 @@
 - SW 瞬态状态迁 `chrome.storage.session`：模块级 Promise 已去重，DNR 规则即真相源，无收益
 - 每检测项一个 collector 文件：129 条规则量级下过度碎片化
 - customRulesCache 与 TEST_DOMAIN_CACHE 的理论竞态：Chrome onChanged 与 set 广播同序，实践中不成立
-- API 时效核对结论：DNR `modifyHeaders`/`getMatchedRules`、UA-CH `fullVersionList`（非已废弃的 `Full-Version`）、`storage.session`、module SW 全部符合当前文档；`domains` 等废弃字段未使用；vendor 库 DOMPurify 3.4.9 / marked 18.0.5 均为近期版本
+- API 时效核对结论：DNR `modifyHeaders`/`getMatchedRules`、UA-CH `fullVersionList`（非已废弃的 `Full-Version`）、`storage.session`、module SW 全部符合当前文档；`domains` 等废弃字段未使用；vendor 库已更新至 DOMPurify 3.5.0 / marked 18.3.0

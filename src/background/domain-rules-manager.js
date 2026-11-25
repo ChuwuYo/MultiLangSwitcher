@@ -13,9 +13,11 @@ export class DomainRulesManager {
 		// 自定义规则内存缓存：避免每次未命中都读 chrome.storage；
 		// 外部（如手动注入 customDomainRules）修改时由 onChanged 失效
 		this.customRulesCache = null;
+		this._customRulesVersion = 0;
 		if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
 			chrome.storage.onChanged.addListener((changes, areaName) => {
-				if (areaName === "local" && changes.customDomainRules) {
+				if (areaName === "local" && changes[STORAGE_KEYS.CUSTOM_DOMAIN_RULES]) {
+					this._customRulesVersion++;
 					this.customRulesCache = null;
 					// 域名查询结果由自定义规则参与计算，一并失效
 					this.domainCache.clear();
@@ -57,9 +59,10 @@ export class DomainRulesManager {
 			const data = await response.json();
 			this.rules = data.domainLanguageRules || {};
 			return this.rules;
-		} catch (_error) {
-			this.rules = {};
-			return this.rules;
+		} catch (error) {
+			console.error("[DomainRulesManager] Failed to load domain rules:", error);
+			this.loadPromise = null;
+			return {};
 		}
 	}
 
@@ -74,34 +77,53 @@ export class DomainRulesManager {
 	/**
 	 * 根据域名获取对应的语言
 	 * @param {string} domain - 域名
-	 * @returns {Promise<string|null>} 语言代码或null
+	 * @returns {Promise<{language: string|null, fromCache: boolean}>} 语言代码（未命中为 null）与缓存命中状态
 	 */
-	async getLanguageForDomain(domain) {
+	async lookupDomainWithCacheStatus(domain) {
 		try {
+			const normalizedDomain = String(domain || "")
+				.trim()
+				.toLowerCase();
+			if (!normalizedDomain) return { language: null, fromCache: false };
+
 			// 检查缓存（LRU：命中时重插入以刷新热度）
-			if (this.domainCache.has(domain)) {
+			if (this.domainCache.has(normalizedDomain)) {
 				this.cacheStats.hits++;
-				const cachedResult = this.domainCache.get(domain);
-				this.domainCache.delete(domain);
-				this.domainCache.set(domain, cachedResult);
-				return cachedResult ? cachedResult.language : null;
+				const cachedResult = this.domainCache.get(normalizedDomain);
+				this.domainCache.delete(normalizedDomain);
+				this.domainCache.set(normalizedDomain, cachedResult);
+				return { language: cachedResult ? cachedResult.language : null, fromCache: true };
 			}
 
 			// 缓存未命中
 			this.cacheStats.misses++;
 
-			// 确保规则已加载
+			// 确保内置规则已尝试加载；即使加载失败仍继续检查自定义规则（但不缓存缺失结果）
 			await this._ensureRulesLoaded();
-			if (!this.rules) return null;
 
-			// 获取自定义规则并查找匹配
-			const customRules = await this.getCustomRules();
-			const result = this._findMatchingRule(domain, customRules);
-			return result ? result.language : null;
+			for (let attempt = 0; attempt < 3; attempt++) {
+				const versionBefore = this._customRulesVersion;
+				const customRules = await this.getCustomRules();
+				if (versionBefore !== this._customRulesVersion) {
+					continue;
+				}
+				if (!this.rules) {
+					const customMatch = this._matchRuleInTable(normalizedDomain, customRules);
+					return { language: customMatch ? customMatch.language : null, fromCache: false };
+				}
+				const result = this._findMatchingRule(normalizedDomain, customRules);
+				return { language: result ? result.language : null, fromCache: false };
+			}
+			return { language: null, fromCache: false };
 		} catch (error) {
 			console.error(`[DomainRulesManager] Error getting language for domain "${domain}":`, error);
-			return null;
+			return { language: null, fromCache: false };
 		}
+	}
+
+	async getLanguageForDomain(domain) {
+		const { language } = await this.lookupDomainWithCacheStatus(domain);
+		return language;
 	}
 
 	/**
@@ -156,10 +178,21 @@ export class DomainRulesManager {
 	/**
 	 * 查找匹配的规则
 	 * @param {string} domain - 域名
-	 * @param {Object} customRules - 自定义规则
-	 * @returns {Object|null} 匹配结果 {language, source} 或 null
+	 * @param {Object} table - 规则表（域名后缀 → 语言）
+	 * @returns {Object|null} 匹配结果 {language, rule} 或 null
 	 * @private
 	 */
+	_matchRuleInTable(domain, table) {
+		if (!table || typeof table !== "object") return null;
+		if (table[domain]) return { language: table[domain], rule: domain };
+		const parts = domain.split(".");
+		for (let i = 1; i < parts.length; i++) {
+			const suffix = parts.slice(i).join(".");
+			if (table[suffix]) return { language: table[suffix], rule: suffix };
+		}
+		return null;
+	}
+
 	_findMatchingRule(domain, customRules) {
 		let result;
 
@@ -245,17 +278,31 @@ export class DomainRulesManager {
 	 * 获取自定义规则（首读后缓存，storage 变化时自动失效）
 	 * @returns {Promise<Object>} 自定义规则对象
 	 */
-	async getCustomRules() {
-		if (this.customRulesCache) {
-			return this.customRulesCache;
+	async getCustomRules({ throwOnError = false } = {}) {
+		for (let attempt = 0; attempt < 3; attempt++) {
+			if (this.customRulesCache) {
+				return this.customRulesCache;
+			}
+			const versionAtStart = this._customRulesVersion;
+			try {
+				const result = await chrome.storage.local.get([STORAGE_KEYS.CUSTOM_DOMAIN_RULES]);
+				const rules = result[STORAGE_KEYS.CUSTOM_DOMAIN_RULES] || {};
+				if (versionAtStart === this._customRulesVersion) {
+					this.customRulesCache = rules;
+					return rules;
+				}
+			} catch (error) {
+				if (throwOnError) throw error;
+				return {};
+			}
 		}
 		try {
 			const result = await chrome.storage.local.get([STORAGE_KEYS.CUSTOM_DOMAIN_RULES]);
-			this.customRulesCache = result.customDomainRules || {};
-		} catch (_error) {
-			this.customRulesCache = {};
+			return result[STORAGE_KEYS.CUSTOM_DOMAIN_RULES] || {};
+		} catch (error) {
+			if (throwOnError) throw error;
+			return {};
 		}
-		return this.customRulesCache;
 	}
 
 	/**

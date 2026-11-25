@@ -48,6 +48,8 @@ export const setAutoSwitchEnabled = (value) => {
  * @param {string} currentLanguage - 当前生效的语言代码
  */
 let lastNotifiedLanguage = null;
+let notifyQueue = Promise.resolve();
+let notifySeq = 0;
 
 /**
  * 最近一次发布到 UI 的生效语言（自动切换据此避免每次导航都重复通知）
@@ -56,15 +58,23 @@ let lastNotifiedLanguage = null;
 export const getLastNotifiedLanguage = () => lastNotifiedLanguage;
 
 export const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
+	const seq = ++notifySeq;
+	const prevNotifiedLanguage = lastNotifiedLanguage;
+	// 立即记录最新待发布值用于同步去重，并串行化写入避免乱序覆盖
 	lastNotifiedLanguage = currentLanguage;
-	chrome.storage.session
-		.set({
-			[STORAGE_KEYS.UI_STATE]: {
-				autoSwitchEnabled: autoSwitchEnabled,
-				currentLanguage: currentLanguage,
-			},
-		})
+	notifyQueue = notifyQueue
+		.then(() =>
+			chrome.storage.session.set({
+				[STORAGE_KEYS.UI_STATE]: {
+					autoSwitchEnabled: autoSwitchEnabled,
+					currentLanguage: currentLanguage,
+				},
+			}),
+		)
 		.catch((notifyError) => {
+			if (seq === notifySeq) {
+				lastNotifiedLanguage = prevNotifiedLanguage;
+			}
 			sendBackgroundLog(`${backgroundI18n.t("failed_notify_ui_update")}: ${notifyError.message}`, "warning");
 		});
 	sendBackgroundLog(

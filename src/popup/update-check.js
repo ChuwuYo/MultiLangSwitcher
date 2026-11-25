@@ -14,6 +14,19 @@ let updateChecker = null;
 let updateCheckInProgress = false;
 let updateCheckController = null;
 let updateCheckDebounceTimer = null;
+let updateErrorHideTimer = null;
+let updateNotificationHideTimer = null;
+
+const getSafeGitHubReleaseUrl = (url) => {
+	const fallback = "https://github.com/ChuwuYo/MultiLangSwitcher/releases/latest";
+	try {
+		const parsed = new URL(String(url || fallback));
+		if (parsed.protocol === "https:" && parsed.hostname === "github.com") {
+			return parsed.toString();
+		}
+	} catch (_error) {}
+	return fallback;
+};
 let lastUpdateCheckTime = 0;
 
 /**
@@ -79,9 +92,13 @@ const showUpdateError = (message, fallbackMessage = null, showRetryOption = fals
 		updateErrorAlert.classList.remove("d-none");
 	});
 
-	// 对于复杂错误使用更长的自动隐藏时间
+	// 对于复杂错误使用更长的自动隐藏时间（先清旧定时器）
+	if (updateErrorHideTimer) {
+		ResourceManager.clearTimeout(updateErrorHideTimer);
+	}
 	const hideDelay = fallbackMessage || showRetryOption ? 8000 : 5000;
-	ResourceManager.setTimeout(() => {
+	updateErrorHideTimer = ResourceManager.setTimeout(() => {
+		updateErrorHideTimer = null;
 		updateErrorAlert.classList.add("d-none");
 	}, hideDelay);
 };
@@ -142,6 +159,11 @@ const showUpdateNotification = (updateInfo) => {
 	if (!alertDiv) return;
 
 	runDOMUpdate(() => {
+		// 渲染任意新结果前先清理旧的自动隐藏定时器，避免提前隐藏新通知
+		if (updateNotificationHideTimer) {
+			ResourceManager.clearTimeout(updateNotificationHideTimer);
+			updateNotificationHideTimer = null;
+		}
 		// 当GitHub API不可用时处理回退模式
 		if (updateInfo.fallbackMode) {
 			alertDiv.className = "alert alert-warning mb-0 update-notification warning";
@@ -178,8 +200,9 @@ const showUpdateNotification = (updateInfo) => {
 			const actions = document.createElement("div");
 			actions.className = "update-actions mt-2";
 			const link = document.createElement("a");
-			link.href = updateInfo.releaseUrl;
+			link.href = getSafeGitHubReleaseUrl(updateInfo.releaseUrl);
 			link.target = "_blank";
+			link.rel = "noopener noreferrer";
 			link.className = "btn btn-outline-warning btn-sm";
 			link.textContent = popupI18n.t("check_manually");
 			actions.appendChild(link);
@@ -191,7 +214,8 @@ const showUpdateNotification = (updateInfo) => {
 			sendDebugLog(popupI18n.t("showing_fallback_notification"), "warning");
 
 			// 5秒后自动隐藏回退通知
-			ResourceManager.setTimeout(() => {
+			updateNotificationHideTimer = ResourceManager.setTimeout(() => {
+				updateNotificationHideTimer = null;
 				updateNotification.classList.add("d-none");
 			}, 5000);
 		} else if (updateInfo.updateAvailable) {
@@ -242,15 +266,18 @@ const showUpdateNotification = (updateInfo) => {
 			actions.className = "update-actions";
 
 			const viewLink = document.createElement("a");
-			viewLink.href = updateInfo.releaseUrl;
+			viewLink.href = getSafeGitHubReleaseUrl(updateInfo.releaseUrl);
 			viewLink.target = "_blank";
+			viewLink.rel = "noopener noreferrer";
 			viewLink.className = "btn btn-outline-primary";
 			viewLink.textContent = popupI18n.t("view_release");
 			actions.appendChild(viewLink);
 
 			const downloadLink = document.createElement("a");
-			downloadLink.href = `https://github.com/ChuwuYo/MultiLangSwitcher/archive/refs/tags/v${updateInfo.latestVersion}.zip`;
+			const safeVersion = encodeURIComponent(String(updateInfo.latestVersion || "").replace(/^v/, ""));
+			downloadLink.href = `https://github.com/ChuwuYo/MultiLangSwitcher/archive/refs/tags/v${safeVersion}.zip`;
 			downloadLink.target = "_blank";
+			downloadLink.rel = "noopener noreferrer";
 			downloadLink.className = "btn btn-primary";
 			downloadLink.textContent = popupI18n.t("download_update");
 			actions.appendChild(downloadLink);
@@ -289,8 +316,9 @@ const showUpdateNotification = (updateInfo) => {
 
 			sendDebugLog(popupI18n.t("extension_is_up_to_date"), "info");
 
-			// 4秒后自动隐藏成功通知
-			ResourceManager.setTimeout(() => {
+			// 4秒后自动隐藏成功通知（复用句柄以便后续通知取消）
+			updateNotificationHideTimer = ResourceManager.setTimeout(() => {
+				updateNotificationHideTimer = null;
 				updateNotification.classList.add("d-none");
 			}, 4000);
 		}
@@ -339,6 +367,7 @@ export const cancelUpdateCheck = () => {
 	if (updateCheckInProgress) {
 		updateCheckInProgress = false;
 		updateCheckButtonState(false);
+		getEl("updateNotification")?.classList.add("d-none");
 	}
 };
 
@@ -424,17 +453,18 @@ const performUpdateCheck = async () => {
 	showUpdateLoadingState();
 	updateCheckButtonState(true);
 
-	// 为此请求创建新的中止控制器
-	updateCheckController = ResourceManager.addController(new AbortController());
+	// 为此请求创建局部中止控制器引用，避免并发取消/重试时误清理新请求
+	const controller = ResourceManager.addController(new AbortController());
+	updateCheckController = controller;
 
 	try {
 		sendDebugLog(popupI18n.t("starting_update_check"), "info");
 
 		// 为更新检查器添加中止信号支持，具有优雅的回退机制
-		const updateInfo = await updateChecker.checkForUpdates(updateCheckController.signal);
+		const updateInfo = await updateChecker.checkForUpdates(controller.signal);
 
-		// 检查请求是否被取消
-		if (updateCheckController?.signal.aborted) {
+		// 检查请求是否被取消或已被新请求取代
+		if (controller.signal.aborted || updateCheckController !== controller) {
 			sendDebugLog(popupI18n.t("update_check_was_cancelled"), "info");
 			return;
 		}
@@ -443,7 +473,7 @@ const performUpdateCheck = async () => {
 		showUpdateNotification(updateInfo);
 	} catch (error) {
 		// 检查错误是否由于取消导致
-		if (error.name === "AbortError" || updateCheckController?.signal.aborted) {
+		if (error.name === "AbortError" || controller.signal.aborted || updateCheckController !== controller) {
 			sendDebugLog(popupI18n.t("update_check_was_cancelled"), "info");
 			return;
 		}
@@ -478,15 +508,11 @@ const performUpdateCheck = async () => {
 		// 显示统一的错误信息
 		showUpdateError(errorMessage, fallbackMessage, showRetryOption);
 	} finally {
-		// 清理更新检查状态
-		updateCheckInProgress = false;
-
-		// 使用对外暴露的 abortController 接口清理控制器（避免直接访问内部结构）
-		if (updateCheckController) {
-			ResourceManager.abortController(updateCheckController);
+		ResourceManager.abortController(controller);
+		if (updateCheckController === controller) {
+			updateCheckInProgress = false;
 			updateCheckController = null;
+			updateCheckButtonState(false);
 		}
-
-		updateCheckButtonState(false);
 	}
 };

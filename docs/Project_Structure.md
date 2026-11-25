@@ -51,6 +51,7 @@ MultiLangSwitcher/
     ├── shared/                      - 跨页共享模块
     │   ├── message-types.js         - 消息协议常量（MessageTypes，13 个）
     │   ├── storage-keys.js          - 存储键常量（STORAGE_KEYS / LOCAL_STORAGE_KEYS）
+    │   ├── dnr-rule-ids.js          - declarativeNetRequest 动态规则 ID 与优先级基址常量
     │   ├── shared-utils.js          - 日志、语言检测、i18n 注册表、兜底翻译
     │   ├── shared-i18n-base.js      - BaseI18n（字典静态注入 + data-i18n 扫描器）
     │   ├── shared-actions.js        - requestBackground 信封 + resetAcceptLanguage

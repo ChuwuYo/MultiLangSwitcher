@@ -64,20 +64,20 @@ export const initDiagnostics = () => {
 			fragment.appendChild(declarativeTitle);
 
 			const hasDeclarativePermission = manifest.permissions?.includes("declarativeNetRequest");
-			const hasFeedbackPermission = manifest.permissions?.includes("declarativeNetRequestFeedback");
+			const hasFeedbackDeclared =
+				manifest.permissions?.includes("declarativeNetRequestFeedback") ||
+				manifest.optional_permissions?.includes("declarativeNetRequestFeedback");
 
+			let feedbackAnchor = null;
 			if (hasDeclarativePermission) {
 				const p1 = document.createElement("p");
 				p1.className = "success";
 				p1.textContent = debugI18n.t("declarative_permission_found");
 				fragment.appendChild(p1);
 
-				if (hasFeedbackPermission) {
-					const p2 = document.createElement("p");
-					p2.className = "success";
-					p2.textContent = debugI18n.t("declarative_feedback_permission_found");
-					fragment.appendChild(p2);
-				}
+				feedbackAnchor = document.createElement("div");
+				fragment.appendChild(feedbackAnchor);
+
 				const p3 = document.createElement("p");
 				p3.className = "info";
 				p3.textContent = debugI18n.t("using_dynamic_rules");
@@ -92,6 +92,17 @@ export const initDiagnostics = () => {
 			// 获取存储的语言设置和自动切换状态 (移入 try 块，确保在 manifest 读取成功后执行)
 			(async () => {
 				try {
+					if (hasDeclarativePermission && hasFeedbackDeclared && feedbackAnchor) {
+						const granted = chrome.permissions?.contains
+							? await chrome.permissions.contains({ permissions: ["declarativeNetRequestFeedback"] })
+							: manifest.permissions?.includes("declarativeNetRequestFeedback");
+						if (granted) {
+							const p2 = document.createElement("p");
+							p2.className = "success";
+							p2.textContent = debugI18n.t("declarative_feedback_permission_found");
+							feedbackAnchor.appendChild(p2);
+						}
+					}
 					const result = await chrome.storage.local.get([
 						STORAGE_KEYS.CURRENT_LANGUAGE,
 						STORAGE_KEYS.AUTO_SWITCH_ENABLED,

@@ -68,12 +68,12 @@ class ThemeManager {
 	 * 初始化主题管理器
 	 */
 	init() {
-		// 应用初始主题
+		// 应用初始主题（未保存用户偏好时不写 localStorage，以保留跟随系统主题能力）
 		const savedTheme = localStorage.getItem(LOCAL_STORAGE_KEYS.THEME);
 		if (savedTheme) {
-			this.applyTheme(savedTheme);
+			this.applyTheme(savedTheme, { persist: false });
 		} else {
-			this.applyTheme(this.prefersDarkScheme.matches ? "dark" : "light");
+			this.applyTheme(this.prefersDarkScheme.matches ? "dark" : "light", { persist: false });
 		}
 
 		this.setupEventListeners();
@@ -82,10 +82,13 @@ class ThemeManager {
 	/**
 	 * 应用指定主题
 	 * @param {string} theme - 主题名称
+	 * @param {{ persist?: boolean }} [options]
 	 */
-	applyTheme(theme) {
+	applyTheme(theme, { persist = false } = {}) {
 		document.documentElement.setAttribute("data-bs-theme", theme);
-		localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, theme);
+		if (persist) {
+			localStorage.setItem(LOCAL_STORAGE_KEYS.THEME, theme);
+		}
 
 		if (!this.themeToggleBtn) return;
 
@@ -105,7 +108,7 @@ class ThemeManager {
 			ResourceManager.addEventListener(this.themeToggleBtn, "click", () => {
 				const currentTheme = document.documentElement.getAttribute("data-bs-theme");
 				const newTheme = currentTheme === "dark" ? "light" : "dark";
-				this.applyTheme(newTheme);
+				this.applyTheme(newTheme, { persist: true });
 			});
 		}
 
@@ -113,7 +116,7 @@ class ThemeManager {
 		ResourceManager.addEventListener(this.prefersDarkScheme, "change", (e) => {
 			// 仅当用户未设置偏好时才更改
 			if (!localStorage.getItem(LOCAL_STORAGE_KEYS.THEME)) {
-				this.applyTheme(e.matches ? "dark" : "light");
+				this.applyTheme(e.matches ? "dark" : "light", { persist: false });
 			}
 		});
 	}

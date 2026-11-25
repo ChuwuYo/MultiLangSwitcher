@@ -40,7 +40,7 @@ export const LANGUAGE_OPTIONS = [
 	{ value: "id", label: "Bahasa Indonesia (id)" }, // 印度尼西亚
 	{ value: "vi", label: "Tiếng Việt (vi)" }, // 越南
 	{ value: "th", label: "ไทย (th)" }, // 泰国
-	{ value: "tl", label: "Filipino (tl)" }, // 菲律宾
+	{ value: "fil", label: "Filipino (fil)" }, // 菲律宾（BCP 47 标准主标签）
 
 	// 葡萄牙语
 	{ value: "pt-PT", label: "Português (Portugal) (pt-PT)" }, // 葡萄牙
@@ -58,7 +58,7 @@ export const LANGUAGE_OPTIONS = [
 	// 北欧
 	{ value: "sv", label: "Svenska (sv)" }, // 瑞典
 	{ value: "fi", label: "Suomi (fi)" }, // 芬兰
-	{ value: "no", label: "Norsk (no)" }, // 挪威
+	{ value: "nb", label: "Norsk Bokmål (nb)" }, // 挪威书面语（BCP 47 推荐）
 	{ value: "da", label: "Dansk (da)" }, // 丹麦
 
 	// 中东和西亚
@@ -113,23 +113,41 @@ export const generateLanguageOptions = (selectedValue = null) => {
 	return html;
 };
 
+export const LEGACY_LANGUAGE_CODE_MAP = Object.freeze({
+	tl: "fil",
+	no: "nb",
+});
+
+export const normalizeLanguageOptionValue = (value) => {
+	if (typeof value !== "string") return value;
+	const trimmed = value.trim();
+	return Object.hasOwn(LEGACY_LANGUAGE_CODE_MAP, trimmed) ? LEGACY_LANGUAGE_CODE_MAP[trimmed] : trimmed;
+};
+
+const getDefaultCustomSuffix = () => {
+	const lang = typeof navigator !== "undefined" ? String(navigator.language || "").toLowerCase() : "";
+	return lang.startsWith("zh") ? "自定义" : "Custom";
+};
+
 /**
  * 填充语言选择框元素
  * @param {HTMLSelectElement} selectElement - 要填充的select元素
  * @param {string|null} selectedValue - 要选中的语言值
+ * @param {string|null} [customSuffix=null] - 自定义选项后缀
  */
-// biome-ignore lint/correctness/noUnusedVariables: 该函数用于外部调用
-export const populateLanguageSelect = (selectElement, selectedValue = null) => {
+export const populateLanguageSelect = (selectElement, selectedValue = null, customSuffix = null) => {
 	// 验证必需参数和类型
 	if (!selectElement || !(selectElement instanceof HTMLElement)) return;
 
-	selectElement.innerHTML = generateLanguageOptions(selectedValue);
+	const normalizedValue = selectedValue ? normalizeLanguageOptionValue(selectedValue) : null;
+	selectElement.innerHTML = generateLanguageOptions(normalizedValue);
 
 	// 如果指定了选中值但在预定义选项中没有找到，添加自定义选项
-	if (selectedValue && !LANGUAGE_OPTIONS.find((opt) => opt.value === selectedValue)) {
+	if (normalizedValue && !LANGUAGE_OPTIONS.find((opt) => opt.value === normalizedValue)) {
 		const customOption = document.createElement("option");
-		customOption.value = selectedValue;
-		customOption.textContent = `${selectedValue} (自定义)`;
+		customOption.value = normalizedValue;
+		const suffix = customSuffix || getDefaultCustomSuffix();
+		customOption.textContent = `${normalizedValue} (${suffix})`;
 		customOption.selected = true;
 		selectElement.insertBefore(customOption, selectElement.firstChild);
 	}

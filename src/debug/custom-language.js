@@ -21,8 +21,8 @@ const validateAcceptLanguageFormat = (languageString) => {
 		return true;
 	}
 
-	// 检查是否包含不合法字符（Accept-Language 应该只包含字母、数字、连字符、逗号、分号、等号、点和空格）
-	const invalidChars = /[^a-zA-Z0-9\-,;=.\s]/;
+	// 检查是否包含不合法字符（支持 RFC 9110 通配符 * 与标准 Accept-Language 字符集）
+	const invalidChars = /[^a-zA-Z0-9\-*,;=.\s]/;
 	if (invalidChars.test(trimmed)) {
 		return true; // 包含不合法字符
 	}
@@ -40,22 +40,22 @@ const validateAcceptLanguageFormat = (languageString) => {
 			return true; // 空的部分
 		}
 
-		// 检查每个部分的格式：language-tag 或 language-tag;q=value
-		const qIndex = cleanPart.indexOf(";q=");
-		const languageTag = qIndex === -1 ? cleanPart : cleanPart.substring(0, qIndex);
+		// 支持分号前后可选空白（如 en-US; q=0.8）
+		const qMatch = /^([^;]+?)(?:\s*;\s*q\s*=\s*([^;]+))?$/i.exec(cleanPart);
+		if (!qMatch) {
+			return true;
+		}
+		const languageTag = qMatch[1].trim();
+		const qValue = qMatch[2]?.trim();
 
-		// 更宽松的语言标签验证：支持更复杂的格式如 zh-Hans-CN
-		// 基本格式：2-3个字母，可选地跟多个连字符分隔的2-8个字母/数字的子标签
-		const languageTagPattern = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/;
+		// 支持通配符 * 及 BCP 47 单字母扩展子标签（如 en-US-u-ca-gregory）
+		const languageTagPattern = /^(\*|[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*)$/;
 		if (!languageTagPattern.test(languageTag)) {
 			return true; // 语言标签格式不正确
 		}
 
 		// 如果有质量值，检查其格式
-		if (qIndex !== -1) {
-			const qValue = cleanPart.substring(qIndex + 3);
-
-			// 检查质量值格式：应该是0到1之间的数字，最多3位小数
+		if (qValue !== undefined) {
 			const qValuePattern = /^(0(\.\d{1,3})?|1(\.0{1,3})?)$/;
 			if (!qValuePattern.test(qValue)) {
 				return true; // 质量值格式不正确
@@ -71,60 +71,68 @@ const validateAcceptLanguageFormat = (languageString) => {
  */
 export const initCustomLanguage = () => {
 	// 应用自定义语言设置
-	ResourceManager.addEventListener(document.getElementById("applyCustomLangBtn"), "click", () => {
-		const customLangInput = /** @type {HTMLInputElement} */ (document.getElementById("customLanguageInput"));
-		const customLangResult = document.getElementById("customLangResult");
-		const languageString = customLangInput.value.trim();
+	const customLanguageForm = document.getElementById("customLanguageForm");
+	ResourceManager.addEventListener(
+		customLanguageForm || document.getElementById("applyCustomLangBtn"),
+		customLanguageForm ? "submit" : "click",
+		(event) => {
+			event.preventDefault();
+			const customLangInput = /** @type {HTMLInputElement} */ (document.getElementById("customLanguageInput"));
+			const customLangResult = document.getElementById("customLangResult");
+			const languageString = customLangInput.value.trim();
 
-		// 无需预先清空：后续两条路径均通过 setSafeContent 清空并写入新内容
+			// 无需预先清空：后续两条路径均通过 setSafeContent 清空并写入新内容
 
-		if (!languageString) {
-			setSafeErrorMessage(customLangResult, debugI18n.t("enter_valid_language"));
-			addLogMessage(debugI18n.t("try_apply_custom_empty"), "warning");
-			customLangInput.classList.add("is-invalid");
-			return;
-		}
-
-		customLangInput.classList.remove("is-invalid");
-
-		// 检查格式是否可能有问题
-		const hasFormatIssues = validateAcceptLanguageFormat(languageString);
-
-		setSafeContent(customLangResult, `${debugI18n.t("applying_custom_language")} ${languageString}...`);
-		addLogMessage(`${debugI18n.t("try_apply_custom")} ${languageString}`, "info");
-
-		// 发送消息到 background.js 请求更新规则
-		(async () => {
-			try {
-				await requestBackground(MessageTypes.UPDATE_RULES, { language: languageString });
-
-				// 使用安全的DOM操作
-				const messages = [
-					{
-						message: `${debugI18n.t("custom_language_applied")} ${languageString}`,
-						className: "success",
-					},
-				];
-
-				if (hasFormatIssues) {
-					messages.push({
-						message: debugI18n.t("accept_language_format_warning"),
-						className: "warning",
-					});
-				}
-
-				setSafeContent(customLangResult, messages);
-				addLogMessage(`${debugI18n.t("custom_language_applied_log")} ${languageString}`, "success");
-
-				if (hasFormatIssues) {
-					addLogMessage(debugI18n.t("accept_language_format_warning"), "warning");
-				}
-			} catch (error) {
-				setSafeContent(customLangResult, `${debugI18n.t("apply_custom_failed")} ${error.message}`, "error");
-				addLogMessage(`${debugI18n.t("apply_custom_failed")} ${error.message}`, "error");
+			if (!languageString) {
+				setSafeErrorMessage(customLangResult, debugI18n.t("enter_valid_language"));
+				addLogMessage(debugI18n.t("try_apply_custom_empty"), "warning");
+				customLangInput.classList.add("is-invalid");
+				customLangInput.setAttribute("aria-invalid", "true");
+				return;
 			}
-		})();
-	});
+
+			customLangInput.classList.remove("is-invalid");
+			customLangInput.removeAttribute("aria-invalid");
+
+			// 检查格式是否可能有问题
+			const hasFormatIssues = validateAcceptLanguageFormat(languageString);
+
+			setSafeContent(customLangResult, `${debugI18n.t("applying_custom_language")} ${languageString}...`);
+			addLogMessage(`${debugI18n.t("try_apply_custom")} ${languageString}`, "info");
+
+			// 发送消息到 background.js 请求更新规则
+			(async () => {
+				try {
+					await requestBackground(MessageTypes.UPDATE_RULES, { language: languageString });
+
+					// 使用安全的DOM操作
+					const messages = [
+						{
+							message: `${debugI18n.t("custom_language_applied")} ${languageString}`,
+							className: "success",
+						},
+					];
+
+					if (hasFormatIssues) {
+						messages.push({
+							message: debugI18n.t("accept_language_format_warning"),
+							className: "warning",
+						});
+					}
+
+					setSafeContent(customLangResult, messages);
+					addLogMessage(`${debugI18n.t("custom_language_applied_log")} ${languageString}`, "success");
+
+					if (hasFormatIssues) {
+						addLogMessage(debugI18n.t("accept_language_format_warning"), "warning");
+					}
+				} catch (error) {
+					setSafeContent(customLangResult, `${debugI18n.t("apply_custom_failed")} ${error.message}`, "error");
+					addLogMessage(`${debugI18n.t("apply_custom_failed")} ${error.message}`, "error");
+				}
+			})();
+		},
+	);
 
 	// 重置自定义语言设置
 	ResourceManager.addEventListener(document.getElementById("resetCustomLangBtn"), "click", async () => {

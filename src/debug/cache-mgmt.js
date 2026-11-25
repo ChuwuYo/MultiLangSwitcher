@@ -31,9 +31,15 @@ export const initializeCacheManagement = () => {
 		ResourceManager.addEventListener(resetCacheStatsBtn, "click", resetCacheStats);
 	}
 
-	// 域名测试按钮
+	// 域名测试表单（支持回车提交与按钮点击）
+	const testDomainForm = document.getElementById("testDomainForm");
 	const testDomainBtn = document.getElementById("testDomainBtn");
-	if (testDomainBtn) {
+	if (testDomainForm) {
+		ResourceManager.addEventListener(testDomainForm, "submit", (event) => {
+			event.preventDefault();
+			testDomainCache();
+		});
+	} else if (testDomainBtn) {
 		ResourceManager.addEventListener(testDomainBtn, "click", testDomainCache);
 	}
 

@@ -49,18 +49,25 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	const eventHandlers = {
 		// 防抖相关状态
 		lastApplyTime: 0,
+		autoSwitchSeq: 0,
 
 		// 自动切换开关变更处理
 		autoSwitchChange: async (event) => {
 			const enabled = event.target.checked;
+			const seq = ++eventHandlers.autoSwitchSeq;
 
 			// 先本地即时反馈，再异步持久化，提升交互流畅度
 			updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
 
-			const success = await setAutoSwitchStatus(enabled);
-			if (!success) {
-				// 回滚 UI 状态，使用立即模式
-				updateAutoSwitchUI(!enabled, autoSwitchToggle, languageSelect, applyButton);
+			const success = await setAutoSwitchStatus(enabled, {
+				shouldShowError: () => seq === eventHandlers.autoSwitchSeq,
+			});
+			if (!success && seq === eventHandlers.autoSwitchSeq) {
+				// 仅当本次请求仍为最新操作时回滚，优先从权威存储读取真实状态而非简单取反
+				const authoritativeEnabled = await getAutoSwitchStatus();
+				if (seq === eventHandlers.autoSwitchSeq) {
+					updateAutoSwitchUI(authoritativeEnabled, autoSwitchToggle, languageSelect, applyButton);
+				}
 			}
 		},
 
@@ -68,6 +75,11 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		languageSelectFocus: (event) => {
 			event.target.size = 6;
 			sendDebugLog(popupI18n.t("language_select_focus"), "info");
+		},
+
+		// 语言选择框失焦时折叠列表
+		languageSelectBlur: (event) => {
+			event.target.size = 1;
 		},
 
 		// 应用按钮点击处理
@@ -90,7 +102,6 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 				// 更新请求头规则并触发自动检查
 				// currentLanguage 由 background 的 UPDATE_RULES 处理器在规则应用成功后持久化（单写者原则）
 				await updateHeaderRules(selectedLanguage, true);
-				updateLanguageDisplay(selectedLanguage);
 
 				// 折叠下拉框，直接同步
 				languageSelect.size = 1;
@@ -133,7 +144,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		// 重置操作错误处理函数
 		handleResetError(error) {
 			const errorDetails = error?.message || popupI18n.t("unknown_error");
-			const userMessage = popupI18n.t("reset_failed_alert") + ": " + errorDetails;
+			const userMessage = `${popupI18n.t("reset_failed_alert")}: ${errorDetails}`;
 			sendDebugLog(popupI18n.t("reset_request_failed", { message: errorDetails }), "error");
 			showError(userMessage);
 		},
@@ -167,6 +178,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 
 	if (languageSelect) {
 		ResourceManager.addEventListener(languageSelect, "focus", eventHandlers.languageSelectFocus);
+		ResourceManager.addEventListener(languageSelect, "blur", eventHandlers.languageSelectBlur);
 	}
 
 	if (applyButton) {
@@ -187,8 +199,19 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		ResourceManager.addEventListener(updateCheckBtn, "click", eventHandlers.updateCheckBtnClick);
 	}
 
-	// 全局资源清理函数
+	const onStorageChanged = (changes, areaName) => {
+		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
+			return;
+		}
+		handleAutoSwitchUIUpdate(changes[STORAGE_KEYS.UI_STATE].newValue, autoSwitchToggle, languageSelect, applyButton);
+	};
+
+	let isCleanedUp = false;
+	// 统一的页面资源清理逻辑（幂等，防止 beforeunload + pagehide 重复执行）
 	const cleanupResources = () => {
+		if (isCleanedUp) return;
+		isCleanedUp = true;
+		chrome.storage.onChanged.removeListener(onStorageChanged);
 		// 取消正在进行的更新检查
 		cancelUpdateCheck();
 
@@ -259,10 +282,5 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	};
 
 	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息）
-	chrome.storage.onChanged.addListener((changes, areaName) => {
-		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
-			return;
-		}
-		handleAutoSwitchUIUpdate(changes[STORAGE_KEYS.UI_STATE].newValue, autoSwitchToggle, languageSelect, applyButton);
-	});
+	chrome.storage.onChanged.addListener(onStorageChanged);
 });

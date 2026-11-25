@@ -22,29 +22,41 @@ export const renderChatPlaceholder = () => {
 };
 
 // 模型回复可被提示注入操控：默认配置仍放行远程图片、style 里的 url() 和表单，
-// 渲染即会向任意站点发请求（泄露已脱敏的 IP/UA），表单还能把用户输入发到外站
+// 使用严格白名单收紧 DOMPurify，防止外链资源请求、表单注入与未知标签绕过
 const AI_REPLY_PURIFY_CONFIG = {
-	FORBID_TAGS: [
-		"img",
-		"picture",
-		"source",
-		"video",
-		"audio",
-		"svg",
-		"math",
-		"form",
-		"input",
-		"button",
-		"textarea",
-		"select",
-		"style",
-		"link",
-		"meta",
-		"base",
+	ALLOWED_TAGS: [
+		"p",
+		"br",
+		"strong",
+		"em",
+		"del",
+		"code",
+		"pre",
+		"blockquote",
+		"ul",
+		"ol",
+		"li",
+		"h1",
+		"h2",
+		"h3",
+		"h4",
+		"h5",
+		"h6",
+		"table",
+		"thead",
+		"tbody",
+		"tr",
+		"th",
+		"td",
+		"hr",
+		"a",
 	],
-	FORBID_ATTR: ["style", "action", "formaction", "srcset", "background", "poster"],
+	ALLOWED_ATTR: ["href", "title"],
 	ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|#)/i,
 };
+
+const copyResetTimers = new Map();
+const pendingStreamFrames = new Map();
 
 const createChatMessageElement = (message) => {
 	const element = document.createElement("div");
@@ -74,16 +86,19 @@ const createChatMessageElement = (message) => {
 	return element;
 };
 
-export const updateChatMessageElement = (message, options = {}) => {
+const applyChatMessageUpdateNow = (message, options = {}) => {
 	const { messagesContainer } = getAiElements();
 	if (!messagesContainer) {
 		return;
 	}
 
-	let messageElement = messagesContainer.querySelector(`[data-message-id="${message.id}"]`);
+	const isNearBottom =
+		messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 48;
+	const escapedId = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(String(message.id)) : String(message.id);
+	let messageElement = messagesContainer.querySelector(`[data-message-id="${escapedId}"]`);
 	if (!messageElement) {
 		if (messagesContainer.children.length === 1 && !messagesContainer.firstElementChild?.dataset?.messageId) {
-			messagesContainer.innerHTML = "";
+			messagesContainer.replaceChildren();
 		}
 
 		messageElement = createChatMessageElement(message);
@@ -93,7 +108,9 @@ export const updateChatMessageElement = (message, options = {}) => {
 	const copyButton = messageElement.querySelector(".ai-chat-message-copy");
 	if (copyButton) {
 		CopyButton?.setDisabled(copyButton, !message.content);
-		CopyButton?.setCopiedState(copyButton, false);
+		if (options.finalize) {
+			CopyButton?.setCopiedState(copyButton, false);
+		}
 	}
 
 	const contentElement = messageElement.querySelector(".ai-chat-message-content");
@@ -104,11 +121,48 @@ export const updateChatMessageElement = (message, options = {}) => {
 	if (message.role === "assistant" && options.finalize && canRenderMarkdown()) {
 		const rawHtml = /** @type {any} */ (window).marked.parse(message.content || "");
 		contentElement.innerHTML = /** @type {any} */ (window).DOMPurify.sanitize(rawHtml, AI_REPLY_PURIFY_CONFIG);
+		contentElement.querySelectorAll("a[href]").forEach((anchor) => {
+			const href = anchor.getAttribute("href") || "";
+			if (/^https?:/i.test(href)) {
+				anchor.setAttribute("target", "_blank");
+				anchor.setAttribute("rel", "noopener noreferrer nofollow");
+			}
+		});
 	} else {
 		contentElement.textContent = message.content || "";
 	}
 
-	messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	if (isNearBottom || options.finalize) {
+		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	}
+};
+
+export const updateChatMessageElement = (message, options = {}) => {
+	const pendingId = pendingStreamFrames.get(message.id);
+	if (options.finalize) {
+		if (pendingId !== undefined) {
+			cancelAnimationFrame(pendingId);
+			pendingStreamFrames.delete(message.id);
+		}
+		applyChatMessageUpdateNow(message, options);
+		return;
+	}
+
+	if (typeof requestAnimationFrame !== "function") {
+		applyChatMessageUpdateNow(message, options);
+		return;
+	}
+	if (pendingId !== undefined) {
+		return;
+	}
+	const frameId = requestAnimationFrame(() => {
+		pendingStreamFrames.delete(message.id);
+		if (!getMessageById(message.id)) {
+			return;
+		}
+		applyChatMessageUpdateNow(message, { finalize: false });
+	});
+	pendingStreamFrames.set(message.id, frameId);
 };
 
 export const renderVisibleChatMessages = () => {
@@ -117,6 +171,12 @@ export const renderVisibleChatMessages = () => {
 		return;
 	}
 
+	pendingStreamFrames.forEach((frameId) => {
+		if (typeof cancelAnimationFrame === "function") {
+			cancelAnimationFrame(frameId);
+		}
+	});
+	pendingStreamFrames.clear();
 	messagesContainer.innerHTML = "";
 	const visibleMessages = getVisibleChatMessages();
 	if (visibleMessages.length === 0) {
@@ -125,7 +185,7 @@ export const renderVisibleChatMessages = () => {
 	}
 
 	visibleMessages.forEach((message) => {
-		updateChatMessageElement(message, {
+		applyChatMessageUpdateNow(message, {
 			finalize: message.role === "assistant" && !!message.rendered,
 		});
 	});
@@ -223,7 +283,10 @@ const getStructuredExportLabels = () => {
 		audio: translate("ai_export_label_audio"),
 		compatibility: translate("ai_export_section_compatibility"),
 		browser: translate("ai_export_label_browser"),
+		uaData: translate("ai_export_label_ua_data"),
 		apiSupport: translate("ai_export_label_api_support"),
+		localeFormatting: translate("locale_formatting_title"),
+		ipTimezone: translate("ai_export_section_ip_timezone"),
 	};
 };
 
@@ -270,6 +333,14 @@ const buildStructuredSnapshotMarkdown = (snapshot, sanitizeSnapshot) => {
 		buildMarkdownEntry(labels.dateTimeLocale, sanitizedSnapshot.intl?.dateTimeLocale),
 		buildMarkdownEntry(labels.numberFormatLocale, sanitizedSnapshot.intl?.numberFormatLocale),
 		"",
+		`## ${labels.localeFormatting}`,
+		"",
+		buildMarkdownEntry(labels.localeFormatting, sanitizedSnapshot.localeFormatting),
+		"",
+		`## ${labels.ipTimezone}`,
+		"",
+		buildMarkdownEntry(labels.ipTimezone, sanitizedSnapshot.ipTimezone),
+		"",
 		`## ${labels.webrtc}`,
 		"",
 		buildMarkdownEntry(labels.status, sanitizedSnapshot.webrtc?.status),
@@ -293,6 +364,7 @@ const buildStructuredSnapshotMarkdown = (snapshot, sanitizeSnapshot) => {
 		`## ${labels.compatibility}`,
 		"",
 		buildMarkdownEntry(labels.browser, sanitizedSnapshot.compatibility?.browser),
+		buildMarkdownEntry(labels.uaData, sanitizedSnapshot.compatibility?.uaData),
 		buildMarkdownEntry(labels.apiSupport, sanitizedSnapshot.compatibility?.apiSupport),
 	];
 
@@ -347,10 +419,16 @@ const handleCopyMessage = async (messageId) => {
 	try {
 		await copyTextToClipboard(message.content);
 		if (button) {
+			const prevTimer = copyResetTimers.get(messageId);
+			if (prevTimer) {
+				ResourceManager.clearTimeout(prevTimer);
+			}
 			CopyButton?.setCopiedState(button, true);
-			ResourceManager.setTimeout(() => {
+			const timerId = ResourceManager.setTimeout(() => {
+				copyResetTimers.delete(messageId);
 				CopyButton?.setCopiedState(button, false);
 			}, 1200);
+			copyResetTimers.set(messageId, timerId);
 		}
 	} catch (_error) {
 		setAIStatus("ai_copy_failed", "danger");

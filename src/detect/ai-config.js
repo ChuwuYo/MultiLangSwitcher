@@ -4,11 +4,13 @@ import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { getAiElements, setAIConfigHint, translate } from "./ai-shared.js";
 
 const AI_CONFIG_STORAGE_KEY = STORAGE_KEYS.AI_DIAGNOSIS_CONFIG;
+const AI_SESSION_KEYS_STORAGE_KEY = `${STORAGE_KEYS.AI_DIAGNOSIS_CONFIG}_sessionKeys`;
 const DEFAULT_PROVIDER_KEY = "openrouter";
 const AI_PROVIDER_PRESETS = AIProviderPresets || {};
 const AI_PROVIDER_PRESET_ORDER = AIProviderPresetOrder || Object.keys(AI_PROVIDER_PRESETS);
 let aiConfigStore = {
 	selectedProvider: DEFAULT_PROVIDER_KEY,
+	sessionOnlyKeys: false,
 	providers: {},
 };
 
@@ -43,6 +45,7 @@ const normalizeConfig = (config = {}) => {
 const normalizeConfigStore = (storedConfig = null) => {
 	const normalizedStore = {
 		selectedProvider: DEFAULT_PROVIDER_KEY,
+		sessionOnlyKeys: Boolean(storedConfig?.sessionOnlyKeys),
 		providers: {},
 	};
 
@@ -80,14 +83,14 @@ const normalizeConfigStore = (storedConfig = null) => {
 const getStoredProviderConfig = (providerKey) =>
 	aiConfigStore.providers[providerKey] || normalizeConfig({ provider: providerKey });
 
-const serializeConfigStore = () => {
+const serializeConfigStore = ({ stripApiKeys = Boolean(aiConfigStore.sessionOnlyKeys) } = {}) => {
 	const providers = {};
 	AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
 		const providerConfig = getStoredProviderConfig(providerKey);
 		providers[providerKey] = {
 			provider: providerKey,
 			baseUrl: providerConfig.baseUrl,
-			apiKey: providerConfig.apiKey,
+			apiKey: stripApiKeys ? "" : providerConfig.apiKey,
 			model: providerConfig.model,
 			authHeader: providerConfig.authHeader,
 			updatedAt: providerConfig.updatedAt || 0,
@@ -96,8 +99,18 @@ const serializeConfigStore = () => {
 
 	return {
 		selectedProvider: aiConfigStore.selectedProvider || DEFAULT_PROVIDER_KEY,
+		sessionOnlyKeys: Boolean(aiConfigStore.sessionOnlyKeys),
 		providers,
 	};
+};
+
+const serializeSessionKeys = () => {
+	const keys = {};
+	AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
+		const key = getStoredProviderConfig(providerKey).apiKey;
+		if (key) keys[providerKey] = key;
+	});
+	return keys;
 };
 
 export const readAIConfigFromInputs = (providerOverride = "") => {
@@ -189,8 +202,12 @@ export const validateAIConfig = (config) => {
 };
 
 export const persistAIConfig = async () => {
+	const elements = getAiElements();
 	const config = readAIConfigFromInputs();
 	aiConfigStore.selectedProvider = config.provider;
+	if (elements.sessionOnlyKeyCheckbox) {
+		aiConfigStore.sessionOnlyKeys = Boolean(elements.sessionOnlyKeyCheckbox.checked);
+	}
 	aiConfigStore.providers[config.provider] = {
 		...config,
 		updatedAt: Date.now(),
@@ -199,8 +216,15 @@ export const persistAIConfig = async () => {
 
 	try {
 		await chrome.storage.local.set({
-			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore(),
+			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore({ stripApiKeys: aiConfigStore.sessionOnlyKeys }),
 		});
+		if (chrome.storage?.session) {
+			if (aiConfigStore.sessionOnlyKeys) {
+				await chrome.storage.session.set({ [AI_SESSION_KEYS_STORAGE_KEY]: serializeSessionKeys() });
+			} else {
+				await chrome.storage.session.remove(AI_SESSION_KEYS_STORAGE_KEY);
+			}
+		}
 	} catch (error) {
 		console.warn("Failed to persist AI config:", error);
 	}
@@ -209,16 +233,66 @@ export const persistAIConfig = async () => {
 	return config;
 };
 
+export const clearAllStoredAPIKeys = async () => {
+	const elements = getAiElements();
+	AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
+		const current = getStoredProviderConfig(providerKey);
+		aiConfigStore.providers[providerKey] = { ...current, apiKey: "", updatedAt: Date.now() };
+	});
+	if (elements.apiKeyInput) {
+		elements.apiKeyInput.value = "";
+	}
+	let localOk = true;
+	let sessionOk = true;
+	try {
+		await chrome.storage.local.set({
+			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore({ stripApiKeys: true }),
+		});
+	} catch (error) {
+		localOk = false;
+		console.warn("Failed to clear local AI keys:", error);
+	}
+	if (chrome.storage?.session) {
+		try {
+			await chrome.storage.session.remove(AI_SESSION_KEYS_STORAGE_KEY);
+		} catch (error) {
+			sessionOk = false;
+			console.warn("Failed to clear session AI keys:", error);
+		}
+	}
+	if (localOk && sessionOk) {
+		setAIConfigHint("ai_keys_cleared", "success");
+	} else {
+		setAIConfigHint("ai_keys_clear_failed", "danger");
+	}
+};
+
 export const loadAIConfig = async () => {
 	let storedConfig = null;
+	let sessionKeys = null;
 	try {
 		const result = await chrome.storage.local.get(AI_CONFIG_STORAGE_KEY);
 		storedConfig = result?.[AI_CONFIG_STORAGE_KEY] || null;
+		if (chrome.storage?.session) {
+			const sessionResult = await chrome.storage.session.get(AI_SESSION_KEYS_STORAGE_KEY);
+			sessionKeys = sessionResult?.[AI_SESSION_KEYS_STORAGE_KEY] || null;
+		}
 	} catch (error) {
 		console.warn("Failed to load AI config:", error);
 	}
 
 	aiConfigStore = normalizeConfigStore(storedConfig);
+	if (aiConfigStore.sessionOnlyKeys && sessionKeys && typeof sessionKeys === "object") {
+		AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
+			if (typeof sessionKeys[providerKey] === "string" && sessionKeys[providerKey].trim()) {
+				aiConfigStore.providers[providerKey].apiKey = sessionKeys[providerKey].trim();
+			}
+		});
+	}
+	const elements = getAiElements();
+	if (elements.sessionOnlyKeyCheckbox) {
+		elements.sessionOnlyKeyCheckbox.checked = Boolean(aiConfigStore.sessionOnlyKeys);
+	}
 	const normalized = getStoredProviderConfig(aiConfigStore.selectedProvider);
 
 	fillAIConfigInputs(normalized);
@@ -244,8 +318,11 @@ export const handleProviderChange = async () => {
 
 	try {
 		await chrome.storage.local.set({
-			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore(),
+			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore({ stripApiKeys: aiConfigStore.sessionOnlyKeys }),
 		});
+		if (chrome.storage?.session && aiConfigStore.sessionOnlyKeys) {
+			await chrome.storage.session.set({ [AI_SESSION_KEYS_STORAGE_KEY]: serializeSessionKeys() });
+		}
 	} catch (error) {
 		console.warn("Failed to persist AI config:", error);
 	}
