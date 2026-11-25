@@ -43,41 +43,62 @@ export class UpdateChecker {
 			return cached;
 		}
 
-		try {
-			const releaseData = await this.fetchLatestRelease(signal);
-			const updateInfo = this.formatUpdateInfo(releaseData);
-			await this.saveCache(updateInfo);
-			return updateInfo;
-		} catch (error) {
-			// 如果是中止错误，直接重新抛出，由调用方（如 popup.js）处理
-			if (error.name === "AbortError") {
-				throw error;
-			}
-			// 对于其他错误，进行轻量级分类和记录
-			const message = String(error?.message || "").toLowerCase();
-			let errorType = "UNEXPECTED_ERROR";
-
-			if (error?.status >= 400) {
-				errorType = "SERVICE_ISSUE";
-			} else if (message.includes("failed to fetch") || message.includes("network") || message.includes("timeout")) {
-				errorType = "NETWORK_ISSUE";
-			}
-
-			error.type = errorType;
-			sendLocalizedUpdateLog("update_check_failed", { error: error.message }, "error");
-			throw error;
+		if (!signal && this._inFlightCheck) {
+			return this._inFlightCheck;
 		}
+
+		const runCheck = (async () => {
+			try {
+				const releaseData = await this.fetchLatestRelease(signal);
+				const updateInfo = this.formatUpdateInfo(releaseData);
+				await this.saveCache(updateInfo);
+				return updateInfo;
+			} catch (error) {
+				// 如果是中止错误，直接重新抛出，由调用方（如 popup.js）处理
+				if (error.name === "AbortError") {
+					throw error;
+				}
+				// 对于其他错误，进行轻量级分类和记录
+				const message = String(error?.message || "").toLowerCase();
+				let errorType = "UNEXPECTED_ERROR";
+
+				if (error?.status >= 400) {
+					errorType = "SERVICE_ISSUE";
+				} else if (message.includes("failed to fetch") || message.includes("network") || message.includes("timeout")) {
+					errorType = "NETWORK_ISSUE";
+				}
+
+				error.type = errorType;
+				sendLocalizedUpdateLog("update_check_failed", { error: error.message }, "error");
+				throw error;
+			} finally {
+				if (this._inFlightCheck === runCheck) this._inFlightCheck = null;
+			}
+		})();
+
+		if (!signal) {
+			this._inFlightCheck = runCheck;
+		}
+		return runCheck;
 	}
 
 	/**
 	 * 从 jsDelivr CDN API 获取最新版本号（作为 GitHub API 的 Fallback）
 	 * @returns {Promise<Object>} 兼容 GitHub API 的发布对象（含 tag_name）
 	 */
-	async fetchLatestVersionFromJsDelivr() {
+	async fetchLatestVersionFromJsDelivr(signal = null) {
 		const jsDelivrUrl = `https://data.jsdelivr.com/v1/packages/gh/${this.repoOwner}/${this.repoName}`;
 
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+		const onAbort = () => controller.abort();
+		if (signal) {
+			if (signal.aborted) {
+				clearTimeout(timeoutId);
+				throw new DOMException("Request aborted", "AbortError");
+			}
+			signal.addEventListener("abort", onAbort, { once: true });
+		}
 
 		try {
 			const response = await fetch(jsDelivrUrl, {
@@ -94,8 +115,8 @@ export class UpdateChecker {
 				throw new Error("No versions found in jsDelivr response");
 			}
 
-			// 过滤出稳定版本（排除预发布版本）
-			const stableVersions = data.versions.filter((v) => !/-beta|-rc|-alpha|-dev|-pre|-snapshot/i.test(v.version));
+			// 过滤出稳定版本（按 SemVer 排除所有含 '-' 的预发布版本）
+			const stableVersions = data.versions.filter((v) => typeof v?.version === "string" && !v.version.includes("-"));
 
 			if (stableVersions.length === 0) {
 				throw new Error("No stable versions found in jsDelivr response");
@@ -103,20 +124,24 @@ export class UpdateChecker {
 
 			const latestVersion = stableVersions[0].version;
 
-			// 构造一个兼容 GitHub API 格式的简化对象
+			// 构造一个兼容 GitHub API 格式的简化对象（使用 releases/latest 避免 v 前缀缺失导致 404）
 			return {
 				tag_name: latestVersion,
-				html_url: `https://github.com/${this.repoOwner}/${this.repoName}/releases/tag/${latestVersion}`,
+				html_url: `https://github.com/${this.repoOwner}/${this.repoName}/releases/latest`,
 				body: null,
 				published_at: null,
 			};
 		} catch (error) {
+			if (signal?.aborted) {
+				throw new DOMException("Request aborted", "AbortError");
+			}
 			if (error.name === "AbortError") {
 				throw new Error("jsDelivr request timeout");
 			}
 			throw new Error(`jsDelivr fallback failed: ${error.message}`);
 		} finally {
 			clearTimeout(timeoutId);
+			signal?.removeEventListener("abort", onAbort);
 		}
 	}
 
@@ -129,6 +154,7 @@ export class UpdateChecker {
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
 
+		const onAbort = () => controller.abort();
 		// 如果外部提供了 signal，监听它的 abort 事件
 		if (signal) {
 			if (signal.aborted) {
@@ -136,18 +162,15 @@ export class UpdateChecker {
 				// 使用 DOMException 以符合 fetch 的行为
 				throw new DOMException("Request aborted", "AbortError");
 			}
-			signal.addEventListener("abort", () => controller.abort(), {
-				once: true,
-			});
+			signal.addEventListener("abort", onAbort, { once: true });
 		}
 
 		try {
-			// 先尝试官方 GitHub API
+			// 先尝试官方 GitHub API（Fetch 规范禁止自定义 User-Agent，由浏览器自动附加）
 			const response = await fetch(this.apiUrl, {
 				signal: controller.signal,
 				headers: {
 					Accept: "application/vnd.github.v3+json",
-					"User-Agent": `MultiLangSwitcher/${this.currentVersion}`,
 				},
 			});
 
@@ -173,14 +196,18 @@ export class UpdateChecker {
 			sendLocalizedUpdateLog("github_api_failed_trying_fallback", { error: error.message }, "warning");
 
 			try {
-				return await this.fetchLatestVersionFromJsDelivr();
+				return await this.fetchLatestVersionFromJsDelivr(signal);
 			} catch (fallbackError) {
+				if (signal?.aborted || fallbackError?.name === "AbortError") {
+					throw new DOMException("Request aborted", "AbortError");
+				}
 				// 回退也失败了，记录后抛出原始错误以保留根因
 				sendLocalizedUpdateLog("jsdelivr_fallback_failed", { error: fallbackError.message }, "error");
 				throw error;
 			}
 		} finally {
 			clearTimeout(timeoutId); // 统一在这里清理
+			signal?.removeEventListener("abort", onAbort);
 		}
 	}
 
@@ -219,32 +246,55 @@ export class UpdateChecker {
 	 */
 	isNewerVersion(current, latest) {
 		try {
-			// 清理版本号：移除 'v' 前缀、预发布标签和构建元数据
-			const cleanVersion = (ver) => (ver || "").trim().replace(/^v/, "").split(/[-+]/)[0];
+			const parseSemver = (ver) => {
+				const withoutBuild = String(ver || "")
+					.trim()
+					.replace(/^v/i, "")
+					.split("+")[0];
+				const dashIdx = withoutBuild.indexOf("-");
+				const core = dashIdx === -1 ? withoutBuild : withoutBuild.slice(0, dashIdx);
+				const pre = dashIdx === -1 ? "" : withoutBuild.slice(dashIdx + 1);
+				return {
+					parts: core.split(".").map(Number),
+					pre: pre ? pre.split(".") : [],
+				};
+			};
 
-			const currentClean = cleanVersion(current);
-			const latestClean = cleanVersion(latest);
-
-			const currentParts = currentClean.split(".").map(Number);
-			const latestParts = latestClean.split(".").map(Number);
-
-			const maxLength = Math.max(currentParts.length, latestParts.length);
+			const currParsed = parseSemver(current);
+			const latParsed = parseSemver(latest);
+			const maxLength = Math.max(currParsed.parts.length, latParsed.parts.length);
 
 			for (let i = 0; i < maxLength; i++) {
-				const curr = i < currentParts.length ? currentParts[i] : 0; // 补 0 处理 1.2 vs 1.2.3
-				const lat = i < latestParts.length ? latestParts[i] : 0;
+				const curr = i < currParsed.parts.length ? currParsed.parts[i] : 0;
+				const lat = i < latParsed.parts.length ? latParsed.parts[i] : 0;
 
 				if (Number.isNaN(curr) || Number.isNaN(lat)) {
 					return false;
 				}
-				if (lat > curr) {
-					return true;
-				}
-				if (lat < curr) {
-					return false;
+				if (lat > curr) return true;
+				if (lat < curr) return false;
+			}
+
+			// 核心版本相同：按 SemVer 2.0.0 正式版高于预发布版
+			if (currParsed.pre.length > 0 && latParsed.pre.length === 0) return true;
+			if (currParsed.pre.length === 0 && latParsed.pre.length > 0) return false;
+			const preMax = Math.max(currParsed.pre.length, latParsed.pre.length);
+			for (let i = 0; i < preMax; i++) {
+				if (i >= currParsed.pre.length) return true;
+				if (i >= latParsed.pre.length) return false;
+				const c = currParsed.pre[i];
+				const l = latParsed.pre[i];
+				const cNum = /^\d+$/.test(c) ? Number(c) : null;
+				const lNum = /^\d+$/.test(l) ? Number(l) : null;
+				if (cNum !== null && lNum !== null) {
+					if (lNum !== cNum) return lNum > cNum;
+				} else if (cNum !== null || lNum !== null) {
+					return lNum === null;
+				} else if (l !== c) {
+					return l > c;
 				}
 			}
-			return false; // 版本相同
+			return false;
 		} catch (error) {
 			sendLocalizedUpdateLog("version_comparison_failed", { error: error.message }, "warning");
 			return false;

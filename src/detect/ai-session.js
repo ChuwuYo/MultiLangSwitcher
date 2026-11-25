@@ -1,4 +1,5 @@
 import { AIChatClient } from "../shared/ai-chat-client.js";
+import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { readAIConfigFromInputs, validateAIConfig } from "./ai-config.js";
 import {
 	aiSessionState,
@@ -13,6 +14,8 @@ import {
 } from "./ai-shared.js";
 import { renderVisibleChatMessages, updateChatMessageElement } from "./ai-ui.js";
 import { DetectPageContext } from "./detect.js";
+
+let activeRequestToken = 0;
 
 export const isChatContextStale = () =>
 	!!(
@@ -188,8 +191,10 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 		rendered: false,
 	});
 
+	const controller = ResourceManager.createController();
+	const requestToken = ++activeRequestToken;
 	aiSessionState.isRequestInFlight = true;
-	aiSessionState.abortController = new AbortController();
+	aiSessionState.abortController = controller;
 	setAIStatus("ai_request_in_progress", "info");
 	updateAIControls();
 
@@ -202,13 +207,17 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 			messages: transportMessages,
 			temperature: 0.2,
 			stream: true,
-			signal: aiSessionState.abortController.signal,
+			signal: controller.signal,
 			onDelta: (_delta, fullContent) => {
+				if (requestToken !== activeRequestToken) return;
 				assistantMessage.content = fullContent;
 				updateChatMessageElement(assistantMessage, { finalize: false });
 			},
 		});
 
+		if (requestToken !== activeRequestToken) {
+			return;
+		}
 		assistantMessage.content = (result.content || "").trim();
 		if (!assistantMessage.content) {
 			throw new Error(translate("ai_empty_reply"));
@@ -217,9 +226,18 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 		finalizeAssistantMessage(assistantMessage.id);
 		setAIStatus("ai_ready_for_followup", "success");
 	} catch (error) {
-		const aborted = error?.name === "AbortError" || /cancel|abort/i.test(String(error?.message || ""));
+		// 若会话已在请求期间被重置，忽略过期请求的错误状态覆写
+		if (requestToken !== activeRequestToken) {
+			return;
+		}
+		const aborted = controller.signal.aborted || error?.name === "AbortError";
 		if (!assistantMessage.content) {
 			removeMessageById(assistantMessage.id);
+			if (firstTurn) {
+				aiSessionState.hasStarted = false;
+				aiSessionState.messages = [];
+				renderVisibleChatMessages();
+			}
 		} else {
 			finalizeAssistantMessage(assistantMessage.id);
 		}
@@ -232,9 +250,12 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 			});
 		}
 	} finally {
-		aiSessionState.isRequestInFlight = false;
-		aiSessionState.abortController = null;
-		updateAIControls();
+		ResourceManager.abortController(controller);
+		if (requestToken === activeRequestToken) {
+			aiSessionState.isRequestInFlight = false;
+			aiSessionState.abortController = null;
+			updateAIControls();
+		}
 	}
 };
 
@@ -295,17 +316,13 @@ export const stopAIRequest = () => {
 	if (!aiSessionState.abortController) {
 		return;
 	}
-
-	try {
-		aiSessionState.abortController.abort();
-	} catch (_error) {}
+	ResourceManager.abortController(aiSessionState.abortController);
 };
 
 export const resetAISession = ({ statusKey = "ai_chat_cleared" } = {}) => {
+	activeRequestToken++;
 	if (aiSessionState.abortController) {
-		try {
-			aiSessionState.abortController.abort();
-		} catch (_error) {}
+		ResourceManager.abortController(aiSessionState.abortController);
 	}
 
 	aiSessionState.messages = [];

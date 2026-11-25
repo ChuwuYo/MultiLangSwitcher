@@ -14,67 +14,76 @@ import { setSafeContent, setSafeErrorMessage, setSafeSuccessMessage } from "./sa
  */
 export const initRulesFix = () => {
 	// 修复规则优先级
-	ResourceManager.addEventListener(document.getElementById("fixPriorityBtn"), "click", () => {
+	const fixPriorityBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("fixPriorityBtn"));
+	const clearAllRulesBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("clearAllRulesBtn"));
+
+	ResourceManager.addEventListener(fixPriorityBtn, "click", async () => {
 		const resultElement = document.getElementById("fixResult");
+		if (!resultElement || !fixPriorityBtn) return;
+		fixPriorityBtn.disabled = true;
 		resultElement.textContent = debugI18n.t("fixing_rule_priority");
 		addLogMessage(debugI18n.t("try_fix_priority"), "info");
 
-		// 通过消息传递获取和更新动态规则
-		(async () => {
-			try {
-				// 统一消息调用：避免重复的 response.success 校验
-				const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
-
-				const existingRules = response.rules;
-				const existingRuleIds = existingRules.map((rule) => rule.id);
-				// 自动切换的按域名规则靠高于 RULE_ID 的分级优先级生效，统一改成 100 会让它们失效
-				const updatedRules = existingRules.map((rule) => (rule.id === RULE_ID ? { ...rule, priority: 100 } : rule));
-
-				await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
-					removeRuleIds: existingRuleIds,
-					addRules: updatedRules,
-				});
-
-				setSafeContent(resultElement, debugI18n.t("priority_updated_success"), "success");
-				addLogMessage(debugI18n.t("priority_updated_log"), "success");
-			} catch (error) {
-				setSafeContent(resultElement, `${debugI18n.t("fix_failed")} ${error.message}`, "error");
-				addLogMessage(`${debugI18n.t("fix_priority_failed")} ${error.message}`, "error");
+		try {
+			const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
+			const existingRules = Array.isArray(response?.rules) ? response.rules : [];
+			if (existingRules.length === 0) {
+				setSafeContent(resultElement, debugI18n.t("no_rules_warning"), "warning");
+				addLogMessage(debugI18n.t("no_rules_warning"), "warning");
+				return;
 			}
-		})();
+			const existingRuleIds = existingRules.map((rule) => rule.id);
+			// 自动切换的按域名规则靠高于 RULE_ID 的分级优先级生效，统一改成 100 会让它们失效
+			const updatedRules = existingRules.map((rule) => (rule.id === RULE_ID ? { ...rule, priority: 100 } : rule));
+
+			await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
+				removeRuleIds: existingRuleIds,
+				addRules: updatedRules,
+			});
+
+			setSafeContent(resultElement, debugI18n.t("priority_updated_success"), "success");
+			addLogMessage(debugI18n.t("priority_updated_log"), "success");
+		} catch (error) {
+			setSafeContent(resultElement, `${debugI18n.t("fix_failed")} ${error.message}`, "error");
+			addLogMessage(`${debugI18n.t("fix_priority_failed")} ${error.message}`, "error");
+		} finally {
+			fixPriorityBtn.disabled = false;
+		}
 	});
 
 	// 清除并重新应用规则
-	ResourceManager.addEventListener(document.getElementById("clearAllRulesBtn"), "click", () => {
+	ResourceManager.addEventListener(clearAllRulesBtn, "click", async () => {
 		const resultElement = document.getElementById("fixResult");
+		if (!resultElement || !clearAllRulesBtn) return;
+		clearAllRulesBtn.disabled = true;
 		resultElement.textContent = debugI18n.t("clearing_rules_reapply");
 		addLogMessage(debugI18n.t("try_clear_reapply"), "info");
 
-		// 通过消息传递获取和清除动态规则
-		(async () => {
-			try {
-				const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
+		try {
+			const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
+			const existingRules = Array.isArray(response?.rules) ? response.rules : [];
+			const existingRuleIds = existingRules.map((rule) => rule.id);
 
-				const existingRules = response.rules;
-				const existingRuleIds = existingRules.map((rule) => rule.id);
-
+			if (existingRuleIds.length > 0) {
 				await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
 					removeRuleIds: existingRuleIds,
 				});
-
-				// 清除成功后，重新应用默认或存储的规则
-				const storageResponse = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
-				const languageToApply = storageResponse[STORAGE_KEYS.CURRENT_LANGUAGE] || "zh-CN";
-
-				await requestBackground(MessageTypes.UPDATE_RULES, {
-					language: languageToApply,
-				});
-				setSafeSuccessMessage(resultElement, `${debugI18n.t("rules_cleared_reapplied")} ${languageToApply}`);
-				addLogMessage(`${debugI18n.t("rules_cleared_reapplied_log")} ${languageToApply}`, "success");
-			} catch (error) {
-				setSafeErrorMessage(resultElement, `${debugI18n.t("clear_failed")} ${error.message}`);
-				addLogMessage(`${debugI18n.t("clear_rules_failed")} ${error.message}`, "error");
 			}
-		})();
+
+			// 清除成功后，重新应用默认或存储的规则
+			const storageResponse = await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE]);
+			const languageToApply = storageResponse[STORAGE_KEYS.CURRENT_LANGUAGE] || "zh-CN";
+
+			await requestBackground(MessageTypes.UPDATE_RULES, {
+				language: languageToApply,
+			});
+			setSafeSuccessMessage(resultElement, `${debugI18n.t("rules_cleared_reapplied")} ${languageToApply}`);
+			addLogMessage(`${debugI18n.t("rules_cleared_reapplied_log")} ${languageToApply}`, "success");
+		} catch (error) {
+			setSafeErrorMessage(resultElement, `${debugI18n.t("clear_failed")} ${error.message}`);
+			addLogMessage(`${debugI18n.t("clear_rules_failed")} ${error.message}`, "error");
+		} finally {
+			clearAllRulesBtn.disabled = false;
+		}
 	});
 };

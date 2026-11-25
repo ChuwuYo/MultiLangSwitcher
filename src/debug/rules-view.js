@@ -88,15 +88,35 @@ export const initRulesView = () => {
 					fragment.appendChild(ul);
 				}
 
-				// 通过消息传递获取最近匹配的规则信息
-				const matchedResponse = await requestBackground(MessageTypes.GET_MATCHED_RULES);
-				const matchedRules = matchedResponse.matchedRules;
+				// 按需申请可选调试权限 declarativeNetRequestFeedback（仅在用户点击查看规则时触发）
+				let hasFeedbackPermission = true;
+				if (chrome.permissions?.contains && chrome.permissions?.request) {
+					hasFeedbackPermission = await chrome.permissions.contains({
+						permissions: ["declarativeNetRequestFeedback"],
+					});
+					if (!hasFeedbackPermission) {
+						hasFeedbackPermission = await chrome.permissions.request({
+							permissions: ["declarativeNetRequestFeedback"],
+						});
+					}
+				}
 
 				const matchedTitle = document.createElement("h5");
 				matchedTitle.textContent = debugI18n.t("recent_matched_rules");
 				fragment.appendChild(matchedTitle);
 
-				if (matchedRules?.rulesMatchedInfo?.length > 0) {
+				let matchedRules = null;
+				if (hasFeedbackPermission) {
+					const matchedResponse = await requestBackground(MessageTypes.GET_MATCHED_RULES);
+					matchedRules = matchedResponse?.matchedRules || null;
+				}
+
+				if (!hasFeedbackPermission) {
+					const p = document.createElement("p");
+					p.className = "warning";
+					p.textContent = debugI18n.t("feedback_permission_denied");
+					fragment.appendChild(p);
+				} else if (matchedRules?.rulesMatchedInfo?.length > 0) {
 					const ul = document.createElement("ul");
 					// 去重处理，避免显示重复的规则
 					const uniqueRules = new Map();
@@ -140,7 +160,7 @@ export const initRulesView = () => {
 				}
 				resultElement.appendChild(fragment);
 			} catch (error) {
-				setSafeErrorMessage(resultElement, `获取规则失败: ${error.message}`);
+				setSafeErrorMessage(resultElement, `${debugI18n.t("get_rules_error")}${error.message}`);
 			}
 		})();
 	});

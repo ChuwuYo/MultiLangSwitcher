@@ -125,5 +125,7 @@ const runAllDetections = async () => {
 
 ResourceManager.addEventListener(window, "DOMContentLoaded", () => {
 	addRefreshButton(runAllDetections);
-	ResourceManager.setTimeout(runAllDetections, 1000);
+	ResourceManager.setTimeout(() => {
+		runAllDetections().catch(() => {});
+	}, 1000);
 });

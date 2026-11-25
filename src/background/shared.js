@@ -56,13 +56,15 @@ let lastNotifiedLanguage = null;
 export const getLastNotifiedLanguage = () => lastNotifiedLanguage;
 
 export const notifyPopupUIUpdate = (autoSwitchEnabled, currentLanguage) => {
-	lastNotifiedLanguage = currentLanguage;
 	chrome.storage.session
 		.set({
 			[STORAGE_KEYS.UI_STATE]: {
 				autoSwitchEnabled: autoSwitchEnabled,
 				currentLanguage: currentLanguage,
 			},
+		})
+		.then(() => {
+			lastNotifiedLanguage = currentLanguage;
 		})
 		.catch((notifyError) => {
 			sendBackgroundLog(`${backgroundI18n.t("failed_notify_ui_update")}: ${notifyError.message}`, "warning");

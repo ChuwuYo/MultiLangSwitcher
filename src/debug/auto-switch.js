@@ -21,46 +21,41 @@ export const initAutoSwitch = () => {
 
 			autoSwitchToggle.checked = !!result[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
 
-			// 等待i18n系统初始化完成后再输出日志（以 isReady 为终止条件，
-			// 字典加载失败时 translations 恒为空对象，轮询它会永不终止）
-			const checkI18nAndLog = () => {
-				if (debugI18n.isReady) {
-					addLogMessage(
-						`${result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
-						"info",
-					);
-				} else {
-					ResourceManager.setTimeout(checkI18nAndLog, 100);
-				}
-			};
-
-			checkI18nAndLog();
+			if (!debugI18n.isReady) {
+				await debugI18n.ready();
+			}
+			addLogMessage(
+				`${result[STORAGE_KEYS.AUTO_SWITCH_ENABLED] ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled")}`,
+				"info",
+			);
 		} catch (error) {
 			console.error("Failed to get auto switch status:", error.message);
 		}
 	})();
 
 	// 自动切换功能控制
-	ResourceManager.addEventListener(document.getElementById("autoSwitchToggle"), "change", function () {
-		const isEnabled = this.checked;
+	ResourceManager.addEventListener(document.getElementById("autoSwitchToggle"), "change", async (event) => {
+		const toggle = /** @type {HTMLInputElement | null} */ (event.currentTarget);
+		if (!toggle) return;
+		const isEnabled = toggle.checked;
+		toggle.disabled = true;
 		addLogMessage(
 			`${debugI18n.t("try_enable_disable_auto")}${isEnabled ? debugI18n.t("enable") : debugI18n.t("disable")}${debugI18n.t("auto_switch_function_ellipsis")}`,
 			"info",
 		);
 
-		// 发送消息到 background.js 更新自动切换状态
-		(async () => {
-			try {
-				// 后台统一响应格式，失败会抛错
-				await requestBackground(MessageTypes.AUTO_SWITCH_TOGGLED, {
-					enabled: isEnabled,
-				});
-				addLogMessage(isEnabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled"), "success");
-				// 存储持久化由 background 的 AUTO_SWITCH_TOGGLED 处理器单点完成，此处无需回写
-			} catch (error) {
-				addLogMessage(`${debugI18n.t("update_auto_switch_failed")} ${error.message}`, "error");
-			}
-		})();
+		try {
+			await requestBackground(MessageTypes.AUTO_SWITCH_TOGGLED, {
+				enabled: isEnabled,
+			});
+			addLogMessage(isEnabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled"), "success");
+		} catch (error) {
+			// 失败时回滚 UI 开关状态，避免与后台真实配置分裂
+			toggle.checked = !isEnabled;
+			addLogMessage(`${debugI18n.t("update_auto_switch_failed")} ${error.message}`, "error");
+		} finally {
+			toggle.disabled = false;
+		}
 	});
 
 	// 监听 background 发布的会话级 UI 状态（storage.onChanged 即天然广播，取代自定义消息；

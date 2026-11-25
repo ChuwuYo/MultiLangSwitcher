@@ -9,11 +9,10 @@ on:
 permissions:
   contents: read
 
-# 所有 ref 统一：新提交到达即取消同 ref 在跑的旧 run。
-# main 的 publish 步骤有回滚 trap 兜底中断态，且发布头检查会拒绝过期 run。
+# PR 与特性分支新提交到达时取消同 ref 旧 run；main/master 与发布 tag 不中断，避免发布处于半完成态。
 concurrency:
   group: ${{ format('ci-{0}', github.ref) }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   verify:
@@ -56,11 +55,12 @@ jobs:
       - name: Build extension zip
         run: |
           set -euo pipefail
-          VERSION=$(jq -r .version manifest.json)
           STAGE="MultiLangSwitcher"
           mkdir "$STAGE"
           cp manifest.json LICENSE "$STAGE/"
           cp -r src _locales assets "$STAGE/"
+          rm -f "$STAGE/src/shared/vendor/bootstrap.min.css"
+          rm -f "$STAGE/assets/images/icon64.png" "$STAGE/assets/images/icon256.png" "$STAGE/assets/images/icon512.png"
           find "$STAGE/src/shared/vendor" -name "*.map" -delete 2>/dev/null || true
           zip -r "MultiLangSwitcher.zip" "$STAGE"
           sha256sum "MultiLangSwitcher.zip" | awk '{print $1}' > digest.txt
@@ -127,6 +127,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Guard tag/version match
         run: |
           set -euo pipefail

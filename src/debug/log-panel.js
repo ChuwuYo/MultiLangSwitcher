@@ -7,8 +7,18 @@ import { getFallbackTranslation } from "../shared/shared-utils.js";
 // 日志功能
 let logOutput = null;
 
+const VALID_LOG_TYPES = new Set(["info", "warning", "error", "success"]);
+const MAX_LOG_ENTRIES = 500;
+
 // 存储所有日志消息
 let allLogMessages = [];
+
+const createLogElement = (logEntry) => {
+	const logElement = document.createElement("div");
+	logElement.classList.add(`log-${logEntry.logType}`);
+	logElement.textContent = `[${logEntry.timestamp}] ${logEntry.message}`;
+	return logElement;
+};
 
 /**
  * 添加日志消息到UI并存储
@@ -16,27 +26,39 @@ let allLogMessages = [];
  * @param {string} logType - 日志类型 (info, warning, error, success)
  */
 export const addLogMessage = (message, logType = "info") => {
+	const safeType = VALID_LOG_TYPES.has(logType) ? logType : "info";
 	const timestamp = new Date().toLocaleTimeString();
-	const logEntry = { timestamp, message, logType };
+	const logEntry = { timestamp, message: String(message ?? ""), logType: safeType };
 	allLogMessages.push(logEntry);
-	renderLogs(); // 重新渲染日志以应用过滤
-	// 自动滚动到底部
+	let trimmed = false;
+	if (allLogMessages.length > MAX_LOG_ENTRIES) {
+		allLogMessages = allLogMessages.slice(-MAX_LOG_ENTRIES);
+		trimmed = true;
+	}
+	if (!logOutput || !logFilterCheckboxes) {
+		return;
+	}
+	if (trimmed) {
+		renderLogs();
+	} else if (getActiveFilters().includes(safeType)) {
+		logOutput.appendChild(createLogElement(logEntry));
+	}
 	logOutput.scrollTop = logOutput.scrollHeight;
 };
 
 // 根据当前过滤器渲染日志
 const renderLogs = () => {
-	logOutput.innerHTML = ""; // 清空当前显示
+	if (!logOutput || !logFilterCheckboxes) {
+		return;
+	}
 	const activeFilters = getActiveFilters();
-
+	const fragment = document.createDocumentFragment();
 	allLogMessages.forEach((logEntry) => {
 		if (activeFilters.includes(logEntry.logType)) {
-			const logElement = document.createElement("div");
-			logElement.classList.add(`log-${logEntry.logType}`);
-			logElement.textContent = `[${logEntry.timestamp}] ${logEntry.message}`;
-			logOutput.appendChild(logElement);
+			fragment.appendChild(createLogElement(logEntry));
 		}
 	});
+	logOutput.replaceChildren(fragment);
 };
 
 // 过滤器复选框为静态元素，缓存引用避免每次渲染日志时重复查询 DOM
@@ -71,7 +93,7 @@ export const initLogPanel = () => {
 
 	// 监听来自扩展其他部分的日志消息
 	ResourceManager.addMessageListener((request) => {
-		if (request.type !== MessageTypes.DEBUG_LOG) return;
+		if (!request || request.type !== MessageTypes.DEBUG_LOG || typeof request.message !== "string") return;
 
 		// 过滤掉后台脚本的日志消息
 		if (!request.message.startsWith("[后台]") && !request.message.startsWith("[Background]")) {

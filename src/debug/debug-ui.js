@@ -14,11 +14,15 @@ import { addLogMessage, initLogPanel } from "./log-panel.js";
 import { initRulesFix } from "./rules-fix.js";
 import { initRulesView } from "./rules-view.js";
 import "../shared/toggle.js";
-import "./debug-headers.js";
+import { initDebugHeaders } from "./debug-headers.js";
 
 registerI18nInstance("debug", debugI18n);
 
-ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
+ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
+	if (!debugI18n.isReady) {
+		await debugI18n.ready();
+	}
+
 	// 初始化语言选项
 	const testLanguageSelect = /** @type {HTMLSelectElement} */ (document.getElementById("testLanguage"));
 	if (testLanguageSelect) {
@@ -28,6 +32,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", () => {
 	initRulesView();
 
 	initLogPanel();
+	initDebugHeaders();
 
 	initAutoSwitch();
 

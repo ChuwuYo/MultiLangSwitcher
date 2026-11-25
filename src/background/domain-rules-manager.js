@@ -13,9 +13,11 @@ export class DomainRulesManager {
 		// 自定义规则内存缓存：避免每次未命中都读 chrome.storage；
 		// 外部（如手动注入 customDomainRules）修改时由 onChanged 失效
 		this.customRulesCache = null;
+		this._customRulesVersion = 0;
 		if (typeof chrome !== "undefined" && chrome.storage?.onChanged) {
 			chrome.storage.onChanged.addListener((changes, areaName) => {
-				if (areaName === "local" && changes.customDomainRules) {
+				if (areaName === "local" && changes[STORAGE_KEYS.CUSTOM_DOMAIN_RULES]) {
+					this._customRulesVersion++;
 					this.customRulesCache = null;
 					// 域名查询结果由自定义规则参与计算，一并失效
 					this.domainCache.clear();
@@ -57,9 +59,10 @@ export class DomainRulesManager {
 			const data = await response.json();
 			this.rules = data.domainLanguageRules || {};
 			return this.rules;
-		} catch (_error) {
-			this.rules = {};
-			return this.rules;
+		} catch (error) {
+			console.error("[DomainRulesManager] Failed to load domain rules:", error);
+			this.loadPromise = null;
+			return {};
 		}
 	}
 
@@ -78,12 +81,17 @@ export class DomainRulesManager {
 	 */
 	async getLanguageForDomain(domain) {
 		try {
+			const normalizedDomain = String(domain || "")
+				.trim()
+				.toLowerCase();
+			if (!normalizedDomain) return null;
+
 			// 检查缓存（LRU：命中时重插入以刷新热度）
-			if (this.domainCache.has(domain)) {
+			if (this.domainCache.has(normalizedDomain)) {
 				this.cacheStats.hits++;
-				const cachedResult = this.domainCache.get(domain);
-				this.domainCache.delete(domain);
-				this.domainCache.set(domain, cachedResult);
+				const cachedResult = this.domainCache.get(normalizedDomain);
+				this.domainCache.delete(normalizedDomain);
+				this.domainCache.set(normalizedDomain, cachedResult);
 				return cachedResult ? cachedResult.language : null;
 			}
 
@@ -96,7 +104,7 @@ export class DomainRulesManager {
 
 			// 获取自定义规则并查找匹配
 			const customRules = await this.getCustomRules();
-			const result = this._findMatchingRule(domain, customRules);
+			const result = this._findMatchingRule(normalizedDomain, customRules);
 			return result ? result.language : null;
 		} catch (error) {
 			console.error(`[DomainRulesManager] Error getting language for domain "${domain}":`, error);
@@ -249,13 +257,17 @@ export class DomainRulesManager {
 		if (this.customRulesCache) {
 			return this.customRulesCache;
 		}
+		const versionAtStart = this._customRulesVersion;
 		try {
 			const result = await chrome.storage.local.get([STORAGE_KEYS.CUSTOM_DOMAIN_RULES]);
-			this.customRulesCache = result.customDomainRules || {};
+			const rules = result[STORAGE_KEYS.CUSTOM_DOMAIN_RULES] || {};
+			if (versionAtStart === this._customRulesVersion) {
+				this.customRulesCache = rules;
+			}
+			return rules;
 		} catch (_error) {
-			this.customRulesCache = {};
+			return {};
 		}
-		return this.customRulesCache;
 	}
 
 	/**

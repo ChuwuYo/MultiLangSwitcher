@@ -20,6 +20,13 @@ export const showCurrentRules = async () => {
 			return;
 		}
 
+		const hasFeedbackPermission = chrome.permissions?.contains
+			? await chrome.permissions.contains({ permissions: ["declarativeNetRequestFeedback"] })
+			: true;
+		if (!hasFeedbackPermission) {
+			sendDebugLog(debugI18n.t("feedback_permission_denied"), "warning");
+			return;
+		}
 		const matchedRules = await chrome.declarativeNetRequest.getMatchedRules({});
 		sendDebugLog(`${debugI18n.t("matched_rules")} ${JSON.stringify(matchedRules, null, 2)}`, "info");
 	} catch (error) {
@@ -78,5 +85,9 @@ export const testHeaderChange = async (language) => {
 	testHeader: testHeaderChange,
 };
 
-// 显示使用说明
-sendDebugLog(debugI18n.t("debug_tool_loaded"), "info");
+/**
+ * 在 i18n 与日志面板就绪后输出调试工具加载提示
+ */
+export const initDebugHeaders = () => {
+	sendDebugLog(debugI18n.t("debug_tool_loaded"), "info");
+};

@@ -45,7 +45,8 @@ const extractKeys = (component) => {
 	];
 	if (htmlFiles) {
 		const html = readFileSync(htmlFiles, "utf8");
-		for (const match of html.matchAll(/data-i18n(?:-title|-placeholder|-alt)?="([a-z0-9_]+)"/g)) keys.add(match[1]);
+		for (const match of html.matchAll(/data-i18n(?:-title|-placeholder|-alt|-aria-label)?="([a-z0-9_]+)"/g))
+			keys.add(match[1]);
 	}
 	return keys;
 };

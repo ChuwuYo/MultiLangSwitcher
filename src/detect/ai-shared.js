@@ -23,6 +23,8 @@ export const getAiElements = () => {
 			baseUrlInput: document.getElementById("aiBaseUrlInput"),
 			apiKeyInput: document.getElementById("aiApiKeyInput"),
 			apiKeyToggle: document.getElementById("aiApiKeyToggle"),
+			sessionOnlyKeyCheckbox: document.getElementById("aiSessionOnlyKey"),
+			clearKeysButton: document.getElementById("aiClearKeysBtn"),
 			modelInput: document.getElementById("aiModelInput"),
 			configHint: document.getElementById("aiConfigHint"),
 			startButton: document.getElementById("aiStartButton"),

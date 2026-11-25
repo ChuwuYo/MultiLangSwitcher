@@ -1,27 +1,43 @@
+const DEFAULT_REQUEST_TIMEOUT_MS = 60000;
+
 const normalizeChatCompletionsUrl = (baseUrl) => {
 	const trimmed = String(baseUrl || "").trim();
 	if (!trimmed) {
 		return "";
 	}
-
-	const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
-	if (/\/chat\/completions$/i.test(withoutTrailingSlash)) {
-		return withoutTrailingSlash;
+	try {
+		const parsed = new URL(trimmed);
+		const cleanPath = parsed.pathname.replace(/\/+$/, "");
+		if (!/\/chat\/completions$/i.test(cleanPath)) {
+			parsed.pathname = `${cleanPath}/chat/completions`;
+		} else {
+			parsed.pathname = cleanPath;
+		}
+		return parsed.toString();
+	} catch (_error) {
+		const withoutTrailingSlash = trimmed.replace(/\/+$/, "");
+		return /\/chat\/completions$/i.test(withoutTrailingSlash)
+			? withoutTrailingSlash
+			: `${withoutTrailingSlash}/chat/completions`;
 	}
-
-	if (/\/v\d+$/i.test(withoutTrailingSlash)) {
-		return `${withoutTrailingSlash}/chat/completions`;
-	}
-
-	return `${withoutTrailingSlash}/chat/completions`;
 };
 
 const extractErrorMessage = async (response) => {
+	const fallback = `${response.status} ${response.statusText}`.trim();
 	try {
-		const payload = await response.json();
-		return payload?.error?.message || payload?.message || `${response.status} ${response.statusText}`.trim();
+		const rawText = await response.text();
+		if (!rawText) return fallback;
+		try {
+			const payload = JSON.parse(rawText);
+			if (typeof payload?.error === "string" && payload.error.trim()) {
+				return payload.error.trim();
+			}
+			return payload?.error?.message || payload?.message || fallback;
+		} catch (_parseError) {
+			return rawText.trim().slice(0, 200) || fallback;
+		}
 	} catch (_error) {
-		return `${response.status} ${response.statusText}`.trim();
+		return fallback;
 	}
 };
 
@@ -34,7 +50,7 @@ const isLocalNetworkHost = (hostname) => {
 	if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "::1") {
 		return true;
 	}
-	if (/^f[cd][0-9a-f]{0,2}:/.test(host)) {
+	if (/^f[cd][0-9a-f]{2}:/.test(host)) {
 		return true;
 	}
 	const octets = host.split(".").map(Number);
@@ -51,6 +67,18 @@ const isLocalNetworkHost = (hostname) => {
 	);
 };
 
+const isLinkLocalOrMetadataHost = (hostname) => {
+	const host = hostname
+		.replace(/^\[|\]$/g, "")
+		.replace(/\.$/, "")
+		.toLowerCase();
+	if (/^fe[89ab][0-9a-f]:/.test(host)) {
+		return true;
+	}
+	const octets = host.split(".").map(Number);
+	return octets.length === 4 && octets[0] === 169 && octets[1] === 254;
+};
+
 /**
  * @param {string} url
  * @returns {"ok" | "invalid" | "insecure"}
@@ -60,6 +88,9 @@ const checkEndpointSecurity = (url) => {
 	try {
 		parsed = new URL(String(url || "").trim());
 	} catch (_error) {
+		return "invalid";
+	}
+	if (parsed.username || parsed.password || isLinkLocalOrMetadataHost(parsed.hostname)) {
 		return "invalid";
 	}
 	if (parsed.protocol === "https:") {
@@ -81,6 +112,7 @@ const createChatCompletion = async ({
 	stream = true,
 	signal,
 	onDelta,
+	timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
 }) => {
 	const normalizedUrl = normalizeChatCompletionsUrl(url);
 	if (!normalizedUrl) {
@@ -93,25 +125,54 @@ const createChatCompletion = async ({
 	const headers = {
 		"Content-Type": "application/json",
 	};
-	if (authHeader.toLowerCase() === "authorization") {
-		headers.Authorization = `Bearer ${apiKey}`;
-	} else {
-		headers[authHeader] = apiKey;
+	const trimmedKey = String(apiKey || "").trim();
+	const headerName = String(authHeader || "Authorization").trim() || "Authorization";
+	if (trimmedKey) {
+		if (headerName.toLowerCase() === "authorization") {
+			headers.Authorization = `Bearer ${trimmedKey}`;
+		} else {
+			headers[headerName] = trimmedKey;
+		}
 	}
 
-	const response = await fetch(normalizedUrl, {
-		method: "POST",
-		// 重定向目标不经过 HTTPS 校验，自定义认证头和请求体可能被转发到明文地址
-		redirect: "error",
-		headers,
-		body: JSON.stringify({
-			model,
-			messages,
-			temperature,
-			stream,
-		}),
-		signal,
-	});
+	const timeoutController = new AbortController();
+	const onExternalAbort = () => timeoutController.abort();
+	if (signal) {
+		if (signal.aborted) {
+			timeoutController.abort();
+		} else {
+			signal.addEventListener("abort", onExternalAbort, { once: true });
+		}
+	}
+	let timeoutId = null;
+	const resetIdleTimeout = () => {
+		if (timeoutId) clearTimeout(timeoutId);
+		if (timeoutMs > 0) {
+			timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
+		}
+	};
+	resetIdleTimeout();
+
+	let response;
+	try {
+		response = await fetch(normalizedUrl, {
+			method: "POST",
+			// 重定向目标不经过 HTTPS 校验，自定义认证头和请求体可能被转发到明文地址
+			redirect: "error",
+			headers,
+			body: JSON.stringify({
+				model,
+				messages,
+				temperature,
+				stream,
+			}),
+			signal: timeoutController.signal,
+		});
+	} catch (error) {
+		if (timeoutId) clearTimeout(timeoutId);
+		signal?.removeEventListener("abort", onExternalAbort);
+		throw error;
+	}
 
 	if (!response.ok) {
 		throw new Error(await extractErrorMessage(response));
@@ -120,33 +181,46 @@ const createChatCompletion = async ({
 	const contentType = response.headers.get("content-type") || "";
 	const isSse = stream && contentType.toLowerCase().includes("text/event-stream") && response.body;
 
-	if (isSse) {
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder("utf-8");
-		let content = "";
-		let buffer = "";
-		const processBuffer = (chunk, flush = false) => {
-			buffer += chunk;
-			const lines = buffer.split(/\r?\n/);
-			buffer = flush ? "" : lines.pop() || "";
+	try {
+		if (isSse) {
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder("utf-8");
+			let content = "";
+			let buffer = "";
+			const processBuffer = (chunk, flush = false) => {
+				buffer += chunk;
+				const lines = buffer.split(/\r?\n/);
+				buffer = flush ? "" : lines.pop() || "";
 
-			for (const rawLine of lines) {
-				const line = rawLine.trim();
-				if (!line || !line.startsWith("data:")) {
-					continue;
-				}
+				for (const rawLine of lines) {
+					const line = rawLine.trim();
+					if (!line || !line.startsWith("data:")) {
+						continue;
+					}
 
-				const data = line.slice(5).trim();
-				if (!data) {
-					continue;
-				}
+					const data = line.slice(5).trim();
+					if (!data) {
+						continue;
+					}
 
-				if (data === "[DONE]") {
-					return true;
-				}
+					if (data === "[DONE]") {
+						return true;
+					}
 
-				try {
-					const payload = JSON.parse(data);
+					let payload;
+					try {
+						payload = JSON.parse(data);
+					} catch (_error) {
+						// Ignore malformed chunks from providers that mix non-JSON SSE lines.
+						continue;
+					}
+
+					if (payload?.error) {
+						const errMsg =
+							typeof payload.error === "string" ? payload.error : payload.error?.message || "Upstream stream error";
+						throw new Error(errMsg);
+					}
+
 					const delta = payload?.choices?.[0]?.delta?.content;
 					if (typeof delta === "string" && delta.length > 0) {
 						content += delta;
@@ -154,35 +228,38 @@ const createChatCompletion = async ({
 							onDelta(delta, content);
 						}
 					}
-				} catch (_error) {
-					// Ignore malformed chunks from providers that mix non-JSON SSE lines.
 				}
-			}
 
-			return false;
-		};
+				return false;
+			};
 
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) {
-				if (processBuffer(decoder.decode(), true)) {
-					return { content, streamed: true };
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					resetIdleTimeout();
+					if (done) {
+						processBuffer(decoder.decode(), true);
+						break;
+					}
+					if (processBuffer(decoder.decode(value, { stream: true }))) {
+						break;
+					}
 				}
-				break;
+			} finally {
+				reader.cancel().catch(() => {});
+				reader.releaseLock();
 			}
 
-			if (processBuffer(decoder.decode(value, { stream: true }))) {
-				return { content, streamed: true };
-			}
+			return { content, streamed: true };
 		}
 
-		return { content, streamed: true };
+		const payload = await response.json();
+		const content = payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text || "";
+		return { content, streamed: false };
+	} finally {
+		if (timeoutId) clearTimeout(timeoutId);
+		signal?.removeEventListener("abort", onExternalAbort);
 	}
-
-	const payload = await response.json();
-	const content = payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text || "";
-
-	return { content, streamed: false };
 };
 
 const AIChatClient = {

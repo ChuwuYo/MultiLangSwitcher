@@ -218,6 +218,11 @@ const detectEn = {
 	ai_restart_required:
 		"The detection snapshot changed, so the old context is no longer reliable. Start AI diagnosis again.",
 	ai_empty_reply: "The AI service returned no usable content.",
+	ai_export_label_ua_data: "UA-CH High Entropy Data",
+	ai_export_section_ip_timezone: "IP Geolocation & Timezone",
+	ai_session_only_key_label: "Keep API keys in memory for this browser session only",
+	ai_clear_keys: "Clear saved API keys",
+	ai_keys_cleared: "All saved API keys have been cleared.",
 };
 
 const detectZh = {
@@ -429,6 +434,11 @@ const detectZh = {
 	ai_waiting_for_question: "请输入追问内容。",
 	ai_restart_required: "检测快照已变化，旧上下文不再可靠。请重新开始 AI 诊断。",
 	ai_empty_reply: "AI 没有返回有效内容。",
+	ai_export_label_ua_data: "UA-CH 高熵值信息",
+	ai_export_section_ip_timezone: "IP 地理与时区",
+	ai_session_only_key_label: "仅在当前浏览器会话中保存 API Key（关闭后自动清除）",
+	ai_clear_keys: "清除已保存的 API Key",
+	ai_keys_cleared: "已清除所有保存的 API Key。",
 };
 
 export { detectEn, detectZh };

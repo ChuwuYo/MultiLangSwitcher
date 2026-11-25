@@ -50,30 +50,59 @@
     }
 
     .success {
-      color: green;
+      color: #198754;
       font-weight: bold;
     }
 
     .error {
-      color: rgb(240, 101, 101);
+      color: #dc3545;
       font-weight: bold;
+    }
+
+    .warning {
+      color: #997404;
+      font-weight: bold;
+    }
+
+    .info {
+      color: #087990;
+    }
+
+    html[data-bs-theme="dark"] .success,
+    html[data-bs-theme="dark"] .log-success {
+      color: #75b798;
+    }
+
+    html[data-bs-theme="dark"] .error,
+    html[data-bs-theme="dark"] .log-error {
+      color: #ea868f;
+    }
+
+    html[data-bs-theme="dark"] .warning,
+    html[data-bs-theme="dark"] .log-warning {
+      color: #ffda6a;
+    }
+
+    html[data-bs-theme="dark"] .info,
+    html[data-bs-theme="dark"] .log-info {
+      color: #6edff6;
     }
 
     /* 日志不同类型的颜色 */
     .log-info {
-      color: rgb(165, 165, 250);
+      color: #084298;
     }
 
     .log-warning {
-      color: orange;
+      color: #997404;
     }
 
     .log-error {
-      color: rgb(248, 115, 115);
+      color: #dc3545;
     }
 
     .log-success {
-      color: green;
+      color: #198754;
     }
 
     /* 匹配规则详情的样式 */
@@ -138,9 +167,9 @@
 </head>
 
 <body>
-  <button id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle"></button>
+  <button type="button" id="themeToggleBtn" class="toggle" title="Toggle Theme" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
 
-  <div class="container">
+  <main class="container">
     <h2 id="pageHeading" data-i18n="heading"></h2>
     <p class="lead" id="pageSubtitle" data-i18n="subtitle"></p>
 
@@ -153,8 +182,8 @@
         <div class="debug-section">
           <h4 id="currentRulesTitle" data-i18n="current_rules"></h4>
           <p class="text-muted" id="currentRulesDesc" data-i18n="current_rules_desc"></p>
-          <button id="showRulesBtn" class="btn btn-primary" data-i18n="show_rules"></button>
-          <div id="rulesResult" class="debug-result" data-i18n="click_view_rules"></div>
+          <button type="button" id="showRulesBtn" class="btn btn-primary" data-i18n="show_rules"></button>
+          <div id="rulesResult" class="debug-result" aria-live="polite" data-i18n="click_view_rules"></div>
         </div>
       </div>
 
@@ -168,27 +197,29 @@
               <!-- 语言选项将由JavaScript动态生成 -->
             </select>
           </div>
-          <button id="testHeaderBtn" class="btn btn-success" data-i18n="test_header"></button>
-          <div id="headerTestResult" class="debug-result" data-i18n="click_test_header"></div>
+          <button type="button" id="testHeaderBtn" class="btn btn-success" data-i18n="test_header"></button>
+          <div id="headerTestResult" class="debug-result" aria-live="polite" data-i18n="click_test_header"></div>
         </div>
       </div>
 
       <!-- 自定义语言设置 -->
       <div class="col-md-6">
         <div class="debug-section">
-          <button id="resetCustomLangBtn" class="toggle reset-btn-corner"
-            data-i18n-title="reset_accept_language_tooltip"><img src="../../assets/images/reset.svg" id="resetBtnImg" width="16"
+          <button type="button" id="resetCustomLangBtn" class="toggle reset-btn-corner"
+            data-i18n-title="reset_accept_language_tooltip" data-i18n-aria-label="reset_accept_language_tooltip"><img src="../../assets/images/reset.svg" id="resetBtnImg" width="16"
               height="16" class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
           <h4 id="customLangTitle" data-i18n="custom_language"></h4>
           <p class="text-muted" id="customLangDesc" data-i18n="custom_language_desc"></p>
-          <div class="mb-3">
-            <label for="customLanguageInput" class="form-label" id="customLangInputLabel"
-              data-i18n="custom_language_label"></label>
-            <input type="text" class="form-control" id="customLanguageInput"
-              data-i18n-placeholder="custom_language_placeholder">
-          </div>
-          <button id="applyCustomLangBtn" class="btn btn-primary" data-i18n="apply_custom"></button>
-          <div id="customLangResult" class="debug-result mt-2"></div>
+          <form id="customLanguageForm">
+            <div class="mb-3">
+              <label for="customLanguageInput" class="form-label" id="customLangInputLabel"
+                data-i18n="custom_language_label"></label>
+              <input type="text" class="form-control" id="customLanguageInput"
+                data-i18n-placeholder="custom_language_placeholder">
+            </div>
+            <button type="submit" id="applyCustomLangBtn" class="btn btn-primary" data-i18n="apply_custom"></button>
+          </form>
+          <div id="customLangResult" class="debug-result mt-2" aria-live="polite"></div>
         </div>
       </div>
       <!-- 自定义语言设置结束 -->
@@ -238,13 +269,13 @@
           </div>
 
           <!-- 缓存测试 -->
-          <div class="mb-3">
+          <form id="testDomainForm" class="mb-3">
             <label for="testDomainInput" class="form-label" id="testDomainLabel"></label>
             <div class="input-group">
               <input type="text" class="form-control form-control-sm" id="testDomainInput" placeholder="example.com">
-              <button id="testDomainBtn" class="btn btn-outline-success btn-sm"></button>
+              <button type="submit" id="testDomainBtn" class="btn btn-outline-success btn-sm"></button>
             </div>
-          </div>
+          </form>
 
           <!-- 缓存管理按钮 -->
           <div class="mb-3">
@@ -292,19 +323,19 @@
           <label class="form-check-label" for="filterSuccess" id="successLabel" data-i18n="success"></label>
         </div>
       </div>
-      <div id="logOutput" class="debug-result"></div>
-      <button id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2" data-i18n="clear_logs"></button>
+      <div id="logOutput" class="debug-result" role="log" aria-live="polite"></div>
+      <button type="button" id="clearLogsBtn" class="btn btn-secondary btn-sm mt-2" data-i18n="clear_logs"></button>
     </div>
 
     <div class="debug-section mt-4">
       <h4 id="commonFixesTitle" data-i18n="common_fixes"></h4>
       <p class="text-muted" id="commonFixesDesc" data-i18n="common_fixes_desc"></p>
       <div class="list-group">
-        <button id="fixPriorityBtn" class="list-group-item list-group-item-action">
+        <button type="button" id="fixPriorityBtn" class="list-group-item list-group-item-action">
           <strong id="fixPriorityTitle" data-i18n="fix_priority"></strong> <span id="fixPriorityDesc"
             data-i18n="fix_priority_desc"></span>
         </button>
-        <button id="clearAllRulesBtn" class="list-group-item list-group-item-action">
+        <button type="button" id="clearAllRulesBtn" class="list-group-item list-group-item-action">
           <strong id="clearReapplyTitle" data-i18n="clear_reapply"></strong> <span id="clearReapplyDesc"
             data-i18n="clear_reapply_desc"></span>
         </button>
@@ -332,7 +363,7 @@
       <div id="domainRulesResult" class="debug-result" data-i18n="click_view_domain_rules"></div>
     </div>
     <!-- 自动切换功能控制结束 -->
-  </div>
+  </main>
 
   <script type="module" src="debug-ui.js"></script>
 </body>

@@ -469,11 +469,13 @@ select:disabled {
 }
 [type="button"],
 [type="reset"],
+[type="submit"],
 button {
 	-webkit-appearance: button;
 }
 [type="button"]:not(:disabled),
 [type="reset"]:not(:disabled),
+[type="submit"]:not(:disabled),
 button:not(:disabled) {
 	cursor: pointer;
 }
@@ -1842,6 +1844,14 @@ fieldset:disabled .btn {
 }
 .visually-hidden * {
 	overflow: hidden !important;
+}
+.vr {
+	display: inline-block;
+	align-self: stretch;
+	width: var(--bs-border-width);
+	min-height: 1em;
+	background-color: currentcolor;
+	opacity: 0.25;
 }
 .d-grid {
 	display: grid !important;

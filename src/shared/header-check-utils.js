@@ -17,9 +17,9 @@
  * 按优先级顺序排列，系统将依次尝试直到成功
  */
 export const HEADER_CHECK_ENDPOINTS = [
-	"https://httpbin.org/headers",
-	"https://postman-echo.com/headers",
 	"https://httpbingo.org/headers",
+	"https://postman-echo.com/headers",
+	"https://httpbin.org/headers",
 ];
 
 /**
@@ -149,15 +149,17 @@ export const createExternalCheckLinks = (texts = {}) => {
 	const link1 = document.createElement("a");
 	link1.href = "https://pixelscan.net/fingerprint-check";
 	link1.target = "_blank";
+	link1.rel = "noopener noreferrer";
 	link1.textContent = "https://pixelscan.net/fingerprint-check";
 	fragment.appendChild(link1);
 
 	fragment.appendChild(document.createTextNode(` ${or} `));
 
 	const link2 = document.createElement("a");
-	link2.href = "https://www.browserscan.net/zh";
+	link2.href = "https://www.browserscan.net/";
 	link2.target = "_blank";
-	link2.textContent = "https://www.browserscan.net/zh";
+	link2.rel = "noopener noreferrer";
+	link2.textContent = "https://www.browserscan.net/";
 	fragment.appendChild(link2);
 
 	fragment.appendChild(document.createTextNode(` ${suffix}`));

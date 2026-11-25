@@ -115,7 +115,7 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 		expect(JSON.stringify(result)).not.toContain("macOS");
 	});
 
-	it("redacts compatibility.browser.userAgent but keeps name/version/os", () => {
+	it("redacts compatibility.browser.userAgent and fullVersion but keeps name/version/os", () => {
 		const result = sanitizeSnapshotForAI({
 			compatibility: {
 				browser: {
@@ -128,7 +128,29 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 			},
 		});
 		expect(result.compatibility.browser.userAgent).toBe("[redacted]");
+		expect(result.compatibility.browser.fullVersion).toBe("[redacted]");
 		expect(result.compatibility.browser.name).toBe("Chrome");
+		expect(result.compatibility.browser.version).toBe("131");
 		expect(JSON.stringify(result)).not.toContain("real-agent");
+		expect(JSON.stringify(result)).not.toContain("131.0.6778.86");
+	});
+
+	it("redacts ipTimezone ip, city, and organization while keeping timezone and country", () => {
+		const result = sanitizeSnapshotForAI({
+			ipTimezone: {
+				status: "ok",
+				ip: "203.0.113.42",
+				timezone: "Asia/Tokyo",
+				country: "JP",
+				region: "Tokyo",
+				city: "Shibuya",
+				organization: "Example Corp Fiber",
+			},
+		});
+		expect(result.ipTimezone.ip).toBe("[redacted]");
+		expect(result.ipTimezone.city).toBe("[redacted]");
+		expect(result.ipTimezone.organization).toBe("[redacted]");
+		expect(result.ipTimezone.timezone).toBe("Asia/Tokyo");
+		expect(result.ipTimezone.country).toBe("JP");
 	});
 });

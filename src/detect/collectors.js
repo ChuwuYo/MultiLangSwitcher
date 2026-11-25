@@ -120,10 +120,13 @@ const checkApiSupport = () => [
 		supported: (() => {
 			try {
 				const canvas = ResourceManager.createCanvasElement();
-				return !!(
-					window.WebGLRenderingContext &&
-					(canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
+				const gl = /** @type {WebGLRenderingContext | null} */ (
+					window.WebGLRenderingContext && (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
 				);
+				if (gl) {
+					gl.getExtension("WEBGL_lose_context")?.loseContext();
+				}
+				return !!gl;
 			} catch (_error) {
 				return false;
 			}
@@ -249,6 +252,7 @@ export const collectWebglFingerprintInfo = () => {
 		const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || "N/A";
 
 		const fingerprintData = `${vendor} | ${renderer} | ${version} | ${shadingLanguageVersion}`;
+		gl.getExtension("WEBGL_lose_context")?.loseContext();
 		return {
 			status: "ok",
 			hash: md5(fingerprintData),
@@ -415,17 +419,15 @@ const IP_GEO_ENDPOINTS = [
 export const collectIpTimezoneInfo = async () => {
 	const errors = [];
 	for (const endpoint of IP_GEO_ENDPOINTS) {
+		const controller = ResourceManager.createController();
+		const timeoutId = ResourceManager.setTimeout(() => ResourceManager.abortController(controller), 5000);
 		try {
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 5000);
 			const response = await fetch(endpoint.url, { signal: controller.signal, cache: "no-store" });
 			if (!response.ok) {
-				clearTimeout(timeoutId);
 				throw new Error(`HTTP ${response.status}`);
 			}
-			// clearTimeout 必须在读取 body 之后：端点只回 header 不回 body 时仍能按时中止
+			// 在读取 body 之后再通过 finally 清理定时器，确保半开响应也能按时中止
 			const data = await response.json();
-			clearTimeout(timeoutId);
 			const result = endpoint.normalize(data);
 			if (!result.timezone || result.timezone === "N/A") {
 				throw new Error("no timezone in response");
@@ -433,6 +435,9 @@ export const collectIpTimezoneInfo = async () => {
 			return { status: "ok", ...result, error: "" };
 		} catch (error) {
 			errors.push(`${endpoint.url}: ${error?.message || String(error)}`);
+		} finally {
+			ResourceManager.clearTimeout(timeoutId);
+			ResourceManager.abortController(controller);
 		}
 	}
 	console.warn(translateDetect("ip_timezone_detection_failed"), errors.join("; "));
@@ -475,11 +480,13 @@ const collectWebRtcIps = async () =>
 			pc.onicecandidate = (event) => {
 				if (!event?.candidate?.candidate) return;
 
-				const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i;
-				const ipMatch = ipRegex.exec(event.candidate.candidate);
-
-				if (ipMatch && !ips.includes(ipMatch[1])) {
-					ips.push(ipMatch[1]);
+				// 优先取 SDP candidate 第 5 字段（兼容 IPv4 与压缩格式 IPv6，跳过 *.local mDNS 占位名）
+				const rawAddr = event.candidate.address || event.candidate.candidate.split(" ")[4] || "";
+				if (!rawAddr || rawAddr.endsWith(".local")) return;
+				const isIPv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(rawAddr);
+				const isIPv6 = rawAddr.includes(":") && /^[0-9a-f:.]+$/i.test(rawAddr);
+				if ((isIPv4 || isIPv6) && !ips.includes(rawAddr)) {
+					ips.push(rawAddr);
 				}
 			};
 

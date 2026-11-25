@@ -36,6 +36,8 @@ export const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, ap
  * 显示错误消息
  * @param {string} message - 错误消息
  */
+let showErrorTimerId = null;
+
 export const showError = (message) => {
 	// 验证输入
 	if (!message) return;
@@ -51,8 +53,12 @@ export const showError = (message) => {
 	errorMessage.textContent = message;
 	errorAlert.classList.remove("d-none");
 
-	// 5秒后自动隐藏错误消息（可延后合并）
-	ResourceManager.setTimeout(() => {
+	// 5秒后自动隐藏错误消息（先清旧定时器避免提前隐藏新提示）
+	if (showErrorTimerId) {
+		ResourceManager.clearTimeout(showErrorTimerId);
+	}
+	showErrorTimerId = ResourceManager.setTimeout(() => {
+		showErrorTimerId = null;
 		errorAlert.classList.add("d-none");
 	}, 5000);
 };
@@ -63,12 +69,11 @@ export const showError = (message) => {
  * @param {string} messageKey - 国际化消息键
  */
 const displayHeaderCheckError = (element, messageKey) => {
-	element.innerHTML = "";
 	const fragment = document.createDocumentFragment();
 	fragment.appendChild(document.createTextNode(popupI18n.t(messageKey)));
 	fragment.appendChild(document.createElement("br"));
 	fragment.appendChild(createLocalizedExternalCheckLinks((key) => popupI18n.t(key)));
-	element.appendChild(fragment);
+	element.replaceChildren(fragment);
 };
 
 /**
@@ -161,7 +166,7 @@ export const performHeaderCheckGuarded = async (headerCheckContentPre) => {
 export const performHeaderCheck = async (headerCheckContentPre) => {
 	try {
 		// 显示初始加载状态
-		headerCheckContentPre.textContent = popupI18n.t("fetching_headers") + "...";
+		headerCheckContentPre.textContent = `${popupI18n.t("fetching_headers")}...`;
 		sendDebugLog(popupI18n.t("start_quick_check"), "info");
 
 		// 使用共享模块获取请求头

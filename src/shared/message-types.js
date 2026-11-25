@@ -3,7 +3,6 @@
  * 所有 chrome.runtime.sendMessage / onMessage 的 type 字段必须使用此处的常量，
  * 禁止散落字符串字面量。
  */
-// biome-ignore lint/correctness/noUnusedVariables: 常量对象供各页面与后台脚本引用
 export const MessageTypes = Object.freeze({
 	DEBUG_LOG: "DEBUG_LOG",
 	UPDATE_RULES: "UPDATE_RULES",

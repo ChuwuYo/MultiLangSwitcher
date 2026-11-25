@@ -1,5 +1,6 @@
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import {
+	clearAllStoredAPIKeys,
 	ensureProviderOptions,
 	handleApiKeyToggle,
 	handleProviderChange,
@@ -41,14 +42,19 @@ const sanitizeSnapshotForAI = (snapshot) => {
 		sanitized.browserFingerprint.userAgent = "[redacted]";
 	}
 
-	// IP 时区检测的出口 IP 与 WebRTC IP 同等脱敏
-	if (sanitized.ipTimezone?.ip) {
-		sanitized.ipTimezone.ip = "[redacted]";
+	// IP 时区检测的出口 IP、城市与组织/ISP 信息同等脱敏，仅保留时区与国家/地区用于一致性诊断
+	if (sanitized.ipTimezone) {
+		if ("ip" in sanitized.ipTimezone) sanitized.ipTimezone.ip = "[redacted]";
+		if ("city" in sanitized.ipTimezone) sanitized.ipTimezone.city = "[redacted]";
+		if ("organization" in sanitized.ipTimezone) sanitized.ipTimezone.organization = "[redacted]";
 	}
 
-	// UA 字符串同等敏感：保留浏览器名/版本/OS，删除完整 UA
+	// UA 字符串与完整小版本号同等敏感：保留浏览器名/主版本/OS，脱敏完整 UA 与 fullVersion
 	if (sanitized.compatibility?.browser) {
 		sanitized.compatibility.browser.userAgent = "[redacted]";
+		if ("fullVersion" in sanitized.compatibility.browser) {
+			sanitized.compatibility.browser.fullVersion = "[redacted]";
+		}
 	}
 
 	// UA-CH 高熵值与 User Agent 同等敏感：仅保留移动端布尔标志
@@ -79,6 +85,9 @@ const sanitizeSnapshotForAI = (snapshot) => {
 const bindConfigPersistence = () => {
 	const elements = getAiElements();
 	[elements.baseUrlInput, elements.apiKeyInput, elements.modelInput].forEach((input) => {
+		ResourceManager.addEventListener(input, "input", () => {
+			updateAIControls();
+		});
 		ResourceManager.addEventListener(input, "change", async () => {
 			await persistAIConfig();
 			updateAIControls();
@@ -98,6 +107,14 @@ const initializeAIUi = async () => {
 		updateAIControls();
 	});
 	ResourceManager.addEventListener(elements.apiKeyToggle, "click", handleApiKeyToggle);
+	ResourceManager.addEventListener(elements.sessionOnlyKeyCheckbox, "change", async () => {
+		await persistAIConfig();
+		updateAIControls();
+	});
+	ResourceManager.addEventListener(elements.clearKeysButton, "click", async () => {
+		await clearAllStoredAPIKeys();
+		updateAIControls();
+	});
 	ResourceManager.addEventListener(elements.startButton, "click", () => startAIDiagnosis(sanitizeSnapshotForAI));
 	ResourceManager.addEventListener(elements.stopButton, "click", stopAIRequest);
 	ResourceManager.addEventListener(elements.clearButton, "click", () => resetAISession());
