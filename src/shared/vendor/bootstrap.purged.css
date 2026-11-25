@@ -1944,6 +1944,10 @@ fieldset:disabled .btn {
 .text-center {
 	text-align: center !important;
 }
+.text-break {
+	word-wrap: break-word !important;
+	word-break: break-word !important;
+}
 .text-primary {
 	--bs-text-opacity: 1;
 	color: rgba(var(--bs-primary-rgb), var(--bs-text-opacity)) !important;

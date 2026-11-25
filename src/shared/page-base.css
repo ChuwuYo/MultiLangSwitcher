@@ -88,6 +88,22 @@ html[data-bs-theme="dark"] .text-muted {
 	color: #9ca3af !important;
 }
 
+html[data-bs-theme="dark"] .text-success {
+	color: var(--mls-success) !important;
+}
+
+html[data-bs-theme="dark"] .text-info {
+	color: var(--mls-info) !important;
+}
+
+html[data-bs-theme="dark"] .text-warning {
+	color: var(--mls-warning) !important;
+}
+
+html[data-bs-theme="dark"] .text-danger {
+	color: var(--mls-danger) !important;
+}
+
 /* 独立标签页（Debug / Detect）采用 0.9375rem（默认 15px），兼顾信息密度与长文可读性；
  * 380px 弹窗在 popup.html 中单独收紧为 0.875rem（14px） */
 html {
@@ -98,6 +114,10 @@ html {
 body {
 	font-family: var(--mls-font-sans);
 	-webkit-font-smoothing: antialiased;
+}
+
+#pageHeading {
+	padding-right: 44px;
 }
 
 /* 统一键盘焦点环，保证三页可访问性一致 */
