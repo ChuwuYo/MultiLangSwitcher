@@ -132,16 +132,13 @@ export const initDomainRules = () => {
 							detailDiv.className = "matched-rule-detail";
 
 							const table = document.createElement("table");
-							table.className = "table table-sm table-striped";
-							table.style.tableLayout = "fixed";
+							table.className = "table table-sm table-striped domain-rules-table";
 
 							const thead = document.createElement("thead");
 							const trHead = document.createElement("tr");
 							const thDomain = document.createElement("th");
-							thDomain.style.width = "50%";
 							thDomain.textContent = debugI18n.t("domain");
 							const thLang = document.createElement("th");
-							thLang.style.width = "50%";
 							thLang.textContent = debugI18n.t("language");
 							trHead.appendChild(thDomain);
 							trHead.appendChild(thLang);

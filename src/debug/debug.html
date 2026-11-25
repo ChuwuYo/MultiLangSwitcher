@@ -19,25 +19,19 @@
     .debug-section {
       position: relative;
       margin-bottom: 20px;
-      padding: 15px;
-      border-radius: 8px;
-      background-color: var(--bs-tertiary-bg);
-      border: 1px solid var(--bs-border-color-translucent);
-    }
-
-    /* 确保所有卡片间距一致 */
-    .col-md-6 .debug-section {
-      margin-bottom: 20px;
+      padding: 16px;
+      border-radius: var(--mls-radius-md);
+      background-color: var(--mls-surface-subtle);
+      border: 1px solid var(--mls-border-subtle);
     }
 
     .debug-result {
       margin-top: 10px;
-      padding: 15px;
-      border-radius: 5px;
-      background-color: var(--bs-body-bg);
-      border: 1px solid var(--bs-border-color-translucent);
-      min-height: 60px;
-      height: auto;
+      padding: 12px 14px;
+      border-radius: var(--mls-radius-sm);
+      background-color: var(--mls-surface);
+      border: 1px solid var(--mls-border-subtle);
+      min-height: 56px;
       max-height: 400px;
       overflow-y: auto;
       overflow-wrap: break-word;
@@ -45,122 +39,95 @@
       font-size: 0.9em;
       line-height: 1.5;
       box-sizing: border-box;
-      display: block;
       width: 100%;
     }
 
-    .success {
-      color: #198754;
-      font-weight: bold;
-    }
-
-    .error {
-      color: #dc3545;
-      font-weight: bold;
-    }
-
-    .warning {
-      color: #997404;
-      font-weight: bold;
-    }
-
-    .info {
-      color: #087990;
-    }
-
-    html[data-bs-theme="dark"] .success,
-    html[data-bs-theme="dark"] .log-success {
-      color: #75b798;
-    }
-
-    html[data-bs-theme="dark"] .error,
-    html[data-bs-theme="dark"] .log-error {
-      color: #ea868f;
-    }
-
-    html[data-bs-theme="dark"] .warning,
-    html[data-bs-theme="dark"] .log-warning {
-      color: #ffda6a;
-    }
-
-    html[data-bs-theme="dark"] .info,
-    html[data-bs-theme="dark"] .log-info {
-      color: #6edff6;
-    }
-
-    /* 日志不同类型的颜色 */
-    .log-info {
-      color: #084298;
-    }
-
-    .log-warning {
-      color: #997404;
-    }
-
-    .log-error {
-      color: #dc3545;
-    }
-
+    .success,
     .log-success {
-      color: #198754;
+      color: var(--mls-success);
     }
 
-    /* 匹配规则详情的样式 */
+    .error,
+    .log-error {
+      color: var(--mls-danger);
+    }
+
+    .warning,
+    .log-warning {
+      color: var(--mls-warning);
+    }
+
+    .info,
+    .log-info {
+      color: var(--mls-info);
+    }
+
+    .success,
+    .error,
+    .warning {
+      font-weight: 600;
+    }
+
     .matched-rule-detail {
-      margin-left: 15px;
-      border-left: 2px solid #007bff;
+      margin-left: 14px;
+      border-left: 2px solid var(--mls-accent);
       padding-left: 10px;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
+    }
+
+    .domain-rules-table {
+      table-layout: fixed;
+    }
+
+    .domain-rules-table th {
+      width: 50%;
+    }
+
+    .rule-separator {
+      border-top: 1px solid var(--mls-border);
+      margin: 0.5rem 0;
+      padding: 0;
+      height: 1px;
+      list-style: none;
     }
 
     .reset-btn-corner {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 12px;
+      right: 12px;
     }
 
-    /* 缓存管理样式 */
+    /* 为右上角重置按钮预留空间，避免窄屏或英文标题重叠 */
+    #customLangTitle {
+      padding-right: 44px;
+    }
+
     .cache-stats-container {
-      background-color: var(--bs-body-bg);
-      border: 1px solid var(--bs-border-color);
-      border-radius: 5px;
-      padding: 10px;
+      background-color: var(--mls-surface);
+      border: 1px solid var(--mls-border);
+      border-radius: var(--mls-radius-sm);
+      padding: 10px 12px;
       font-size: 0.9em;
+      font-variant-numeric: tabular-nums;
     }
 
     .cache-stat-item {
-      padding: 5px 0;
+      padding: 4px 0;
     }
 
     .cache-size {
-      font-weight: bold;
-      color: #0d6efd;
+      font-weight: 700;
+      color: var(--mls-accent);
     }
 
     .cache-hit-rate {
-      font-size: 0.8em;
-      color: #6c757d;
+      font-size: 0.82em;
+      color: var(--bs-secondary-color);
     }
 
-
-    /* 缓存操作结果显示框样式 */
     #cacheOperationResult {
-      margin-top: 10px;
       padding: 8px 10px;
-      /* 减少上下内边距 */
-      border-radius: 5px;
-      background-color: var(--bs-body-bg);
-      border: 1px solid var(--bs-border-color);
       min-height: 2.2em;
-      /* 最小高度约一行 */
-      max-height: 400px;
-      /* 增加最大高度限制 */
-      overflow-y: auto;
-      /* 内容超出时显示滚动条 */
-      word-break: break-word;
-      white-space: normal;
-      /* 允许正常换行 */
-      font-size: 0.9em;
       line-height: 1.4;
     }
   </style>
