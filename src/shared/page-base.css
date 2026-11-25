@@ -32,7 +32,6 @@
 	--mls-radius-md: 10px;
 	--mls-focus-outline: 2px solid var(--mls-accent);
 	--mls-scrollbar-thumb: rgba(100, 116, 139, 0.38);
-	--mls-scrollbar-thumb-hover: rgba(100, 116, 139, 0.62);
 }
 
 html[data-bs-theme="dark"] {
@@ -51,7 +50,6 @@ html[data-bs-theme="dark"] {
 	--mls-info-subtle: rgba(56, 189, 248, 0.12);
 	--mls-info-border: rgba(56, 189, 248, 0.32);
 	--mls-scrollbar-thumb: rgba(148, 163, 184, 0.32);
-	--mls-scrollbar-thumb-hover: rgba(148, 163, 184, 0.56);
 	--bs-secondary-color: #9ca3af;
 }
 
@@ -76,6 +74,13 @@ html[data-bs-theme="dark"] .btn-outline-secondary:disabled {
 html[data-bs-theme="dark"] .btn-outline-danger {
 	color: #f87171;
 	border-color: rgba(248, 113, 113, 0.6);
+}
+
+html[data-bs-theme="dark"] .btn-outline-danger:hover:not(:disabled),
+html[data-bs-theme="dark"] .btn-outline-danger:focus-visible:not(:disabled) {
+	color: #ffffff;
+	background-color: #dc2626;
+	border-color: #dc2626;
 }
 
 html[data-bs-theme="dark"] .btn-outline-danger:disabled {
@@ -134,7 +139,6 @@ summary:focus-visible,
 /* 代码、请求头与数值读数专用 MapleMonoNL 等宽字体 + 等宽数字对齐 */
 pre,
 code,
-.font-monospace,
 .version-badge,
 .cache-size,
 .cache-hit-rate,
@@ -144,7 +148,13 @@ code,
 	font-variant-numeric: tabular-nums;
 }
 
-/* 统一轻量滚动条样式，随明暗主题自动适配 */
+/* 覆盖 Bootstrap 带 !important 的 .font-monospace，确保使用共享等宽字体令牌 */
+.font-monospace {
+	font-family: var(--mls-font-mono) !important;
+	font-variant-numeric: tabular-nums;
+}
+
+/* 统一标准轻量滚动条样式（Chrome 121+ 原生支持，随明暗主题自动适配） */
 pre,
 .debug-result,
 .ai-chat-messages,
@@ -152,40 +162,6 @@ pre,
 #headerCheckContent {
 	scrollbar-width: thin;
 	scrollbar-color: var(--mls-scrollbar-thumb) transparent;
-}
-
-pre::-webkit-scrollbar,
-.debug-result::-webkit-scrollbar,
-.ai-chat-messages::-webkit-scrollbar,
-#languageSelect::-webkit-scrollbar,
-#headerCheckContent::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
-}
-
-pre::-webkit-scrollbar-track,
-.debug-result::-webkit-scrollbar-track,
-.ai-chat-messages::-webkit-scrollbar-track,
-#languageSelect::-webkit-scrollbar-track,
-#headerCheckContent::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-pre::-webkit-scrollbar-thumb,
-.debug-result::-webkit-scrollbar-thumb,
-.ai-chat-messages::-webkit-scrollbar-thumb,
-#languageSelect::-webkit-scrollbar-thumb,
-#headerCheckContent::-webkit-scrollbar-thumb {
-	background: var(--mls-scrollbar-thumb);
-	border-radius: 999px;
-}
-
-pre::-webkit-scrollbar-thumb:hover,
-.debug-result::-webkit-scrollbar-thumb:hover,
-.ai-chat-messages::-webkit-scrollbar-thumb:hover,
-#languageSelect::-webkit-scrollbar-thumb:hover,
-#headerCheckContent::-webkit-scrollbar-thumb:hover {
-	background: var(--mls-scrollbar-thumb-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {

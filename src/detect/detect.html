@@ -44,6 +44,11 @@
       color: #ffffff;
     }
 
+    html[data-bs-theme="dark"] .list-group-item-success .badge,
+    html[data-bs-theme="dark"] .list-group-item-danger .badge {
+      color: #0f172a;
+    }
+
     .ai-diagnosis-card {
       border: 1px solid var(--mls-accent-border);
     }
@@ -129,7 +134,7 @@
 
     .ai-chat-message pre,
     .ai-chat-message code {
-      font-family: "MapleMonoNL", monospace;
+      font-family: var(--mls-font-mono);
     }
 
     .ai-chat-message-content.is-markdown pre {

@@ -76,7 +76,7 @@
 	transform: scale(0.95);
 }
 
-.copy.is-copied {
+.copy.is-copied:not([disabled]) {
 	background-color: var(--mls-success-subtle, rgba(21, 128, 61, 0.1));
 	border-color: var(--mls-success-border, rgba(21, 128, 61, 0.3));
 }
@@ -91,7 +91,7 @@
 	color: var(--button-hover-text-color);
 }
 
-.copy.is-copied svg {
+.copy.is-copied:not([disabled]) svg {
 	color: var(--mls-success, #15803d);
 }
 
