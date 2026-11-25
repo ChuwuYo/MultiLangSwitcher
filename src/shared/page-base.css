@@ -1,14 +1,176 @@
-/* 页面公共基础样式：字体定义与应用（三页共享，单一来源） */
+/* 页面公共基础样式：字体定义与三页共享 Design Tokens（单一来源） */
 @font-face {
 	font-family: "MapleMonoNL";
 	src: url("../../assets/fonts/MapleMonoNL-Regular.woff2") format("woff2");
+	font-display: swap;
 }
 
-/* rem 基于根元素：在 html 上缩放才能同时缩小 bootstrap 的 rem 组件尺寸 */
+:root {
+	--mls-accent: #2563eb;
+	--mls-accent-hover: #1d4ed8;
+	--mls-accent-subtle: rgba(37, 99, 235, 0.1);
+	--mls-accent-border: rgba(37, 99, 235, 0.28);
+	--mls-surface: var(--bs-body-bg, #ffffff);
+	--mls-surface-subtle: var(--bs-tertiary-bg, #f8f9fa);
+	--mls-border: var(--bs-border-color, #dee2e6);
+	--mls-border-subtle: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.12));
+	--mls-success: #15803d;
+	--mls-success-subtle: rgba(21, 128, 61, 0.1);
+	--mls-success-border: rgba(21, 128, 61, 0.3);
+	--mls-warning: #9a6700;
+	--mls-warning-subtle: rgba(212, 167, 44, 0.14);
+	--mls-warning-border: rgba(212, 167, 44, 0.4);
+	--mls-danger: #cf222e;
+	--mls-info: #0969da;
+	--mls-info-subtle: rgba(9, 105, 218, 0.1);
+	--mls-info-border: rgba(9, 105, 218, 0.28);
+	--mls-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+		"Microsoft YaHei", sans-serif;
+	--mls-font-mono: "MapleMonoNL", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	--mls-radius-xs: 4px;
+	--mls-radius-sm: 6px;
+	--mls-radius-md: 10px;
+	--mls-focus-outline: 2px solid var(--mls-accent);
+	--mls-scrollbar-thumb: rgba(100, 116, 139, 0.38);
+}
+
+html[data-bs-theme="dark"] {
+	--mls-accent: #60a5fa;
+	--mls-accent-hover: #93c5fd;
+	--mls-accent-subtle: rgba(96, 165, 250, 0.14);
+	--mls-accent-border: rgba(96, 165, 250, 0.32);
+	--mls-success: #4ade80;
+	--mls-success-subtle: rgba(74, 222, 128, 0.12);
+	--mls-success-border: rgba(74, 222, 128, 0.32);
+	--mls-warning: #fbbf24;
+	--mls-warning-subtle: rgba(251, 191, 36, 0.12);
+	--mls-warning-border: rgba(251, 191, 36, 0.34);
+	--mls-danger: #f87171;
+	--mls-info: #38bdf8;
+	--mls-info-subtle: rgba(56, 189, 248, 0.12);
+	--mls-info-border: rgba(56, 189, 248, 0.32);
+	--mls-scrollbar-thumb: rgba(148, 163, 184, 0.32);
+	--bs-secondary-color: #9ca3af;
+}
+
+/* 暗色模式下修正 Bootstrap 描边按钮与禁用态偏暗、灰底难辨认的问题 */
+html[data-bs-theme="dark"] .btn-outline-secondary {
+	color: #e2e8f0;
+	border-color: #4b5563;
+}
+
+html[data-bs-theme="dark"] .btn-outline-secondary:hover:not(:disabled) {
+	color: #ffffff;
+	background-color: rgba(255, 255, 255, 0.08);
+	border-color: #6b7280;
+}
+
+html[data-bs-theme="dark"] .btn-outline-secondary:disabled {
+	color: #9ca3af;
+	border-color: #374151;
+	opacity: 0.75;
+}
+
+html[data-bs-theme="dark"] .btn-outline-danger {
+	color: #f87171;
+	border-color: rgba(248, 113, 113, 0.6);
+}
+
+html[data-bs-theme="dark"] .btn-outline-danger:hover:not(:disabled),
+html[data-bs-theme="dark"] .btn-outline-danger:focus-visible:not(:disabled) {
+	color: #ffffff;
+	background-color: #dc2626;
+	border-color: #dc2626;
+}
+
+html[data-bs-theme="dark"] .btn-outline-danger:disabled {
+	color: #fca5a5;
+	border-color: rgba(248, 113, 113, 0.35);
+	opacity: 0.72;
+}
+
+html[data-bs-theme="dark"] .text-muted {
+	color: #9ca3af !important;
+}
+
+html[data-bs-theme="dark"] .text-success {
+	color: var(--mls-success) !important;
+}
+
+html[data-bs-theme="dark"] .text-info {
+	color: var(--mls-info) !important;
+}
+
+html[data-bs-theme="dark"] .text-warning {
+	color: var(--mls-warning) !important;
+}
+
+html[data-bs-theme="dark"] .text-danger {
+	color: var(--mls-danger) !important;
+}
+
+/* 独立标签页（Debug / Detect）采用 0.9375rem（默认 15px），兼顾信息密度与长文可读性；
+ * 380px 弹窗在 popup.html 中单独收紧为 0.875rem（14px） */
 html {
-	font-size: 0.875rem;
+	font-size: 0.9375rem;
+	color-scheme: light dark;
 }
 
 body {
-	font-family: "MapleMonoNL", sans-serif;
+	font-family: var(--mls-font-sans);
+	-webkit-font-smoothing: antialiased;
+}
+
+#pageHeading {
+	padding-right: 44px;
+}
+
+/* 统一键盘焦点环，保证三页可访问性一致 */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible {
+	outline: var(--mls-focus-outline);
+	outline-offset: 2px;
+}
+
+/* 代码、请求头与数值读数专用 MapleMonoNL 等宽字体 + 等宽数字对齐 */
+pre,
+code,
+.version-badge,
+.cache-size,
+.cache-hit-rate,
+#currentLanguage,
+#headerCheckContent {
+	font-family: var(--mls-font-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+/* 覆盖 Bootstrap 带 !important 的 .font-monospace，确保使用共享等宽字体令牌 */
+.font-monospace {
+	font-family: var(--mls-font-mono) !important;
+	font-variant-numeric: tabular-nums;
+}
+
+/* 统一标准轻量滚动条样式（Chrome 121+ 原生支持，随明暗主题自动适配） */
+pre,
+.debug-result,
+.ai-chat-messages,
+#languageSelect,
+#headerCheckContent {
+	scrollbar-width: thin;
+	scrollbar-color: var(--mls-scrollbar-thumb) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

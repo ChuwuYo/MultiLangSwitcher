@@ -1,35 +1,32 @@
 .ai-chat-message-copy {
 	position: absolute;
-	top: 6px;
-	right: 6px;
+	top: 8px;
+	right: 8px;
 	opacity: 0.72;
 	z-index: 2;
+	transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ai-chat-message-copy:hover,
+.ai-chat-message-copy:focus-visible,
+.ai-chat-message-copy.is-copied {
+	opacity: 1;
 }
 
 .copy {
-	--button-bg: rgba(53, 52, 52, 0.38);
-	--button-hover-bg: rgba(70, 70, 70, 0.62);
-	--button-text-color: rgba(255, 255, 255, 0.86);
-	--button-hover-text-color: #8bb9fe;
-	--button-border-radius: 7px;
-	--button-diameter: 24px;
-	--button-outline-width: 1px;
-	--button-outline-color: rgba(141, 141, 141, 0.7);
-	--tooltip-bg: #f4f3f3;
-	--toolptip-border-radius: 4px;
-	--tooltip-font-family: Menlo, Roboto Mono, monospace;
-	--tooltip-font-size: 11px;
-	--tootip-text-color: rgb(50, 50, 50);
-	--tooltip-padding-x: 6px;
-	--tooltip-padding-y: 6px;
-	--tooltip-offset: 8px;
+	--button-bg: rgba(15, 23, 42, 0.08);
+	--button-hover-bg: rgba(15, 23, 42, 0.16);
+	--button-text-color: var(--bs-body-color);
+	--button-hover-text-color: var(--mls-accent, #2563eb);
+	--button-border-radius: var(--mls-radius-sm, 6px);
+	--button-diameter: 26px;
 	box-sizing: border-box;
 	width: var(--button-diameter);
 	height: var(--button-diameter);
 	border-radius: var(--button-border-radius);
 	background-color: var(--button-bg);
 	color: var(--button-text-color);
-	border: none;
+	border: 1px solid var(--mls-border-subtle, transparent);
 	cursor: pointer;
 	outline: none;
 	backdrop-filter: blur(4px);
@@ -37,7 +34,7 @@
 
 .copy[disabled] {
 	cursor: default;
-	opacity: 0.55;
+	opacity: 0.45;
 }
 
 .copy .tooltip {
@@ -71,27 +68,34 @@
 }
 
 .copy:hover:not([disabled]),
-.copy:focus-visible:not([disabled]),
-.copy.is-copied {
+.copy:focus-visible:not([disabled]) {
 	background-color: var(--button-hover-bg);
 }
 
 .copy:active:not([disabled]) {
-	outline: var(--button-outline-width) solid var(--button-outline-color);
+	transform: scale(0.95);
+}
+
+.copy.is-copied:not([disabled]) {
+	background-color: var(--mls-success-subtle, rgba(21, 128, 61, 0.1));
+	border-color: var(--mls-success-border, rgba(21, 128, 61, 0.3));
+}
+
+.copy:focus-visible:not([disabled]) {
+	outline: var(--mls-focus-outline, 2px solid var(--mls-accent, #2563eb));
+	outline-offset: 2px;
 }
 
 .copy:hover:not([disabled]) svg,
-.copy:focus-visible:not([disabled]) svg,
-.copy.is-copied svg {
+.copy:focus-visible:not([disabled]) svg {
 	color: var(--button-hover-text-color);
 }
 
+.copy.is-copied:not([disabled]) svg {
+	color: var(--mls-success, #15803d);
+}
+
 html[data-bs-theme="dark"] .copy {
-	--button-bg: rgba(32, 37, 43, 0.52);
-	--button-hover-bg: rgba(42, 49, 57, 0.7);
-	--button-text-color: rgba(233, 239, 245, 0.9);
-	--button-hover-text-color: #93c5fd;
-	--button-outline-color: rgba(99, 112, 126, 0.72);
-	--tooltip-bg: #f3f4f6;
-	--tootip-text-color: rgb(31, 41, 55);
+	--button-bg: rgba(255, 255, 255, 0.08);
+	--button-hover-bg: rgba(255, 255, 255, 0.16);
 }

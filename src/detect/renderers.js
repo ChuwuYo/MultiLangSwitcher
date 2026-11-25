@@ -156,7 +156,7 @@ export const renderCanvasFingerprintInfo = (canvasFingerprintInfo) => {
 	fragment.appendChild(hashTitleP);
 
 	const hashValP = document.createElement("p");
-	hashValP.className = "text-dark fw-bold small";
+	hashValP.className = "text-body fw-bold small font-monospace text-break";
 	hashValP.textContent = canvasFingerprintInfo.hash;
 	fragment.appendChild(hashValP);
 
@@ -199,7 +199,7 @@ export const renderWebglFingerprintInfo = (webglFingerprintInfo) => {
 		fragment.appendChild(titleP);
 
 		const valP = document.createElement("p");
-		valP.className = `text-dark small${isBold ? " fw-bold" : ""}`;
+		valP.className = `text-body small font-monospace text-break${isBold ? " fw-bold" : ""}`;
 		valP.textContent = value;
 		fragment.appendChild(valP);
 	};
@@ -248,7 +248,7 @@ export const renderAudioFingerprintInfo = (audioFingerprintInfo) => {
 	fragment.appendChild(hashTitleP);
 
 	const hashValP = document.createElement("p");
-	hashValP.className = "text-dark fw-bold small";
+	hashValP.className = "text-body fw-bold small font-monospace text-break";
 	hashValP.textContent = audioFingerprintInfo.hash;
 	fragment.appendChild(hashValP);
 
@@ -283,7 +283,7 @@ export const renderIntlInfo = (intlInfo) => {
 	fragment.appendChild(dtTitleP);
 
 	const dtValP = document.createElement("p");
-	dtValP.className = "text-secondary fw-bold";
+	dtValP.className = "text-body fw-bold";
 	dtValP.textContent = intlInfo.dateTimeLocale;
 	fragment.appendChild(dtValP);
 
@@ -295,7 +295,7 @@ export const renderIntlInfo = (intlInfo) => {
 	fragment.appendChild(nfTitleP);
 
 	const nfValP = document.createElement("p");
-	nfValP.className = "text-secondary fw-bold";
+	nfValP.className = "text-body fw-bold";
 	nfValP.textContent = intlInfo.numberFormatLocale;
 	fragment.appendChild(nfValP);
 
@@ -382,7 +382,7 @@ export const renderFingerprintInfo = (fingerprintInfo, ipTimezoneInfo = null) =>
 		fragment.appendChild(titleP);
 
 		const valP = document.createElement("p");
-		valP.className = `text-success${isBold ? " fw-bold" : ""}${isSmall ? " small" : ""}`;
+		valP.className = `text-success${isBold ? " fw-bold" : ""}${isSmall ? " small font-monospace text-break" : ""}`;
 		valP.textContent = value;
 		fragment.appendChild(valP);
 	};
@@ -536,7 +536,7 @@ export const renderLocaleFormattingInfo = (info) => {
 		fragment.appendChild(titleP);
 
 		const valP = document.createElement("p");
-		valP.className = `text-success small${isBold ? " fw-bold" : ""}`;
+		valP.className = `text-success${isBold ? " fw-bold" : ""}`;
 		valP.textContent = value;
 		fragment.appendChild(valP);
 	};

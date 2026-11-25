@@ -180,8 +180,7 @@ const showUpdateNotification = (updateInfo) => {
 			const comparison = document.createElement("div");
 			comparison.className = "version-comparison";
 			const versionLine = document.createElement("div");
-			versionLine.className = "version-line";
-			versionLine.style.justifyContent = "center";
+			versionLine.className = "version-line justify-content-center";
 			const badge = document.createElement("span");
 			badge.className = "version-badge";
 			badge.textContent = `v${updateInfo.currentVersion}`;
@@ -302,8 +301,7 @@ const showUpdateNotification = (updateInfo) => {
 			const comparison = document.createElement("div");
 			comparison.className = "version-comparison";
 			const versionLine = document.createElement("div");
-			versionLine.className = "version-line";
-			versionLine.style.justifyContent = "center";
+			versionLine.className = "version-line justify-content-center";
 			const badge = document.createElement("span");
 			badge.className = "version-badge";
 			badge.textContent = `v${updateInfo.currentVersion}`;

@@ -14,24 +14,31 @@
   <link href="../shared/toggle.css" rel="stylesheet">
   <script src="../shared/theme-init.js"></script>
   <style>
-    /* 主体布局样式 */
-    body {
-      width: 380px;
-      padding: 10px;
+    html {
+      font-size: 0.875rem;
     }
 
-    /* 头部区域样式 */
+    body {
+      width: 380px;
+      padding: 14px 12px 12px;
+    }
+
     .header {
-      margin-bottom: 15px;
+      margin-bottom: 14px;
+      padding: 0 32px;
       text-align: center;
     }
 
-    /* 语言选择区域样式 */
-    .language-select {
-      margin-bottom: 15px;
+    .header h4 {
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin-bottom: 2px;
     }
 
-    /* 状态行：状态卡 + 独立重置按钮 */
+    .language-select {
+      margin-bottom: 12px;
+    }
+
     .status-row {
       display: flex;
       align-items: stretch;
@@ -39,296 +46,222 @@
       margin-bottom: 12px;
     }
 
-    /* 状态卡：当前语言醒目展示 */
     .status-card {
       flex: 1;
       padding: 10px 12px;
-      border: 1px solid var(--bs-border-color);
-      border-radius: 8px;
-      background-color: var(--bs-tertiary-bg);
+      border: 1px solid var(--mls-border);
+      border-radius: var(--mls-radius-md);
+      background-color: var(--mls-surface-subtle);
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    /* 分区节奏 */
     .section {
       margin-bottom: 12px;
     }
 
-    /* 自动切换行：标签与开关同行 */
     .auto-switch-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
-      padding: 4px 2px;
+      padding: 6px 2px;
     }
 
-    /* 页脚：次级操作区 */
+    .auto-switch-label {
+      font-size: 0.92em;
+      cursor: pointer;
+      user-select: none;
+    }
+
     .popup-footer {
       margin-top: 12px;
       padding-top: 10px;
-      border-top: 1px solid var(--bs-border-color-translucent);
+      border-top: 1px solid var(--mls-border-subtle);
     }
 
-    /* 当前语言代码高亮样式 */
+    #statusText {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* 当前语言代码徽章：作为弹窗唯一视觉焦点，保持克制的仪器读数感 */
     #currentLanguage {
-      background-color: #f4fccc;
-      color: #0d6efd;
-      padding: 2px 6px;
-      border-radius: 4px;
+      display: inline-block;
+      background-color: var(--mls-accent-subtle);
+      color: var(--mls-accent);
+      border: 1px solid var(--mls-accent-border);
+      padding: 2px 8px;
+      border-radius: var(--mls-radius-sm);
+      font-family: var(--mls-font-mono);
+      font-variant-numeric: tabular-nums;
       font-weight: 600;
     }
 
-    /* 暗色主题下的语言代码高亮 */
-    html[data-bs-theme="dark"] #currentLanguage {
-      background-color: #373c42;
-      color: #86b7fe;
-    }
-
-    /* 语言选择框的自定义滚动条样式 */
     #languageSelect {
       overflow-y: auto;
     }
 
-    /* Webkit 浏览器滚动条样式 (Chrome, Safari, Edge) */
-    #languageSelect::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #languageSelect::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    #languageSelect::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 10px;
-    }
-
-    #languageSelect::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    /* Firefox 浏览器滚动条样式 */
-    #languageSelect {
-      scrollbar-width: thin;
-      /* "auto" 或 "thin" */
-      scrollbar-color: #888 #f1f1f1;
-      /* 滑块和轨道颜色 */
-    }
-
-    /* 切换开关CSS样式 */
+    /* 切换开关 */
     .toggle-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       position: relative;
-      border-radius: .5em;
-      padding: .125em;
-      background-image: linear-gradient(to bottom, #d5d5d5, #e8e8e8);
-      box-shadow: 0 1px 1px rgb(255 255 255 / .6);
-      font-size: 1.5em;
-      margin-top: 15px;
+      display: inline-flex;
+      flex-shrink: 0;
     }
 
-    /* 切换开关复选框样式 */
     .toggle-checkbox {
       appearance: none;
       position: absolute;
+      inset: 0;
       z-index: 1;
-      border-radius: inherit;
-      width: 100%;
-      height: 100%;
-      font: inherit;
+      margin: 0;
       opacity: 0;
       cursor: pointer;
     }
 
-    /* 切换开关容器样式 */
     .toggle-container {
-      display: flex;
-      align-items: center;
       position: relative;
-      border-radius: .375em;
-      width: 3em;
-      height: 1.5em;
-      background-color: #e8e8e8;
-      box-shadow: inset 0 0 .0625em .125em rgb(255 255 255 / .2), inset 0 .0625em .125em rgb(0 0 0 / .4);
-      transition: background-color .4s linear;
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background-color: rgba(120, 120, 128, 0.24);
+      transition: background-color 0.24s ease;
     }
 
-    /* 切换开关选中状态样式 */
-    .toggle-checkbox:checked+.toggle-container {
-      background-color: #f3b519;
+    html[data-bs-theme="dark"] .toggle-container {
+      background-color: rgba(120, 120, 128, 0.36);
     }
 
-    /* 切换开关按钮样式 */
     .toggle-button {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       position: absolute;
-      left: .0625em;
-      border-radius: .3125em;
-      width: 1.375em;
-      height: 1.375em;
-      background-color: #e8e8e8;
-      box-shadow: inset 0 -.0625em .0625em .125em rgb(0 0 0 / .1), inset 0 -.125em .0625em rgb(0 0 0 / .2), inset 0 .1875em .0625em rgb(255 255 255 / .3), 0 .125em .125em rgb(0 0 0 / .5);
-      transition: left .4s;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0.5px 1px rgba(0, 0, 0, 0.12);
+      transition:
+        transform 0.26s cubic-bezier(0.32, 1.25, 0.5, 1),
+        width 0.16s ease;
     }
 
-    /* 切换开关键盘焦点可见环 */
-    .toggle-checkbox:focus-visible+.toggle-container {
-      outline: 2px solid #0d6efd;
+    .toggle-checkbox:active:not(:disabled) + .toggle-container > .toggle-button {
+      width: 28px;
+    }
+
+    .toggle-checkbox:checked + .toggle-container {
+      background-color: #34c759;
+    }
+
+    html[data-bs-theme="dark"] .toggle-checkbox:checked + .toggle-container {
+      background-color: #30d158;
+    }
+
+    .toggle-checkbox:checked + .toggle-container > .toggle-button {
+      transform: translateX(20px);
+    }
+
+    .toggle-checkbox:checked:active:not(:disabled) + .toggle-container > .toggle-button {
+      transform: translateX(14px);
+    }
+
+    .toggle-checkbox:focus-visible + .toggle-container {
+      outline: var(--mls-focus-outline);
       outline-offset: 2px;
     }
 
-    /* 切换开关按钮选中位置 */
-    .toggle-checkbox:checked+.toggle-container>.toggle-button {
-      left: 1.5625em;
+    .toggle-checkbox:disabled + .toggle-container {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
-    /* 切换开关按钮圆点容器 */
-    .toggle-button-circles-container {
-      display: grid;
-      grid-template-columns: repeat(3, min-content);
-      gap: .125em;
-      position: absolute;
-      margin: 0 auto;
-    }
-
-    /* 切换开关按钮圆点样式 */
-    .toggle-button-circle {
-      border-radius: 50%;
-      width: .125em;
-      height: .125em;
-      background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
-    }
-
-    /* 重置按钮：状态卡右侧独立正方形按钮（边长跟卡片行高一致，icon 居中） */
     #resetBtn {
       position: static;
       flex-shrink: 0;
       width: 44px;
       height: 44px;
       align-self: center;
-      border-radius: 8px;
+      border-radius: var(--mls-radius-md);
     }
 
-    /* 更新检查按钮基础样式 - 独特的淡紫色调 */
+    /* 暗色模式下提升快捷工具栏描边按钮可读性 */
+    html[data-bs-theme="dark"] #checkHeaderBtn {
+      color: var(--mls-accent);
+      border-color: var(--mls-accent-border);
+    }
+
+    html[data-bs-theme="dark"] #checkHeaderBtn:hover {
+      background-color: var(--mls-accent-subtle);
+      color: var(--mls-accent-hover);
+    }
+
+    html[data-bs-theme="dark"] #detectionPageLink,
+    html[data-bs-theme="dark"] #debugPageLink {
+      color: var(--bs-body-color);
+      border-color: var(--mls-border);
+    }
+
+    /* 更新检查按钮：回归中性克制的页脚幽灵按钮 */
     .update-check-button {
       position: relative;
-      font-size: 0.8em;
-      border: 1px solid #e6e3f0;
-      background-color: #f8f6fc;
-      color: #7c6f9a;
-      transition: all 0.2s ease;
-      border-radius: 4px;
+      font-size: 0.85em;
+      border: 1px solid var(--mls-border);
+      background-color: var(--mls-surface-subtle);
+      color: var(--bs-secondary-color);
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      border-radius: var(--mls-radius-sm);
     }
 
-    /* 更新检查按钮旋转器样式 */
     .update-check-button .spinner-border {
       width: 0.8rem;
       height: 0.8rem;
     }
 
-    /* 更新检查按钮悬停效果 */
-    .update-check-button:hover {
-      border-color: #d4c8e8;
-      background-color: #f0ebf8;
-      color: #6b5b85;
-      transform: translateY(-1px);
+    .update-check-button:hover:not(:disabled) {
+      border-color: var(--mls-accent-border);
+      background-color: var(--mls-accent-subtle);
+      color: var(--mls-accent);
     }
 
-    /* 更新检查按钮焦点状态 */
-    .update-check-button:focus {
-      box-shadow: 0 0 0 2px rgba(124, 111, 154, 0.25);
-      outline: none;
-      border-color: #d4c8e8;
+    .update-check-button:focus-visible {
+      outline: 2px solid var(--mls-accent);
+      outline-offset: 2px;
     }
 
-    /* 更新检查按钮激活状态 */
-    .update-check-button:active {
-      transform: translateY(0);
-      background-color: #e8ddf4;
-      border-color: #c7b8dd;
-    }
-
-    /* 暗色主题下的更新检查按钮 */
-    html[data-bs-theme="dark"] .update-check-button {
-      border-color: #4a4458;
-      background-color: #2d2838;
-      color: #b8a8d1;
-    }
-
-    html[data-bs-theme="dark"] .update-check-button:hover {
-      border-color: #5d5470;
-      background-color: #3a3447;
-      color: #c9bce0;
-    }
-
-    html[data-bs-theme="dark"] .update-check-button:focus {
-      box-shadow: 0 0 0 2px rgba(184, 168, 209, 0.25);
-      border-color: #5d5470;
-    }
-
-    html[data-bs-theme="dark"] .update-check-button:active {
-      background-color: #453f56;
-      border-color: #6b6080;
-    }
-
-    /* 更新通知样式 */
+    /* 更新通知语义配色（统一令牌 + 区分 success 绿 / info 蓝 / warning 琥珀） */
     .update-notification {
       margin-top: 10px;
       padding: 12px;
-      border-radius: 6px;
+      border-radius: var(--mls-radius-sm);
       font-size: 0.9em;
       border: 1px solid;
+      animation: slideIn 0.25s ease-out;
     }
 
-    /* 成功状态更新通知样式 */
     .update-notification.success {
-      background-color: #d1edff;
-      border-color: #0d6efd;
-      color: #0d6efd;
+      background-color: var(--mls-success-subtle);
+      border-color: var(--mls-success-border);
+      color: var(--mls-success);
     }
 
-    /* 信息状态更新通知样式 */
     .update-notification.info {
-      background-color: #e2f3ff;
-      border-color: #0dcaf0;
-      color: #055160;
-    }
-
-    /* 暗色主题下的更新通知样式 */
-    html[data-bs-theme="dark"] .update-notification.success {
-      background-color: #1e3a5f;
-      border-color: #86b7fe;
-      color: #86b7fe;
+      background-color: var(--mls-info-subtle);
+      border-color: var(--mls-info-border);
+      color: var(--mls-info);
     }
 
     .update-notification.warning {
-      background-color: #fff3cd;
-      border-color: #ffca2c;
-      color: #664d03;
+      background-color: var(--mls-warning-subtle);
+      border-color: var(--mls-warning-border);
+      color: var(--mls-warning);
     }
 
-    html[data-bs-theme="dark"] .update-notification.info {
-      background-color: #1f4a54;
-      border-color: #6edff6;
-      color: #6edff6;
-    }
-
-    html[data-bs-theme="dark"] .update-notification.warning {
-      background-color: #4d3b0b;
-      border-color: #ffda6a;
-      color: #ffda6a;
-    }
-
-    /* 更新操作按钮容器样式 */
     .update-actions {
       margin-top: 10px;
       display: flex;
@@ -336,113 +269,77 @@
       justify-content: center;
     }
 
-    /* 更新操作按钮样式 */
     .update-actions .btn {
-      font-size: 0.8em;
-      padding: 6px 12px;
-      border-radius: 4px;
+      font-size: 0.85em;
+      padding: 5px 12px;
+      border-radius: var(--mls-radius-sm);
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
 
-    /* 更新版本信息样式 */
     .update-version-info {
       margin: 8px 0;
       font-size: 0.85em;
       line-height: 1.4;
     }
 
-    /* 更新版本信息标题样式 */
     .update-version-info strong {
       display: block;
       margin-bottom: 6px;
       font-size: 1em;
     }
 
-    /* 版本对比容器样式 */
     .version-comparison {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
     }
 
-    /* 版本对比行样式 */
     .version-line {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* 版本标签样式 */
     .version-badge {
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: var(--mls-surface-subtle);
+      border: 1px solid var(--mls-border-subtle);
       padding: 2px 6px;
-      border-radius: 3px;
-      font-family: 'MapleMonoNL', monospace;
+      border-radius: 4px;
+      font-family: var(--mls-font-mono);
       font-size: 0.9em;
     }
 
-    /* 通用滑入动画效果 - 可复用的动画类 */
-    .slide-in-animation {
-      animation: slideIn 0.3s ease-out;
-    }
-
-    /* 更新通知动画效果 - 复用通用动画 */
-    .update-notification {
-      animation: slideIn 0.3s ease-out;
-    }
-
-    /* 快速检查结果动画效果 - 复用通用动画 */
     .header-check-result {
-      animation: slideIn 0.3s ease-out;
+      animation: slideIn 0.25s ease-out;
     }
 
-    /* 滑入动画关键帧 */
+    #headerCheckContent {
+      font-size: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
     @keyframes slideIn {
       from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-6px);
       }
-
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
 
-    /* 更新检查加载旋转器样式 */
-    .update-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top: 2px solid currentColor;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    /* 旋转动画关键帧 */
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* 链接文本处理 - 防止长链接超出popup边界 */
     #updateErrorMessage,
     #updateNotificationContent,
     #headerCheckContent {
-      word-break: break-all;
-      overflow-wrap: break-word;
+      overflow-wrap: anywhere;
       max-width: 100%;
     }
 
-    /* 链接样式优化 */
     #updateErrorMessage a,
     #updateNotificationContent a,
     #headerCheckContent a {
@@ -451,34 +348,10 @@
       max-width: 100%;
     }
 
-    /* 错误消息区域的特殊处理 */
-    #updateErrorAlert {
-      max-width: 100%;
-      overflow-wrap: break-word;
-    }
-
-    /* 更新通知区域的特殊处理 */
+    #updateErrorAlert,
     #updateNotification .alert {
       max-width: 100%;
       overflow-wrap: break-word;
-    }
-
-    /* 自动切换标签样式 */
-    .auto-switch-label {
-      font-size: 0.8em;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    /* 自动切换外层容器 */
-    .toggle-wrapper-inline {
-      font-size: 1em;
-      width: fit-content;
-    }
-
-    /* 行内布局时清除开关自身的上边距与自动居中 */
-    .auto-switch-row .toggle-wrapper {
-      margin-top: 0;
     }
   </style>
 </head>
@@ -521,29 +394,13 @@
       <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
     </div>
 
-    <!-- 自动切换：标签与开关同一行 -->
+    <!-- 自动切换：标签与精密机械开关同一行 -->
     <div class="auto-switch-row">
       <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label mb-0" data-i18n="auto_switch"></label>
-      <div class="toggle-wrapper toggle-wrapper-inline">
+      <div class="toggle-wrapper">
         <input class="toggle-checkbox" type="checkbox" role="switch" id="autoSwitchToggle">
         <div class="toggle-container" aria-hidden="true">
-          <div class="toggle-button">
-            <div class="toggle-button-circles-container">
-              <!-- 切换按钮装饰圆点 -->
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-              <div class="toggle-button-circle"></div>
-            </div>
-          </div>
+          <div class="toggle-button"></div>
         </div>
       </div>
     </div>
@@ -558,9 +415,9 @@
     <!-- 请求头检查结果显示区域 -->
     <div class="mt-2 d-none header-check-result" id="headerCheckResult">
       <div class="card">
-        <div class="card-header bg-light" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
+        <div class="card-header bg-body-tertiary" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
         <div class="card-body">
-          <pre id="headerCheckContent" class="mb-0" aria-live="polite" style="font-size: 12px; max-height: 150px; overflow-y: auto;" data-i18n="click_quick_check"></pre>
+          <pre id="headerCheckContent" class="mb-0" aria-live="polite" data-i18n="click_quick_check"></pre>
         </div>
       </div>
     </div>

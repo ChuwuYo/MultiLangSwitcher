@@ -44,7 +44,7 @@ class DetectI18n extends BaseI18n {
 		const aiDiagnosisSubtitle = /** @type {HTMLElement} */ (document.querySelector("#aiDiagnosisSubtitle"));
 		if (aiDiagnosisSubtitle) {
 			aiDiagnosisSubtitle.textContent = "";
-			aiDiagnosisSubtitle.style.display = "none";
+			aiDiagnosisSubtitle.classList.add("d-none");
 		}
 
 		const aiProviderSelect = /** @type {HTMLSelectElement} */ (document.querySelector("#aiProviderSelect"));

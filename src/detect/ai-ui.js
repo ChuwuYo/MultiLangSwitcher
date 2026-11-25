@@ -120,6 +120,7 @@ const applyChatMessageUpdateNow = (message, options = {}) => {
 
 	if (message.role === "assistant" && options.finalize && canRenderMarkdown()) {
 		const rawHtml = /** @type {any} */ (window).marked.parse(message.content || "");
+		contentElement.classList.add("is-markdown");
 		contentElement.innerHTML = /** @type {any} */ (window).DOMPurify.sanitize(rawHtml, AI_REPLY_PURIFY_CONFIG);
 		contentElement.querySelectorAll("a[href]").forEach((anchor) => {
 			const href = anchor.getAttribute("href") || "";
@@ -129,6 +130,7 @@ const applyChatMessageUpdateNow = (message, options = {}) => {
 			}
 		});
 	} else {
+		contentElement.classList.remove("is-markdown");
 		contentElement.textContent = message.content || "";
 	}
 
