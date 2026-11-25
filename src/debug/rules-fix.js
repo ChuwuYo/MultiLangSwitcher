@@ -16,30 +16,30 @@ export const initRulesFix = () => {
 	// 修复规则优先级
 	const fixPriorityBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("fixPriorityBtn"));
 	const clearAllRulesBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("clearAllRulesBtn"));
+	let isRuleOpBusy = false;
+	const setRuleButtonsBusy = (busy) => {
+		isRuleOpBusy = busy;
+		if (fixPriorityBtn) fixPriorityBtn.disabled = busy;
+		if (clearAllRulesBtn) clearAllRulesBtn.disabled = busy;
+	};
 
 	ResourceManager.addEventListener(fixPriorityBtn, "click", async () => {
 		const resultElement = document.getElementById("fixResult");
-		if (!resultElement || !fixPriorityBtn) return;
-		fixPriorityBtn.disabled = true;
+		if (!resultElement || !fixPriorityBtn || isRuleOpBusy) return;
+		setRuleButtonsBusy(true);
 		resultElement.textContent = debugI18n.t("fixing_rule_priority");
 		addLogMessage(debugI18n.t("try_fix_priority"), "info");
 
 		try {
-			const response = await requestBackground(MessageTypes.GET_DYNAMIC_RULES);
-			const existingRules = Array.isArray(response?.rules) ? response.rules : [];
-			if (existingRules.length === 0) {
+			// 发送原子修复意图，由后台在锁内读取最新规则并仅修补 RULE_ID，避免旧快照覆写重置后的状态
+			const response = await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
+				repairPriorityOnly: true,
+			});
+			if (response?.empty) {
 				setSafeContent(resultElement, debugI18n.t("no_rules_warning"), "warning");
 				addLogMessage(debugI18n.t("no_rules_warning"), "warning");
 				return;
 			}
-			const existingRuleIds = existingRules.map((rule) => rule.id);
-			// 自动切换的按域名规则靠高于 RULE_ID 的分级优先级生效，统一改成 100 会让它们失效
-			const updatedRules = existingRules.map((rule) => (rule.id === RULE_ID ? { ...rule, priority: 100 } : rule));
-
-			await requestBackground(MessageTypes.UPDATE_DYNAMIC_RULES, {
-				removeRuleIds: existingRuleIds,
-				addRules: updatedRules,
-			});
 
 			setSafeContent(resultElement, debugI18n.t("priority_updated_success"), "success");
 			addLogMessage(debugI18n.t("priority_updated_log"), "success");
@@ -47,15 +47,15 @@ export const initRulesFix = () => {
 			setSafeContent(resultElement, `${debugI18n.t("fix_failed")} ${error.message}`, "error");
 			addLogMessage(`${debugI18n.t("fix_priority_failed")} ${error.message}`, "error");
 		} finally {
-			fixPriorityBtn.disabled = false;
+			setRuleButtonsBusy(false);
 		}
 	});
 
 	// 清除并重新应用规则
 	ResourceManager.addEventListener(clearAllRulesBtn, "click", async () => {
 		const resultElement = document.getElementById("fixResult");
-		if (!resultElement || !clearAllRulesBtn) return;
-		clearAllRulesBtn.disabled = true;
+		if (!resultElement || !clearAllRulesBtn || isRuleOpBusy) return;
+		setRuleButtonsBusy(true);
 		resultElement.textContent = debugI18n.t("clearing_rules_reapply");
 		addLogMessage(debugI18n.t("try_clear_reapply"), "info");
 
@@ -83,7 +83,7 @@ export const initRulesFix = () => {
 			setSafeErrorMessage(resultElement, `${debugI18n.t("clear_failed")} ${error.message}`);
 			addLogMessage(`${debugI18n.t("clear_rules_failed")} ${error.message}`, "error");
 		} finally {
-			clearAllRulesBtn.disabled = false;
+			setRuleButtonsBusy(false);
 		}
 	});
 };

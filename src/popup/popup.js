@@ -59,10 +59,15 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			// 先本地即时反馈，再异步持久化，提升交互流畅度
 			updateAutoSwitchUI(enabled, autoSwitchToggle, languageSelect, applyButton);
 
-			const success = await setAutoSwitchStatus(enabled);
+			const success = await setAutoSwitchStatus(enabled, {
+				shouldShowError: () => seq === eventHandlers.autoSwitchSeq,
+			});
 			if (!success && seq === eventHandlers.autoSwitchSeq) {
-				// 仅当本次请求仍为最新操作时才回滚 UI 状态
-				updateAutoSwitchUI(!enabled, autoSwitchToggle, languageSelect, applyButton);
+				// 仅当本次请求仍为最新操作时回滚，优先从权威存储读取真实状态而非简单取反
+				const authoritativeEnabled = await getAutoSwitchStatus();
+				if (seq === eventHandlers.autoSwitchSeq) {
+					updateAutoSwitchUI(authoritativeEnabled, autoSwitchToggle, languageSelect, applyButton);
+				}
 			}
 		},
 

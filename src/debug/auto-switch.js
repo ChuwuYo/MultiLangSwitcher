@@ -33,11 +33,14 @@ export const initAutoSwitch = () => {
 		}
 	})();
 
+	let autoSwitchSeq = 0;
+
 	// 自动切换功能控制
 	ResourceManager.addEventListener(document.getElementById("autoSwitchToggle"), "change", async (event) => {
 		const toggle = /** @type {HTMLInputElement | null} */ (event.currentTarget);
 		if (!toggle) return;
 		const isEnabled = toggle.checked;
+		const seq = ++autoSwitchSeq;
 		toggle.disabled = true;
 		addLogMessage(
 			`${debugI18n.t("try_enable_disable_auto")}${isEnabled ? debugI18n.t("enable") : debugI18n.t("disable")}${debugI18n.t("auto_switch_function_ellipsis")}`,
@@ -50,11 +53,32 @@ export const initAutoSwitch = () => {
 			});
 			addLogMessage(isEnabled ? debugI18n.t("auto_switch_enabled") : debugI18n.t("auto_switch_disabled"), "success");
 		} catch (error) {
-			// 失败时回滚 UI 开关状态，避免与后台真实配置分裂
-			toggle.checked = !isEnabled;
+			if (seq === autoSwitchSeq) {
+				// 仅在当前仍是最新操作时回滚，并优先读取权威存储状态避免覆盖他页更新
+				let authoritativeEnabled = !isEnabled;
+				try {
+					const sessionRes = await chrome.storage.session?.get([STORAGE_KEYS.UI_STATE]);
+					const sessionState = /** @type {{ autoSwitchEnabled?: boolean } | undefined} */ (
+						sessionRes?.[STORAGE_KEYS.UI_STATE]
+					);
+					if (typeof sessionState?.autoSwitchEnabled === "boolean") {
+						authoritativeEnabled = sessionState.autoSwitchEnabled;
+					} else {
+						const localRes = await chrome.storage.local.get([STORAGE_KEYS.AUTO_SWITCH_ENABLED]);
+						authoritativeEnabled = !!localRes[STORAGE_KEYS.AUTO_SWITCH_ENABLED];
+					}
+				} catch (_readErr) {
+					authoritativeEnabled = !isEnabled;
+				}
+				if (seq === autoSwitchSeq) {
+					toggle.checked = authoritativeEnabled;
+				}
+			}
 			addLogMessage(`${debugI18n.t("update_auto_switch_failed")} ${error.message}`, "error");
 		} finally {
-			toggle.disabled = false;
+			if (seq === autoSwitchSeq) {
+				toggle.disabled = false;
+			}
 		}
 	});
 
@@ -64,6 +88,7 @@ export const initAutoSwitch = () => {
 		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
 			return;
 		}
+		autoSwitchSeq++;
 		const { autoSwitchEnabled, currentLanguage } =
 			/** @type {{ autoSwitchEnabled: boolean, currentLanguage: string }} */ (changes[STORAGE_KEYS.UI_STATE].newValue);
 		const autoSwitchToggle = /** @type {HTMLInputElement} */ (document.getElementById("autoSwitchToggle"));

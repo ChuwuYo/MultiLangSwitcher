@@ -230,7 +230,7 @@ const requestAssistantMessage = async ({ userMessage = "", firstTurn = false, sa
 		if (requestToken !== activeRequestToken) {
 			return;
 		}
-		const aborted = controller.signal.aborted || error?.name === "AbortError";
+		const aborted = controller.signal.aborted && error?.name !== "TimeoutError";
 		if (!assistantMessage.content) {
 			removeMessageById(assistantMessage.id);
 			if (firstTurn) {

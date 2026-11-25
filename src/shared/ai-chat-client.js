@@ -67,6 +67,24 @@ const isLocalNetworkHost = (hostname) => {
 	);
 };
 
+const extractMappedIpv4Octets = (host) => {
+	// 支持 ::ffff:169.254.169.254、::ffff:a9fe:a9fe 及完整前导 0 形式
+	const dotted = /^(?:::ffff:|(?:0+:){5}ffff:)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(host);
+	if (dotted) {
+		const octets = dotted[1].split(".").map(Number);
+		if (octets.length === 4 && octets.every((n) => Number.isInteger(n) && n >= 0 && n <= 255)) {
+			return octets;
+		}
+	}
+	const hexPair = /^(?:::ffff:|(?:0+:){5}ffff:)([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host);
+	if (hexPair) {
+		const hi = Number.parseInt(hexPair[1], 16);
+		const lo = Number.parseInt(hexPair[2], 16);
+		return [(hi >>> 8) & 0xff, hi & 0xff, (lo >>> 8) & 0xff, lo & 0xff];
+	}
+	return null;
+};
+
 const isLinkLocalOrMetadataHost = (hostname) => {
 	const host = hostname
 		.replace(/^\[|\]$/g, "")
@@ -74,6 +92,10 @@ const isLinkLocalOrMetadataHost = (hostname) => {
 		.toLowerCase();
 	if (/^fe[89ab][0-9a-f]:/.test(host)) {
 		return true;
+	}
+	const mappedOctets = extractMappedIpv4Octets(host);
+	if (mappedOctets) {
+		return mappedOctets[0] === 169 && mappedOctets[1] === 254;
 	}
 	const octets = host.split(".").map(Number);
 	return octets.length === 4 && octets[0] === 169 && octets[1] === 254;
@@ -145,10 +167,20 @@ const createChatCompletion = async ({
 		}
 	}
 	let timeoutId = null;
+	let timedOut = false;
+	const createTimeoutError = () => {
+		const timeoutErr = /** @type {Error & { code?: string }} */ (new Error("AI request timed out"));
+		timeoutErr.name = "TimeoutError";
+		timeoutErr.code = "REQUEST_TIMEOUT";
+		return timeoutErr;
+	};
 	const resetIdleTimeout = () => {
 		if (timeoutId) clearTimeout(timeoutId);
 		if (timeoutMs > 0) {
-			timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
+			timeoutId = setTimeout(() => {
+				timedOut = true;
+				timeoutController.abort();
+			}, timeoutMs);
 		}
 	};
 	resetIdleTimeout();
@@ -171,6 +203,9 @@ const createChatCompletion = async ({
 	} catch (error) {
 		if (timeoutId) clearTimeout(timeoutId);
 		signal?.removeEventListener("abort", onExternalAbort);
+		if (timedOut && !signal?.aborted) {
+			throw createTimeoutError();
+		}
 		throw error;
 	}
 

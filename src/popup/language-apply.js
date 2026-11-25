@@ -7,6 +7,7 @@ import { requestBackground } from "../shared/shared-actions.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { popupI18n } from "../i18n/popup-i18n.js";
 import { getEl } from "./shared.js";
+import { normalizeLanguageOptionValue } from "../shared/shared-language-options.js";
 import { showError, updateLanguageDisplay } from "./ui-sync.js";
 
 /**
@@ -54,14 +55,14 @@ export const updateHeaderRules = async (language, autoCheck = false) => {
 export const getCurrentLanguage = async () => {
 	// 尝试从background脚本获取当前语言
 	const backgroundLanguage = await getLanguageFromBackground();
-	if (backgroundLanguage) return backgroundLanguage;
+	if (backgroundLanguage) return normalizeLanguageOptionValue(backgroundLanguage);
 
 	// 回退到本地存储
 	const storageLanguage = await getLanguageFromStorage();
-	if (storageLanguage) return storageLanguage;
+	if (storageLanguage) return normalizeLanguageOptionValue(storageLanguage);
 
 	// 使用默认语言作为最后的回退
-	return getDefaultLanguage();
+	return normalizeLanguageOptionValue(getDefaultLanguage());
 };
 
 /**
@@ -147,9 +148,10 @@ export const getAutoSwitchStatus = async () => {
  * 持久化由 background 的 AUTO_SWITCH_TOGGLED 处理器单点完成（写存储 + 应用规则 + 发布 UI 状态），
  * 本页不直接写存储，避免双写竞态；返回值反映后台实际处理结果
  * @param {boolean} enabled - 是否启用
+ * @param {{ shouldShowError?: () => boolean }} [options] - 可选回调，返回是否展示错误提示
  * @returns {Promise<boolean>} 操作是否成功
  */
-export const setAutoSwitchStatus = async (enabled) => {
+export const setAutoSwitchStatus = async (enabled, { shouldShowError = () => true } = {}) => {
 	try {
 		await requestBackground(MessageTypes.AUTO_SWITCH_TOGGLED, { enabled });
 
@@ -164,8 +166,10 @@ export const setAutoSwitchStatus = async (enabled) => {
 		const message = error.message;
 		const localized = popupI18n.t("update_storage_status_failed", { message });
 
-		// 避免重复字符串插值逻辑，统一使用 localized
-		showError(localized);
+		// 仅当本次请求仍为最新操作时向用户展示错误，避免过期失败提示覆盖新操作
+		if (shouldShowError()) {
+			showError(localized);
+		}
 		sendDebugLog(localized, "error");
 		return false;
 	}

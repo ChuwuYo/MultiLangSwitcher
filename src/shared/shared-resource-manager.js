@@ -24,6 +24,9 @@ const createResourceManager = () => {
 
 	const addController = (controller) => {
 		if (controller) {
+			if (controller.signal?.aborted) {
+				return controller;
+			}
 			trackedControllers.add(controller);
 			controller.signal?.addEventListener?.(
 				"abort",

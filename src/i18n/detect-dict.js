@@ -223,6 +223,7 @@ const detectEn = {
 	ai_session_only_key_label: "Keep API keys in memory for this browser session only",
 	ai_clear_keys: "Clear saved API keys",
 	ai_keys_cleared: "All saved API keys have been cleared.",
+	ai_keys_clear_failed: "Failed to clear saved API keys. Please try again.",
 };
 
 const detectZh = {
@@ -363,7 +364,8 @@ const detectZh = {
 	ai_model_label: "模型名称",
 	ai_api_key_toggle_show: "显示",
 	ai_api_key_toggle_hide: "隐藏",
-	ai_privacy_hint: "您的 API Key 仅保存在 chrome.storage.local，本扩展不会上传或同步该配置；聊天记录只保留在当前页面。",
+	ai_privacy_hint:
+		"您的 API Key 默认保存在 chrome.storage.local，开启“仅本次会话保存”后改存于 chrome.storage.session，本扩展不会上传或同步该配置；聊天记录只保留在当前页面。",
 	ai_config_ready: "AI 配置已保存，可开始诊断。",
 	ai_config_incomplete: "请填写完整的 Base URL、API Key 和模型名称。",
 	ai_config_replace_template: "请先把地址中的模板资源名替换成您自己的实际资源名，再开始 AI 诊断。",
@@ -439,6 +441,7 @@ const detectZh = {
 	ai_session_only_key_label: "仅在当前浏览器会话中保存 API Key（关闭后自动清除）",
 	ai_clear_keys: "清除已保存的 API Key",
 	ai_keys_cleared: "已清除所有保存的 API Key。",
+	ai_keys_clear_failed: "清除已保存的 API Key 失败，请重试。",
 };
 
 export { detectEn, detectZh };

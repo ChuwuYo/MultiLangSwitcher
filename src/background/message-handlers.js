@@ -64,30 +64,53 @@ const handleUpdateRulesRequest = async (request) => {
  * 处理自动切换开关请求
  * @param {Object} request - 请求对象
  */
-const handleAutoSwitchToggleRequest = async (request) => {
-	if (typeof request?.enabled !== "boolean") {
-		throw new Error("Invalid auto-switch enabled flag");
-	}
-	const prevEnabled = getAutoSwitchEnabled();
-	const nextEnabled = request.enabled;
+let stateTransitionLock = Promise.resolve();
+const withStateTransitionLock = async (task) => {
+	let release;
+	const prev = stateTransitionLock;
+	stateTransitionLock = new Promise((resolve) => {
+		release = resolve;
+	});
+	await prev;
 	try {
-		setAutoSwitchEnabled(nextEnabled);
-		sendBackgroundLog(`${backgroundI18n.t("auto_switch_status_updated")}: ${nextEnabled}`, "info");
-		await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: nextEnabled });
-
-		const { currentLanguage: storedLanguage } = /** @type {Record<string, any>} */ (
-			await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE])
-		);
-		await applyLanguageRulesBasedOnState(storedLanguage);
-
-		const currentEffectiveLanguage = nextEnabled ? DEFAULT_LANG_EN : storedLanguage || DEFAULT_LANG_EN;
-		notifyPopupUIUpdate(nextEnabled, currentEffectiveLanguage);
-		return { autoSwitchEnabled: nextEnabled, currentLanguage: currentEffectiveLanguage };
-	} catch (error) {
-		setAutoSwitchEnabled(prevEnabled);
-		throw error;
+		return await task();
+	} finally {
+		release();
 	}
 };
+
+const handleAutoSwitchToggleRequest = (request) =>
+	withStateTransitionLock(async () => {
+		if (typeof request?.enabled !== "boolean") {
+			throw new Error("Invalid auto-switch enabled flag");
+		}
+		const prevEnabled = getAutoSwitchEnabled();
+		const nextEnabled = request.enabled;
+		let storedLanguage;
+		let storageUpdated = false;
+		try {
+			({ currentLanguage: storedLanguage } = /** @type {Record<string, any>} */ (
+				await chrome.storage.local.get([STORAGE_KEYS.CURRENT_LANGUAGE])
+			));
+			setAutoSwitchEnabled(nextEnabled);
+			sendBackgroundLog(`${backgroundI18n.t("auto_switch_status_updated")}: ${nextEnabled}`, "info");
+			await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: nextEnabled });
+			storageUpdated = true;
+
+			await applyLanguageRulesBasedOnState(storedLanguage);
+
+			const currentEffectiveLanguage = nextEnabled ? DEFAULT_LANG_EN : storedLanguage || DEFAULT_LANG_EN;
+			notifyPopupUIUpdate(nextEnabled, currentEffectiveLanguage);
+			return { autoSwitchEnabled: nextEnabled, currentLanguage: currentEffectiveLanguage };
+		} catch (error) {
+			setAutoSwitchEnabled(prevEnabled);
+			if (storageUpdated) {
+				await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: prevEnabled }).catch(() => {});
+			}
+			await applyLanguageRulesBasedOnState(storedLanguage).catch(() => {});
+			throw error;
+		}
+	});
 
 /**
  * 处理获取当前语言请求
@@ -113,25 +136,28 @@ const handleGetCurrentLangRequest = async () => {
 /**
  * 处理重置Accept-Language请求
  */
-const handleResetAcceptLanguageRequest = async () => {
-	try {
-		if (getAutoSwitchEnabled()) {
-			setAutoSwitchEnabled(false);
-			await clearAllDynamicRules();
-			await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: false });
-		} else {
-			await applyDynamicRulesLocked({ removeRuleIds: [RULE_ID] });
-		}
+const handleResetAcceptLanguageRequest = () =>
+	withStateTransitionLock(async () => {
+		const prevEnabled = getAutoSwitchEnabled();
+		try {
+			if (prevEnabled) {
+				await clearAllDynamicRules();
+				await chrome.storage.local.set({ [STORAGE_KEYS.AUTO_SWITCH_ENABLED]: false });
+				setAutoSwitchEnabled(false);
+			} else {
+				await applyDynamicRulesLocked({ removeRuleIds: [RULE_ID] });
+			}
 
-		await chrome.storage.local.remove([STORAGE_KEYS.CURRENT_LANGUAGE]);
-		sendBackgroundLog(backgroundI18n.t("accept_language_reset_successful"), "success");
-		notifyPopupUIUpdate(false, null);
-		return {};
-	} catch (error) {
-		sendBackgroundLog(`${backgroundI18n.t("reset_error")}: ${error.message}`, "error");
-		throw error;
-	}
-};
+			await chrome.storage.local.remove([STORAGE_KEYS.CURRENT_LANGUAGE]);
+			sendBackgroundLog(backgroundI18n.t("accept_language_reset_successful"), "success");
+			notifyPopupUIUpdate(false, null);
+			return {};
+		} catch (error) {
+			setAutoSwitchEnabled(prevEnabled);
+			sendBackgroundLog(`${backgroundI18n.t("reset_error")}: ${error.message}`, "error");
+			throw error;
+		}
+	});
 
 /**
  * 处理获取域名规则请求
@@ -200,17 +226,10 @@ const handleTestDomainCacheRequest = async (request) => {
 		// 确保域名规则管理器已加载
 		await domainRulesManager.loadRules();
 
-		// 在调用 getLanguageForDomain 之前检查缓存状态，以获得准确的"是否命中缓存"状态
-		const parsedDomain = domain.split(".");
-		const secondLevelDomain = parsedDomain.length >= 2 ? parsedDomain.slice(-2).join(".") : domain;
-		const fromCache =
-			domainRulesManager.domainCache.has(domain) ||
-			domainRulesManager.domainCache.has(secondLevelDomain) ||
-			(domain.startsWith("www.") && domainRulesManager.domainCache.has(domain.substring(4))) ||
-			domainRulesManager.domainCache.has(`www.${domain}`);
-
-		// 测试域名查询（这会触发缓存机制，如果是 miss，则会填充缓存）
-		let language = await domainRulesManager.getLanguageForDomain(domain);
+		// 直接使用 domainRulesManager 规范化查找返回的真实缓存命中状态
+		const lookupResult = await domainRulesManager.lookupDomainWithCacheStatus(domain);
+		const fromCache = lookupResult.fromCache;
+		let language = lookupResult.language;
 		let isUsingFallback = false;
 
 		// 如果没有找到匹配规则，使用回退策略
@@ -401,7 +420,11 @@ const isAllowedHeaderRule = (rule) => {
 	if (!rule || typeof rule !== "object" || !Number.isInteger(rule.id) || rule.id <= 0) {
 		return false;
 	}
-	if (rule.action?.type !== "modifyHeaders" || !Array.isArray(rule.action.requestHeaders)) {
+	if (
+		rule.action?.type !== "modifyHeaders" ||
+		!Array.isArray(rule.action.requestHeaders) ||
+		rule.action.responseHeaders !== undefined
+	) {
 		return false;
 	}
 	return (
@@ -418,8 +441,32 @@ const isAllowedHeaderRule = (rule) => {
  */
 const handleUpdateDynamicRulesRequest = async (request) => {
 	try {
-		const removeRuleIds = Array.isArray(request?.removeRuleIds) ? request.removeRuleIds : [];
-		const addRules = Array.isArray(request?.addRules) ? request.addRules : [];
+		if (request?.repairPriorityOnly === true) {
+			return await withStateTransitionLock(async () => {
+				const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
+				if (currentRules.length === 0) {
+					return { repaired: false, empty: true };
+				}
+				const targetRule = currentRules.find((rule) => rule.id === RULE_ID);
+				if (!targetRule) {
+					return { repaired: false, empty: false };
+				}
+				const patchedRule = { ...targetRule, priority: 100 };
+				if (!isAllowedHeaderRule(patchedRule)) {
+					throw new Error("Only Accept-Language modifyHeaders rules are allowed");
+				}
+				await applyDynamicRulesLocked({ removeRuleIds: [RULE_ID], addRules: [patchedRule] });
+				return { repaired: true, empty: false };
+			});
+		}
+		if (request?.removeRuleIds !== undefined && !Array.isArray(request.removeRuleIds)) {
+			throw new Error("Invalid removeRuleIds");
+		}
+		if (request?.addRules !== undefined && !Array.isArray(request.addRules)) {
+			throw new Error("Invalid addRules");
+		}
+		const removeRuleIds = request?.removeRuleIds ?? [];
+		const addRules = request?.addRules ?? [];
 		if (!removeRuleIds.every((id) => Number.isInteger(id) && id > 0)) {
 			throw new Error("Invalid removeRuleIds");
 		}

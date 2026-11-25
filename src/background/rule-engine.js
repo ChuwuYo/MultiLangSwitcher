@@ -168,7 +168,7 @@ export const syncAutoSwitchDomainRules = async (enabled) =>
 	withRulesLock(async () => {
 		const effectiveEnabled = Boolean(enabled) && getAutoSwitchEnabled();
 		const builtinRules = effectiveEnabled ? await domainRulesManager.loadRules() : {};
-		const customRules = effectiveEnabled ? await domainRulesManager.getCustomRules() : {};
+		const customRules = effectiveEnabled ? await domainRulesManager.getCustomRules({ throwOnError: true }) : {};
 
 		const applyRules = async (addRules) => {
 			const currentRules = await chrome.declarativeNetRequest.getDynamicRules();
@@ -197,7 +197,8 @@ const classifyRuleUpdateError = (error) => {
 };
 
 const updateHeaderRulesInternal = async (language, initialRetryCount, isAutoSwitch) => {
-	for (let attempt = initialRetryCount; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+	const startAttempt = Math.min(Math.max(0, Number(initialRetryCount) || 0), MAX_RETRY_ATTEMPTS);
+	for (let attempt = startAttempt; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
 		try {
 			// 直接查询当前规则状态，替代缓存检查
 			const currentRules = await chrome.declarativeNetRequest.getDynamicRules();

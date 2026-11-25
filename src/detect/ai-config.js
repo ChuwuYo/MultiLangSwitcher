@@ -83,7 +83,7 @@ const normalizeConfigStore = (storedConfig = null) => {
 const getStoredProviderConfig = (providerKey) =>
 	aiConfigStore.providers[providerKey] || normalizeConfig({ provider: providerKey });
 
-const serializeConfigStore = ({ stripApiKeys = false } = {}) => {
+const serializeConfigStore = ({ stripApiKeys = Boolean(aiConfigStore.sessionOnlyKeys) } = {}) => {
 	const providers = {};
 	AI_PROVIDER_PRESET_ORDER.forEach((providerKey) => {
 		const providerConfig = getStoredProviderConfig(providerKey);
@@ -242,17 +242,29 @@ export const clearAllStoredAPIKeys = async () => {
 	if (elements.apiKeyInput) {
 		elements.apiKeyInput.value = "";
 	}
+	let localOk = true;
+	let sessionOk = true;
 	try {
 		await chrome.storage.local.set({
 			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore({ stripApiKeys: true }),
 		});
-		if (chrome.storage?.session) {
-			await chrome.storage.session.remove(AI_SESSION_KEYS_STORAGE_KEY);
-		}
 	} catch (error) {
-		console.warn("Failed to clear AI keys:", error);
+		localOk = false;
+		console.warn("Failed to clear local AI keys:", error);
 	}
-	setAIConfigHint("ai_keys_cleared", "success");
+	if (chrome.storage?.session) {
+		try {
+			await chrome.storage.session.remove(AI_SESSION_KEYS_STORAGE_KEY);
+		} catch (error) {
+			sessionOk = false;
+			console.warn("Failed to clear session AI keys:", error);
+		}
+	}
+	if (localOk && sessionOk) {
+		setAIConfigHint("ai_keys_cleared", "success");
+	} else {
+		setAIConfigHint("ai_keys_clear_failed", "danger");
+	}
 };
 
 export const loadAIConfig = async () => {
@@ -306,8 +318,11 @@ export const handleProviderChange = async () => {
 
 	try {
 		await chrome.storage.local.set({
-			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore(),
+			[AI_CONFIG_STORAGE_KEY]: serializeConfigStore({ stripApiKeys: aiConfigStore.sessionOnlyKeys }),
 		});
+		if (chrome.storage?.session && aiConfigStore.sessionOnlyKeys) {
+			await chrome.storage.session.set({ [AI_SESSION_KEYS_STORAGE_KEY]: serializeSessionKeys() });
+		}
 	} catch (error) {
 		console.warn("Failed to persist AI config:", error);
 	}

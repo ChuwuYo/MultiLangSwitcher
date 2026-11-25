@@ -159,6 +159,11 @@ const showUpdateNotification = (updateInfo) => {
 	if (!alertDiv) return;
 
 	runDOMUpdate(() => {
+		// 渲染任意新结果前先清理旧的自动隐藏定时器，避免提前隐藏新通知
+		if (updateNotificationHideTimer) {
+			ResourceManager.clearTimeout(updateNotificationHideTimer);
+			updateNotificationHideTimer = null;
+		}
 		// 当GitHub API不可用时处理回退模式
 		if (updateInfo.fallbackMode) {
 			alertDiv.className = "alert alert-warning mb-0 update-notification warning";
@@ -208,10 +213,7 @@ const showUpdateNotification = (updateInfo) => {
 
 			sendDebugLog(popupI18n.t("showing_fallback_notification"), "warning");
 
-			// 5秒后自动隐藏回退通知（先清旧定时器）
-			if (updateNotificationHideTimer) {
-				ResourceManager.clearTimeout(updateNotificationHideTimer);
-			}
+			// 5秒后自动隐藏回退通知
 			updateNotificationHideTimer = ResourceManager.setTimeout(() => {
 				updateNotificationHideTimer = null;
 				updateNotification.classList.add("d-none");
@@ -314,8 +316,9 @@ const showUpdateNotification = (updateInfo) => {
 
 			sendDebugLog(popupI18n.t("extension_is_up_to_date"), "info");
 
-			// 4秒后自动隐藏成功通知
-			ResourceManager.setTimeout(() => {
+			// 4秒后自动隐藏成功通知（复用句柄以便后续通知取消）
+			updateNotificationHideTimer = ResourceManager.setTimeout(() => {
+				updateNotificationHideTimer = null;
 				updateNotification.classList.add("d-none");
 			}, 4000);
 		}

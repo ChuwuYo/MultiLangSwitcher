@@ -121,7 +121,7 @@ export const LEGACY_LANGUAGE_CODE_MAP = Object.freeze({
 export const normalizeLanguageOptionValue = (value) => {
 	if (typeof value !== "string") return value;
 	const trimmed = value.trim();
-	return LEGACY_LANGUAGE_CODE_MAP[trimmed] || trimmed;
+	return Object.hasOwn(LEGACY_LANGUAGE_CODE_MAP, trimmed) ? LEGACY_LANGUAGE_CODE_MAP[trimmed] : trimmed;
 };
 
 const getDefaultCustomSuffix = () => {

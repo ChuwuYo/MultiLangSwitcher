@@ -47,11 +47,34 @@ describe("rule-engine", () => {
 		expect(chrome.declarativeNetRequest.updateDynamicRules).not.toHaveBeenCalled();
 	});
 
-	it("clears all existing dynamic rules under lock", async () => {
-		chrome.declarativeNetRequest.getDynamicRules.mockResolvedValueOnce([{ id: 1 }, { id: 1001 }]);
-		await clearAllDynamicRules();
-		expect(chrome.declarativeNetRequest.updateDynamicRules).toHaveBeenCalledWith({
+	it("serializes concurrent clearAllDynamicRules calls under lock", async () => {
+		let releaseFirst;
+		const firstBlocked = new Promise((resolve) => {
+			releaseFirst = resolve;
+		});
+		chrome.declarativeNetRequest.getDynamicRules
+			.mockResolvedValueOnce([{ id: 1 }, { id: 1001 }])
+			.mockResolvedValueOnce([{ id: 2 }]);
+		chrome.declarativeNetRequest.updateDynamicRules
+			.mockImplementationOnce(() => firstBlocked)
+			.mockResolvedValueOnce(undefined);
+
+		const firstCall = clearAllDynamicRules();
+		const secondCall = clearAllDynamicRules();
+		await Promise.resolve();
+		await Promise.resolve();
+
+		expect(chrome.declarativeNetRequest.updateDynamicRules).toHaveBeenCalledTimes(1);
+		expect(chrome.declarativeNetRequest.updateDynamicRules).toHaveBeenNthCalledWith(1, {
 			removeRuleIds: [1, 1001],
+		});
+
+		releaseFirst();
+		await Promise.all([firstCall, secondCall]);
+
+		expect(chrome.declarativeNetRequest.updateDynamicRules).toHaveBeenCalledTimes(2);
+		expect(chrome.declarativeNetRequest.updateDynamicRules).toHaveBeenNthCalledWith(2, {
+			removeRuleIds: [2],
 		});
 	});
 });

@@ -157,6 +157,9 @@ export const updateChatMessageElement = (message, options = {}) => {
 	}
 	const frameId = requestAnimationFrame(() => {
 		pendingStreamFrames.delete(message.id);
+		if (!getMessageById(message.id)) {
+			return;
+		}
 		applyChatMessageUpdateNow(message, { finalize: false });
 	});
 	pendingStreamFrames.set(message.id, frameId);
@@ -168,6 +171,12 @@ export const renderVisibleChatMessages = () => {
 		return;
 	}
 
+	pendingStreamFrames.forEach((frameId) => {
+		if (typeof cancelAnimationFrame === "function") {
+			cancelAnimationFrame(frameId);
+		}
+	});
+	pendingStreamFrames.clear();
 	messagesContainer.innerHTML = "";
 	const visibleMessages = getVisibleChatMessages();
 	if (visibleMessages.length === 0) {
@@ -176,7 +185,7 @@ export const renderVisibleChatMessages = () => {
 	}
 
 	visibleMessages.forEach((message) => {
-		updateChatMessageElement(message, {
+		applyChatMessageUpdateNow(message, {
 			finalize: message.role === "assistant" && !!message.rendered,
 		});
 	});

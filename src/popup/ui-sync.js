@@ -1,6 +1,7 @@
 // popup/ui-sync.js - 弹窗页面 DOM 同步与显示辅助
 
 import { fetchHeadersFromEndpoints, createLocalizedExternalCheckLinks } from "../shared/header-check-utils.js";
+import { normalizeLanguageOptionValue } from "../shared/shared-language-options.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { sendDebugLog } from "../shared/shared-utils.js";
 import { popupI18n } from "../i18n/popup-i18n.js";
@@ -32,12 +33,12 @@ export const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, ap
 	sendDebugLog(`${popupI18n.t("auto_switch_function")}${statusMsg}, ${actionMsg}.`, "info");
 };
 
+let showErrorTimerId = null;
+
 /**
  * 显示错误消息
  * @param {string} message - 错误消息
  */
-let showErrorTimerId = null;
-
 export const showError = (message) => {
 	// 验证输入
 	if (!message) return;
@@ -84,25 +85,26 @@ const displayHeaderCheckError = (element, messageKey) => {
 export const updateLanguageDisplay = (language, showSuccess = false) => {
 	// 验证输入
 	if (!language) return;
+	const normalizedLanguage = normalizeLanguageOptionValue(language);
 
 	// 直接获取DOM元素
 	const currentLanguageSpan = getEl("currentLanguage");
 	const languageSelect = /** @type {HTMLSelectElement} */ (getEl("languageSelect"));
 
 	// 如果当前值与目标语言一致，避免不必要的 DOM 写入
-	if (currentLanguageSpan && currentLanguageSpan.textContent === language && !showSuccess) {
-		if (languageSelect && languageSelect.value !== language) {
+	if (currentLanguageSpan && currentLanguageSpan.textContent === normalizedLanguage && !showSuccess) {
+		if (languageSelect && languageSelect.value !== normalizedLanguage) {
 			// 仅在下拉值不一致时同步一次
-			languageSelect.value = language;
+			languageSelect.value = normalizedLanguage;
 		}
 		return;
 	}
 
 	// 使用批量DOM更新提高性能；语言切换属于关键可见状态，使用立即模式
 	// 更新当前语言显示
-	if (currentLanguageSpan) currentLanguageSpan.textContent = language;
+	if (currentLanguageSpan) currentLanguageSpan.textContent = normalizedLanguage;
 	// 同步语言选择框的值
-	if (languageSelect) languageSelect.value = language;
+	if (languageSelect) languageSelect.value = normalizedLanguage;
 
 	// 如果需要显示成功提示
 	if (showSuccess) {

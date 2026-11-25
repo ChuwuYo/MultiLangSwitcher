@@ -26,6 +26,11 @@ describe("UpdateChecker.isNewerVersion", () => {
 		expect(isNewerVersion("2.1.1-beta", "2.1.1")).toBe(true);
 		expect(isNewerVersion("2.1.1", "2.1.1-beta")).toBe(false);
 		expect(isNewerVersion("2.1.1-alpha.1", "2.1.1-beta.1")).toBe(true);
+		expect(isNewerVersion("2.1.1-alpha.2", "2.1.1-alpha.10")).toBe(true);
+		expect(isNewerVersion("2.1.1-2", "2.1.1-alpha")).toBe(true);
+		expect(isNewerVersion("2.1.1-alpha", "2.1.1-alpha.1")).toBe(true);
+		expect(isNewerVersion("2.1.1+build.1", "2.1.1+build.2")).toBe(false);
+		expect(isNewerVersion("2.1.1+build.2", "2.1.1+build.1")).toBe(false);
 	});
 
 	it("zero-pads missing segments", () => {

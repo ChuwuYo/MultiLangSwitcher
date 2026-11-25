@@ -15,6 +15,11 @@ export const initRulesView = () => {
 		const resultElement = document.getElementById("rulesResult");
 		resultElement.textContent = debugI18n.t("getting_rule_info");
 
+		// 必须在点击事件的同步栈（任何 await 之前）发起可选权限申请，以保留 Chrome 用户手势上下文
+		const feedbackPermissionPromise = chrome.permissions?.request
+			? chrome.permissions.request({ permissions: ["declarativeNetRequestFeedback"] }).catch(() => false)
+			: Promise.resolve(true);
+
 		// 通过消息传递获取动态规则
 		(async () => {
 			try {
@@ -88,18 +93,8 @@ export const initRulesView = () => {
 					fragment.appendChild(ul);
 				}
 
-				// 按需申请可选调试权限 declarativeNetRequestFeedback（仅在用户点击查看规则时触发）
-				let hasFeedbackPermission = true;
-				if (chrome.permissions?.contains && chrome.permissions?.request) {
-					hasFeedbackPermission = await chrome.permissions.contains({
-						permissions: ["declarativeNetRequestFeedback"],
-					});
-					if (!hasFeedbackPermission) {
-						hasFeedbackPermission = await chrome.permissions.request({
-							permissions: ["declarativeNetRequestFeedback"],
-						});
-					}
-				}
+				// 等待在点击同步阶段发起的可选调试权限授权结果
+				const hasFeedbackPermission = Boolean(await feedbackPermissionPromise);
 
 				const matchedTitle = document.createElement("h5");
 				matchedTitle.textContent = debugI18n.t("recent_matched_rules");

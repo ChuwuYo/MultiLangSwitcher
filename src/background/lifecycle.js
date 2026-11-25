@@ -1,10 +1,12 @@
 // 生命周期：初始化流程、右键菜单与浏览器事件监听（启动/安装/标签页更新/挂起）
 
+import { AUTO_SWITCH_RULE_ID_BASE } from "../shared/dnr-rule-ids.js";
 import { STORAGE_KEYS } from "../shared/storage-keys.js";
 import { backgroundI18n } from "../i18n/background-i18n.js";
 import { domainRulesManager } from "./domain-rules-manager.js";
 import {
 	DEFAULT_LANG_EN,
+	RULE_ID,
 	getAutoSwitchEnabled,
 	getLastNotifiedLanguage,
 	i18nReady,
@@ -52,7 +54,21 @@ const createContextMenusOnce = async () => {
 			await i18nReady;
 
 			if (chrome.contextMenus && typeof chrome.contextMenus.removeAll === "function") {
-				await chrome.contextMenus.removeAll();
+				await /** @type {Promise<void>} */ (
+					new Promise((resolve, reject) => {
+						try {
+							chrome.contextMenus.removeAll(() => {
+								if (chrome.runtime?.lastError) {
+									reject(new Error(chrome.runtime.lastError.message));
+								} else {
+									resolve();
+								}
+							});
+						} catch (error) {
+							reject(error);
+						}
+					})
+				);
 			}
 
 			// 创建菜单项 - 使用国际化标题
@@ -149,7 +165,12 @@ const performInitialization = async (reason) => {
 		//    懒唤醒时仅在规则缺失时重建，且不覆写已有的会话 UI 状态
 		if (reason === "lazy") {
 			const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-			if (existingRules.length === 0) {
+			const hasFallbackRule = existingRules.some((rule) => rule.id === RULE_ID);
+			const hasAutoSwitchRules = existingRules.some((rule) => rule.id >= AUTO_SWITCH_RULE_ID_BASE);
+			const needsRebuild = getAutoSwitchEnabled()
+				? !hasFallbackRule || !hasAutoSwitchRules
+				: !hasFallbackRule || hasAutoSwitchRules;
+			if (needsRebuild) {
 				await applyLanguageRulesBasedOnState(result.currentLanguage);
 			}
 			const sessionData = /** @type {Record<string, any>} */ (
@@ -177,8 +198,23 @@ const performInitialization = async (reason) => {
  * @param {string} reason - 初始化的原因
  * @returns {Promise<void>}
  */
+let fullReconcileDone = false;
+
 const initialize = (reason) => {
 	if (initializationPromise) {
+		// 若先前只是 lazy 唤醒，install/startup 仍需在之后执行一次全量规则对账
+		if (reason !== "lazy" && !fullReconcileDone) {
+			const prevPromise = initializationPromise;
+			initializationPromise = (async () => {
+				await prevPromise.catch(() => {});
+				await performInitialization(reason);
+				isInitialized = true;
+				fullReconcileDone = true;
+			})();
+			initializationPromise.catch(() => {
+				initializationPromise = null;
+			});
+		}
 		return initializationPromise;
 	}
 
@@ -186,6 +222,9 @@ const initialize = (reason) => {
 		try {
 			await performInitialization(reason);
 			isInitialized = true;
+			if (reason !== "lazy") {
+				fullReconcileDone = true;
+			}
 		} catch (error) {
 			initializationPromise = null;
 			isInitialized = false;
@@ -196,14 +235,20 @@ const initialize = (reason) => {
 	return initializationPromise;
 };
 
+let activeTabSyncSeq = 0;
+
 const syncActiveTabDisplayLanguage = async (tab) => {
 	if (!getAutoSwitchEnabled() || !tab?.active || !tab?.url?.startsWith("http") || tab.incognito) {
 		return;
 	}
 
+	const seq = ++activeTabSyncSeq;
 	try {
 		const hostname = new URL(tab.url).hostname.toLowerCase();
 		const matchedLanguage = await domainRulesManager.getLanguageForDomain(hostname);
+		if (seq !== activeTabSyncSeq || !getAutoSwitchEnabled()) {
+			return;
+		}
 		const displayLanguage = typeof matchedLanguage === "string" && matchedLanguage ? matchedLanguage : DEFAULT_LANG_EN;
 
 		if (displayLanguage === getLastNotifiedLanguage()) {

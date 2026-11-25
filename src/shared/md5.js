@@ -185,7 +185,7 @@ export function md5(string) {
 
 	function str2rstrUTF8(input) {
 		// 将 UTF-16 字符串按 UTF-8 编码为逐字节二进制字符串，确保非 ASCII 输入符合 RFC 1321
-		const bytes = new TextEncoder().encode(String(input ?? ""));
+		const bytes = new TextEncoder().encode(String(input));
 		let output = "";
 		for (let i = 0; i < bytes.length; i++) {
 			output += String.fromCharCode(bytes[i]);

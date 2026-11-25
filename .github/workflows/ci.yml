@@ -79,6 +79,9 @@ jobs:
     name: Publish rolling prerelease
     needs: package
     if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+    concurrency:
+      group: publish-latest
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -102,7 +105,12 @@ jobs:
           test "$current" = "$GITHUB_SHA" || { echo "::error::$GITHUB_REF_NAME 已前进，拒绝用旧提交发布。"; exit 1; }
           cp "$zip_file" release/MultiLangSwitcher-latest.zip
       - name: Move latest tag to HEAD
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$GITHUB_REF_NAME" --jq '.object.sha')"
+          test "$current" = "$GITHUB_SHA" || { echo "::error::$GITHUB_REF_NAME 已在发布前前进，中止推送过期 latest 标签。"; exit 1; }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -fa latest -m "Rolling latest build"

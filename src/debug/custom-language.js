@@ -49,7 +49,7 @@ const validateAcceptLanguageFormat = (languageString) => {
 		const qValue = qMatch[2]?.trim();
 
 		// 支持通配符 * 及 BCP 47 单字母扩展子标签（如 en-US-u-ca-gregory）
-		const languageTagPattern = /^(\*|[a-zA-Z]{2,3}(-[a-zA-Z0-9]{1,8})*)$/;
+		const languageTagPattern = /^(\*|[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*)$/;
 		if (!languageTagPattern.test(languageTag)) {
 			return true; // 语言标签格式不正确
 		}

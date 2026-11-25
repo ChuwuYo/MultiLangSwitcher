@@ -116,7 +116,9 @@ export class UpdateChecker {
 			}
 
 			// 过滤出稳定版本（按 SemVer 排除所有含 '-' 的预发布版本）
-			const stableVersions = data.versions.filter((v) => typeof v?.version === "string" && !v.version.includes("-"));
+			const stableVersions = data.versions.filter(
+				(v) => typeof v?.version === "string" && !v.version.split("+")[0].includes("-"),
+			);
 
 			if (stableVersions.length === 0) {
 				throw new Error("No stable versions found in jsDelivr response");
@@ -246,6 +248,7 @@ export class UpdateChecker {
 	 */
 	isNewerVersion(current, latest) {
 		try {
+			const parseNumericPart = (part) => (/^\d+$/.test(part) ? BigInt(part) : null);
 			const parseSemver = (ver) => {
 				const withoutBuild = String(ver || "")
 					.trim()
@@ -255,7 +258,7 @@ export class UpdateChecker {
 				const core = dashIdx === -1 ? withoutBuild : withoutBuild.slice(0, dashIdx);
 				const pre = dashIdx === -1 ? "" : withoutBuild.slice(dashIdx + 1);
 				return {
-					parts: core.split(".").map(Number),
+					parts: core === "" ? [0n] : core.split(".").map(parseNumericPart),
 					pre: pre ? pre.split(".") : [],
 				};
 			};
@@ -265,10 +268,10 @@ export class UpdateChecker {
 			const maxLength = Math.max(currParsed.parts.length, latParsed.parts.length);
 
 			for (let i = 0; i < maxLength; i++) {
-				const curr = i < currParsed.parts.length ? currParsed.parts[i] : 0;
-				const lat = i < latParsed.parts.length ? latParsed.parts[i] : 0;
+				const curr = i < currParsed.parts.length ? currParsed.parts[i] : 0n;
+				const lat = i < latParsed.parts.length ? latParsed.parts[i] : 0n;
 
-				if (Number.isNaN(curr) || Number.isNaN(lat)) {
+				if (curr === null || lat === null) {
 					return false;
 				}
 				if (lat > curr) return true;
@@ -284,8 +287,8 @@ export class UpdateChecker {
 				if (i >= latParsed.pre.length) return false;
 				const c = currParsed.pre[i];
 				const l = latParsed.pre[i];
-				const cNum = /^\d+$/.test(c) ? Number(c) : null;
-				const lNum = /^\d+$/.test(l) ? Number(l) : null;
+				const cNum = parseNumericPart(c);
+				const lNum = parseNumericPart(l);
 				if (cNum !== null && lNum !== null) {
 					if (lNum !== cNum) return lNum > cNum;
 				} else if (cNum !== null || lNum !== null) {
