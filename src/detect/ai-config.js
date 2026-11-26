@@ -46,6 +46,7 @@ const normalizeConfigStore = (storedConfig = null) => {
 	const normalizedStore = {
 		selectedProvider: DEFAULT_PROVIDER_KEY,
 		sessionOnlyKeys: Boolean(storedConfig?.sessionOnlyKeys),
+		sanitizeSnapshot: storedConfig?.sanitizeSnapshot !== false,
 		providers: {},
 	};
 
@@ -100,6 +101,7 @@ const serializeConfigStore = ({ stripApiKeys = Boolean(aiConfigStore.sessionOnly
 	return {
 		selectedProvider: aiConfigStore.selectedProvider || DEFAULT_PROVIDER_KEY,
 		sessionOnlyKeys: Boolean(aiConfigStore.sessionOnlyKeys),
+		sanitizeSnapshot: aiConfigStore.sanitizeSnapshot !== false,
 		providers,
 	};
 };
@@ -208,6 +210,9 @@ export const persistAIConfig = async () => {
 	if (elements.sessionOnlyKeyCheckbox) {
 		aiConfigStore.sessionOnlyKeys = Boolean(elements.sessionOnlyKeyCheckbox.checked);
 	}
+	if (elements.sanitizeSnapshotCheckbox) {
+		aiConfigStore.sanitizeSnapshot = Boolean(elements.sanitizeSnapshotCheckbox.checked);
+	}
 	aiConfigStore.providers[config.provider] = {
 		...config,
 		updatedAt: Date.now(),
@@ -293,6 +298,9 @@ export const loadAIConfig = async () => {
 	if (elements.sessionOnlyKeyCheckbox) {
 		elements.sessionOnlyKeyCheckbox.checked = Boolean(aiConfigStore.sessionOnlyKeys);
 	}
+	if (elements.sanitizeSnapshotCheckbox) {
+		elements.sanitizeSnapshotCheckbox.checked = aiConfigStore.sanitizeSnapshot !== false;
+	}
 	const normalized = getStoredProviderConfig(aiConfigStore.selectedProvider);
 
 	fillAIConfigInputs(normalized);
@@ -329,6 +337,8 @@ export const handleProviderChange = async () => {
 
 	updateAIProviderDescription(nextProvider);
 };
+
+export const isSanitizeSnapshotEnabled = () => aiConfigStore.sanitizeSnapshot !== false;
 
 export const handleApiKeyToggle = () => {
 	const { apiKeyInput, apiKeyToggle } = getAiElements();

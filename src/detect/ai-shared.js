@@ -24,6 +24,7 @@ export const getAiElements = () => {
 			apiKeyInput: document.getElementById("aiApiKeyInput"),
 			apiKeyToggle: document.getElementById("aiApiKeyToggle"),
 			sessionOnlyKeyCheckbox: document.getElementById("aiSessionOnlyKey"),
+			sanitizeSnapshotCheckbox: /** @type {HTMLInputElement | null} */ (document.getElementById("aiSanitizeSnapshot")),
 			clearKeysButton: document.getElementById("aiClearKeysBtn"),
 			modelInput: document.getElementById("aiModelInput"),
 			configHint: document.getElementById("aiConfigHint"),

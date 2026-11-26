@@ -4,6 +4,7 @@ import {
 	ensureProviderOptions,
 	handleApiKeyToggle,
 	handleProviderChange,
+	isSanitizeSnapshotEnabled,
 	loadAIConfig,
 	persistAIConfig,
 } from "./ai-config.js";
@@ -35,7 +36,36 @@ const sanitizeSnapshotForAI = (snapshot) => {
 	}
 
 	if (sanitized.webrtc) {
-		sanitized.webrtc.ips = Array.isArray(snapshot.webrtc?.ips) ? snapshot.webrtc.ips.map(() => "[redacted]") : [];
+		const rawIps = Array.isArray(snapshot.webrtc?.ips) ? snapshot.webrtc.ips : [];
+		const ipSummary = { publicCount: 0, privateCount: 0, mdnsCount: 0, ipv6Count: 0 };
+		for (const rawIp of rawIps) {
+			const value = String(rawIp || "")
+				.trim()
+				.toLowerCase();
+			if (!value) continue;
+			if (value.endsWith(".local")) {
+				ipSummary.mdnsCount++;
+			} else if (value.includes(":")) {
+				ipSummary.ipv6Count++;
+			} else {
+				const octets = value.split(".").map(Number);
+				const isPrivate =
+					octets.length === 4 &&
+					(octets[0] === 10 ||
+						octets[0] === 127 ||
+						(octets[0] === 192 && octets[1] === 168) ||
+						(octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+						(octets[0] === 169 && octets[1] === 254) ||
+						(octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127));
+				if (isPrivate) {
+					ipSummary.privateCount++;
+				} else {
+					ipSummary.publicCount++;
+				}
+			}
+		}
+		sanitized.webrtc.ips = rawIps.map(() => "[redacted]");
+		sanitized.webrtc.ipSummary = ipSummary;
 	}
 
 	if (sanitized.browserFingerprint) {
@@ -70,9 +100,17 @@ const sanitizeSnapshotForAI = (snapshot) => {
 	}
 
 	if (sanitized.hardwareFingerprint?.webgl) {
+		const rawRendererText =
+			`${snapshot.hardwareFingerprint?.webgl?.vendor || ""} ${snapshot.hardwareFingerprint?.webgl?.renderer || ""}`.trim();
+		const rendererType = !rawRendererText
+			? "unknown"
+			: /swiftshader|llvmpipe|software|microsoft basic render|mesa offscreen/i.test(rawRendererText)
+				? "software"
+				: "hardware";
 		sanitized.hardwareFingerprint.webgl.hash = "[redacted]";
 		sanitized.hardwareFingerprint.webgl.vendor = "[redacted]";
 		sanitized.hardwareFingerprint.webgl.renderer = "[redacted]";
+		sanitized.hardwareFingerprint.webgl.rendererType = rendererType;
 	}
 
 	if (sanitized.hardwareFingerprint?.audio) {
@@ -80,6 +118,16 @@ const sanitizeSnapshotForAI = (snapshot) => {
 	}
 
 	return sanitized;
+};
+
+const prepareSnapshotForAI = (snapshot) => {
+	if (!snapshot) return snapshot;
+	const sanitizedMode = isSanitizeSnapshotEnabled();
+	const prepared = sanitizedMode ? sanitizeSnapshotForAI(snapshot) : JSON.parse(JSON.stringify(snapshot));
+	if (prepared && typeof prepared === "object") {
+		prepared.meta = { ...(prepared.meta || {}), sanitized: sanitizedMode };
+	}
+	return prepared;
 };
 
 const bindConfigPersistence = () => {
@@ -111,22 +159,26 @@ const initializeAIUi = async () => {
 		await persistAIConfig();
 		updateAIControls();
 	});
+	ResourceManager.addEventListener(elements.sanitizeSnapshotCheckbox, "change", async () => {
+		await persistAIConfig();
+		updateAIControls();
+	});
 	ResourceManager.addEventListener(elements.clearKeysButton, "click", async () => {
 		await clearAllStoredAPIKeys();
 		updateAIControls();
 	});
-	ResourceManager.addEventListener(elements.startButton, "click", () => startAIDiagnosis(sanitizeSnapshotForAI));
+	ResourceManager.addEventListener(elements.startButton, "click", () => startAIDiagnosis(prepareSnapshotForAI));
 	ResourceManager.addEventListener(elements.stopButton, "click", stopAIRequest);
 	ResourceManager.addEventListener(elements.clearButton, "click", () => resetAISession());
 	ResourceManager.addEventListener(elements.exportStructuredButton, "click", () =>
-		exportStructuredSnapshotAsMarkdown(sanitizeSnapshotForAI),
+		exportStructuredSnapshotAsMarkdown(prepareSnapshotForAI),
 	);
-	ResourceManager.addEventListener(elements.sendButton, "click", () => sendFollowupMessage(sanitizeSnapshotForAI));
+	ResourceManager.addEventListener(elements.sendButton, "click", () => sendFollowupMessage(prepareSnapshotForAI));
 	ResourceManager.addEventListener(elements.exportButton, "click", exportChatAsMarkdown);
 	ResourceManager.addEventListener(elements.userInput, "keydown", (event) => {
 		if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
 			event.preventDefault();
-			sendFollowupMessage(sanitizeSnapshotForAI);
+			sendFollowupMessage(prepareSnapshotForAI);
 		}
 	});
 

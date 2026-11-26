@@ -31,10 +31,17 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 		expect(JSON.stringify(result.http.headers)).not.toContain("secret-session");
 	});
 
-	it("redacts every WebRTC IP", () => {
+	it("redacts every WebRTC IP while keeping ipSummary counts", () => {
 		const result = sanitizeSnapshotForAI(fullSnapshot());
 		expect(result.webrtc.ips).toEqual(["[redacted]", "[redacted]"]);
+		expect(result.webrtc.ipSummary).toEqual({
+			publicCount: 1,
+			privateCount: 1,
+			mdnsCount: 0,
+			ipv6Count: 0,
+		});
 		expect(JSON.stringify(result)).not.toContain("192.168.1.5");
+		expect(JSON.stringify(result)).not.toContain("203.0.113.9");
 		expect(result.webrtc.supported).toBe(true);
 	});
 
@@ -51,6 +58,7 @@ describe("sanitizeSnapshotForAI (security-sensitive)", () => {
 			hash: "[redacted]",
 			vendor: "[redacted]",
 			renderer: "[redacted]",
+			rendererType: "hardware",
 		});
 		expect(result.hardwareFingerprint.audio.hash).toBe("[redacted]");
 		const serialized = JSON.stringify(result);

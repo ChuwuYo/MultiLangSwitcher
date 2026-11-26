@@ -1935,6 +1935,9 @@ fieldset:disabled .btn {
 .gap-2 {
 	gap: 0.5rem !important;
 }
+.gap-3 {
+	gap: 1rem !important;
+}
 .font-monospace {
 	font-family: var(--bs-font-monospace) !important;
 }
