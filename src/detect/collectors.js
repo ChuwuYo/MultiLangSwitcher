@@ -539,13 +539,63 @@ export const collectWebRtcInfo = async () => {
 	}
 };
 
+const collectSpeechVoiceSummary = () => {
+	try {
+		if (typeof window === "undefined" || typeof window.speechSynthesis?.getVoices !== "function") {
+			return { count: 0, languages: [] };
+		}
+		const voices = window.speechSynthesis.getVoices() || [];
+		const uniqueLangs = [];
+		const seen = new Set();
+		for (const voice of voices) {
+			const lang = typeof voice?.lang === "string" ? voice.lang.trim() : "";
+			if (lang && !seen.has(lang)) {
+				seen.add(lang);
+				uniqueLangs.push(lang);
+				if (uniqueLangs.length >= 8) break;
+			}
+		}
+		return { count: voices.length, languages: uniqueLangs };
+	} catch (_error) {
+		return { count: 0, languages: [] };
+	}
+};
+
+const safeMatchMedia = (query) => {
+	try {
+		return typeof window !== "undefined" && typeof window.matchMedia === "function"
+			? window.matchMedia(query).matches
+			: false;
+	} catch (_error) {
+		return false;
+	}
+};
+
 export const collectFingerprintInfo = () => {
 	try {
+		const nav = /** @type {any} */ (navigator);
 		const screenInfo = {
 			width: screen.width || 0,
 			height: screen.height || 0,
 			colorDepth: screen.colorDepth || 0,
+			devicePixelRatio: Number(window.devicePixelRatio || 1),
 		};
+		const device = {
+			hardwareConcurrency: typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : null,
+			deviceMemory: typeof nav.deviceMemory === "number" ? nav.deviceMemory : null,
+			maxTouchPoints: typeof navigator.maxTouchPoints === "number" ? navigator.maxTouchPoints : 0,
+			webdriver: Boolean(navigator.webdriver),
+			pdfViewerEnabled: typeof nav.pdfViewerEnabled === "boolean" ? nav.pdfViewerEnabled : null,
+		};
+		const preferences = {
+			colorScheme: safeMatchMedia("(prefers-color-scheme: dark)") ? "dark" : "light",
+			reducedMotion: safeMatchMedia("(prefers-reduced-motion: reduce)"),
+			colorGamut: safeMatchMedia("(color-gamut: p3)") ? "p3" : "srgb",
+			cookieEnabled: Boolean(navigator.cookieEnabled),
+			doNotTrack: nav.doNotTrack ?? null,
+			globalPrivacyControl: typeof nav.globalPrivacyControl === "boolean" ? nav.globalPrivacyControl : null,
+		};
+		const speechVoices = collectSpeechVoiceSummary();
 
 		return {
 			status: "ok",
@@ -553,6 +603,9 @@ export const collectFingerprintInfo = () => {
 			screen: screenInfo,
 			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "N/A",
 			timezoneOffset: new Date().getTimezoneOffset(),
+			device,
+			preferences,
+			speechVoices,
 			error: "",
 		};
 	} catch (error) {
@@ -560,9 +613,12 @@ export const collectFingerprintInfo = () => {
 		return {
 			status: "error",
 			userAgent: "N/A",
-			screen: { width: 0, height: 0, colorDepth: 0 },
+			screen: { width: 0, height: 0, colorDepth: 0, devicePixelRatio: 1 },
 			timezone: "N/A",
 			timezoneOffset: 0,
+			device: null,
+			preferences: null,
+			speechVoices: { count: 0, languages: [] },
 			error: error?.message || String(error),
 		};
 	}

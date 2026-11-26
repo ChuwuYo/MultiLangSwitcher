@@ -388,9 +388,11 @@ export const renderFingerprintInfo = (fingerprintInfo, ipTimezoneInfo = null) =>
 	};
 
 	addDetail(translateDetect("user_agent_label"), fingerprintInfo.userAgent, false, "", true);
+	const dpr = fingerprintInfo.screen.devicePixelRatio;
+	const dprSuffix = typeof dpr === "number" && dpr > 0 ? ` @${Number(dpr.toFixed(2))}x` : "";
 	addDetail(
 		translateDetect("screen_information_label"),
-		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}`,
+		`${fingerprintInfo.screen.width}x${fingerprintInfo.screen.height}x${fingerprintInfo.screen.colorDepth}${dprSuffix}`,
 		true,
 	);
 	addDetail(
@@ -416,6 +418,29 @@ export const renderFingerprintInfo = (fingerprintInfo, ipTimezoneInfo = null) =>
 				addDetail(translateDetect("ip_org_label"), ipTimezoneInfo.organization);
 			}
 		}
+	}
+
+	if (fingerprintInfo.device) {
+		const deviceParts = [];
+		if (typeof fingerprintInfo.device.hardwareConcurrency === "number") {
+			deviceParts.push(`${fingerprintInfo.device.hardwareConcurrency} ${translateDetect("cores_unit")}`);
+		}
+		if (typeof fingerprintInfo.device.deviceMemory === "number") {
+			deviceParts.push(`${fingerprintInfo.device.deviceMemory} GB`);
+		}
+		deviceParts.push(
+			fingerprintInfo.device.webdriver ? translateDetect("webdriver_detected") : translateDetect("webdriver_normal"),
+		);
+		addDetail(translateDetect("device_signals_label"), deviceParts.join(" · "));
+	}
+
+	if (fingerprintInfo.speechVoices?.count > 0 && fingerprintInfo.speechVoices.languages?.length > 0) {
+		const langsPreview = fingerprintInfo.speechVoices.languages.slice(0, 5).join(", ");
+		const countText = translateDetect("speech_voices_count").replace(
+			"{count}",
+			String(fingerprintInfo.speechVoices.count),
+		);
+		addDetail(translateDetect("speech_voices_label"), `${langsPreview} (${countText})`);
 	}
 
 	const footerP = document.createElement("p");

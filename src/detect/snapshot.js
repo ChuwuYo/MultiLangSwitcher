@@ -106,6 +106,9 @@ export const buildDetectionSnapshot = (results) => {
 			screen: results.fingerprintInfo.screen,
 			timezone: results.fingerprintInfo.timezone,
 			timezoneOffset: results.fingerprintInfo.timezoneOffset,
+			device: results.fingerprintInfo.device || null,
+			preferences: results.fingerprintInfo.preferences || null,
+			speechVoices: results.fingerprintInfo.speechVoices || { count: 0, languages: [] },
 		},
 		hardwareFingerprint: {
 			canvas: {
