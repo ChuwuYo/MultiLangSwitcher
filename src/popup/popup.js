@@ -14,6 +14,12 @@ import {
 	updateLanguageDisplay,
 } from "./ui-sync.js";
 import { getAutoSwitchStatus, getCurrentLanguage, setAutoSwitchStatus, updateHeaderRules } from "./language-apply.js";
+import {
+	closeLanguagePicker,
+	createLanguagePicker,
+	syncLanguagePicker,
+	updateLanguagePickerLabels,
+} from "../shared/language-picker.js";
 import { cancelUpdateCheck, debouncedUpdateCheck, resetUpdateCheckState } from "./update-check.js";
 import "../shared/toggle.js";
 
@@ -33,8 +39,13 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	const autoSwitchToggle = /** @type {HTMLInputElement} */ (getEl("autoSwitchToggle"));
 	const resetBtn = getEl("resetBtn");
 
-	// 初始化语言选项下拉列表
+	// 初始化语言选项下拉列表与可搜索浮层选择器
 	populateLanguageSelect(languageSelect);
+	createLanguagePicker(languageSelect, {
+		searchPlaceholder: popupI18n.t("search_language_placeholder"),
+		emptyText: popupI18n.t("no_matching_language"),
+		placeholderText: popupI18n.t("not_set"),
+	});
 	sendDebugLog(popupI18n.t("popup_script_loaded"));
 
 	// 加载并应用自动切换状态
@@ -71,17 +82,6 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 			}
 		},
 
-		// 语言选择框获得焦点处理
-		languageSelectFocus: (event) => {
-			event.target.size = 6;
-			sendDebugLog(popupI18n.t("language_select_focus"), "info");
-		},
-
-		// 语言选择框失焦时折叠列表
-		languageSelectBlur: (event) => {
-			event.target.size = 1;
-		},
-
 		// 应用按钮点击处理
 		applyButtonClick: async () => {
 			if (!languageSelect) return;
@@ -103,8 +103,8 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 				// currentLanguage 由 background 的 UPDATE_RULES 处理器在规则应用成功后持久化（单写者原则）
 				await updateHeaderRules(selectedLanguage, true);
 
-				// 折叠下拉框，直接同步
-				languageSelect.size = 1;
+				// 关闭浮层选择器
+				closeLanguagePicker();
 				sendDebugLog(popupI18n.t("collapse_language_select"), "info");
 			} catch (error) {
 				// 简化的错误处理
@@ -134,7 +134,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 				// 重置成功后更新UI
 				sendDebugLog(popupI18n.t("reset_successful"), "success");
 				updateLanguageDisplay(popupI18n.t("not_set"));
-				if (languageSelect) languageSelect.value = "";
+				if (languageSelect) {
+					languageSelect.value = "";
+					syncLanguagePicker(languageSelect);
+				}
 			} catch (error) {
 				// 重置失败处理
 				eventHandlers.handleResetError(error);
@@ -176,11 +179,6 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		ResourceManager.addEventListener(autoSwitchToggle, "change", eventHandlers.autoSwitchChange);
 	}
 
-	if (languageSelect) {
-		ResourceManager.addEventListener(languageSelect, "focus", eventHandlers.languageSelectFocus);
-		ResourceManager.addEventListener(languageSelect, "blur", eventHandlers.languageSelectBlur);
-	}
-
 	if (applyButton) {
 		ResourceManager.addEventListener(applyButton, "click", eventHandlers.applyButtonClick);
 	}
@@ -198,6 +196,26 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	if (updateCheckBtn) {
 		ResourceManager.addEventListener(updateCheckBtn, "click", eventHandlers.updateCheckBtnClick);
 	}
+
+	// 接管弹窗内界面语言切换：原地更新文案并平滑过渡，避免整页 reload 闪烁
+	ResourceManager.addEventListener(document, "mls:language-switch-request", (event) => {
+		const customEvent = /** @type {CustomEvent<{ lang?: string }>} */ (event);
+		const nextLang = customEvent.detail?.lang;
+		if (!nextLang) return;
+		event.preventDefault();
+
+		popupI18n.switchLanguageInPlace(nextLang, () => {
+			updateLanguagePickerLabels(languageSelect, {
+				searchPlaceholder: popupI18n.t("search_language_placeholder"),
+				emptyText: popupI18n.t("no_matching_language"),
+				placeholderText: popupI18n.t("not_set"),
+			});
+			// 隐藏旧语言的瞬态通知条，避免中英混杂残留
+			getEl("updateNotification")?.classList.add("d-none");
+			getEl("updateErrorAlert")?.classList.add("d-none");
+			getEl("errorAlert")?.classList.add("d-none");
+		});
+	});
 
 	const onStorageChanged = (changes, areaName) => {
 		if (areaName !== "session" || !changes[STORAGE_KEYS.UI_STATE]?.newValue) {
@@ -276,6 +294,7 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 		// 同步更新语言选择器
 		if (languageSelect) {
 			languageSelect.value = currentLanguage;
+			syncLanguagePicker(languageSelect);
 		}
 
 		sendDebugLog(`${popupI18n.t("received_background_message")} ${currentLanguage}${popupI18n.t("update_ui")}`, "info");

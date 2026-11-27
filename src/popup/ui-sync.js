@@ -5,6 +5,7 @@ import { normalizeLanguageOptionValue } from "../shared/shared-language-options.
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { sendDebugLog } from "../shared/shared-utils.js";
 import { popupI18n } from "../i18n/popup-i18n.js";
+import { syncLanguagePicker } from "../shared/language-picker.js";
 import { getEl, runDOMUpdate } from "./shared.js";
 
 /**
@@ -23,7 +24,10 @@ export const updateAutoSwitchUI = (enabled, autoSwitchToggle, languageSelect, ap
 	autoSwitchToggle.checked = !!enabled;
 
 	// 根据自动切换状态禁用/启用手动选择控件
-	if (languageSelect) languageSelect.disabled = !!enabled;
+	if (languageSelect) {
+		languageSelect.disabled = !!enabled;
+		syncLanguagePicker(languageSelect);
+	}
 	if (applyButton) applyButton.disabled = !!enabled;
 
 	// 记录状态变更日志
@@ -96,6 +100,7 @@ export const updateLanguageDisplay = (language, showSuccess = false) => {
 		if (languageSelect && languageSelect.value !== normalizedLanguage) {
 			// 仅在下拉值不一致时同步一次
 			languageSelect.value = normalizedLanguage;
+			syncLanguagePicker(languageSelect);
 		}
 		return;
 	}
@@ -104,7 +109,10 @@ export const updateLanguageDisplay = (language, showSuccess = false) => {
 	// 更新当前语言显示
 	if (currentLanguageSpan) currentLanguageSpan.textContent = normalizedLanguage;
 	// 同步语言选择框的值
-	if (languageSelect) languageSelect.value = normalizedLanguage;
+	if (languageSelect) {
+		languageSelect.value = normalizedLanguage;
+		syncLanguagePicker(languageSelect);
+	}
 
 	// 如果需要显示成功提示
 	if (showSuccess) {

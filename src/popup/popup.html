@@ -12,102 +12,223 @@
   <link href="../shared/vendor/bootstrap.purged.css" rel="stylesheet">
   <link href="../shared/page-base.css" rel="stylesheet">
   <link href="../shared/toggle.css" rel="stylesheet">
+  <link href="../shared/language-picker.css" rel="stylesheet">
   <script src="../shared/theme-init.js"></script>
   <style>
+    /* 暖中性浅色纸感 + 近纯黑无蓝偏暗色（参考 Amp / Impeccable 色彩体系，与 Detect/Debug 钴蓝技术色一致） */
+    :root {
+      --p-bg: #f6f6f4;
+      --p-surface: #ffffff;
+      --p-surface-2: #ecece8;
+      --p-border: rgba(20, 20, 19, 0.11);
+      --p-border-strong: rgba(20, 20, 19, 0.24);
+      --p-divider: rgba(20, 20, 19, 0.08);
+      --p-text: #141413;
+      --p-muted: #6e6e6a;
+      --p-ink: #141413;
+      --p-ink-hover: #2d2d2a;
+      --p-ink-fg: #ffffff;
+      --p-danger-bg: rgba(207, 34, 46, 0.07);
+      --p-danger-border: rgba(207, 34, 46, 0.24);
+    }
+
+    html[data-bs-theme="dark"] {
+      --p-bg: #0f1010;
+      --p-surface: #171818;
+      --p-surface-2: #222323;
+      --p-border: rgba(255, 255, 255, 0.1);
+      --p-border-strong: rgba(255, 255, 255, 0.22);
+      --p-divider: rgba(255, 255, 255, 0.07);
+      --p-text: #ededec;
+      --p-muted: #8b8d8b;
+      --p-ink: #ededec;
+      --p-ink-hover: #ffffff;
+      --p-ink-fg: #0f1010;
+      --p-danger-bg: rgba(248, 113, 113, 0.1);
+      --p-danger-border: rgba(248, 113, 113, 0.28);
+    }
+
     html {
       font-size: 0.875rem;
     }
 
-    body {
+    body.popup-body {
       width: 380px;
-      padding: 14px 12px 12px;
+      padding: 16px 16px 18px;
+      background-color: var(--p-bg);
+      color: var(--p-text);
     }
 
+    body.popup-body main.container {
+      padding: 0;
+    }
+
+    /* 顶栏右侧收拢两个无框幽灵图标按钮（覆盖 toggle.js 默认左/右分散定位） */
+    body.popup-body .toggle {
+      top: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border-color: transparent;
+      background-color: transparent;
+      color: var(--p-muted);
+    }
+
+    body.popup-body #langToggleBtn {
+      left: auto !important;
+      right: 46px;
+    }
+
+    body.popup-body #themeToggleBtn {
+      right: 14px;
+    }
+
+    body.popup-body .toggle:hover:not(:disabled) {
+      border-color: transparent;
+      background-color: var(--p-surface-2);
+      color: var(--p-text);
+    }
+
+    /* 左对齐单行工具顶栏，去掉居中大标题与冗余占位 */
     .header {
       margin-bottom: 14px;
-      padding: 0 32px;
-      text-align: center;
+      padding-right: 68px;
+      text-align: left;
     }
 
     .header h4 {
-      letter-spacing: -0.02em;
-      font-weight: 700;
+      font-size: 1.08rem;
+      letter-spacing: -0.025em;
+      font-weight: 600;
       margin-bottom: 2px;
+      color: var(--p-text);
     }
 
-    .language-select {
-      margin-bottom: 12px;
+    .header p {
+      font-size: 0.84em;
+      color: var(--p-muted) !important;
     }
 
+    /* 当前语言读数行：排版立主视觉，不套冗余灰框卡片 */
     .status-row {
       display: flex;
-      align-items: stretch;
+      align-items: center;
+      justify-content: space-between;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      padding: 10px 0 12px;
+      border-top: 1px solid var(--p-divider);
+      border-bottom: 1px solid var(--p-divider);
     }
 
     .status-card {
       flex: 1;
-      padding: 10px 12px;
-      border: 1px solid var(--mls-border);
-      border-radius: var(--mls-radius-md);
-      background-color: var(--mls-surface-subtle);
-      text-align: center;
+      min-width: 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-    }
-
-    .section {
-      margin-bottom: 12px;
-    }
-
-    .auto-switch-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      padding: 6px 2px;
-    }
-
-    .auto-switch-label {
-      font-size: 0.92em;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .popup-footer {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid var(--mls-border-subtle);
     }
 
     #statusText {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
+      font-size: 0.88em;
+      color: var(--p-muted);
     }
 
-    /* 当前语言代码徽章：作为弹窗唯一视觉焦点，保持克制的仪器读数感 */
+    /* 当前语言读数：克制的等宽技术徽章（4px 利落圆角） */
     #currentLanguage {
       display: inline-block;
       background-color: var(--mls-accent-subtle);
       color: var(--mls-accent);
       border: 1px solid var(--mls-accent-border);
       padding: 2px 8px;
-      border-radius: var(--mls-radius-sm);
+      border-radius: 4px;
       font-family: var(--mls-font-mono);
       font-variant-numeric: tabular-nums;
+      font-size: 1.05em;
       font-weight: 600;
+      line-height: 1.3;
     }
 
-    #languageSelect {
-      overflow-y: auto;
+    #resetBtn {
+      position: static;
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      opacity: 0.72;
     }
 
-    /* 切换开关 */
+    #resetBtn:hover:not(:disabled) {
+      opacity: 1;
+    }
+
+    /* 核心操作区：语言选择器 + 紧贴文字的紧凑“应用”按钮同行排布 */
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .language-select .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.84em;
+      font-weight: 500;
+      color: var(--p-muted);
+    }
+
+    .language-select {
+      margin-bottom: 10px;
+    }
+
+    #applyButton {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 16px;
+      border-radius: 6px;
+      font-size: 0.92em;
+      font-weight: 500;
+      white-space: nowrap;
+      background-color: var(--p-ink);
+      border: 1px solid var(--p-ink);
+      color: var(--p-ink-fg);
+      transition: background-color 0.14s ease, opacity 0.14s ease, transform 0.1s ease;
+    }
+
+    #applyButton:hover:not(:disabled) {
+      background-color: var(--p-ink-hover);
+      border-color: var(--p-ink-hover);
+      color: var(--p-ink-fg);
+    }
+
+    #applyButton:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #applyButton:disabled {
+      opacity: 0.35;
+    }
+
+    /* 自动切换行：发丝分割线 + 充裕垂直节奏 */
+    .auto-switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 14px 0;
+      border-top: 1px solid var(--p-divider);
+      border-bottom: 1px solid var(--p-divider);
+    }
+
+    .auto-switch-label {
+      font-size: 0.92em;
+      font-weight: 500;
+      color: var(--p-text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* 极简微弹开关 */
     .toggle-wrapper {
       position: relative;
       display: inline-flex;
@@ -126,41 +247,41 @@
 
     .toggle-container {
       position: relative;
-      width: 46px;
-      height: 26px;
+      width: 44px;
+      height: 24px;
       border-radius: 999px;
       background-color: rgba(120, 120, 128, 0.24);
-      transition: background-color 0.24s ease;
+      transition: background-color 0.22s ease;
     }
 
     html[data-bs-theme="dark"] .toggle-container {
-      background-color: rgba(120, 120, 128, 0.36);
+      background-color: rgba(255, 255, 255, 0.18);
     }
 
     .toggle-button {
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 999px;
       background-color: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 0.5px 1px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
       transition:
-        transform 0.26s cubic-bezier(0.32, 1.25, 0.5, 1),
+        transform 0.24s cubic-bezier(0.32, 1.25, 0.5, 1),
         width 0.16s ease;
     }
 
     .toggle-checkbox:active:not(:disabled) + .toggle-container > .toggle-button {
-      width: 28px;
+      width: 26px;
     }
 
     .toggle-checkbox:checked + .toggle-container {
-      background-color: #34c759;
+      background-color: #22a055;
     }
 
     html[data-bs-theme="dark"] .toggle-checkbox:checked + .toggle-container {
-      background-color: #30d158;
+      background-color: #2fb869;
     }
 
     .toggle-checkbox:checked + .toggle-container > .toggle-button {
@@ -181,67 +302,132 @@
       cursor: not-allowed;
     }
 
-    #resetBtn {
-      position: static;
-      flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      align-self: center;
-      border-radius: var(--mls-radius-md);
+    /* 快捷工具栏：三等分固定宽度网格，切换中英文长度不变 */
+    .quick-tools-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
-    /* 暗色模式下提升快捷工具栏描边按钮可读性 */
-    html[data-bs-theme="dark"] #checkHeaderBtn {
-      color: var(--mls-accent);
-      border-color: var(--mls-accent-border);
+    .quick-tools-row .btn {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.86em;
+      font-weight: 500;
+      background-color: var(--p-surface);
+      border: 1px solid var(--p-border);
+      color: var(--p-text);
+      transition: border-color 0.14s ease, background-color 0.14s ease;
     }
 
-    html[data-bs-theme="dark"] #checkHeaderBtn:hover {
-      background-color: var(--mls-accent-subtle);
-      color: var(--mls-accent-hover);
+    .quick-tools-row .btn:hover:not(:disabled) {
+      border-color: var(--p-border-strong);
+      background-color: var(--p-surface);
+      color: var(--p-text);
     }
 
-    html[data-bs-theme="dark"] #detectionPageLink,
-    html[data-bs-theme="dark"] #debugPageLink {
-      color: var(--bs-body-color);
-      border-color: var(--mls-border);
+    .quick-tools-row .btn:disabled {
+      opacity: 0.5;
     }
 
-    /* 更新检查按钮：回归中性克制的页脚幽灵按钮 */
+    /* 页脚更新检查：退居最轻的无框文字操作 */
+    .popup-footer {
+      margin-top: 6px;
+      padding-top: 2px;
+    }
+
     .update-check-button {
       position: relative;
-      font-size: 0.85em;
-      border: 1px solid var(--mls-border);
-      background-color: var(--mls-surface-subtle);
-      color: var(--bs-secondary-color);
-      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-      border-radius: var(--mls-radius-sm);
+      min-height: 32px;
+      padding: 5px 10px;
+      font-size: 0.83em;
+      font-weight: 500;
+      border: 1px solid transparent;
+      background-color: transparent;
+      color: var(--p-muted);
+      border-radius: 6px;
+      transition: background-color 0.14s ease, color 0.14s ease;
     }
 
     .update-check-button .spinner-border {
-      width: 0.8rem;
-      height: 0.8rem;
+      width: 0.78rem;
+      height: 0.78rem;
     }
 
     .update-check-button:hover:not(:disabled) {
-      border-color: var(--mls-accent-border);
-      background-color: var(--mls-accent-subtle);
-      color: var(--mls-accent);
+      background-color: var(--p-surface-2);
+      color: var(--p-text);
     }
 
     .update-check-button:focus-visible {
-      outline: 2px solid var(--mls-accent);
+      outline: var(--mls-focus-outline);
       outline-offset: 2px;
     }
 
-    /* 更新通知语义配色（统一令牌 + 区分 success 绿 / info 蓝 / warning 琥珀） */
+    /* === 动态弹出组件统一视觉（请求头检查结果 / 错误提示 / 更新通知） === */
+    .header-check-result {
+      animation: slideIn 0.2s ease-out;
+    }
+
+    .header-check-result .card {
+      border-radius: 6px;
+      border: 1px solid var(--p-border);
+      background-color: var(--p-surface);
+      box-shadow: none;
+    }
+
+    .header-check-result .card-header {
+      padding: 7px 10px;
+      font-size: 0.82em;
+      font-weight: 600;
+      color: var(--p-muted);
+      background-color: transparent !important;
+      border-bottom: 1px solid var(--p-divider);
+    }
+
+    .header-check-result .card-body {
+      padding: 9px 10px;
+    }
+
+    #headerCheckContent {
+      font-size: 0.84rem;
+      line-height: 1.45;
+      max-height: 140px;
+      overflow-y: auto;
+      color: var(--p-text);
+    }
+
+    /* 错误提示条（#errorAlert 与 #updateErrorAlert 统一精简） */
+    #errorAlert,
+    #updateErrorAlert {
+      padding: 9px 11px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      line-height: 1.45;
+      background-color: var(--p-danger-bg);
+      border: 1px solid var(--p-danger-border);
+      color: var(--mls-danger);
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    #errorAlert {
+      margin-bottom: 12px;
+    }
+
+    /* 更新通知卡片（统一 6px 圆角、克制语义底色与按钮层级） */
     .update-notification {
-      margin-top: 10px;
-      padding: 12px;
-      border-radius: var(--mls-radius-sm);
-      font-size: 0.9em;
-      border: 1px solid;
-      animation: slideIn 0.25s ease-out;
+      margin-top: 8px;
+      padding: 11px 12px;
+      border-radius: 6px;
+      font-size: 0.86em;
+      border: 1px solid var(--p-border);
+      animation: slideIn 0.2s ease-out;
     }
 
     .update-notification.success {
@@ -251,15 +437,51 @@
     }
 
     .update-notification.info {
-      background-color: var(--mls-info-subtle);
-      border-color: var(--mls-info-border);
-      color: var(--mls-info);
+      background-color: var(--p-surface);
+      border-color: var(--p-border-strong);
+      color: var(--p-text);
     }
 
     .update-notification.warning {
       background-color: var(--mls-warning-subtle);
       border-color: var(--mls-warning-border);
       color: var(--mls-warning);
+    }
+
+    .update-version-info {
+      margin: 2px 0 4px;
+      font-size: 0.94em;
+      line-height: 1.45;
+    }
+
+    .update-version-info strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1em;
+      font-weight: 600;
+    }
+
+    .version-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .version-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .version-badge {
+      background-color: var(--p-surface-2);
+      border: 1px solid var(--p-border);
+      color: var(--p-text);
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-family: var(--mls-font-mono);
+      font-size: 0.88em;
     }
 
     .update-actions {
@@ -270,62 +492,46 @@
     }
 
     .update-actions .btn {
-      font-size: 0.85em;
+      font-size: 0.86em;
+      font-weight: 500;
       padding: 5px 12px;
-      border-radius: var(--mls-radius-sm);
+      border-radius: 6px;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 4px;
     }
 
-    .update-version-info {
-      margin: 8px 0;
-      font-size: 0.85em;
-      line-height: 1.4;
+    .update-actions .btn-primary {
+      background-color: var(--p-ink);
+      border-color: var(--p-ink);
+      color: var(--p-ink-fg);
     }
 
-    .update-version-info strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 1em;
+    .update-actions .btn-primary:hover {
+      background-color: var(--p-ink-hover);
+      border-color: var(--p-ink-hover);
+      color: var(--p-ink-fg);
     }
 
-    .version-comparison {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .update-actions .btn-outline-primary,
+    .update-actions .btn-outline-warning {
+      background-color: transparent;
+      border-color: var(--p-border-strong);
+      color: var(--p-text);
     }
 
-    .version-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .version-badge {
-      background-color: var(--mls-surface-subtle);
-      border: 1px solid var(--mls-border-subtle);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: var(--mls-font-mono);
-      font-size: 0.9em;
-    }
-
-    .header-check-result {
-      animation: slideIn 0.25s ease-out;
-    }
-
-    #headerCheckContent {
-      font-size: 12px;
-      max-height: 150px;
-      overflow-y: auto;
+    .update-actions .btn-outline-primary:hover,
+    .update-actions .btn-outline-warning:hover {
+      background-color: var(--p-surface-2);
+      border-color: var(--p-border-strong);
+      color: var(--p-text);
     }
 
     @keyframes slideIn {
       from {
         opacity: 0;
-        transform: translateY(-6px);
+        transform: translateY(-4px);
       }
       to {
         opacity: 1;
@@ -348,10 +554,16 @@
       max-width: 100%;
     }
 
-    #updateErrorAlert,
     #updateNotification .alert {
       max-width: 100%;
       overflow-wrap: break-word;
+    }
+
+    /* 原地语言切换的轻量交叉淡化过渡（View Transitions API） */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 150ms;
+      animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
     }
   </style>
 </head>
@@ -361,29 +573,27 @@
   <button type="button" id="themeToggleBtn" class="toggle" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
 
   <main class="container">
-    <!-- 页面头部 -->
+    <!-- 左对齐单行工具顶栏 -->
     <div class="header">
       <h4 id="extensionName" data-i18n="extension_name"></h4>
       <p class="text-muted mb-0" id="extensionSubtitle" data-i18n="subtitle"></p>
     </div>
 
-    <!-- 状态行：当前语言状态卡 + 独立重置按钮 -->
+    <!-- 当前语言读数行 + 独立重置图标 -->
     <div class="status-row">
-      <!-- 当前状态卡：当前语言一目了然 -->
       <div class="status-card">
         <p id="statusText" class="mb-0" aria-live="polite"></p>
       </div>
-      <!-- 重置Accept-Language按钮 -->
-      <button type="button" id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip" data-i18n-aria-label="reset_accept_language_tooltip"><img src="../../assets/images/reset.svg" id="resetBtnImg" width="16" height="16"
+      <button type="button" id="resetBtn" class="toggle" data-i18n-title="reset_accept_language_tooltip" data-i18n-aria-label="reset_accept_language_tooltip"><img src="../../assets/images/reset.svg" id="resetBtnImg" width="15" height="15"
           class="invert-on-dark" data-i18n-alt="reset_accept_language_tooltip"></button>
     </div>
 
     <!-- 错误提示区域 -->
-    <div id="errorAlert" class="alert alert-danger d-none mt-2" role="alert">
+    <div id="errorAlert" class="alert alert-danger d-none" role="alert">
       <span id="errorMessage"></span>
     </div>
 
-    <!-- 主操作区：语言选择 + 应用 -->
+    <!-- 主操作区：等宽语言选择框 + 固定宽度应用按钮 -->
     <div class="section">
       <div class="language-select">
         <label for="languageSelect" class="form-label" id="languageSelectLabel" data-i18n="select_language"></label>
@@ -391,10 +601,10 @@
           <!-- 语言选项将由JavaScript动态生成 -->
         </select>
       </div>
-      <button id="applyButton" class="btn btn-primary w-100" data-i18n="apply_changes"></button>
+      <button id="applyButton" class="btn btn-primary" data-i18n="apply_changes"></button>
     </div>
 
-    <!-- 自动切换：标签与精密机械开关同一行 -->
+    <!-- 自动切换行 -->
     <div class="auto-switch-row">
       <label for="autoSwitchToggle" id="autoSwitchLabel" class="auto-switch-label mb-0" data-i18n="auto_switch"></label>
       <div class="toggle-wrapper">
@@ -405,24 +615,24 @@
       </div>
     </div>
 
-    <!-- 快捷工具区：语义一致的中性按钮 + 主强调给检查 -->
-    <div class="section d-flex gap-2">
-      <button type="button" id="checkHeaderBtn" class="btn btn-sm btn-outline-primary flex-fill" data-i18n="quick_check"></button>
-      <a href="../detect/detect.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary flex-fill" id="detectionPageLink" data-i18n="detection_page"></a>
-      <a href="../debug/debug.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary flex-fill" id="debugPageLink" data-i18n="debug_tools"></a>
+    <!-- 快捷工具区 -->
+    <div class="section quick-tools-row">
+      <button type="button" id="checkHeaderBtn" class="btn btn-sm" data-i18n="quick_check"></button>
+      <a href="../detect/detect.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm" id="detectionPageLink" data-i18n="detection_page"></a>
+      <a href="../debug/debug.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm" id="debugPageLink" data-i18n="debug_tools"></a>
     </div>
 
     <!-- 请求头检查结果显示区域 -->
     <div class="mt-2 d-none header-check-result" id="headerCheckResult">
       <div class="card">
-        <div class="card-header bg-body-tertiary" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
+        <div class="card-header" id="headerCheckResultTitle" data-i18n="header_check_result"></div>
         <div class="card-body">
           <pre id="headerCheckContent" class="mb-0" aria-live="polite" data-i18n="click_quick_check"></pre>
         </div>
       </div>
     </div>
 
-    <!-- 页脚：更新检查（次级、弱化） -->
+    <!-- 页脚：更新检查 -->
     <div class="popup-footer">
       <button type="button" id="updateCheckBtn" class="btn btn-sm w-100 update-check-button">
         <span id="updateCheckText" data-i18n="check_for_updates"></span>

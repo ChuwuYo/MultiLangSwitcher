@@ -44,6 +44,41 @@ class PopupI18n extends BaseI18n {
 			statusText.appendChild(span);
 		}
 	}
+
+	/**
+	 * 无刷新原地切换弹窗界面语言（支持 View Transition 交叉淡化，自动尊重减弱动态偏好）
+	 * @param {string} lang - 目标语言代码 ('en' | 'zh')
+	 * @param {() => void} [onDomUpdate] - 同帧内同步动态组件文案的回调
+	 * @returns {boolean}
+	 */
+	switchLanguageInPlace(lang, onDomUpdate) {
+		if (!this.setLanguageInPlace(lang)) {
+			return false;
+		}
+
+		const applyAll = () => {
+			this._applyTranslations();
+			if (typeof onDomUpdate === "function") {
+				onDomUpdate();
+			}
+		};
+
+		const prefersReducedMotion =
+			typeof window !== "undefined" &&
+			typeof window.matchMedia === "function" &&
+			window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const docWithTransition = /** @type {Document & { startViewTransition?: (cb: () => void) => unknown }} */ (
+			document
+		);
+
+		if (!prefersReducedMotion && typeof docWithTransition.startViewTransition === "function") {
+			docWithTransition.startViewTransition(applyAll);
+		} else {
+			applyAll();
+		}
+
+		return true;
+	}
 }
 
 // 创建全局实例

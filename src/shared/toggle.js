@@ -39,7 +39,18 @@ class LanguageToggle {
 		document.body.appendChild(langBtn);
 
 		ResourceManager.addEventListener(langBtn, "click", () => {
-			this.switchLanguage(this.currentLang === "zh" ? "en" : "zh");
+			const nextLang = this.currentLang === "zh" ? "en" : "zh";
+			const requestEvent = new CustomEvent("mls:language-switch-request", {
+				cancelable: true,
+				detail: { lang: nextLang },
+			});
+			// 若当前页面（如 Popup）监听并接管了原地无刷新切换，则跳过整页 reload
+			if (!document.dispatchEvent(requestEvent)) {
+				this.currentLang = nextLang;
+				langBtn.title = this.currentLang === "zh" ? "English" : "中文";
+				return;
+			}
+			this.switchLanguage(nextLang);
 		});
 	}
 }

@@ -67,6 +67,8 @@ const debugEn = {
 
 	// Labels and forms
 	test_language_label: "Test Target Language:",
+	search_language_placeholder: "Search language or code...",
+	no_matching_language: "No matching language",
 	custom_language_label: "Custom Language String:",
 	custom_language_placeholder: "Example: en-US,en;q=0.9,fr;q=0.8",
 	info: "Info",
@@ -349,6 +351,8 @@ const debugZh = {
 
 	// 标签和表单
 	test_language_label: "测试目标语言：",
+	search_language_placeholder: "搜索语言或代码...",
+	no_matching_language: "未找到匹配语言",
 	custom_language_label: "自定义语言字符串：",
 	custom_language_placeholder: "示例：en-US,en;q=0.9,fr;q=0.8",
 	info: "信息",

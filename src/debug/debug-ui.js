@@ -1,5 +1,6 @@
 // debug-ui.js - 调试页面UI交互脚本
 
+import { createLanguagePicker } from "../shared/language-picker.js";
 import { populateLanguageSelect } from "../shared/shared-language-options.js";
 import { ResourceManager } from "../shared/shared-resource-manager.js";
 import { registerI18nInstance } from "../shared/shared-utils.js";
@@ -27,6 +28,10 @@ ResourceManager.addEventListener(document, "DOMContentLoaded", async () => {
 	const testLanguageSelect = /** @type {HTMLSelectElement} */ (document.getElementById("testLanguage"));
 	if (testLanguageSelect) {
 		populateLanguageSelect(testLanguageSelect);
+		createLanguagePicker(testLanguageSelect, {
+			searchPlaceholder: debugI18n.t("search_language_placeholder"),
+			emptyText: debugI18n.t("no_matching_language"),
+		});
 	}
 
 	initRulesView();

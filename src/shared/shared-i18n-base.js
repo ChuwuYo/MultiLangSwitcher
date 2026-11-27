@@ -189,6 +189,31 @@ export class BaseI18n {
 	 * 复用共享工具函数实现。
 	 * @param {string} lang - 目标语言代码。
 	 */
+	/**
+	 * 原地切换语言字典并持久化（不触发整页 reload，由调用方负责刷新 DOM）
+	 * @param {string} lang - 目标语言代码 ('en', 'zh')
+	 * @returns {boolean} 是否发生语言切换
+	 */
+	setLanguageInPlace(lang) {
+		if (this.isServiceWorker || !lang || lang === this.currentLang) {
+			return false;
+		}
+		const dictionary = this.dictionaries?.[lang];
+		if (!dictionary) {
+			return false;
+		}
+		this.currentLang = lang;
+		this.translations = dictionary;
+		this.isReady = true;
+		if (typeof localStorage !== "undefined") {
+			localStorage.setItem(LOCAL_STORAGE_KEYS.APP_LANG, lang);
+		}
+		if (typeof document !== "undefined" && document.documentElement) {
+			document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+		}
+		return true;
+	}
+
 	switchLanguage(lang) {
 		if (this.isServiceWorker) {
 			return;
