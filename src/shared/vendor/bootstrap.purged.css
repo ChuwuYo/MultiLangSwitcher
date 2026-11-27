@@ -1872,14 +1872,15 @@ fieldset:disabled .btn {
 	border-top: var(--bs-border-width) var(--bs-border-style)
 		var(--bs-border-color) !important;
 }
+.border-bottom {
+	border-bottom: var(--bs-border-width) var(--bs-border-style)
+		var(--bs-border-color) !important;
+}
 .w-100 {
 	width: 100% !important;
 }
 .h-100 {
 	height: 100% !important;
-}
-.flex-fill {
-	flex: 1 1 auto !important;
 }
 .flex-column {
 	flex-direction: column !important;
