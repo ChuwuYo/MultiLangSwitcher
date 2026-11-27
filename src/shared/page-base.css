@@ -1,4 +1,5 @@
-/* 页面公共基础样式：字体定义与三页共享 Design Tokens（单一来源） */
+/* 页面公共基础样式：字体定义与三页共享 Design Tokens（单一真相源）
+ * 暖中性浅色纸感 + 无蓝偏中性炭黑暗色，三页（Popup / Detect / Debug）完全共用 */
 @font-face {
 	font-family: "MapleMonoNL";
 	src: url("../../assets/fonts/MapleMonoNL-Regular.woff2") format("woff2");
@@ -6,74 +7,173 @@
 }
 
 :root {
+	--bs-body-bg: #f6f6f4;
+	--bs-body-bg-rgb: 246, 246, 244;
+	--bs-body-color: #141413;
+	--bs-body-color-rgb: 20, 20, 19;
+	--bs-secondary-color: #6e6e6a;
+	--bs-tertiary-bg: #f0f0ec;
+	--bs-tertiary-bg-rgb: 240, 240, 236;
+	--bs-secondary-bg: #e7e7e2;
+	--bs-secondary-bg-rgb: 231, 231, 226;
+	--bs-border-color: rgba(20, 20, 19, 0.11);
+	--bs-border-color-translucent: rgba(20, 20, 19, 0.08);
+
+	--mls-surface: #ffffff;
+	--mls-surface-subtle: #f0f0ec;
+	--mls-surface-hover: #ecece8;
+	--mls-border: rgba(20, 20, 19, 0.11);
+	--mls-border-strong: rgba(20, 20, 19, 0.24);
+	--mls-border-subtle: rgba(20, 20, 19, 0.08);
+	--mls-ink: #141413;
+	--mls-ink-hover: #2d2d2a;
+	--mls-ink-fg: #ffffff;
+
 	--mls-accent: #2563eb;
 	--mls-accent-hover: #1d4ed8;
-	--mls-accent-subtle: rgba(37, 99, 235, 0.1);
-	--mls-accent-border: rgba(37, 99, 235, 0.28);
-	--mls-surface: var(--bs-body-bg, #ffffff);
-	--mls-surface-subtle: var(--bs-tertiary-bg, #f8f9fa);
-	--mls-border: var(--bs-border-color, #dee2e6);
-	--mls-border-subtle: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.12));
+	--mls-accent-subtle: rgba(37, 99, 235, 0.09);
+	--mls-accent-border: rgba(37, 99, 235, 0.26);
 	--mls-success: #15803d;
-	--mls-success-subtle: rgba(21, 128, 61, 0.1);
-	--mls-success-border: rgba(21, 128, 61, 0.3);
+	--mls-success-subtle: rgba(21, 128, 61, 0.09);
+	--mls-success-border: rgba(21, 128, 61, 0.28);
 	--mls-warning: #9a6700;
-	--mls-warning-subtle: rgba(212, 167, 44, 0.14);
-	--mls-warning-border: rgba(212, 167, 44, 0.4);
+	--mls-warning-subtle: rgba(212, 167, 44, 0.13);
+	--mls-warning-border: rgba(212, 167, 44, 0.36);
 	--mls-danger: #cf222e;
+	--mls-danger-subtle: rgba(207, 34, 46, 0.07);
+	--mls-danger-border: rgba(207, 34, 46, 0.24);
 	--mls-info: #0969da;
-	--mls-info-subtle: rgba(9, 105, 218, 0.1);
-	--mls-info-border: rgba(9, 105, 218, 0.28);
+	--mls-info-subtle: rgba(9, 105, 218, 0.09);
+	--mls-info-border: rgba(9, 105, 218, 0.26);
+
 	--mls-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
 		"Microsoft YaHei", sans-serif;
 	--mls-font-mono: "MapleMonoNL", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	--mls-radius-xs: 4px;
 	--mls-radius-sm: 6px;
-	--mls-radius-md: 10px;
+	--mls-radius-md: 8px;
 	--mls-focus-outline: 2px solid var(--mls-accent);
-	--mls-scrollbar-thumb: rgba(100, 116, 139, 0.38);
+	--mls-scrollbar-thumb: rgba(20, 20, 19, 0.24);
 }
 
 html[data-bs-theme="dark"] {
+	--bs-body-bg: #0f1010;
+	--bs-body-bg-rgb: 15, 16, 16;
+	--bs-body-color: #ededec;
+	--bs-body-color-rgb: 237, 237, 236;
+	--bs-secondary-color: #8b8d8b;
+	--bs-tertiary-bg: #141515;
+	--bs-tertiary-bg-rgb: 20, 21, 21;
+	--bs-secondary-bg: #222323;
+	--bs-secondary-bg-rgb: 34, 35, 35;
+	--bs-border-color: rgba(255, 255, 255, 0.1);
+	--bs-border-color-translucent: rgba(255, 255, 255, 0.07);
+
+	--mls-surface: #171818;
+	--mls-surface-subtle: #141515;
+	--mls-surface-hover: #222323;
+	--mls-border: rgba(255, 255, 255, 0.1);
+	--mls-border-strong: rgba(255, 255, 255, 0.22);
+	--mls-border-subtle: rgba(255, 255, 255, 0.07);
+	--mls-ink: #ededec;
+	--mls-ink-hover: #ffffff;
+	--mls-ink-fg: #0f1010;
+
 	--mls-accent: #60a5fa;
 	--mls-accent-hover: #93c5fd;
-	--mls-accent-subtle: rgba(96, 165, 250, 0.14);
-	--mls-accent-border: rgba(96, 165, 250, 0.32);
+	--mls-accent-subtle: rgba(96, 165, 250, 0.13);
+	--mls-accent-border: rgba(96, 165, 250, 0.3);
 	--mls-success: #4ade80;
-	--mls-success-subtle: rgba(74, 222, 128, 0.12);
-	--mls-success-border: rgba(74, 222, 128, 0.32);
+	--mls-success-subtle: rgba(74, 222, 128, 0.11);
+	--mls-success-border: rgba(74, 222, 128, 0.28);
 	--mls-warning: #fbbf24;
-	--mls-warning-subtle: rgba(251, 191, 36, 0.12);
-	--mls-warning-border: rgba(251, 191, 36, 0.34);
+	--mls-warning-subtle: rgba(251, 191, 36, 0.11);
+	--mls-warning-border: rgba(251, 191, 36, 0.3);
 	--mls-danger: #f87171;
+	--mls-danger-subtle: rgba(248, 113, 113, 0.1);
+	--mls-danger-border: rgba(248, 113, 113, 0.28);
 	--mls-info: #38bdf8;
-	--mls-info-subtle: rgba(56, 189, 248, 0.12);
-	--mls-info-border: rgba(56, 189, 248, 0.32);
-	--mls-scrollbar-thumb: rgba(148, 163, 184, 0.32);
-	--bs-secondary-color: #9ca3af;
+	--mls-info-subtle: rgba(56, 189, 248, 0.11);
+	--mls-info-border: rgba(56, 189, 248, 0.28);
+	--mls-scrollbar-thumb: rgba(255, 255, 255, 0.2);
 }
 
-/* 暗色模式下修正 Bootstrap 描边按钮与禁用态偏暗、灰底难辨认的问题 */
+/* 统一 Bootstrap 卡片、列表组、表单、表格与顶部提示条的表面与边框 */
+.card {
+	--bs-card-bg: var(--mls-surface);
+	--bs-card-cap-bg: var(--mls-surface-subtle);
+	--bs-card-border-color: var(--mls-border);
+}
+
+.list-group-item {
+	--bs-list-group-bg: var(--mls-surface);
+	--bs-list-group-color: var(--bs-body-color);
+	--bs-list-group-border-color: var(--mls-border-subtle);
+	--bs-list-group-action-color: var(--bs-body-color);
+	--bs-list-group-action-hover-color: var(--bs-body-color);
+	--bs-list-group-action-hover-bg: var(--mls-surface-hover);
+	--bs-list-group-action-active-bg: var(--mls-surface-hover);
+}
+
+.list-group-item-success {
+	--bs-list-group-bg: var(--mls-success-subtle);
+	--bs-list-group-color: var(--bs-body-color);
+	--bs-list-group-border-color: var(--mls-success-border);
+}
+
+.list-group-item-danger {
+	--bs-list-group-bg: var(--mls-danger-subtle);
+	--bs-list-group-color: var(--bs-body-color);
+	--bs-list-group-border-color: var(--mls-danger-border);
+}
+
+.alert-info {
+	--bs-alert-bg: var(--mls-surface);
+	--bs-alert-border-color: var(--mls-border);
+	--bs-alert-color: var(--bs-body-color);
+}
+
+.form-control,
+.form-select {
+	background-color: var(--mls-surface);
+	border-color: var(--mls-border);
+	color: var(--bs-body-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+	background-color: var(--mls-surface);
+	color: var(--bs-body-color);
+	border-color: var(--mls-accent);
+	box-shadow: 0 0 0 2px var(--mls-accent-subtle);
+}
+
+.table {
+	--bs-table-bg: transparent;
+	--bs-table-border-color: var(--mls-border-subtle);
+}
+
+/* 暗色模式下统一中性灰描边按钮（去除蓝偏 Slate 感） */
 html[data-bs-theme="dark"] .btn-outline-secondary {
-	color: #e2e8f0;
-	border-color: #4b5563;
+	color: #dcdcd9;
+	border-color: rgba(255, 255, 255, 0.18);
 }
 
 html[data-bs-theme="dark"] .btn-outline-secondary:hover:not(:disabled) {
 	color: #ffffff;
 	background-color: rgba(255, 255, 255, 0.08);
-	border-color: #6b7280;
+	border-color: rgba(255, 255, 255, 0.3);
 }
 
 html[data-bs-theme="dark"] .btn-outline-secondary:disabled {
-	color: #9ca3af;
-	border-color: #374151;
-	opacity: 0.75;
+	color: #8b8d8b;
+	border-color: rgba(255, 255, 255, 0.1);
+	opacity: 0.72;
 }
 
 html[data-bs-theme="dark"] .btn-outline-danger {
 	color: #f87171;
-	border-color: rgba(248, 113, 113, 0.6);
+	border-color: rgba(248, 113, 113, 0.55);
 }
 
 html[data-bs-theme="dark"] .btn-outline-danger:hover:not(:disabled),
@@ -85,12 +185,12 @@ html[data-bs-theme="dark"] .btn-outline-danger:focus-visible:not(:disabled) {
 
 html[data-bs-theme="dark"] .btn-outline-danger:disabled {
 	color: #fca5a5;
-	border-color: rgba(248, 113, 113, 0.35);
+	border-color: rgba(248, 113, 113, 0.32);
 	opacity: 0.72;
 }
 
 html[data-bs-theme="dark"] .text-muted {
-	color: #9ca3af !important;
+	color: var(--bs-secondary-color) !important;
 }
 
 html[data-bs-theme="dark"] .text-success {
@@ -158,7 +258,6 @@ code,
 pre,
 .debug-result,
 .ai-chat-messages,
-#languageSelect,
 #headerCheckContent {
 	scrollbar-width: thin;
 	scrollbar-color: var(--mls-scrollbar-thumb) transparent;

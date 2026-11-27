@@ -16,9 +16,9 @@
 	min-height: 38px;
 	padding: 7px 10px 7px 11px;
 	border-radius: 6px;
-	border: 1px solid var(--p-border, var(--mls-border));
-	background-color: var(--p-surface, var(--mls-surface));
-	color: var(--p-text, var(--bs-body-color));
+	border: 1px solid var(--mls-border);
+	background-color: var(--mls-surface);
+	color: var(--bs-body-color);
 	font-size: 0.94em;
 	line-height: 1.35;
 	text-align: left;
@@ -27,7 +27,7 @@
 }
 
 .mls-lang-trigger:hover:not(:disabled) {
-	border-color: var(--p-border-strong, rgba(100, 116, 139, 0.5));
+	border-color: var(--mls-border-strong);
 }
 
 .mls-lang-trigger[aria-expanded="true"],
@@ -40,7 +40,7 @@
 .mls-lang-trigger:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
-	background-color: var(--p-surface-2, var(--mls-surface-subtle));
+	background-color: var(--mls-surface-subtle);
 }
 
 .mls-lang-trigger-name {
@@ -53,7 +53,7 @@
 }
 
 .mls-lang-trigger-name.is-placeholder {
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 	font-weight: 400;
 }
 
@@ -68,14 +68,14 @@
 	font-family: var(--mls-font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: 0.85rem;
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 	letter-spacing: -0.01em;
 }
 
 .mls-lang-chevron {
 	width: 14px;
 	height: 14px;
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 	opacity: 0.8;
 	transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -92,8 +92,8 @@
 	right: 0;
 	z-index: 1050;
 	border-radius: 6px;
-	border: 1px solid var(--p-border-strong, var(--mls-border));
-	background-color: var(--p-surface, var(--mls-surface));
+	border: 1px solid var(--mls-border-strong);
+	background-color: var(--mls-surface);
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.1);
 	overflow: hidden;
 	transform-origin: top center;
@@ -121,15 +121,15 @@ html[data-bs-theme="dark"] .mls-lang-menu {
 	align-items: center;
 	gap: 8px;
 	padding: 0 10px 0 11px;
-	border-bottom: 1px solid var(--p-divider, var(--mls-border-subtle));
-	background-color: var(--p-surface, var(--mls-surface));
+	border-bottom: 1px solid var(--mls-border-subtle);
+	background-color: var(--mls-surface);
 }
 
 .mls-lang-search-icon {
 	flex-shrink: 0;
 	width: 14px;
 	height: 14px;
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 	opacity: 0.72;
 }
 
@@ -140,13 +140,13 @@ html[data-bs-theme="dark"] .mls-lang-menu {
 	padding: 0;
 	border: 0;
 	background: transparent;
-	color: var(--p-text, var(--bs-body-color));
+	color: var(--bs-body-color);
 	font-size: 0.9em;
 	outline: none;
 }
 
 .mls-lang-search::placeholder {
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 	opacity: 0.78;
 }
 
@@ -164,14 +164,14 @@ html[data-bs-theme="dark"] .mls-lang-menu {
 	padding: 0;
 	border: 0;
 	border-radius: 999px;
-	background-color: var(--p-surface-2, rgba(120, 120, 128, 0.16));
-	color: var(--p-muted, var(--bs-secondary-color));
+	background-color: var(--mls-surface-hover);
+	color: var(--bs-secondary-color);
 	cursor: pointer;
 	transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .mls-lang-search-clear:hover {
-	color: var(--p-text, var(--bs-body-color));
+	color: var(--bs-body-color);
 }
 
 .mls-lang-search-clear svg {
@@ -199,7 +199,7 @@ html[data-bs-theme="dark"] .mls-lang-menu {
 	min-height: 36px;
 	padding: 6px 8px 6px 10px;
 	border-radius: 4px;
-	color: var(--p-text, var(--bs-body-color));
+	color: var(--bs-body-color);
 	font-size: 0.94rem;
 	line-height: 1.35;
 	cursor: pointer;
@@ -208,11 +208,7 @@ html[data-bs-theme="dark"] .mls-lang-menu {
 }
 
 .mls-lang-item.is-active {
-	background-color: var(--p-surface-2, rgba(15, 23, 42, 0.055));
-}
-
-html[data-bs-theme="dark"] .mls-lang-item.is-active {
-	background-color: var(--p-surface-2, rgba(255, 255, 255, 0.08));
+	background-color: var(--mls-surface-hover);
 }
 
 .mls-lang-item.is-selected .mls-lang-item-name {
@@ -238,11 +234,11 @@ html[data-bs-theme="dark"] .mls-lang-item.is-active {
 	font-family: var(--mls-font-mono);
 	font-variant-numeric: tabular-nums;
 	font-size: 0.85rem;
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 }
 
 .mls-lang-item.is-selected .mls-lang-item-code {
-	color: var(--p-text, var(--bs-body-color));
+	color: var(--bs-body-color);
 	opacity: 0.82;
 }
 
@@ -278,7 +274,7 @@ html[data-bs-theme="dark"] .mls-lang-item.is-active {
 	padding: 18px 12px;
 	text-align: center;
 	font-size: 0.88em;
-	color: var(--p-muted, var(--bs-secondary-color));
+	color: var(--bs-secondary-color);
 }
 
 /* Popup 内约 5.2 行可视（保留底部半行折半提示），浮层与触发条严格等宽，底部留出约 24px 余量且零跳跃 */

@@ -15,39 +15,6 @@
   <link href="../shared/language-picker.css" rel="stylesheet">
   <script src="../shared/theme-init.js"></script>
   <style>
-    /* 暖中性浅色纸感 + 近纯黑无蓝偏暗色（参考 Amp / Impeccable 色彩体系，与 Detect/Debug 钴蓝技术色一致） */
-    :root {
-      --p-bg: #f6f6f4;
-      --p-surface: #ffffff;
-      --p-surface-2: #ecece8;
-      --p-border: rgba(20, 20, 19, 0.11);
-      --p-border-strong: rgba(20, 20, 19, 0.24);
-      --p-divider: rgba(20, 20, 19, 0.08);
-      --p-text: #141413;
-      --p-muted: #6e6e6a;
-      --p-ink: #141413;
-      --p-ink-hover: #2d2d2a;
-      --p-ink-fg: #ffffff;
-      --p-danger-bg: rgba(207, 34, 46, 0.07);
-      --p-danger-border: rgba(207, 34, 46, 0.24);
-    }
-
-    html[data-bs-theme="dark"] {
-      --p-bg: #0f1010;
-      --p-surface: #171818;
-      --p-surface-2: #222323;
-      --p-border: rgba(255, 255, 255, 0.1);
-      --p-border-strong: rgba(255, 255, 255, 0.22);
-      --p-divider: rgba(255, 255, 255, 0.07);
-      --p-text: #ededec;
-      --p-muted: #8b8d8b;
-      --p-ink: #ededec;
-      --p-ink-hover: #ffffff;
-      --p-ink-fg: #0f1010;
-      --p-danger-bg: rgba(248, 113, 113, 0.1);
-      --p-danger-border: rgba(248, 113, 113, 0.28);
-    }
-
     html {
       font-size: 0.875rem;
     }
@@ -55,8 +22,8 @@
     body.popup-body {
       width: 380px;
       padding: 16px 16px 18px;
-      background-color: var(--p-bg);
-      color: var(--p-text);
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
     }
 
     body.popup-body main.container {
@@ -71,7 +38,7 @@
       border-radius: 6px;
       border-color: transparent;
       background-color: transparent;
-      color: var(--p-muted);
+      color: var(--bs-secondary-color);
     }
 
     body.popup-body #langToggleBtn {
@@ -85,8 +52,8 @@
 
     body.popup-body .toggle:hover:not(:disabled) {
       border-color: transparent;
-      background-color: var(--p-surface-2);
-      color: var(--p-text);
+      background-color: var(--mls-surface-hover);
+      color: var(--bs-body-color);
     }
 
     /* 左对齐单行工具顶栏，去掉居中大标题与冗余占位 */
@@ -101,12 +68,12 @@
       letter-spacing: -0.025em;
       font-weight: 600;
       margin-bottom: 2px;
-      color: var(--p-text);
+      color: var(--bs-body-color);
     }
 
     .header p {
       font-size: 0.84em;
-      color: var(--p-muted) !important;
+      color: var(--bs-secondary-color) !important;
     }
 
     /* 当前语言读数行：排版立主视觉，不套冗余灰框卡片 */
@@ -117,8 +84,8 @@
       gap: 8px;
       margin-bottom: 16px;
       padding: 10px 0 12px;
-      border-top: 1px solid var(--p-divider);
-      border-bottom: 1px solid var(--p-divider);
+      border-top: 1px solid var(--mls-border-subtle);
+      border-bottom: 1px solid var(--mls-border-subtle);
     }
 
     .status-card {
@@ -134,7 +101,7 @@
       flex-wrap: wrap;
       gap: 8px;
       font-size: 0.88em;
-      color: var(--p-muted);
+      color: var(--bs-secondary-color);
     }
 
     /* 当前语言读数：克制的等宽技术徽章（4px 利落圆角） */
@@ -174,7 +141,7 @@
       margin-bottom: 6px;
       font-size: 0.84em;
       font-weight: 500;
-      color: var(--p-muted);
+      color: var(--bs-secondary-color);
     }
 
     .language-select {
@@ -189,16 +156,16 @@
       font-size: 0.92em;
       font-weight: 500;
       white-space: nowrap;
-      background-color: var(--p-ink);
-      border: 1px solid var(--p-ink);
-      color: var(--p-ink-fg);
+      background-color: var(--mls-ink);
+      border: 1px solid var(--mls-ink);
+      color: var(--mls-ink-fg);
       transition: background-color 0.14s ease, opacity 0.14s ease, transform 0.1s ease;
     }
 
     #applyButton:hover:not(:disabled) {
-      background-color: var(--p-ink-hover);
-      border-color: var(--p-ink-hover);
-      color: var(--p-ink-fg);
+      background-color: var(--mls-ink-hover);
+      border-color: var(--mls-ink-hover);
+      color: var(--mls-ink-fg);
     }
 
     #applyButton:active:not(:disabled) {
@@ -216,14 +183,14 @@
       justify-content: space-between;
       margin-bottom: 16px;
       padding: 14px 0;
-      border-top: 1px solid var(--p-divider);
-      border-bottom: 1px solid var(--p-divider);
+      border-top: 1px solid var(--mls-border-subtle);
+      border-bottom: 1px solid var(--mls-border-subtle);
     }
 
     .auto-switch-label {
       font-size: 0.92em;
       font-weight: 500;
-      color: var(--p-text);
+      color: var(--bs-body-color);
       cursor: pointer;
       user-select: none;
     }
@@ -319,16 +286,16 @@
       border-radius: 6px;
       font-size: 0.86em;
       font-weight: 500;
-      background-color: var(--p-surface);
-      border: 1px solid var(--p-border);
-      color: var(--p-text);
+      background-color: var(--mls-surface);
+      border: 1px solid var(--mls-border);
+      color: var(--bs-body-color);
       transition: border-color 0.14s ease, background-color 0.14s ease;
     }
 
     .quick-tools-row .btn:hover:not(:disabled) {
-      border-color: var(--p-border-strong);
-      background-color: var(--p-surface);
-      color: var(--p-text);
+      border-color: var(--mls-border-strong);
+      background-color: var(--mls-surface);
+      color: var(--bs-body-color);
     }
 
     .quick-tools-row .btn:disabled {
@@ -349,7 +316,7 @@
       font-weight: 500;
       border: 1px solid transparent;
       background-color: transparent;
-      color: var(--p-muted);
+      color: var(--bs-secondary-color);
       border-radius: 6px;
       transition: background-color 0.14s ease, color 0.14s ease;
     }
@@ -360,8 +327,8 @@
     }
 
     .update-check-button:hover:not(:disabled) {
-      background-color: var(--p-surface-2);
-      color: var(--p-text);
+      background-color: var(--mls-surface-hover);
+      color: var(--bs-body-color);
     }
 
     .update-check-button:focus-visible {
@@ -376,8 +343,8 @@
 
     .header-check-result .card {
       border-radius: 6px;
-      border: 1px solid var(--p-border);
-      background-color: var(--p-surface);
+      border: 1px solid var(--mls-border);
+      background-color: var(--mls-surface);
       box-shadow: none;
     }
 
@@ -385,9 +352,9 @@
       padding: 7px 10px;
       font-size: 0.82em;
       font-weight: 600;
-      color: var(--p-muted);
+      color: var(--bs-secondary-color);
       background-color: transparent !important;
-      border-bottom: 1px solid var(--p-divider);
+      border-bottom: 1px solid var(--mls-border-subtle);
     }
 
     .header-check-result .card-body {
@@ -399,7 +366,7 @@
       line-height: 1.45;
       max-height: 140px;
       overflow-y: auto;
-      color: var(--p-text);
+      color: var(--bs-body-color);
     }
 
     /* 错误提示条（#errorAlert 与 #updateErrorAlert 统一精简） */
@@ -409,8 +376,8 @@
       border-radius: 6px;
       font-size: 0.85em;
       line-height: 1.45;
-      background-color: var(--p-danger-bg);
-      border: 1px solid var(--p-danger-border);
+      background-color: var(--mls-danger-subtle);
+      border: 1px solid var(--mls-danger-border);
       color: var(--mls-danger);
       max-width: 100%;
       overflow-wrap: break-word;
@@ -426,7 +393,7 @@
       padding: 11px 12px;
       border-radius: 6px;
       font-size: 0.86em;
-      border: 1px solid var(--p-border);
+      border: 1px solid var(--mls-border);
       animation: slideIn 0.2s ease-out;
     }
 
@@ -437,9 +404,9 @@
     }
 
     .update-notification.info {
-      background-color: var(--p-surface);
-      border-color: var(--p-border-strong);
-      color: var(--p-text);
+      background-color: var(--mls-surface);
+      border-color: var(--mls-border-strong);
+      color: var(--bs-body-color);
     }
 
     .update-notification.warning {
@@ -475,9 +442,9 @@
     }
 
     .version-badge {
-      background-color: var(--p-surface-2);
-      border: 1px solid var(--p-border);
-      color: var(--p-text);
+      background-color: var(--mls-surface-hover);
+      border: 1px solid var(--mls-border);
+      color: var(--bs-body-color);
       padding: 1px 7px;
       border-radius: 4px;
       font-family: var(--mls-font-mono);
@@ -503,29 +470,29 @@
     }
 
     .update-actions .btn-primary {
-      background-color: var(--p-ink);
-      border-color: var(--p-ink);
-      color: var(--p-ink-fg);
+      background-color: var(--mls-ink);
+      border-color: var(--mls-ink);
+      color: var(--mls-ink-fg);
     }
 
     .update-actions .btn-primary:hover {
-      background-color: var(--p-ink-hover);
-      border-color: var(--p-ink-hover);
-      color: var(--p-ink-fg);
+      background-color: var(--mls-ink-hover);
+      border-color: var(--mls-ink-hover);
+      color: var(--mls-ink-fg);
     }
 
     .update-actions .btn-outline-primary,
     .update-actions .btn-outline-warning {
       background-color: transparent;
-      border-color: var(--p-border-strong);
-      color: var(--p-text);
+      border-color: var(--mls-border-strong);
+      color: var(--bs-body-color);
     }
 
     .update-actions .btn-outline-primary:hover,
     .update-actions .btn-outline-warning:hover {
-      background-color: var(--p-surface-2);
-      border-color: var(--p-border-strong);
-      color: var(--p-text);
+      background-color: var(--mls-surface-hover);
+      border-color: var(--mls-border-strong);
+      color: var(--bs-body-color);
     }
 
     @keyframes slideIn {

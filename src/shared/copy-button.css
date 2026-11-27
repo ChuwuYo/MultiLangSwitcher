@@ -14,8 +14,8 @@
 }
 
 .copy {
-	--button-bg: rgba(15, 23, 42, 0.08);
-	--button-hover-bg: rgba(15, 23, 42, 0.16);
+	--button-bg: rgba(20, 20, 19, 0.07);
+	--button-hover-bg: rgba(20, 20, 19, 0.14);
 	--button-text-color: var(--bs-body-color);
 	--button-hover-text-color: var(--mls-accent, #2563eb);
 	--button-border-radius: var(--mls-radius-sm, 6px);
